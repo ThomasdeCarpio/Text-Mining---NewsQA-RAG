@@ -1,0 +1,25 @@
+# Core Frameworks
+langchain
+langchain-openai
+langchain-community
+langgraph
+
+# Vector Database & Retrieval
+chromadb
+rank_bm25
+
+# Data Processing & Web Scraping
+pandas
+newspaper3k
+beautifulsoup4
+tiktoken
+
+# Evaluation
+ragas
+datasets
+
+# UI & Utilities
+streamlit
+python-dotenv
+tqdm
+pyyaml
