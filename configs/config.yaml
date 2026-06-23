@@ -1,0 +1,70 @@
+# ============================================================
+# NewsQA-RAG Configuration
+# ============================================================
+# This file controls all pipeline behavior: ingestion, indexing,
+# retrieval, and evaluation. Scripts read this file via --config flag.
+
+# --- Embedding Model ---
+embedding:
+  provider: "openai"                    # "openai" | "sentence-transformers"
+  model_name: "text-embedding-3-small"  # OpenAI: "text-embedding-3-small", "text-embedding-3-large"
+                                        # ST: "all-MiniLM-L6-v2", "all-mpnet-base-v2"
+  dimensions: 1536                      # Must match model output dim
+
+# --- Chunking ---
+chunking:
+  strategy: "recursive"       # "recursive" | "semantic" | "sentence"
+  chunk_size: 512             # Target chunk size in tokens
+  chunk_overlap: 64           # Overlap between consecutive chunks
+  # Sentence strategy only:
+  sentences_per_chunk: 8
+  sentence_overlap: 2
+
+# --- Database (ChromaDB) ---
+database:
+  hnsw:
+    space: "cosine"
+    ef_construction: 200
+    M: 16
+    ef_search: 50
+
+# --- LLM ---
+llm:
+  model: "gpt-4o-mini"
+  temperature: 0.0
+  max_tokens: 1024
+
+# --- Retrieval ---
+retrieval:
+  top_k: 10                  # Number of results to retrieve
+  reranker:
+    enabled: true
+    provider: "cohere"        # "cohere" | "cross-encoder"
+    model: "rerank-v3.5"
+    top_n: 5                  # Number of results after reranking
+  hybrid:
+    enabled: true
+    dense_weight: 0.7         # Weight for dense retrieval (0-1)
+    sparse_weight: 0.3        # Weight for BM25 (0-1, must sum to 1 with dense)
+
+# --- Evaluation (Ragas) ---
+evaluation:
+  metrics:
+    - "faithfulness"
+    - "answer_relevancy"
+    - "context_precision"
+    - "context_recall"
+  llm_model: "gpt-4o-mini"   # LLM used by Ragas for evaluation
+
+# --- Metadata ---
+metadata:
+  categories:                 # Controlled vocabulary for article categories
+    - "Politics"
+    - "Technology"
+    - "Business"
+    - "World"
+    - "Science"
+    - "Health"
+    - "Sports"
+    - "Entertainment"
+    - "Other"
