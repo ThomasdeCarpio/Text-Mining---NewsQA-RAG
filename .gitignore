@@ -34,3 +34,6 @@ data/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# database
+database/*
