@@ -18,7 +18,7 @@ from src.indexing.embeddings import (
 )
 from src.indexing.chroma_store import ChromaStore
 
-TEST_DB_PATH = os.path.join(tempfile.gettempdir(), "chroma_test_db")
+TEST_DB_PATH = os.path.join("..", "database", "chroma_test_db")
 COLLECTION_NAME = "test_collection"
 HNSW_CONFIG = {
     "space": "cosine",
@@ -419,3 +419,4 @@ if __name__ == "__main__":
         sys.exit(1)
     finally:
         cleanup()
+        # pass if you want to see real database
