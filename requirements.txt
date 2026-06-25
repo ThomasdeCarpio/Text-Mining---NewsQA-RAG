@@ -12,6 +12,7 @@ sentence-transformers
 # Data Processing & Web Scraping
 pandas
 newspaper3k
+lxml_html_clean
 beautifulsoup4
 tiktoken
 
