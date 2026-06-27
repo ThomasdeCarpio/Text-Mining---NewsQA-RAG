@@ -3,6 +3,8 @@ langchain
 langchain-openai
 langchain-community
 langgraph
+langchain-text-splitters
+tiktoken    
 
 # Vector Database & Retrieval
 chromadb
