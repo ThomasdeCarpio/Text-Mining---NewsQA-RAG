@@ -16,7 +16,6 @@ __pycache__/
 # Data and Databases (DO NOT PUSH CHROMA DB TO GITHUB)
 data/
 *.csv
-*.json
 *.sqlite3
 *.parquet
 

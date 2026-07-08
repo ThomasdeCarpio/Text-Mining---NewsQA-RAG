@@ -27,3 +27,8 @@ streamlit
 python-dotenv
 tqdm
 pyyaml
+
+# Backend API
+fastapi
+uvicorn
+httpx
