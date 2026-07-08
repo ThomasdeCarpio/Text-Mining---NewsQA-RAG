@@ -9,19 +9,22 @@ export function CitationList({ citations }: { citations: Citation[] }) {
     <div className="mt-2">
       <button
         onClick={() => setOpen(!open)}
-        className="text-xs font-medium text-purple-700 hover:underline"
+        className="font-wire text-[10px] uppercase tracking-wide text-accent hover:text-accent-hover"
       >
-        {open ? "Hide Sources" : "View Sources"}
+        {open ? "▲ Hide Sources" : "▼ View Sources"}
       </button>
       {open && (
         <div className="mt-2 flex flex-col gap-2">
           {citations.map((c, i) => (
-            <div key={i} className="rounded border border-gray-200 bg-gray-50 p-2 text-left text-sm">
-              <p className="font-semibold">
-                {c.source} <span className="font-normal text-gray-500">({c.date})</span> — {c.title}
+            <div key={i} className="rounded border-2 border-rule bg-paper p-2 text-left text-sm">
+              <p className="font-display font-semibold text-ink">
+                {c.title}{" "}
+                <span className="font-wire text-[10px] font-normal text-ink-muted">
+                  {c.source} · {c.date}
+                </span>
               </p>
-              <p className="mt-1 italic text-gray-600">"{c.chunk_text}"</p>
-              <a href={c.url} target="_blank" rel="noreferrer" className="text-xs text-purple-700 hover:underline">
+              <p className="mt-1 italic text-ink-muted">"{c.chunk_text}"</p>
+              <a href={c.url} target="_blank" rel="noreferrer" className="font-wire text-[10px] text-accent hover:underline">
                 {c.url}
               </a>
             </div>

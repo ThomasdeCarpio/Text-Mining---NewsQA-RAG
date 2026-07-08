@@ -5,6 +5,7 @@ import { Sidebar } from "./components/Sidebar";
 import { LoginPage } from "./pages/LoginPage";
 import { ChatPage } from "./pages/ChatPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { RetrievalPage } from "./pages/RetrievalPage";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -41,6 +42,16 @@ export default function App() {
           <RequireAuth>
             <RequireAdmin>
               <DashboardPage />
+            </RequireAdmin>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/retrieval"
+        element={
+          <RequireAuth>
+            <RequireAdmin>
+              <RetrievalPage />
             </RequireAdmin>
           </RequireAuth>
         }

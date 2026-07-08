@@ -44,3 +44,42 @@ class AskRequest(BaseModel):
 
 class TriggerCrawlerResponse(BaseModel):
     triggered: bool
+
+
+class AlgorithmOption(BaseModel):
+    id: str
+    label: str
+    available: bool
+
+
+class CollectionStats(BaseModel):
+    exists: bool
+    name: str
+    count: int
+    metadata: dict
+    embedding_info: dict
+
+
+class RetrievalSearchRequest(BaseModel):
+    query: str
+    algorithm: str = "dense"
+    top_k: int = 10
+
+
+class RetrievalResultSchema(BaseModel):
+    id: str
+    text: str
+    distance: float
+    metadata: dict
+
+
+class RetrievalTiming(BaseModel):
+    model_cold_start: bool
+    embed_ms: float
+    db_query_ms: float
+    total_ms: float
+
+
+class RetrievalSearchResponse(BaseModel):
+    results: list[RetrievalResultSchema]
+    timing: RetrievalTiming

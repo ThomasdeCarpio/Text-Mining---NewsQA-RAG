@@ -1,6 +1,39 @@
 @import "tailwindcss";
 
+@theme {
+  --font-serif-display: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --font-mono-wire: ui-monospace, "SF Mono", Consolas, monospace;
+
+  --color-paper: #f3ead9;
+  --color-paper-dark: #e9dcc3;
+  --color-surface: #fffcf5;
+  --color-ink: #2b2620;
+  --color-ink-muted: #6b6355;
+  --color-rule: #d8cbb0;
+  --color-accent: #a13d2b;
+  --color-accent-hover: #832f21;
+  --color-accent-soft: #f1ddd3;
+  --color-moss: #5f6b4a;
+}
+
 body {
   margin: 0;
   font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(43, 38, 32, 0.05) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+
+.font-display {
+  font-family: var(--font-serif-display);
+}
+
+.font-wire {
+  font-family: var(--font-mono-wire);
+}
+
+.stamp-shadow {
+  box-shadow: 3px 3px 0 rgba(43, 38, 32, 0.12);
 }

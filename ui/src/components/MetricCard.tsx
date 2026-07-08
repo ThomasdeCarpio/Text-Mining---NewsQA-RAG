@@ -1,8 +1,8 @@
 export function MetricCard({ name, value }: { name: string; value: number }) {
   return (
-    <div className="rounded-lg border border-gray-200 p-4 text-center">
-      <p className="text-sm text-gray-500">{name}</p>
-      <p className="text-2xl font-semibold text-gray-900">{value.toFixed(2)}</p>
+    <div className="stamp-shadow rounded border-2 border-rule bg-surface p-4 text-center">
+      <p className="font-wire text-[10px] uppercase tracking-wide text-ink-muted">{name}</p>
+      <p className="font-display text-3xl text-accent">{value.toFixed(2)}</p>
     </div>
   );
 }

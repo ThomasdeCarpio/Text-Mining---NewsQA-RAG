@@ -1,8 +1,11 @@
 import type {
   AgentEvent,
+  AlgorithmOption,
   ChatMessage,
+  CollectionStats,
   FailureCase,
   LoginResponse,
+  RetrievalSearchResponse,
   SearchComparisonRow,
 } from "./types";
 
@@ -20,7 +23,10 @@ async function postJson<T>(path: string, body?: unknown): Promise<T> {
     headers: { "Content-Type": "application/json" },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
-  if (!resp.ok) throw new Error(`POST ${path} failed: ${resp.status}`);
+  if (!resp.ok) {
+    const detail = await resp.json().catch(() => null);
+    throw new Error(detail?.detail ?? `POST ${path} failed: ${resp.status}`);
+  }
   return resp.json();
 }
 
@@ -61,6 +67,22 @@ export function getPipelineLogs(): Promise<AgentEvent[]> {
 export async function triggerCrawler(): Promise<boolean> {
   const data = await postJson<{ triggered: boolean }>("/admin/trigger-crawler");
   return data.triggered;
+}
+
+export function getAlgorithms(): Promise<AlgorithmOption[]> {
+  return getJson("/retrieval/algorithms");
+}
+
+export function getCollectionStats(): Promise<CollectionStats> {
+  return getJson("/retrieval/stats");
+}
+
+export function searchRetrieval(
+  query: string,
+  algorithm: string,
+  topK: number,
+): Promise<RetrievalSearchResponse> {
+  return postJson("/retrieval/search", { query, algorithm, top_k: topK });
 }
 
 /**

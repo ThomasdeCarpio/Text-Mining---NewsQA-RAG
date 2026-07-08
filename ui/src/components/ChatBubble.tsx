@@ -6,8 +6,10 @@ export function ChatBubble({ message }: { message: ChatMessage }) {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[75%] rounded-lg px-4 py-2 text-left ${
-          isUser ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-900"
+        className={`max-w-[75%] rounded px-4 py-2 text-left ${
+          isUser
+            ? "bg-accent text-surface"
+            : "stamp-shadow border-2 border-rule bg-surface text-ink"
         }`}
       >
         <p className="whitespace-pre-wrap text-sm">{message.content}</p>

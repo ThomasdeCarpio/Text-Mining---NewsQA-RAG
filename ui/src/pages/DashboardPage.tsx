@@ -31,33 +31,35 @@ export function DashboardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
-      <h1 className="mb-4 text-lg font-semibold">Evaluation Dashboard</h1>
+      <h1 className="mb-6 font-display text-2xl text-ink">Evaluation Desk</h1>
 
-      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
         {Object.entries(metrics).map(([name, value]) => (
           <MetricCard key={name} name={name} value={value} />
         ))}
       </div>
 
-      <h2 className="mb-2 text-sm font-semibold text-gray-700">Vector Search vs Hybrid Search</h2>
-      <div className="mb-6 h-64 rounded border border-gray-200 p-2">
+      <h2 className="mb-2 font-wire text-[10px] uppercase tracking-wide text-ink-muted">
+        Vector Search vs Hybrid Search
+      </h2>
+      <div className="stamp-shadow mb-8 h-64 rounded border-2 border-rule bg-surface p-2">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={comparison}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="metric" tick={{ fontSize: 12 }} />
-            <YAxis domain={[0, 1]} />
-            <Tooltip />
+            <CartesianGrid strokeDasharray="3 3" stroke="#d8cbb0" />
+            <XAxis dataKey="metric" tick={{ fontSize: 12, fill: "#6b6355" }} />
+            <YAxis domain={[0, 1]} tick={{ fill: "#6b6355" }} />
+            <Tooltip contentStyle={{ background: "#fffcf5", border: "2px solid #d8cbb0" }} />
             <Legend />
-            <Bar dataKey="vector_search" name="Vector Search" fill="#a78bfa" />
-            <Bar dataKey="hybrid_search" name="Hybrid Search" fill="#7c3aed" />
+            <Bar dataKey="vector_search" name="Vector Search" fill="#5f6b4a" />
+            <Bar dataKey="hybrid_search" name="Hybrid Search" fill="#a13d2b" />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      <h2 className="mb-2 text-sm font-semibold text-gray-700">Failure Analysis</h2>
-      <div className="mb-6 overflow-x-auto rounded border border-gray-200">
+      <h2 className="mb-2 font-wire text-[10px] uppercase tracking-wide text-ink-muted">Failure Analysis</h2>
+      <div className="stamp-shadow mb-8 overflow-x-auto rounded border-2 border-rule bg-surface">
         <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50">
+          <thead className="border-b-2 border-rule bg-paper font-wire text-[10px] uppercase tracking-wide text-ink-muted">
             <tr>
               <th className="p-2">Question</th>
               <th className="p-2">Expected</th>
@@ -67,20 +69,22 @@ export function DashboardPage() {
           </thead>
           <tbody>
             {failures.map((f, i) => (
-              <tr key={i} className="border-t border-gray-100">
+              <tr key={i} className="border-t border-rule text-ink">
                 <td className="p-2">{f.question}</td>
                 <td className="p-2">{f.expected}</td>
                 <td className="p-2">{f.retrieved}</td>
-                <td className="p-2">{f.reason}</td>
+                <td className="p-2 text-ink-muted">{f.reason}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <h2 className="mb-2 text-sm font-semibold text-gray-700">Pipeline Logs (Agent Thought Process)</h2>
-      <div className="mb-6 max-h-48 overflow-y-auto rounded border border-gray-200 p-2 text-xs text-gray-600">
-        {logs.length === 0 && <p className="text-gray-400">No agent activity recorded yet.</p>}
+      <h2 className="mb-2 font-wire text-[10px] uppercase tracking-wide text-ink-muted">
+        Pipeline Logs (Agent Thought Process)
+      </h2>
+      <div className="stamp-shadow mb-8 max-h-48 overflow-y-auto rounded border-2 border-rule bg-surface p-2 font-wire text-xs text-ink-muted">
+        {logs.length === 0 && <p className="text-ink-muted">No agent activity recorded yet.</p>}
         {logs.map((event, i) => (
           <p key={i}>
             [{event.timestamp}] {event.type}
@@ -89,14 +93,14 @@ export function DashboardPage() {
         ))}
       </div>
 
-      <h2 className="mb-2 text-sm font-semibold text-gray-700">Manual Crawler Trigger</h2>
+      <h2 className="mb-2 font-wire text-[10px] uppercase tracking-wide text-ink-muted">Manual Crawler Trigger</h2>
       <button
         onClick={handleTrigger}
-        className="rounded bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
+        className="rounded bg-accent px-4 py-2 font-wire text-xs uppercase tracking-wide text-surface hover:bg-accent-hover"
       >
         Trigger Crawler
       </button>
-      {crawlerMessage && <p className="mt-2 text-sm text-green-700">{crawlerMessage}</p>}
+      {crawlerMessage && <p className="mt-2 text-sm text-moss">{crawlerMessage}</p>}
     </div>
   );
 }

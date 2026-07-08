@@ -21,28 +21,42 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit} className="w-80 rounded-lg border border-gray-200 p-6 shadow-sm">
-        <h1 className="mb-4 text-xl font-semibold">NewsQA-RAG Login</h1>
-        <label className="mb-1 block text-sm text-gray-600">Username</label>
+    <div className="flex min-h-screen items-center justify-center">
+      <form
+        onSubmit={handleSubmit}
+        className="stamp-shadow w-80 rounded border-2 border-rule bg-surface p-7"
+      >
+        <p className="text-center font-wire text-[10px] uppercase tracking-[0.3em] text-ink-muted">
+          Est. Today · Vol. I
+        </p>
+        <h1 className="mb-1 text-center font-display text-3xl text-ink">The NewsQA</h1>
+        <p className="mb-6 text-center font-wire text-[10px] uppercase tracking-wide text-moss">
+          Retrieval-Augmented Desk
+        </p>
+
+        <label className="mb-1 block font-wire text-[10px] uppercase tracking-wide text-ink-muted">
+          Username
+        </label>
         <input
-          className="mb-3 w-full rounded border border-gray-300 px-3 py-2 text-sm"
+          className="mb-4 w-full rounded border-2 border-rule bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-accent"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        <label className="mb-1 block text-sm text-gray-600">Password</label>
+        <label className="mb-1 block font-wire text-[10px] uppercase tracking-wide text-ink-muted">
+          Password
+        </label>
         <input
           type="password"
-          className="mb-4 w-full rounded border border-gray-300 px-3 py-2 text-sm"
+          className="mb-5 w-full rounded border-2 border-rule bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-accent"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+        {error && <p className="mb-3 text-sm text-accent">{error}</p>}
         <button
           type="submit"
-          className="w-full rounded bg-purple-600 px-3 py-2 text-sm font-medium text-white hover:bg-purple-700"
+          className="w-full rounded bg-accent px-3 py-2 font-wire text-xs uppercase tracking-wide text-surface hover:bg-accent-hover"
         >
-          Log in
+          Enter the Newsroom
         </button>
       </form>
     </div>

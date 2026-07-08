@@ -8,7 +8,7 @@ Goal: Build an **Agentic Retrieval-Augmented Generation (RAG)** system for News 
 - **NewsQA** — single-document fact retrieval
 - **Multi-News** — multi-document synthesis and comparison
 
-**Tech Stack:** Python, LangChain, ChromaDB, OpenAI API, Ragas (evaluation), Streamlit (UI).
+**Tech Stack:** Python, LangChain/LangGraph, ChromaDB, OpenAI API, Ragas (evaluation), FastAPI (backend), React + Vite + TypeScript (UI).
 
 ---
 
@@ -35,7 +35,38 @@ Edit `configs/config.yaml` to set embedding model, chunking strategy, and databa
 
 ## Usage
 
-### Build ChromaDB Collection (End-to-End Pipeline)
+### Run Ingestion (working today)
+
+`scripts/ingest.py` is the pipeline that actually works right now — it reads
+raw HTML from `data/raw/`, cleans it (`src/ingestion/cleaner.py`), chunks it
+(`src/ingestion/chunker.py`, 500-token chunks via tiktoken, 50-token overlap),
+embeds with `sentence-transformers/all-MiniLM-L6-v2` (local, no API key
+needed), and upserts into a ChromaDB collection named `newsqa_cnn` at
+`data/chroma_db/`.
+
+```bash
+python scripts/ingest.py
+```
+
+Notes:
+- On Windows, if you see `UnicodeEncodeError` printing the emoji log lines,
+  run with `PYTHONIOENCODING=utf-8 python scripts/ingest.py` instead (Windows
+  console defaults to cp1252).
+- Some CNN articles in the raw dataset are cp1252-encoded, not UTF-8;
+  `NewsCleaner.clean_file` already falls back to cp1252 automatically on a
+  decode failure — a handful of "❌ Error processing ..." lines for other
+  reasons is still worth checking, but encoding errors are handled.
+- Safe to re-run: `ChromaStore.upsert_chunks` upserts by ID, so re-running
+  after adding new raw files won't duplicate existing chunks.
+- `PIPELINE_CONFIG` inside `scripts/ingest.py` is currently hardcoded
+  (embedding provider/model, paths) rather than reading `configs/config.yaml`
+  — see Roadmap Milestone 5.
+
+`scripts/build_chroma_collection.py` (below) documents an intended
+config-driven alternative to this same pipeline, but is currently
+docstring-only (not implemented) — use `scripts/ingest.py` for now.
+
+### Build ChromaDB Collection (config-driven, not yet implemented)
 
 The main pipeline script. Reads raw article files, cleans, chunks, embeds, and indexes them into a ChromaDB collection in one pass.
 
@@ -130,9 +161,6 @@ python scripts/inspect_collection.py \
 ### Run the API + UI
 
 The app is split into a FastAPI backend (`api/`) and a React frontend (`ui/`).
-Business logic lives behind `src/services/` — currently returning mock data;
-see [Roadmap](#roadmap--remaining-work) for what still needs real
-implementations.
 
 ```bash
 # Terminal 1 — backend (http://localhost:8000)
@@ -144,11 +172,22 @@ npm install
 npm run dev
 ```
 
-Mock login credentials (see `src/services/auth_service.py`):
+Open `http://localhost:5173` and log in (see `src/services/auth_service.py`
+for the hardcoded credentials):
 | Username | Password | Role |
 |---|---|---|
-| `admin` | `admin123` | admin (Evaluation Dashboard + News Chat) |
-| `analyst` | `pass123` | user (News Chat only) |
+| `admin` | `admin123` | admin — News Chat + Evaluation Desk + Retrieval Playground |
+| `analyst` | `pass123` | user — News Chat only |
+
+**What's real vs mock right now:**
+- **Retrieval Playground** (admin, `/retrieval`) is real — it runs dense
+  vector search against whatever collection `scripts/ingest.py` produced
+  (`data/chroma_db`, collection `newsqa_cnn`). Run ingestion first or this
+  page will report the collection as not found. It also reports a
+  per-request latency breakdown (embed time vs ChromaDB query time) so you
+  can see where time actually goes.
+- **News Chat** and **Evaluation Desk** still return mock data — see
+  [Roadmap](#roadmap--remaining-work).
 
 ---
 
@@ -173,11 +212,14 @@ Text-Mining---NewsQA-RAG/
 |   |-- config.yaml          # Main configuration (embedding, chunking, DB, LLM)
 |   |__ setting.py            # Python-level settings, path constants
 |
-|-- data/                     # (gitignored) Raw data and test sets
-|   |-- articles/             # Raw article files for ingestion
+|-- data/                     # (gitignored) Raw data, processed articles, and test sets
+|   |-- raw/                  # Raw HTML articles for ingestion (scripts/ingest.py input)
+|   |-- processed/            # Cleaned text + metadata JSON (scripts/ingest.py intermediate output)
+|   |-- chroma_db/            # ChromaDB persistent storage (scripts/ingest.py output) - "newsqa_cnn" collection
 |   |__ test_qa.json          # Ground-truth QA pairs for evaluation
 |
-|-- database/                 # (gitignored) ChromaDB persistent storage
+|-- database/                 # (gitignored) Alternate ChromaDB storage path used by
+|                              #   scripts/build_chroma_collection.py once implemented
 |
 |-- docs/
 |   |-- database.md           # Database contract: metadata schema, HNSW config, ID format
@@ -185,9 +227,10 @@ Text-Mining---NewsQA-RAG/
 |   |__ indexing_guide.md     # Implementation guide for src/indexing/
 |
 |-- scripts/
-|   |-- build_chroma_collection.py  # End-to-end pipeline: load -> clean -> chunk -> embed -> index
-|   |-- run_benchmark.py            # Evaluate RAG with Ragas metrics
-|   |-- query.py                    # CLI for ad-hoc RAG queries
+|   |-- ingest.py                   # Working ingestion pipeline (clean -> chunk -> embed -> index) - USE THIS
+|   |-- build_chroma_collection.py  # Intended config-driven version of the above - TODO (docstring only)
+|   |-- run_benchmark.py            # Evaluate RAG with Ragas metrics - TODO (docstring only)
+|   |-- query.py                    # CLI for ad-hoc RAG queries - TODO (docstring only)
 |   |__ inspect_collection.py       # Utility: inspect/debug ChromaDB collections
 |
 |-- src/
@@ -201,10 +244,11 @@ Text-Mining---NewsQA-RAG/
 |   |   |-- chroma_store.py   # ChromaDB collection CRUD operations - implemented
 |   |   |__ bm25_index.py     # BM25 sparse index for hybrid retrieval - TODO
 |   |
-|   |-- retrieval/            # Retrieval strategies - all TODO
-|   |   |-- dense.py          # Dense vector retrieval (ChromaDB cosine search)
-|   |   |-- hybrid.py         # Hybrid retrieval (dense + BM25 fusion)
-|   |   |__ reranker.py       # Cohere/cross-encoder reranking
+|   |-- retrieval/            # Retrieval strategies
+|   |   |-- dense.py          # Dense vector retrieval - implemented (embeds query,
+|   |   |                     #   then queries ChromaDB separately so callers can time each phase)
+|   |   |-- hybrid.py         # Hybrid retrieval (dense + BM25 fusion) - TODO
+|   |   |__ reranker.py       # Cohere/cross-encoder reranking - TODO
 |   |
 |   |-- agents/               # LangGraph agentic orchestration - TODO
 |   |   |-- rag_agent.py      # RAG agent with tool-calling capabilities
@@ -217,12 +261,15 @@ Text-Mining---NewsQA-RAG/
 |   |   |-- retrieval_tools.py  # Search/retrieve tool wrappers
 |   |   |__ ingestion_tools.py  # On-the-fly ingestion tool (for live crawl)
 |   |
-|   |-- services/             # Business logic behind the API (mock data for now)
-|   |   |-- types.py          # Shared dataclasses (AgentEvent, Citation, ChatMessage, User)
-|   |   |-- session_store.py  # In-memory chat history + trace log
-|   |   |-- auth_service.py   # Hardcoded mock login
-|   |   |-- chat_service.py   # Mock ReAct-style agent event generator
-|   |   |__ eval_service.py   # Mock dashboard metrics/comparison/failure cases
+|   |-- services/             # Business logic behind the API
+|   |   |-- types.py             # Shared dataclasses (AgentEvent, Citation, ChatMessage, User)
+|   |   |-- session_store.py     # In-memory chat history + trace log
+|   |   |-- auth_service.py      # Hardcoded mock login
+|   |   |-- chat_service.py      # Mock ReAct-style agent event generator
+|   |   |-- eval_service.py      # Mock dashboard metrics/comparison/failure cases
+|   |   |__ retrieval_service.py # REAL - dense search against the ChromaDB collection
+|   |                            #   scripts/ingest.py produces; hybrid/reranked raise
+|   |                            #   NotImplementedError until Milestone 2
 |   |
 |   |__ llm.py                # LLM client initialization (OpenAI) - TODO
 |
@@ -232,14 +279,15 @@ Text-Mining---NewsQA-RAG/
 |   |__ routers/
 |       |-- auth.py            # POST /auth/login
 |       |-- chat.py            # POST /chat/ask (SSE stream), GET/POST history & clear
-|       |__ admin.py           # GET /admin/metrics|search-comparison|failure-cases|pipeline-logs, POST /admin/trigger-crawler
+|       |-- admin.py           # GET /admin/metrics|search-comparison|failure-cases|pipeline-logs, POST /admin/trigger-crawler
+|       |__ retrieval.py       # GET /retrieval/algorithms|stats, POST /retrieval/search (REAL)
 |
-|-- ui/                       # React + Vite + TypeScript frontend
+|-- ui/                       # React + Vite + TypeScript frontend (retro/newspaper theme)
 |   |-- src/
 |   |   |-- api/               # fetch-based client mirroring api/schemas.py
 |   |   |-- context/           # AuthContext (session persisted to localStorage)
-|   |   |-- pages/             # LoginPage, ChatPage, DashboardPage
-|   |   |__ components/        # Sidebar, ChatBubble, CitationList, MetricCard
+|   |   |-- pages/             # LoginPage, ChatPage, DashboardPage, RetrievalPage
+|   |   |__ components/        # Sidebar, ChatBubble, CitationList, MetricCard, RetrievalResultCard
 |   |__ package.json
 |
 |-- .env.example              # Environment variable template
@@ -264,18 +312,26 @@ Text-Mining---NewsQA-RAG/
 
 ## Roadmap / Remaining Work
 
-The API (`api/`) and UI (`ui/`) are wired end-to-end today, but every endpoint
-in `src/services/` returns **mock data**. Nothing yet touches ChromaDB, an
-LLM, or Ragas. Below is what's left, grouped by milestone — each milestone
-should leave the app fully runnable end-to-end, just with more of it real.
+Ingestion is real (`scripts/ingest.py` → ChromaDB, 413 chunks from the sample
+CNN/NewsQA data as of this writing) and dense retrieval is real (Retrieval
+Playground). Chat and the Evaluation Desk still return **mock data** from
+`src/services/chat_service.py` / `eval_service.py`. Below is what's left,
+grouped by milestone — each milestone should leave the app fully runnable
+end-to-end, just with more of it real.
 
 ### Milestone 1 — Single-source RAG (replaces the chat mock with a real answer)
+- [x] `src/retrieval/dense.py` — dense-only retrieval against `ChromaStore`,
+      embeds the query and queries ChromaDB as two separate timed steps.
+- [x] `src/services/retrieval_service.py` + `api/routers/retrieval.py` +
+      the `/retrieval` Retrieval Playground page — lets you test retrieval
+      quality/latency directly against real ingested data, independent of
+      any LLM. **Not yet wired into chat** — this is a standalone debugging
+      surface, not (yet) something `chat_service.ask` calls into.
 - [ ] `src/llm.py` — OpenAI client init, mirroring the `get_embedding_function(config)`
       factory pattern already used in `src/indexing/embeddings.py`.
-- [ ] `src/retrieval/dense.py` — dense-only retrieval against `ChromaStore`
-      (`src/indexing/chroma_store.py`, already implemented).
-- [ ] `src/tools/retrieval_tools.py` — LangChain tool wrapper around dense
-      retrieval.
+- [ ] `src/tools/retrieval_tools.py` — LangChain tool wrapper around
+      `retrieval_service`/`dense_search`, for agent tool-calling (distinct
+      from the direct service-call path the Retrieval Playground uses).
 - [ ] `src/agents/rag_agent.py` — single-tool-call agent (no multi-step loop
       yet): question → retrieve → generate answer + citations.
 - [ ] Wire `scripts/query.py` (currently docstring-only) against this.
@@ -291,6 +347,12 @@ should leave the app fully runnable end-to-end, just with more of it real.
       in `configs/config.yaml` under `retrieval.hybrid`).
 - [ ] `src/retrieval/reranker.py` — Cohere or cross-encoder reranking
       (`retrieval.reranker` config already defined).
+- [ ] `src/services/retrieval_service.py`'s `search()` already dispatches on
+      an `algorithm` string (`"dense"` implemented, `"hybrid"`/`"reranked"`
+      raise `NotImplementedError`) and `list_algorithms()` marks them
+      `available: false` — implement the two branches there and flip
+      `available` to `true`; the Retrieval Playground UI already renders
+      whatever `list_algorithms()` returns, no frontend change needed.
 - [ ] Swap `retrieval_tools.py` to use hybrid+rerank behind the same tool
       interface.
 
@@ -321,7 +383,14 @@ should leave the app fully runnable end-to-end, just with more of it real.
 
 ### Milestone 5 — Productionization / polish (do only once 1–4 are solid)
 - [ ] `configs/setting.py` — settings loader unifying `config.yaml` + `.env`
-      (currently empty; nothing parses `config.yaml` into Python yet).
+      (currently empty; nothing parses `config.yaml` into Python yet). Once
+      this exists, remove the duplicated embedding/path config hardcoded in
+      both `scripts/ingest.py`'s `PIPELINE_CONFIG` and
+      `src/services/retrieval_service.py` — they must currently be kept in
+      sync by hand.
+- [ ] Consolidate `scripts/ingest.py` (works, hardcoded config) and
+      `scripts/build_chroma_collection.py` (intended config-driven CLI,
+      docstring-only) into one script.
 - [ ] Real user store + token-based auth (JWT or session cookie) instead of
       the hardcoded dict in `auth_service.py` — only worth it if this goes
       beyond local/demo use.

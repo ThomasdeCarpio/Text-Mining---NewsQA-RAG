@@ -40,3 +40,36 @@ export interface SearchComparisonRow {
   vector_search: number;
   hybrid_search: number;
 }
+
+export interface AlgorithmOption {
+  id: string;
+  label: string;
+  available: boolean;
+}
+
+export interface CollectionStats {
+  exists: boolean;
+  name: string;
+  count: number;
+  metadata: Record<string, unknown>;
+  embedding_info: Record<string, unknown>;
+}
+
+export interface RetrievalResult {
+  id: string;
+  text: string;
+  distance: number;
+  metadata: Record<string, string>;
+}
+
+export interface RetrievalTiming {
+  model_cold_start: boolean;
+  embed_ms: number;
+  db_query_ms: number;
+  total_ms: number;
+}
+
+export interface RetrievalSearchResponse {
+  results: RetrievalResult[];
+  timing: RetrievalTiming;
+}
