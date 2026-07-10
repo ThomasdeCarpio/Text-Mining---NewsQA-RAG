@@ -63,19 +63,18 @@ class SentenceTransformerEmbeddingFunction(EmbeddingFunction):
     def __call__(self, input: Documents) -> Embeddings: ...
 ```
 
-### ChromaDB Registration
+### `get_info()` Method
 
-Both implementations must be registered with ChromaDB's `@register_embedding_function` decorator so they can be serialized with the collection config. Each must implement:
+Both implementations expose a `get_info()` method returning model metadata:
 
 ```python
-@staticmethod
-def name() -> str: ...
-
-def get_config(self) -> Dict[str, Any]: ...
-
-@staticmethod
-def build_from_config(config: Dict[str, Any]) -> "EmbeddingFunction": ...
+def get_info(self) -> Dict[str, Any]:
+    # Returns: {provider, model_name, output_dimensions, max_input_tokens, use_cases}
 ```
+
+Used by `ChromaStore.get_collection_stats()` to report embedding details alongside collection statistics.
+
+> **Note:** The `@register_embedding_function` decorator is intentionally **not** used. It imports `chromadb.utils.embedding_functions` which eagerly loads ChromaDB's built-in ONNX module, causing a native DLL conflict with PyTorch on Windows (exit 0xC0000005). Since we always pass `ef` manually to `ChromaStore`, the ChromaDB serialization registry is not needed.
 
 ### Contract
 
@@ -292,15 +291,15 @@ The indexing module reads from `configs/config.yaml`:
 
 ```yaml
 embedding:
-  provider: "openai"
-  model_name: "text-embedding-3-small"
-  dimensions: 1536
+  provider: "sentence-transformers"   # "openai" | "sentence-transformers"
+  model_name: "all-MiniLM-L6-v2"
+  dimensions: 384
 
 database:
   hnsw:
     space: "cosine"
     ef_construction: 200
-    M: 16
+    max_neighbors: 16    # ChromaDB API key (not "M")
     ef_search: 50
 ```
 
@@ -311,7 +310,8 @@ database:
 - [ ] `embeddings.py` factory returns correct provider based on config
 - [ ] OpenAI embedding function produces vectors of correct dimension
 - [ ] Sentence-Transformers embedding function works without API key
-- [ ] Both embedding functions implement ChromaDB's registration interface
+- [ ] Both embedding functions expose `get_info()` returning provider/dimensions/use_cases
+- [ ] Importing `embeddings.py` does NOT trigger `onnxruntime` or `torch` loading
 - [ ] `chroma_store.py` creates collection with correct HNSW config
 - [ ] `chroma_store.py` upsert is idempotent (re-running doesn't duplicate)
 - [ ] `chroma_store.py` batches large upserts correctly

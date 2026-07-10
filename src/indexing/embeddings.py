@@ -1,6 +1,5 @@
 from typing import Dict, Any, List
 from chromadb import Documents, EmbeddingFunction, Embeddings
-from chromadb.utils.embedding_functions import register_embedding_function
 
 
 OPENAI_MODEL_INFO = {
@@ -22,7 +21,6 @@ OPENAI_MODEL_INFO = {
 }
 
 
-@register_embedding_function
 class OpenAIEmbeddingFunction(EmbeddingFunction):
 
     def __init__(self, model_name: str = "text-embedding-3-small", dimensions: int = 1536):
@@ -102,7 +100,6 @@ SENTENCE_TRANSFORMER_MODEL_INFO = {
 }
 
 
-@register_embedding_function
 class SentenceTransformerEmbeddingFunction(EmbeddingFunction):
 
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):

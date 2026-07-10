@@ -100,3 +100,50 @@ class TextChunker:
         print(f"\n🎯 Total chunks generated across all files: {len(all_chunks)}")
 
         return all_chunks
+
+
+# ---------------------------------------------------------------------------
+# Factory
+# ---------------------------------------------------------------------------
+
+def get_chunker(config: dict) -> "TextChunker":
+    """
+    Factory. Reads config["chunking"].
+    Currently supports strategy "recursive" only.
+    """
+    chunking_cfg = config.get("chunking", {})
+    strategy = chunking_cfg.get("strategy", "recursive")
+
+    if strategy == "recursive":
+        return TextChunker(
+            chunk_size=chunking_cfg.get("chunk_size", 500),
+            chunk_overlap=chunking_cfg.get("chunk_overlap", 50),
+        )
+
+    raise ValueError(
+        f"Unknown chunking strategy: '{strategy}'. Supported: 'recursive'."
+    )
+
+
+# ---------------------------------------------------------------------------
+# JSONL persistence helpers
+# ---------------------------------------------------------------------------
+
+def save_chunks(chunks: list[dict], path: str) -> None:
+    """Write chunks to a JSONL file (one JSON object per line)."""
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        for chunk in chunks:
+            f.write(json.dumps(chunk, ensure_ascii=False) + "\n")
+    print(f"Saved {len(chunks)} chunks to {path}")
+
+
+def load_chunks(path: str) -> list[dict]:
+    """Load chunks from a JSONL file."""
+    chunks = []
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                chunks.append(json.loads(line))
+    return chunks

@@ -6,10 +6,10 @@
 
 # --- Embedding Model ---
 embedding:
-  provider: "openai"                    # "openai" | "sentence-transformers"
-  model_name: "text-embedding-3-small"  # OpenAI: "text-embedding-3-small", "text-embedding-3-large"
+  provider: "sentence-transformers"     # "openai" | "sentence-transformers"
+  model_name: "all-MiniLM-L6-v2"       # OpenAI: "text-embedding-3-small", "text-embedding-3-large"
                                         # ST: "all-MiniLM-L6-v2", "all-mpnet-base-v2"
-  dimensions: 1536                      # Must match model output dim
+  dimensions: 384                       # Must match model output dim
 
 # --- Chunking ---
 chunking:
@@ -25,7 +25,7 @@ database:
   hnsw:
     space: "cosine"
     ef_construction: 200
-    M: 16
+    max_neighbors: 16
     ef_search: 50
 
 # --- LLM ---
