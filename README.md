@@ -301,6 +301,13 @@ Text-Mining---NewsQA-RAG/
 
 ## Development Docs
 
+**New to this project? Start with [docs/explainer/](docs/explainer/README.md)**
+— a plain-language (Vietnamese) walkthrough of what the system does, how the
+pieces connect, a file-by-file map, and what's missing and why. No code-level
+detail — for that, see the guides below. Prefer reading it as a styled page?
+Open `docs/explainer/index.html` in a browser (works offline, fonts/styles
+are embedded) instead of the raw `.md` files.
+
 | Document | Description |
 |---|---|
 | [docs/database.md](docs/database.md) | Database contract: metadata schema, ID format, HNSW config, embedding model spec |
