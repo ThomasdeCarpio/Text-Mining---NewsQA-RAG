@@ -1,0 +1,8 @@
+playwright
+feedparser
+newspaper3k
+beautifulsoup4
+lxml_html_clean
+python-dateutil
+huggingface_hub>=1.8.0
+python-dotenv
