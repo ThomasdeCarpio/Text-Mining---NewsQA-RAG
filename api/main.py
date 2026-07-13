@@ -1,7 +1,10 @@
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routers import admin, auth, chat, retrieval
+
+load_dotenv()  # picks up DEEPSEEK_API_KEY / OPENAI_API_KEY for generation
 
 app = FastAPI(title="NewsQA-RAG API")
 

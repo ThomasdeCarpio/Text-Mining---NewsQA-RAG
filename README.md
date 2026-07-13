@@ -102,24 +102,30 @@ python scripts/build_chroma_collection.py \
 
 ### Run Evaluation Benchmark
 
-Evaluate the RAG pipeline against ground-truth QA pairs using Ragas metrics.
+Score the RAG pipeline (retrieval metrics; add generation + Ragas for the full
+picture). The test set and the collection **must be built from the same
+articles** — `build_mini_testset.py` does both in one command:
 
 ```bash
-python scripts/run_benchmark.py \
-    --db-path database/ \
-    --collection basic_collection \
-    --test-set data/test_qa.json \
-    --output results/benchmark_results.json \
-    --config configs/config.yaml
+# 1) Build a matched test set + eval collection
+python scripts/build_mini_testset.py --n-articles 40 \
+    --output data/testset_eval.jsonl --build-collection --collection newsqa_eval
+
+# 2) Retrieval-only (fast, no API key)
+python scripts/run_benchmark.py --retriever dense \
+    --testset data/testset_eval.jsonl --collection newsqa_eval \
+    --report-dir reports/dense
+
+# 3) Full: generation (EM/F1) + Ragas judge (Faithfulness, ...) — needs a key in .env
+python scripts/run_benchmark.py --retriever hybrid \
+    --testset data/testset_eval.jsonl --collection newsqa_eval \
+    --chunks-path data/chroma_db/chunks/newsqa_eval.jsonl \
+    --run-generator --run-ragas --report-dir reports/hybrid
 ```
 
-| Argument | Required | Description |
-|---|---|---|
-| `--db-path` | Yes | Path to ChromaDB storage |
-| `--collection` | Yes | Collection name to query |
-| `--test-set` | Yes | Path to test QA pairs (JSON) |
-| `--output` | No | Path to save results (default: stdout) |
-| `--config` | No | Config file path |
+Reports land in `reports/<name>/report.json` and feed the Evaluation Desk. See
+`notebooks/02_evaluation.ipynb` for the guided version, and
+`docs/evaluation.md` §7 for the full flow. Run `run_benchmark.py --help` for all flags.
 
 
 ### Query CLI (Quick Test)
@@ -162,13 +168,19 @@ python scripts/inspect_collection.py \
 
 The app is split into a FastAPI backend (`api/`) and a React frontend (`ui/`).
 
+**Prerequisites:**
+1. `pip install -r requirements.txt` and `cd ui && npm install`.
+2. Build the corpus once: `python scripts/ingest.py` (creates the `newsqa_cnn`
+   collection at `data/chroma_db/`). Chat + Retrieval Playground read from it.
+3. `cp .env.example .env` and set **`DEEPSEEK_API_KEY`** (cheap, recommended) or
+   `OPENAI_API_KEY`. Needed for chat answer generation; retrieval works without it.
+
 ```bash
 # Terminal 1 — backend (http://localhost:8000)
 uvicorn api.main:app --reload --port 8000
 
 # Terminal 2 — frontend (http://localhost:5173)
 cd ui
-npm install
 npm run dev
 ```
 
@@ -180,14 +192,15 @@ for the hardcoded credentials):
 | `analyst` | `pass123` | user — News Chat only |
 
 **What's real vs mock right now:**
-- **Retrieval Playground** (admin, `/retrieval`) is real — it runs dense
-  vector search against whatever collection `scripts/ingest.py` produced
-  (`data/chroma_db`, collection `newsqa_cnn`). Run ingestion first or this
-  page will report the collection as not found. It also reports a
-  per-request latency breakdown (embed time vs ChromaDB query time) so you
-  can see where time actually goes.
-- **News Chat** and **Evaluation Desk** still return mock data — see
-  [Roadmap](#roadmap--remaining-work).
+- **News Chat** is real — `chat_service.ask` runs dense retrieval on
+  `newsqa_cnn` + generation (DeepSeek/OpenAI), streaming real answers with
+  citations. Single-shot (no multi-step agent loop yet). First message is
+  slower (embedding model cold-start).
+- **Retrieval Playground** (admin, `/retrieval`) is real — dense vector search
+  with a per-request latency breakdown (embed vs ChromaDB query time).
+- **Evaluation Desk** (admin) reads real reports from `reports/` once you run a
+  benchmark — see [Run Evaluation Benchmark](#run-evaluation-benchmark) and
+  `notebooks/02_evaluation.ipynb`. Empty until the first report exists.
 
 ---
 
