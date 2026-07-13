@@ -36,3 +36,5 @@ Thumbs.db
 
 # database
 database/*
+# Generated evaluation reports
+reports/

@@ -1,3 +1,4 @@
+import hashlib
 import math
 import re
 from collections import Counter
@@ -157,28 +158,108 @@ def evaluate_chunking(chunks: list[dict]) -> dict:
     }
 
 
+_SENTENCE_END = re.compile(r'[.!?]["\')\]]?$')
+
+
+def deduplication_rate(texts: list[str]) -> float:
+    """Fraction of chunks that are exact duplicates (by MD5). 0.0 = all unique. (spec 3.2)"""
+    if not texts:
+        return 0.0
+    hashes = [hashlib.md5(t.encode("utf-8")).hexdigest() for t in texts]
+    return round(1 - len(set(hashes)) / len(hashes), 4)
+
+
+def semantic_integrity(texts: list[str]) -> float:
+    """
+    Fraction of chunks that end at a sentence boundary (spec 3.1).
+    Proxy for "chunk not cut mid-sentence"; higher is better.
+    ponytail: regex heuristic, swap for spaCy sentence segmentation if it misjudges.
+    """
+    if not texts:
+        return 0.0
+    ok = sum(1 for t in texts if _SENTENCE_END.search(t.strip()))
+    return round(ok / len(texts), 4)
+
+
+def delta_mrr(samples_initial: list[dict], samples_reranked: list[dict], k: int = 5) -> float:
+    """MRR(reranked) - MRR(initial): did the reranker improve ordering? (spec 3.4)"""
+    mi = np.mean([mrr_at_k(s["relevant_chunk_ids"], s["retrieved_ids"], k) for s in samples_initial])
+    mr = np.mean([mrr_at_k(s["relevant_chunk_ids"], s["retrieved_ids"], k) for s in samples_reranked])
+    return round(float(mr - mi), 4)
+
+
 # ---------------------------------------------------------------------------
 # RAGAS wrapper
 # ---------------------------------------------------------------------------
 
+def _ragas_shim() -> None:
+    """Let ragas 0.4.x import under langchain 1.x (Vertex AI symbols were removed)."""
+    import sys
+    import types
+
+    if "langchain_community.chat_models.vertexai" not in sys.modules:
+        m = types.ModuleType("langchain_community.chat_models.vertexai")
+        m.ChatVertexAI = type("ChatVertexAI", (), {})
+        sys.modules["langchain_community.chat_models.vertexai"] = m
+    import langchain_community.llms as _llms
+    if not hasattr(_llms, "VertexAI"):
+        _llms.VertexAI = type("VertexAI", (), {})
+
+
+def _ragas_judge(llm_model: str):
+    """
+    Build the RAGAS judge LLM from env, cheapest option first.
+
+    DEEPSEEK_API_KEY set → DeepSeek (OpenAI-compatible, ~10x cheaper than GPT-4o).
+    Else → OpenAI with OPENAI_API_KEY. Embeddings are always local (free): DeepSeek
+    has no embeddings endpoint and answer_relevancy needs one.
+    """
+    import os
+
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except Exception:
+        pass
+
+    from langchain_openai import ChatOpenAI
+    from langchain_community.embeddings import HuggingFaceEmbeddings
+    from ragas.llms import LangchainLLMWrapper
+    from ragas.embeddings import LangchainEmbeddingsWrapper
+
+    if os.getenv("DEEPSEEK_API_KEY"):
+        model = llm_model if llm_model.startswith("deepseek") else "deepseek-chat"
+        chat = ChatOpenAI(model=model, api_key=os.environ["DEEPSEEK_API_KEY"],
+                          base_url="https://api.deepseek.com", temperature=0, max_retries=2)
+    else:
+        chat = ChatOpenAI(model=llm_model, temperature=0)
+
+    emb = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    return LangchainLLMWrapper(chat), LangchainEmbeddingsWrapper(emb)
+
+
 def evaluate_ragas(
     samples: list[dict],
     metrics: Optional[list[str]] = None,
-    llm_model: str = "gpt-4o-mini",
+    llm_model: str = "deepseek-chat",
 ) -> dict:
     """
-    Run RAGAS evaluation.
+    Run RAGAS evaluation with a configurable judge LLM.
 
     Args:
         samples: list of {question, answer, contexts (list[str]), ground_truth}
         metrics: subset of ["faithfulness", "answer_relevancy", "context_precision",
-                            "context_recall", "answer_correctness"].
-                 Defaults to all five.
-        llm_model: OpenAI model used by RAGAS as judge LLM.
+                            "context_recall", "answer_correctness"]. Defaults to all five.
+        llm_model: judge model name. DeepSeek is used automatically when DEEPSEEK_API_KEY
+                   is set (see _ragas_judge); otherwise this is the OpenAI model.
 
     Returns:
         Dict of metric_name → mean score.
     """
+    import os
+
+    _ragas_shim()
+
     from ragas import evaluate
     from ragas.metrics import (
         faithfulness,
@@ -201,6 +282,11 @@ def evaluate_ragas(
         metrics = list(metric_map.keys())
 
     selected = [metric_map[m] for m in metrics if m in metric_map]
+    judge, embeddings = _ragas_judge(llm_model)
+
+    # DeepSeek only supports n=1; answer_relevancy defaults to 3 generations -> 400 error.
+    if os.getenv("DEEPSEEK_API_KEY"):
+        answer_relevancy.strictness = 1
 
     dataset = Dataset.from_list([
         {
@@ -212,8 +298,10 @@ def evaluate_ragas(
         for s in samples
     ])
 
-    result = evaluate(dataset=dataset, metrics=selected)
-    return {k: round(float(v), 4) for k, v in dict(result).items()}
+    result = evaluate(dataset=dataset, metrics=selected, llm=judge, embeddings=embeddings)
+
+    df = result.to_pandas()
+    return {m: round(float(df[m].mean()), 4) for m in metrics if m in df.columns}
 
 
 # ---------------------------------------------------------------------------
@@ -238,3 +326,21 @@ def build_report(
     if ragas_metrics:
         report["ragas"] = ragas_metrics
     return report
+
+
+if __name__ == "__main__":
+    # ponytail self-check: metrics that break silently would ruin a whole report
+    assert hit_rate_at_k(["a"], ["b", "a"], 2) == 1.0
+    assert hit_rate_at_k(["a"], ["b", "c"], 2) == 0.0
+    assert mrr_at_k(["a"], ["b", "a"], 5) == 0.5
+    assert recall_at_k(["a", "b"], ["a", "x"], 5) == 0.5
+    assert round(ndcg_at_k(["a"], ["a"], 5), 4) == 1.0
+    assert exact_match("The Cat.", "the cat") == 1.0
+    assert 0.66 < f1_score_qa("a b c", "a b d") < 0.67
+    assert deduplication_rate(["x", "x", "y"]) == round(1 / 3, 4)
+    assert semantic_integrity(["Ends here.", "cut mid"]) == 0.5
+    assert delta_mrr(
+        [{"relevant_chunk_ids": ["a"], "retrieved_ids": ["b", "a"]}],
+        [{"relevant_chunk_ids": ["a"], "retrieved_ids": ["a", "b"]}],
+    ) == 0.5
+    print("metrics self-check OK")

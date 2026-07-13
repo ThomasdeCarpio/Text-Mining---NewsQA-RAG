@@ -33,16 +33,29 @@ class OpenAILLM:
         if self._client is None:
             import openai
 
-            self._client = openai.OpenAI(
-                api_key=os.environ.get("OPENAI_API_KEY"),
-                base_url=os.environ.get("OPENAI_BASE_URL") or None,
-            )
+            if os.environ.get("DEEPSEEK_API_KEY"):
+                # DeepSeek is OpenAI-compatible and cheap; use it for generation too.
+                self._client = openai.OpenAI(
+                    api_key=os.environ["DEEPSEEK_API_KEY"],
+                    base_url="https://api.deepseek.com",
+                )
+            else:
+                self._client = openai.OpenAI(
+                    api_key=os.environ.get("OPENAI_API_KEY"),
+                    base_url=os.environ.get("OPENAI_BASE_URL") or None,
+                )
         return self._client
+
+    def _model(self) -> str:
+        """Force a DeepSeek model name when the DeepSeek client is in use."""
+        if os.environ.get("DEEPSEEK_API_KEY") and not self.model.startswith("deepseek"):
+            return "deepseek-chat"
+        return self.model
 
     def generate(self, system_prompt: str, user_prompt: str) -> str:
         client = self._get_client()
         response = client.chat.completions.create(
-            model=self.model,
+            model=self._model(),
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
