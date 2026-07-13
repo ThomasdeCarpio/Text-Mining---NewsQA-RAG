@@ -180,13 +180,16 @@ for the hardcoded credentials):
 | `analyst` | `pass123` | user — News Chat only |
 
 **What's real vs mock right now:**
+- **News Chat** is real and calls the OpenAI-compatible gateway configured by
+  `OPENAI_BASE_URL` and `CHAT_MODEL`. RAG is optional: `CHAT_MODE=auto` falls
+  back to direct model chat when ChromaDB or the local collection is absent.
 - **Retrieval Playground** (admin, `/retrieval`) is real — it runs dense
   vector search against whatever collection `scripts/ingest.py` produced
   (`data/chroma_db`, collection `newsqa_cnn`). Run ingestion first or this
   page will report the collection as not found. It also reports a
   per-request latency breakdown (embed time vs ChromaDB query time) so you
   can see where time actually goes.
-- **News Chat** and **Evaluation Desk** still return mock data — see
+- **Evaluation Desk** still returns mock data — see
   [Roadmap](#roadmap--remaining-work).
 
 ---
@@ -313,6 +316,7 @@ are embedded) instead of the raw `.md` files.
 | [docs/database.md](docs/database.md) | Database contract: metadata schema, ID format, HNSW config, embedding model spec |
 | [docs/ingestion_guide.md](docs/ingestion_guide.md) | Implementation guide for `src/ingestion/` (loader, cleaner, chunker) |
 | [docs/indexing_guide.md](docs/indexing_guide.md) | Implementation guide for `src/indexing/` (embeddings, chroma_store, bm25) |
+| [docs/model_gateway.md](docs/model_gateway.md) | XAH gateway setup for NewsQA, Codex, Claude Code, OpenCode, and embeddings |
 | [docs/ui.md](docs/ui.md) | UI/UX spec: user roles, required screens, evaluation dashboard |
 
 ---

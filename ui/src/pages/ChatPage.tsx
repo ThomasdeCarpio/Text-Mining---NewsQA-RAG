@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { askStream, clearChat, getHistory } from "../api/client";
 import type { AgentEvent, ChatMessage, Citation } from "../api/types";
 import { useAuth } from "../context/AuthContext";
@@ -14,13 +14,20 @@ export function ChatPage() {
   const [isThinking, setIsThinking] = useState(false);
   const [steps, setSteps] = useState<AgentEvent[]>([]);
   const [pendingAnswer, setPendingAnswer] = useState<{ content: string; citations: Citation[] } | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  function refreshHistory() {
-    getHistory(sessionId).then(setHistory);
-  }
+  const refreshHistory = useCallback(async () => {
+    try {
+      setHistory(await getHistory(sessionId));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to load chat history.");
+    }
+  }, [sessionId]);
 
-  useEffect(refreshHistory, [sessionId]);
+  useEffect(() => {
+    void refreshHistory();
+  }, [refreshHistory]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -35,24 +42,34 @@ export function ChatPage() {
     setIsThinking(true);
     setSteps([]);
     setPendingAnswer(null);
+    setError(null);
 
-    await askStream(sessionId, q, (event) => {
-      if (event.type === "final_answer") {
-        setPendingAnswer({ content: event.content, citations: event.citations ?? [] });
-      } else {
-        setSteps((s) => [...s, event]);
-      }
-    });
-
-    setIsThinking(false);
-    refreshHistory();
-    setSteps([]);
-    setPendingAnswer(null);
+    try {
+      await askStream(sessionId, q, (event) => {
+        if (event.type === "final_answer") {
+          setPendingAnswer({ content: event.content, citations: event.citations ?? [] });
+        } else {
+          setSteps((s) => [...s, event]);
+        }
+      });
+      await refreshHistory();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to send the message.");
+    } finally {
+      setIsThinking(false);
+      setSteps([]);
+      setPendingAnswer(null);
+    }
   }
 
   async function handleClear() {
-    await clearChat(sessionId);
-    setHistory([]);
+    setError(null);
+    try {
+      await clearChat(sessionId);
+      setHistory([]);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to clear the chat.");
+    }
   }
 
   return (
@@ -75,7 +92,7 @@ export function ChatPage() {
         {isThinking && (
           <div className="stamp-shadow rounded border-2 border-dashed border-rule bg-surface p-3 text-left text-sm text-ink-muted">
             <p className="mb-1 font-wire text-[10px] uppercase tracking-wide text-moss">
-              Agent is thinking... Searching database...
+              Model is responding through the configured gateway...
             </p>
             {steps.map((s, i) => (
               <p key={i} className="font-wire text-xs text-ink-muted">
@@ -90,19 +107,29 @@ export function ChatPage() {
             )}
           </div>
         )}
+        {error && (
+          <div
+            role="alert"
+            className="rounded border-2 border-accent bg-surface p-3 text-sm text-accent"
+          >
+            {error}
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
 
       <form onSubmit={handleSubmit} className="flex gap-2 border-t-2 border-rule bg-surface p-4">
         <input
           className="flex-1 rounded border-2 border-rule bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-          placeholder="Ask a question about the news..."
+          placeholder="Ask anything..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
+          disabled={isThinking}
         />
         <button
           type="submit"
-          className="rounded bg-accent px-4 py-2 font-wire text-xs uppercase tracking-wide text-surface hover:bg-accent-hover"
+          disabled={isThinking}
+          className="rounded bg-accent px-4 py-2 font-wire text-xs uppercase tracking-wide text-surface hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           Send
         </button>

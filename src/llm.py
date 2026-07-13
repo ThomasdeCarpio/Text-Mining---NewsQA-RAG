@@ -1,4 +1,14 @@
-import os
+from collections.abc import Sequence
+from typing import Any, TypedDict
+
+from src.model_gateway import create_openai_client
+
+
+class ChatMessageInput(TypedDict):
+    """Message accepted by the OpenAI-compatible chat completions endpoint."""
+
+    role: str
+    content: str
 
 
 class OpenAILLM:
@@ -22,7 +32,7 @@ class OpenAILLM:
         self,
         model: str = "gpt-4o-mini",
         temperature: float = 0.0,
-        max_tokens: int = 1024,
+        max_tokens: int | None = 1024,
     ):
         self.model = model
         self.temperature = temperature
@@ -31,25 +41,47 @@ class OpenAILLM:
 
     def _get_client(self):
         if self._client is None:
-            import openai
-
-            self._client = openai.OpenAI(
-                api_key=os.environ.get("OPENAI_API_KEY"),
-                base_url=os.environ.get("OPENAI_BASE_URL") or None,
-            )
+            self._client = create_openai_client()
         return self._client
 
     def generate(self, system_prompt: str, user_prompt: str) -> str:
-        client = self._get_client()
-        response = client.chat.completions.create(
-            model=self.model,
-            messages=[
+        """Generate one response from a system prompt and a user prompt.
+
+        Args:
+            system_prompt: Instructions that define the assistant's behavior.
+            user_prompt: Current user request or a formatted RAG prompt.
+
+        Returns:
+            Text returned by the configured chat model.
+        """
+
+        return self.generate_messages(
+            [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
-            ],
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
+            ]
         )
+
+    def generate_messages(self, messages: Sequence[ChatMessageInput]) -> str:
+        """Generate one response from an ordered multi-turn conversation.
+
+        Args:
+            messages: Ordered chat messages containing ``role`` and ``content``.
+
+        Returns:
+            Text returned by the configured chat model.
+        """
+
+        client = self._get_client()
+        request: dict[str, Any] = {
+            "model": self.model,
+            "messages": list(messages),
+            "temperature": self.temperature,
+        }
+        if self.max_tokens is not None:
+            request["max_tokens"] = self.max_tokens
+
+        response = client.chat.completions.create(**request)
         return response.choices[0].message.content or ""
 
     def generate_rag_answer(self, question: str, contexts: list[str]) -> str:

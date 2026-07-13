@@ -26,7 +26,9 @@ def search(payload: RetrievalSearchRequest):
     try:
         results, timing = retrieval_service.search(payload.query, payload.algorithm, payload.top_k)
         return {"results": results, "timing": timing}
+    except retrieval_service.RetrievalUnavailableError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
     except NotImplementedError as e:
-        raise HTTPException(status_code=501, detail=str(e))
+        raise HTTPException(status_code=501, detail=str(e)) from e
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e

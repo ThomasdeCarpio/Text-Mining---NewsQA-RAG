@@ -4,6 +4,7 @@ langchain-openai
 langchain-community
 langgraph
 langchain-text-splitters
+openai
 tiktoken    
 
 # Vector Database & Retrieval

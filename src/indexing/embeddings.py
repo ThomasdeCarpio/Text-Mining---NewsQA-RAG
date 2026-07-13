@@ -1,6 +1,8 @@
 from typing import Dict, Any, List
 from chromadb import Documents, EmbeddingFunction, Embeddings
 
+from src.model_gateway import create_openai_client
+
 
 OPENAI_MODEL_INFO = {
     "text-embedding-3-small": {
@@ -30,8 +32,7 @@ class OpenAIEmbeddingFunction(EmbeddingFunction):
 
     def _get_client(self):
         if self._client is None:
-            import openai
-            self._client = openai.OpenAI()
+            self._client = create_openai_client()
         return self._client
 
     def __call__(self, input: Documents) -> Embeddings:
