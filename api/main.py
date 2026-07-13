@@ -1,7 +1,11 @@
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routers import admin, auth, chat, retrieval
+from src.model_gateway import PROJECT_ROOT
+
+load_dotenv(PROJECT_ROOT / ".env", override=False)
 
 app = FastAPI(title="NewsQA-RAG API")
 

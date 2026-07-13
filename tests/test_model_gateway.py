@@ -21,7 +21,11 @@ except ModuleNotFoundError:
 
 from src.indexing.embeddings import OpenAIEmbeddingFunction
 from src.llm import OpenAILLM
-from src.model_gateway import create_openai_client, load_openai_client_settings
+from src.model_gateway import (
+    create_openai_client,
+    load_generation_client_settings,
+    load_openai_client_settings,
+)
 
 
 class ModelGatewaySettingsTests(unittest.TestCase):
@@ -61,23 +65,40 @@ class ModelGatewaySettingsTests(unittest.TestCase):
         self.assertEqual(_gateway_root("https://api.xah.io/v1"), "https://api.xah.io")
         self.assertEqual(_gateway_root("https://example.com/proxy"), "https://example.com/proxy")
 
+    def test_deepseek_key_overrides_generation_provider_only(self):
+        """Select DeepSeek generation without changing generic embedding settings."""
+
+        settings = load_generation_client_settings(
+            "gpt-4o-mini",
+            {
+                "DEEPSEEK_API_KEY": "deepseek-secret",
+                "OPENAI_API_KEY": "gateway-secret",
+                "OPENAI_BASE_URL": "https://api.xah.io/v1",
+            },
+        )
+
+        self.assertEqual(settings.api_key, "deepseek-secret")
+        self.assertEqual(settings.base_url, "https://api.deepseek.com")
+        self.assertEqual(settings.model, "deepseek-chat")
+
 
 class ModelClientIntegrationTests(unittest.TestCase):
     """Verify LLM and embedding wrappers use the shared gateway factory."""
 
-    @patch("src.llm.create_openai_client")
+    @patch("src.llm.create_generation_client")
     def test_llm_uses_shared_client_factory(self, client_factory):
         """Create the chat client lazily and reuse it across calls."""
 
         expected_client = Mock()
-        client_factory.return_value = expected_client
+        client_factory.return_value = (expected_client, "effective-chat")
         llm = OpenAILLM()
 
         self.assertIs(llm._get_client(), expected_client)
         self.assertIs(llm._get_client(), expected_client)
-        client_factory.assert_called_once_with()
+        client_factory.assert_called_once_with("gpt-4o-mini")
+        self.assertEqual(llm._effective_model, "effective-chat")
 
-    @patch("src.llm.create_openai_client")
+    @patch("src.llm.create_generation_client")
     def test_llm_generation_preserves_model_configuration(self, client_factory):
         """Send configured model controls through the shared gateway client."""
 
@@ -85,7 +106,7 @@ class ModelClientIntegrationTests(unittest.TestCase):
         client.chat.completions.create.return_value = SimpleNamespace(
             choices=[SimpleNamespace(message=SimpleNamespace(content="answer"))]
         )
-        client_factory.return_value = client
+        client_factory.return_value = (client, "remote-chat")
         llm = OpenAILLM(model="remote-chat", temperature=0.2, max_tokens=321)
 
         answer = llm.generate("system", "question")
@@ -101,7 +122,7 @@ class ModelClientIntegrationTests(unittest.TestCase):
             max_tokens=321,
         )
 
-    @patch("src.llm.create_openai_client")
+    @patch("src.llm.create_generation_client")
     def test_llm_can_defer_output_limit_to_reasoning_model(self, client_factory):
         """Omit max_tokens when the gateway should choose a model-appropriate limit."""
 
@@ -109,7 +130,7 @@ class ModelClientIntegrationTests(unittest.TestCase):
         client.chat.completions.create.return_value = SimpleNamespace(
             choices=[SimpleNamespace(message=SimpleNamespace(content="answer"))]
         )
-        client_factory.return_value = client
+        client_factory.return_value = (client, "reasoning-model")
         llm = OpenAILLM(model="reasoning-model", max_tokens=None)
 
         answer = llm.generate_messages([{"role": "user", "content": "question"}])

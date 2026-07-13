@@ -496,6 +496,7 @@ footer.colophon {
       <li><a href="#ch2"><span class="num">II.</span>Cách hệ thống hoạt động</a></li>
       <li><a href="#ch3"><span class="num">III.</span>Bản đồ thư mục</a></li>
       <li><a href="#ch4"><span class="num">IV.</span>Còn thiếu gì &amp; vì sao</a></li>
+      <li><a href="#ch5"><span class="num">V.</span>Hiểu các chỉ số (metrics)</a></li>
     </ol>
   </nav>
 
@@ -903,6 +904,151 @@ footer.colophon {
     <p class="pull">
       Tóm lại: (1) AI trả lời thật → (2) tìm kiếm chính xác hơn → (3) agent
       nhiều bước → (4) đo điểm thật → (5) phần còn lại, làm khi có thời gian.
+    </p>
+  </div>
+</article>
+
+<article class="chapter" id="ch5">
+  <div class="chapter-head">
+    <span class="chapter-num">V.</span>
+    <h2>Hiểu các chỉ số (metrics)</h2>
+  </div>
+  <p class="dek">Mấy con số điểm hệ thống dùng để tự chấm mình — giải thích không cần biết toán.</p>
+
+  <div class="prose">
+    <h3>Ý tưởng lớn: ta đo 2 việc tách rời</h3>
+    <p>
+      Một câu trả lời RAG tốt cần <strong>hai</strong> thứ đúng, và ta đo từng thứ riêng:
+    </p>
+    <ol>
+      <li><strong>Tìm có trúng đoạn không?</strong> (<em>retrieval</em>) — hệ thống lôi ra
+        đúng đoạn văn bản chứa đáp án chưa? Tìm sai đoạn thì AI giỏi mấy cũng trả lời bậy.</li>
+      <li><strong>Viết câu trả lời có đúng không?</strong> (<em>generation</em>) — từ đoạn
+        đã tìm, AI viết ra có chính xác, có bịa không?</li>
+    </ol>
+    <p class="pull">Tách 2 phần để biết lỗi nằm ở đâu: tìm sai, hay tìm đúng mà viết sai.</p>
+
+    <h3>Ví dụ xuyên suốt</h3>
+    <p>
+      Câu hỏi: <strong>"Tỷ lệ thất nghiệp được báo cáo là bao nhiêu?"</strong> — đáp án đúng:
+      <strong>"3.9%"</strong>. Hệ thống trả về 5 đoạn đã xếp hạng; đoạn <strong>thật sự chứa
+      "3.9%"</strong> nằm ở <strong>hạng 2</strong>:
+    </p>
+    <div class="clipping-wrap">
+<div class="clipping">Hạng 1:  [đoạn nói chung về nền kinh tế]         ✗ không chứa đáp án
+Hạng 2:  [đoạn có "...thất nghiệp 3.9%"]        ✓ ĐÚNG
+Hạng 3:  [đoạn về lãi suất]                      ✗
+Hạng 4:  ...                                     ✗
+Hạng 5:  ...                                     ✗</div>
+    </div>
+
+    <h3>"@k" nghĩa là gì?</h3>
+    <p>
+      Nhiều chỉ số có đuôi <code>@k</code> (đọc "at k"), ví dụ <code>Hit Rate@5</code>. Nó nghĩa
+      là <strong>chỉ xét k đoạn xếp hạng cao nhất</strong>. <code>@5</code> = chỉ nhìn top 5. Vì
+      người dùng (và AI) chỉ đọc vài đoạn đầu, nên ta đo chất lượng trong top 5 / top 10 — không
+      phải toàn bộ kho.
+    </p>
+
+    <h3>Nhóm 1 — Chấm phần TÌM KIẾM &nbsp;<span class="stamp stamp--real">✅ miễn phí</span></h3>
+    <p>Bốn chỉ số này tính bằng so sánh ID đoạn, <strong>không cần AI, không tốn tiền</strong>.</p>
+
+    <div class="case">
+      <div class="case-title"><span class="num">1</span><h3>Hit Rate@k — "có lọt vào top k không?"</h3></div>
+      <dl>
+        <dt>Nôm na</dt><dd>Trong k đoạn đầu, có <strong>ít nhất 1</strong> đoạn đúng không? Trúng = 1, trượt = 0.</dd>
+        <dt>Ví dụ</dt><dd>Đoạn đúng ở hạng 2 → <code>Hit@5 = 1</code>, nhưng <code>Hit@1 = 0</code>.</dd>
+        <dt>Đọc số</dt><dd><strong>Cao = tốt.</strong> 0.85 = 85% câu hỏi tìm được đoạn đúng trong top k. Chỉ số dễ hiểu nhất, nhìn đầu tiên.</dd>
+      </dl>
+    </div>
+
+    <div class="case">
+      <div class="case-title"><span class="num">2</span><h3>Recall@k — "vớt được bao nhiêu phần đoạn đúng?"</h3></div>
+      <dl>
+        <dt>Nôm na</dt><dd>Một câu hỏi có thể có nhiều đoạn đúng. Recall = tìm được <strong>mấy phần</strong> trong số đó. Tìm 3/4 → 0.75.</dd>
+        <dt>Ví dụ</dt><dd>Có 1 đoạn đúng, tìm được nó → <code>Recall@5 = 1.0</code>.</dd>
+        <dt>Đọc số</dt><dd><strong>Cao = tốt.</strong> Hit Rate hỏi "có trúng phát nào không", Recall hỏi "trúng được <strong>bao nhiêu</strong>".</dd>
+      </dl>
+    </div>
+
+    <div class="case">
+      <div class="case-title"><span class="num">3</span><h3>MRR — "đoạn đúng nằm hạng mấy?"</h3></div>
+      <dl>
+        <dt>Nôm na</dt><dd>MRR = <code>1 / hạng của đoạn đúng đầu tiên</code>. Đoạn đúng càng lên <strong>đầu</strong>, điểm càng cao.</dd>
+        <dt>Ví dụ</dt><dd>Đoạn đúng ở hạng 2 → <code>MRR = 1/2 = 0.5</code>. Hạng 1 → 1.0; hạng 4 → 0.25.</dd>
+        <dt>Đọc số</dt><dd><strong>Cao = tốt.</strong> AI đọc kỹ vài đoạn đầu nhất — đẩy đoạn đúng lên top 1 tốt hơn nhiều so với nhét ở hạng 5.</dd>
+      </dl>
+    </div>
+
+    <div class="case">
+      <div class="case-title"><span class="num">4</span><h3>NDCG@k — "thứ tự xếp hạng có đẹp không?"</h3></div>
+      <dl>
+        <dt>Nôm na</dt><dd>Giống MRR nhưng khó tính hơn: thưởng khi đoạn đúng ở hạng cao, <strong>phạt</strong> khi đẩy xuống thấp. Điểm 0–1.</dd>
+        <dt>Ví dụ</dt><dd>Đoạn đúng ở hạng 2 → NDCG ≈ 0.63.</dd>
+        <dt>Đọc số</dt><dd><strong>Cao = tốt.</strong> Chỉ số "xịn" nhất để đánh giá <strong>chất lượng thứ tự</strong> của cả danh sách.</dd>
+      </dl>
+    </div>
+
+    <h3>Nhóm 2 — Chấm CÂU TRẢ LỜI &nbsp;<span class="stamp stamp--real">✅ miễn phí</span></h3>
+    <p>
+      <strong>Exact Match (EM)</strong> — câu AI có <strong>trùng khít</strong> đáp án mẫu không
+      (bỏ hoa thường/dấu câu)? Trùng = 1, khác = 0. "3.9%" vs "3.9%" → 1; "khoảng 3.9 phần trăm"
+      → 0 (dù ý đúng!). <strong>Cao = tốt nhưng rất khắt khe</strong>, chỉ hợp đáp án ngắn.
+    </p>
+    <p>
+      <strong>F1</strong> — đếm số <strong>từ chung</strong> giữa câu AI và đáp án, cân bằng giữa
+      nói thừa và nói thiếu. Điểm 0–1. Khoan dung hơn EM cho câu dài — đây là chỉ số chuẩn của bộ
+      NewsQA. <strong>Cao = tốt.</strong>
+    </p>
+
+    <h3>Nhóm 3 — Dùng AI chấm AI (RAGAS) &nbsp;<span class="stamp stamp--mock">🎭 tốn tiền API</span></h3>
+    <p>
+      Mấy chỉ số này <strong>không đếm từ</strong> được, phải nhờ <strong>một con AI khác đọc và
+      chấm</strong> (framework Ragas, gọi OpenAI). Điểm 0–1.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Chỉ số</th><th>Hỏi điều gì</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Faithfulness</strong> (trung thực)</td><td>Mọi câu AI nói có <strong>suy ra được</strong> từ đoạn đã đưa không? AI thêm thông tin ngoài nguồn = <strong>bịa</strong>. Quan trọng nhất cho tin tức.</td></tr>
+          <tr><td><strong>Answer Relevance</strong> (liên quan)</td><td>Câu trả lời có <strong>đi thẳng</strong> vào câu hỏi không, hay lan man/né tránh? (Có thể không bịa nhưng vẫn lạc đề.)</td></tr>
+          <tr><td><strong>Context Precision</strong></td><td>Trong các đoạn đưa cho AI, bao nhiêu phần <strong>thật sự hữu ích</strong>? (nhiễu ít = cao)</td></tr>
+          <tr><td><strong>Context Recall</strong></td><td>Các đoạn đó có <strong>đủ</strong> thông tin để trả lời không?</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="pull">RAG Triad = Context (tìm đúng) + Faithfulness (không bịa) + Answer Relevance (đúng câu hỏi). Ba cái ổn thì cả hệ thống ổn.</p>
+
+    <h3>Nhóm 4 — Chẩn đoán phụ (không cần đáp án)</h3>
+    <ul>
+      <li><strong>Dedup Rate</strong> — bao nhiêu phần đoạn bị <strong>trùng y hệt</strong>. <strong>Thấp = tốt</strong> (0 là không trùng).</li>
+      <li><strong>Semantic Integrity</strong> — bao nhiêu phần đoạn <strong>kết thúc trọn câu</strong> (không cắt ngang). <strong>Cao = tốt.</strong></li>
+      <li><strong>Delta MRR (∆MRR)</strong> — cho bước rerank: <code>MRR sau − MRR trước</code>. <strong>Dương = tốt</strong> (rerank đẩy đoạn đúng lên); âm = làm tệ đi.</li>
+    </ul>
+
+    <h3>Bảng tra nhanh</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Chỉ số</th><th>Đo cái gì</th><th>Điểm tốt</th><th>Module</th><th>Tốn tiền?</th></tr></thead>
+        <tbody>
+          <tr><td>Hit Rate@k</td><td>Có đoạn đúng trong top k</td><td>Cao →1</td><td>Retriever</td><td>Không</td></tr>
+          <tr><td>Recall@k</td><td>Vớt được mấy phần đoạn đúng</td><td>Cao →1</td><td>Retriever</td><td>Không</td></tr>
+          <tr><td>MRR</td><td>Đoạn đúng nằm hạng mấy</td><td>Cao →1</td><td>Retriever</td><td>Không</td></tr>
+          <tr><td>NDCG@k</td><td>Thứ tự xếp hạng đẹp cỡ nào</td><td>Cao →1</td><td>Retriever / Reranker</td><td>Không</td></tr>
+          <tr><td>∆MRR</td><td>Rerank có cải thiện không</td><td>Dương &gt;0</td><td>Reranker</td><td>Không</td></tr>
+          <tr><td>Exact Match</td><td>Trùng khít đáp án</td><td>Cao →1</td><td>Generator</td><td>Không</td></tr>
+          <tr><td>F1</td><td>Trùng bao nhiêu từ</td><td>Cao →1</td><td>Generator</td><td>Không</td></tr>
+          <tr><td>Faithfulness</td><td>Có bịa không</td><td>Cao →1</td><td>Generator</td><td><strong>Có</strong></td></tr>
+          <tr><td>Answer Relevance</td><td>Có đúng câu hỏi không</td><td>Cao →1</td><td>Generator</td><td><strong>Có</strong></td></tr>
+          <tr><td>Context Precision/Recall</td><td>Chất lượng đoạn đã tìm</td><td>Cao →1</td><td>Retriever</td><td><strong>Có</strong></td></tr>
+          <tr><td>Dedup Rate</td><td>Đoạn trùng lặp</td><td><strong>Thấp →0</strong></td><td>Chunking</td><td>Không</td></tr>
+          <tr><td>Semantic Integrity</td><td>Đoạn có trọn câu</td><td>Cao →1</td><td>Chunking</td><td>Không</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Muốn biết <strong>file nào tính chỉ số nào</strong> và <strong>sửa module nào để cải thiện
+      chỉ số nào</strong>, xem <code>docs/evaluation.md</code> mục 7.3.
     </p>
   </div>
 </article>

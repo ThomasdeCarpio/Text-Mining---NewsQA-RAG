@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from typing import Any, TypedDict
 
-from src.model_gateway import create_openai_client
+from src.model_gateway import create_generation_client
 
 
 class ChatMessageInput(TypedDict):
@@ -19,6 +19,7 @@ class OpenAILLM:
       OPENAI_API_KEY  — required
       OPENAI_BASE_URL — optional; set to point at Ollama, Azure OpenAI, or any
                         OpenAI-compatible endpoint (e.g. http://localhost:11434/v1)
+      DEEPSEEK_API_KEY — optional; when set, generation uses DeepSeek directly
     """
 
     DEFAULT_SYSTEM_PROMPT = (
@@ -38,10 +39,11 @@ class OpenAILLM:
         self.temperature = temperature
         self.max_tokens = max_tokens
         self._client = None
+        self._effective_model = model
 
     def _get_client(self):
         if self._client is None:
-            self._client = create_openai_client()
+            self._client, self._effective_model = create_generation_client(self.model)
         return self._client
 
     def generate(self, system_prompt: str, user_prompt: str) -> str:
@@ -74,7 +76,7 @@ class OpenAILLM:
 
         client = self._get_client()
         request: dict[str, Any] = {
-            "model": self.model,
+            "model": self._effective_model,
             "messages": list(messages),
             "temperature": self.temperature,
         }
@@ -94,7 +96,7 @@ class OpenAILLM:
 def get_llm(config: dict) -> OpenAILLM:
     """
     Factory. Reads config["llm"].
-    API key and base URL are always read from env (OPENAI_API_KEY, OPENAI_BASE_URL).
+    Provider credentials and base URLs are always read from environment variables.
     """
     llm_cfg = config.get("llm", {})
     return OpenAILLM(

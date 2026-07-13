@@ -1,0 +1,294 @@
+# Specification: RAG System Evaluation Pipeline
+
+## 1. Overview
+
+This document outlines the technical specification for building a modular Evaluation Pipeline for a Retrieval-Augmented Generation (RAG) system. The pipeline must be designed to evaluate individual components independently as well as the end-to-end (E2E) system.
+
+The implementation should follow a **Factory Pattern** to allow flexible registration and instantiation of different evaluators without breaking the core architecture.
+
+---
+
+## 2. Architecture & Core Interfaces
+
+### 2.1. Design Pattern
+
+* Implement a **Factory Pattern** (`EvaluatorFactory`) to manage evaluator classes.
+* Define an abstract base class (e.g., `BaseEvaluator`) that enforces a standard `evaluate` method.
+* Define a standard return object (e.g., `EvaluationResult`) that contains a dictionary of calculated `metrics` and a dictionary of `metadata` (for logging/debugging).
+
+### 2.2. Standardized I/O concept
+
+While the exact data schemas will be defined later, the general interface for any evaluator module must conceptually accept:
+
+* **`input_data`**: The payload going into the specific RAG module.
+* **`output_data`**: The actual result produced by the RAG module.
+* **`ground_truth`**: (Optional but required for some metrics) The expected result or golden dataset reference.
+
+---
+
+## 3. Module Specifications
+
+Below are the evaluation requirements for each specific module in the RAG pipeline.
+
+### 3.1. Ingestion Evaluator
+
+* **Objective:** Evaluate the quality of the document chunking process.
+* **Input Description:** The original processed document text.
+* **Output Description:** A collection of chunked text segments along with their extracted metadata.
+* **Evaluation Metrics:**
+| Metric | Evaluation Method | Description |
+| --- | --- | --- |
+| **Chunk Size Compliance** | Heuristic (Count) | Measure token/character length of each chunk to ensure it falls within the configured min/max boundaries. |
+| **Metadata Completeness** | Schema Validation | Check if every chunk contains mandatory metadata fields (e.g., source_id, page_number). |
+| **Semantic Integrity** | NLP / Heuristic | Verify that chunks do not break mid-sentence or mid-word (e.g., using regex or basic NLP sentence boundary detection). |
+
+
+
+### 3.2. Indexing Evaluator
+
+* **Objective:** Ensure data is correctly embedded and stored in the Vector Database without duplication or data loss.
+* **Input Description:** The prepared list of chunks and their metadata ready for insertion.
+* **Output Description:** The state/status of the Vector DB collection post-insertion.
+* **Evaluation Metrics:**
+| Metric | Evaluation Method | Description |
+| --- | --- | --- |
+| **Sanity Query (Recall@1)** | Vector Search | Randomly sample text from inserted chunks, use it as a query. The exact chunk must be returned at Rank 1. |
+| **Deduplication Rate** | Hashing | Compare MD5 hashes of chunk texts to identify redundant records in the DB. |
+| **Write Latency** | Time Measurement | Measure the time taken (in milliseconds) per batch insertion. |
+
+
+
+### 3.3. Retriever Evaluator
+
+* **Objective:** Assess how accurately the search component retrieves relevant context from the database.
+* **Input Description:** The user's text query (and expected chunk IDs from the ground truth).
+* **Output Description:** A list of retrieved text chunks, including their search scores and metadata.
+* **Evaluation Metrics:**
+| Metric | Evaluation Method | Description |
+| --- | --- | --- |
+| **Hit Rate / Recall@K** | Statistical calculation | Check if at least one expected/ground-truth chunk is present in the Top-K retrieved results. |
+| **MRR (Mean Reciprocal Rank)** | Statistical calculation | Calculate `1/rank` of the first relevant chunk found in the results. Higher is better. |
+| **Context Precision** | LLM-as-a-judge | Use an LLM to evaluate the signal-to-noise ratio in the retrieved chunks (how many are actually useful for the query). |
+
+
+
+### 3.4. Reranker Evaluator
+
+* **Objective:** Evaluate the effectiveness of the re-ranking model in pushing the most relevant chunks to the top.
+* **Input Description:** The user query, the initial list of retrieved chunks (from the Retriever), and ground truth.
+* **Output Description:** The re-sorted list of chunks.
+* **Evaluation Metrics:**
+| Metric | Evaluation Method | Description |
+| --- | --- | --- |
+| **NDCG@K** | Statistical calculation | Measure the ranking quality (Normalized Discounted Cumulative Gain), penalizing highly relevant chunks placed lower in the list. |
+| **Delta MRR ($\Delta$ MRR)** | Statistical calculation | `MRR(Reranked) - MRR(Initial)`. Measures if the reranker actually improved the sorting order. |
+
+
+
+### 3.5. Generator Evaluator
+
+* **Objective:** Evaluate the quality, accuracy, and safety of the final LLM-generated response.
+* **Input Description:** The user query and the Top-K sorted chunks used as context.
+* **Output Description:** The final text answer generated by the LLM.
+* **Evaluation Metrics:**
+| Metric | Evaluation Method | Description |
+| --- | --- | --- |
+| **Faithfulness (Groundedness)** | LLM-as-a-judge | Verify that every claim in the generated answer can be logically deduced from the provided context (Detects Hallucinations). |
+| **Answer Relevance** | LLM-as-a-judge | Assess whether the generated answer directly addresses the user's query without being evasive or overly verbose. |
+
+
+
+---
+
+## 4. End-to-End (E2E) Pipeline Evaluator
+
+* **Objective:** Evaluate the overall user experience and system performance from input query to final answer.
+* **Input Description:** The raw user query and the expected ideal answer/context (Ground Truth Dataset).
+* **Output Description:** The final generated answer, the contexts utilized, and execution metadata (like total time).
+* **Evaluation Metrics:**
+| Metric | Evaluation Method | Description |
+| --- | --- | --- |
+| **RAG Triad** | LLM-as-a-judge | Aggregate score of *Context Relevance*, *Faithfulness*, and *Answer Relevance*. |
+| **E2E Latency** | Time Measurement | Total time taken from receiving the query to returning the final generated string. |
+
+
+
+---
+
+## 5. Implementation Notes for the Agent
+
+1. **Third-Party Libraries:** Utilize libraries like `ragas`, `truera/trulens`, or `deepeval` for standardizing LLM-as-a-judge metrics (Faithfulness, Answer Relevance). Do not reinvent the prompt-engineering wheel for these metrics unless specifically required.
+2. **Standard Metrics:** Use standard math/data libraries (like `scikit-learn` or custom NumPy functions) to calculate MRR, NDCG, and Hit Rate.
+3. **Mock Data Compatibility:** Ensure the Evaluator logic is decoupled from actual database connections. The evaluation logic should work strictly on the Python data structures passed via `input_data` and `output_data`.
+
+---
+
+## 6. Data Contracts (I/O Schemas)
+
+> This is the source of truth for every hand-off in the eval pipeline. Producers and consumers
+> below **must** agree on these shapes. `notebooks/02_evaluation.ipynb` is the reference driver.
+
+Flow: `testset.jsonl` → `run_benchmark.py` → `reports/<name>/report.json` → `eval_service.py` → dashboard.
+
+### 6.1. Test set — `data/testset.jsonl`  *(the golden dataset)*
+
+One JSON object **per line** (JSONL). Produced by `scripts/prepare_testset.py`; consumed by
+`scripts/run_benchmark.py`.
+
+```json
+{
+  "question":           "What was the reported unemployment rate?",
+  "ground_truth":       "3.9%",
+  "article_key":        "cnn/stories/abc123.story",
+  "relevant_chunk_ids": ["923426cab4bf_chunk_0", "923426cab4bf_chunk_2"],
+  "evidence":           "the unemployment rate fell to 3.9%",
+  "article_chunk_ids":  ["923426cab4bf_chunk_0", "923426cab4bf_chunk_1", "..."]
+}
+```
+
+| Field | Type | Required by eval | Meaning |
+| --- | --- | --- | --- |
+| `question` | `str` | ✅ always | The query fed to the retriever/agent. |
+| `ground_truth` | `str` | ✅ for QA/RAGAS | Expected answer string (NewsQA first answer). |
+| `relevant_chunk_ids` | `list[str]` | ✅ for retrieval metrics | **The engineered field.** Chunk IDs whose text contains the answer. Rows without it are skipped by retrieval scoring. |
+| `article_key` | `str` | optional | Groups questions by source article (debugging). |
+| `evidence` | `str` | optional | Raw answer span text (used to derive `relevant_chunk_ids`). |
+| `article_chunk_ids` | `list[str]` | optional | All chunk IDs from the source article (context). |
+
+**⚠️ Contract for the teammate engineering `relevant_chunk_ids`:** raw NewsQA on HuggingFace has
+**no** `chunk_id` field — it ships `context` (article text) + answer character spans (`labels.start/end`).
+You must (1) chunk each article with the **same chunker + config** that built the live collection, and
+(2) emit the `id` of every chunk whose text overlaps the answer span. Chunk IDs are formatted
+`"{article_id}_chunk_{i}"` (e.g. `923426cab4bf_chunk_0`) and **must byte-for-byte equal** the `id`
+values in `data/chroma_db/chunks/*.jsonl` / ChromaDB — otherwise every retrieval metric reads 0.
+`src/evaluation/testset.py::NewsQATestSetBuilder` already implements this span→chunk mapping; extend it there.
+
+### 6.2. Benchmark report — `reports/<name>/report.json`  *(the output)*
+
+Produced by `run_benchmark.py`; consumed by `eval_service.py` (dashboard). Optional keys appear only
+when the matching stage ran (`--run-generator` → `qa`; `--run-ragas` → `ragas`).
+
+```json
+{
+  "config":    { "retriever": "hybrid", "top_k": 10, "rerank_top_n": 5,
+                 "collection": "newsqa_cnn", "n_eval": 100, "timestamp": "2026-07-13T..." },
+  "retrieval": { "hit_rate@5": 0.82, "mrr@5": 0.71, "recall@5": 0.64, "ndcg@5": 0.69,
+                 "n_samples": 100 },
+  "qa":        { "exact_match": 0.41, "f1": 0.58, "n_samples": 100 },
+  "ragas":     { "faithfulness": 0.90, "answer_relevancy": 0.85,
+                 "context_precision": 0.78, "context_recall": 0.75 },
+  "failures":  [ { "question": "...", "expected": "3.9%",
+                   "retrieved": "first chunk text...", "reason": "retrieval miss" } ]
+}
+```
+
+`retrieval` carries `hit_rate/mrr/recall/ndcg` at every `k` in `[1, 3, 5, 10]`. `config.retriever`
+is the join key the dashboard uses to line up `dense` vs `hybrid`.
+
+### 6.3. Per-sample dicts (for anyone adding a new metric)
+
+Metric functions in `src/evaluation/metrics.py` are pure — they take lists of plain dicts, no DB:
+
+| Function | Input list item |
+| --- | --- |
+| `evaluate_retrieval` | `{"relevant_chunk_ids": list[str], "retrieved_ids": list[str]}` |
+| `evaluate_qa` | `{"prediction": str, "ground_truth": str}` |
+| `evaluate_ragas` | `{"question": str, "answer": str, "contexts": list[str], "ground_truth": str}` |
+| `delta_mrr` | two lists of `{"relevant_chunk_ids": list[str], "retrieved_ids": list[str]}` (initial, reranked) |
+
+### 6.4. Dashboard API responses (report → UI)
+
+`eval_service.py` reshapes reports into exactly what the React UI types expect (`ui/src/api/types.ts`):
+
+| Endpoint | Response shape |
+| --- | --- |
+| `GET /admin/metrics` | `{ "MRR": 0.71, "Faithfulness": 0.90, ... }` — `Record<string, number>` |
+| `GET /admin/search-comparison` | `[ { "metric": "MRR", "vector_search": 0.71, "hybrid_search": 0.85 }, ... ]` |
+| `GET /admin/failure-cases` | `[ { "question", "expected", "retrieved", "reason" }, ... ]` |
+
+`vector_search` = the `dense` report, `hybrid_search` = the `hybrid` report. Missing report → `0.0`.
+
+---
+
+## 7. Evaluation flow — files, swap points, and the UI
+
+### 7.1. The pipeline at a glance
+
+```
+                 build_mini_testset.py  (--build-collection)
+NewsQA (HF)  ─────────────────────────────────────────────►  data/testset_*.jsonl
+   │                    │  uses testset.py + chunker              +  Chroma collection
+   │                    │                                         +  chunks/<name>.jsonl
+   │                    ▼
+   │            [ same articles + same chunker on both sides = IDs match ]
+   │                    │
+   ▼                    ▼
+run_benchmark.py  ──►  metrics.py  ──►  reports/<name>/report.json
+   (retriever/reranker/agent)                    │
+                                                 ▼
+                              eval_service.py ─► /admin/* (FastAPI) ─► Dashboard (React)
+```
+
+**One rule that keeps everything correct:** the collection you score against must be built from the
+**same articles + same chunker** as the test set. That is why `build_mini_testset.py` builds both in
+one step. Do **not** score a NewsQA-derived test set against `newsqa_cnn` (ingested from raw CNN HTML
+with a different chunker/ID scheme) — every metric reads 0. `run_benchmark.py` prints a warning when it
+detects this (all `hit_rate@k = 0` while `n_samples > 0`).
+
+### 7.2. File map (what to open for each job)
+
+| Job | File |
+| --- | --- |
+| Build a matched test set + eval collection (one command) | `scripts/build_mini_testset.py` |
+| Test-set build logic (grouping, evidence→chunk mapping) | `src/evaluation/testset.py` |
+| Run a benchmark, write a report | `scripts/run_benchmark.py` |
+| Metric math (all of it) | `src/evaluation/metrics.py` |
+| Reports → dashboard shapes | `src/services/eval_service.py` → `api/routers/admin.py` |
+| Driver notebook (run everything, plot) | `notebooks/02_evaluation.ipynb` |
+| Learn / debug the evidence→chunk mapping | `notebooks/03_newsqa_mini_dataset.ipynb` |
+| Full-scale (1000-article) test-set builder | `scripts/prepare_testset.py` (class `NewsQATestSetBuilder`) |
+
+### 7.3. Swap / improve points (per RAG module)
+
+Each module is evaluated by specific metrics and swapped in one place + config. Metrics don't change
+when you swap a module — that's the point of the contract in §6.
+
+| Module | Improve here | Config key | Measured by |
+| --- | --- | --- | --- |
+| Chunking / Ingestion | `src/ingestion/chunker.py` | `chunking` | `evaluate_chunking`, `deduplication_rate`, `semantic_integrity` |
+| Embedding / Indexing | `src/indexing/embeddings.py`, `chroma_store.py` | `embedding`, `database.hnsw` | Sanity Recall@1 (notebook 02 §3), dedup |
+| Retriever | `src/retrieval/*` via `retriever_factory.py` | `retrieval` | `evaluate_retrieval` → hit_rate / MRR / recall / NDCG |
+| Reranker | `src/retrieval/reranker.py` | `retrieval.reranker` | `delta_mrr`, NDCG |
+| Generator (LLM) | `src/llm.py` | `llm` | `evaluate_qa` (EM/F1), `evaluate_ragas` (faithfulness, answer relevance) |
+| End-to-end | `src/agents/rag_agent.py` | all of the above | `run_benchmark.py --run-generator --run-ragas` (RAG triad + latency) |
+
+**To compare a change:** run `run_benchmark.py` before and after into two `--report-dir`s and diff the
+report JSONs. To compare retrievers side by side, use report dirs named `dense` and `hybrid` — the
+dashboard's bar chart reads exactly those two.
+
+### 7.4. Using it in the UI
+
+The **Evaluation Dashboard** (`ui/src/pages/DashboardPage.tsx`, admin-only) is a pure **read view** of
+whatever is in `reports/`. Nothing is computed in the request path — refreshing = re-running a benchmark.
+
+| Dashboard element | Endpoint | Source |
+| --- | --- | --- |
+| Metric cards (MRR, Faithfulness, …) | `GET /admin/metrics` | primary report (`hybrid`, else any) |
+| Vector-vs-Hybrid bar chart | `GET /admin/search-comparison` | `reports/dense` + `reports/hybrid` |
+| Failure Analysis table | `GET /admin/failure-cases` | `failures[]` in a report |
+| Pipeline Logs | `GET /admin/pipeline-logs` | live agent trace (`session_store`) |
+| Trigger Crawler | `POST /admin/trigger-crawler` | `eval_service.trigger_crawler` (stub) |
+
+**Refresh the dashboard** (no code, no restart):
+```bash
+python scripts/run_benchmark.py --retriever dense  --testset data/testset_eval.jsonl \
+    --collection newsqa_eval --report-dir reports/dense
+python scripts/run_benchmark.py --retriever hybrid --testset data/testset_eval.jsonl \
+    --collection newsqa_eval --chunks-path data/chroma_db/chunks/newsqa_eval.jsonl \
+    --report-dir reports/hybrid
+```
+`eval_service.py` re-reads `reports/` on every request, so the dashboard shows the new numbers on reload.
+To fill the metric **cards** (Faithfulness etc.), add `--run-generator --run-ragas`. Set
+`DEEPSEEK_API_KEY` in `.env` to run generation + RAGAS judging cheaply on DeepSeek (embeddings stay
+local/free); otherwise it falls back to `OPENAI_API_KEY`. Both generation (`src/llm.py`) and the RAGAS
+judge (`src/evaluation/metrics.py`) prefer DeepSeek automatically when that key is present.

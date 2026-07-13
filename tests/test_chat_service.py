@@ -125,7 +125,7 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
             patch.object(chat_service, "_rag_is_candidate", return_value=True),
             patch.object(
                 chat_service,
-                "_retrieve_rag_results",
+                "_run_rag_pipeline",
                 side_effect=chat_service.RAGUnavailableError("missing index"),
             ),
             patch.object(chat_service, "_create_llm", return_value=llm),
@@ -136,13 +136,10 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(events[-1].type, "final_answer")
         self.assertEqual(events[-1].content, "Fallback answer")
         llm.generate_messages.assert_called_once()
-        llm.generate_rag_answer.assert_not_called()
 
     async def test_available_rag_returns_context_citations(self):
         """Return retrieved article metadata when the local RAG path succeeds."""
 
-        llm = Mock()
-        llm.generate_rag_answer.return_value = "RAG answer"
         results = [
             {
                 "text": "Relevant Reuters article text.",
@@ -158,8 +155,11 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
         with (
             patch.object(chat_service, "load_chat_settings", return_value=_settings("rag")),
             patch.object(chat_service, "_rag_is_candidate", return_value=True),
-            patch.object(chat_service, "_retrieve_rag_results", return_value=results),
-            patch.object(chat_service, "_create_llm", return_value=llm),
+            patch.object(
+                chat_service,
+                "_run_rag_pipeline",
+                return_value={"answer": "RAG answer", "reranked_chunks": results},
+            ),
         ):
             events = await self._collect_events("Question with an index")
 
@@ -167,7 +167,6 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(final.content, "RAG answer")
         self.assertEqual(final.citations[0].source, "Reuters")
         self.assertEqual(final.citations[0].title, "Test article")
-        llm.generate_messages.assert_not_called()
 
     async def test_gateway_error_is_sanitized_and_keeps_stream_valid(self):
         """Emit a final answer event without exposing provider exception details."""

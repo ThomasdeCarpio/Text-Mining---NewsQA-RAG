@@ -86,7 +86,16 @@ def main():
     parser.add_argument("--run-ragas", action="store_true",
                         help="Compute RAGAS metrics (requires --run-generator + OPENAI_API_KEY)")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--progress", action="store_true",
+                        help="Show a tqdm progress bar over questions")
     args = parser.parse_args()
+
+    # Load .env so OPENAI_API_KEY / DEEPSEEK_API_KEY are available to generation + RAGAS.
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except Exception:
+        pass
 
     with open(args.config, encoding="utf-8") as f:
         config = yaml.safe_load(f)
@@ -102,10 +111,29 @@ def main():
     print(f"Loading test set from {args.testset} ...")
     test_entries = load_testset(args.testset)
 
+    # Validate the data contract early with actionable messages (see docs/evaluation.md §6.1)
+    if not test_entries:
+        sys.exit(f"ERROR: test set '{args.testset}' is empty.")
+    required = ["question", "ground_truth", "relevant_chunk_ids"]
+    missing = [f for f in required if f not in test_entries[0]]
+    if missing:
+        sys.exit(
+            f"ERROR: test set rows are missing required field(s): {missing}.\n"
+            f"       Expected schema per line: {required} (+ optional fields).\n"
+            f"       See docs/evaluation.md section 6.1."
+        )
+
     # Filter to entries that have relevant chunk IDs (for retrieval metrics)
     scorable = [e for e in test_entries if e.get("relevant_chunk_ids")]
     print(f"  Total entries    : {len(test_entries)}")
     print(f"  With ground truth: {len(scorable)}")
+
+    if not scorable:
+        sys.exit(
+            "ERROR: no rows have a non-empty 'relevant_chunk_ids', so retrieval cannot be scored.\n"
+            "       This field must be engineered by mapping answer spans to chunk IDs\n"
+            "       (see docs/evaluation.md section 6.1 and src/evaluation/testset.py)."
+        )
 
     if args.n_eval:
         rng = random.Random(args.seed)
@@ -159,8 +187,14 @@ def main():
     retrieval_samples = []
     qa_samples = []
     ragas_samples = []
+    failures = []
 
-    for i, entry in enumerate(scorable, 1):
+    iterable = scorable
+    if args.progress:
+        from tqdm import tqdm
+        iterable = tqdm(scorable, desc="Retrieval+gen", unit="q")
+
+    for i, entry in enumerate(iterable, 1):
         question = entry["question"]
 
         if args.run_generator and llm is not None:
@@ -179,6 +213,16 @@ def main():
             "retrieved_ids": retrieved_ids,
         })
 
+        # Record retrieval misses for the dashboard's Failure Analysis table (cap at 20)
+        relevant = set(entry["relevant_chunk_ids"])
+        if len(failures) < 20 and not any(rid in relevant for rid in retrieved_ids[:top_k]):
+            failures.append({
+                "question": question,
+                "expected": entry["ground_truth"],
+                "retrieved": (contexts[0][:200] if contexts else "No matching chunk found"),
+                "reason": "No ground-truth chunk in top-k (retrieval miss)",
+            })
+
         if args.run_generator:
             qa_samples.append({
                 "prediction": answer,
@@ -192,7 +236,7 @@ def main():
                     "ground_truth": entry["ground_truth"],
                 })
 
-        if i % 50 == 0:
+        if not args.progress and i % 10 == 0:
             print(f"  {i}/{len(scorable)} done ...")
 
     # ------------------------------------------------------------------
@@ -201,11 +245,23 @@ def main():
     print("\nComputing metrics ...")
     retrieval_metrics = evaluate_retrieval(retrieval_samples)
 
+    # Diagnose the classic silent failure: metrics all 0 because the test set's
+    # relevant_chunk_ids don't belong to this collection (different articles/chunker/ID scheme).
+    if retrieval_metrics.get("n_samples", 0) > 0 and all(
+        v == 0 for k, v in retrieval_metrics.items() if k.startswith("hit_rate@")
+    ):
+        print(
+            f"\n  WARNING: every retrieval metric is 0 across {retrieval_metrics['n_samples']} samples.\n"
+            f"           The test set's 'relevant_chunk_ids' almost certainly do NOT match the chunk IDs\n"
+            f"           in collection '{args.collection}'. Build the test set and the collection from the\n"
+            f"           SAME articles + chunker (see scripts/build_mini_testset.py --build-collection)."
+        )
+
     qa_metrics = evaluate_qa(qa_samples) if qa_samples else {}
 
     ragas_metrics = {}
     if ragas_samples:
-        print("Running RAGAS (this calls OpenAI API) ...")
+        print(f"Running RAGAS judge on {len(ragas_samples)} samples (LLM calls, this can take a while) ...")
         ragas_cfg = config.get("evaluation", {})
         ragas_metrics = evaluate_ragas(
             ragas_samples,
@@ -233,6 +289,7 @@ def main():
         qa_metrics=qa_metrics or None,
         ragas_metrics=ragas_metrics or None,
     )
+    report["failures"] = failures
 
     # ------------------------------------------------------------------
     # Save report

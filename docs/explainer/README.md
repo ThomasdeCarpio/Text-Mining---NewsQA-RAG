@@ -25,6 +25,9 @@ thiếu gì. Nó **không** đi vào từng dòng code. Nếu bạn cần chi ti
 4. **[04-con-thieu-gi-va-tai-sao.md](04-con-thieu-gi-va-tai-sao.md)** — Phần
    nào chưa xong, và vì sao nó quan trọng (không phải chỉ là danh sách việc
    cần làm — là giải thích hậu quả nếu không làm).
+5. **[05-hieu-metrics.md](05-hieu-metrics.md)** — Mấy con số điểm (Hit Rate,
+   MRR, Faithfulness…) nghĩa là gì, giải thích bằng ngôn ngữ đời thường, không
+   cần biết toán.
 
 Quy ước trạng thái dùng xuyên suốt 4 file này:
 

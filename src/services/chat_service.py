@@ -10,6 +10,8 @@ from collections.abc import AsyncIterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal, cast
 
+import yaml
+
 from src.llm import ChatMessageInput, OpenAILLM
 from src.model_gateway import PROJECT_ROOT
 from src.services.session_store import SessionStore, get_session_store
@@ -25,7 +27,10 @@ _DIRECT_SYSTEM_PROMPT = (
     "retrieval context is explicitly provided."
 )
 _RAG_DB_PATH = PROJECT_ROOT / "data" / "chroma_db"
+_RAG_CONFIG_PATH = PROJECT_ROOT / "configs" / "config.yaml"
 _VALID_CHAT_MODES = {"auto", "direct", "rag"}
+_rag_agent = None
+_rag_agent_key: tuple[str, float, int | None, int] | None = None
 
 
 class RAGUnavailableError(RuntimeError):
@@ -182,18 +187,83 @@ def _rag_is_candidate(mode: ChatMode) -> bool:
     return has_chromadb and _RAG_DB_PATH.is_dir()
 
 
-def _retrieve_rag_results(question: str, top_k: int) -> list[dict]:
-    """Retrieve local news chunks without importing RAG dependencies at startup.
+def _get_rag_agent(settings: ChatSettings):
+    """Build and cache the real RAG pipeline without adding startup dependencies.
 
     Args:
-        question: User question used as the dense retrieval query.
-        top_k: Maximum number of chunks to return.
+        settings: Runtime chat settings used for retrieval and generation.
 
     Returns:
-        Ranked chunk dictionaries from the local ChromaDB collection.
+        Configured ``RAGAgent`` backed by the production news collection.
 
     Raises:
-        RAGUnavailableError: If dependencies, the collection, or indexed data are absent.
+        RAGUnavailableError: If optional RAG dependencies or configuration fail.
+    """
+
+    global _rag_agent, _rag_agent_key
+    cache_key = (
+        settings.model,
+        settings.temperature,
+        settings.max_tokens,
+        settings.rag_top_k,
+    )
+    if _rag_agent is not None and _rag_agent_key == cache_key:
+        return _rag_agent
+
+    try:
+        from src.agents.rag_agent import RAGAgent
+        from src.indexing.chroma_store import ChromaStore
+        from src.indexing.embeddings import get_embedding_function
+        from src.retrieval.reranker import get_reranker
+        from src.retrieval.retriever_factory import get_retriever
+
+        with _RAG_CONFIG_PATH.open(encoding="utf-8") as config_file:
+            config = yaml.safe_load(config_file) or {}
+
+        store = ChromaStore(
+            str(_RAG_DB_PATH),
+            get_embedding_function(config),
+        )
+        retriever = get_retriever(
+            "dense",
+            config,
+            store,
+            "newsqa_cnn",
+        )
+        rerank_top_n = min(
+            settings.rag_top_k,
+            int(
+                config.get("retrieval", {})
+                .get("reranker", {})
+                .get("top_n", settings.rag_top_k)
+            ),
+        )
+        _rag_agent = RAGAgent(
+            retriever=retriever,
+            reranker=get_reranker(config),
+            llm=_create_llm(settings),
+            top_k=settings.rag_top_k,
+            rerank_top_n=rerank_top_n,
+        )
+        _rag_agent_key = cache_key
+    except Exception as exc:
+        raise RAGUnavailableError("The local RAG pipeline could not initialize.") from exc
+
+    return _rag_agent
+
+
+def _run_rag_pipeline(question: str, settings: ChatSettings) -> dict:
+    """Run retrieval, reranking, and generation for one question.
+
+    Args:
+        question: User question passed to the RAG pipeline.
+        settings: Runtime chat settings used to build the pipeline.
+
+    Returns:
+        Full ``RAGAgent.run`` result containing the answer and ranked chunks.
+
+    Raises:
+        RAGUnavailableError: If the collection is absent or any RAG stage fails.
     """
 
     try:
@@ -203,16 +273,15 @@ def _retrieve_rag_results(question: str, top_k: int) -> list[dict]:
         if not stats.get("exists") or int(stats.get("count", 0)) <= 0:
             raise RAGUnavailableError("The local news collection is empty or missing.")
 
-        result_limit = min(top_k, int(stats["count"]))
-        results, _ = retrieval_service.search(question, "dense", result_limit)
+        result = _get_rag_agent(settings).run(question)
     except RAGUnavailableError:
         raise
     except Exception as exc:
-        raise RAGUnavailableError("The local retrieval pipeline is unavailable.") from exc
+        raise RAGUnavailableError("The local RAG pipeline failed.") from exc
 
-    if not results:
-        raise RAGUnavailableError("The local retrieval pipeline returned no context.")
-    return results
+    if not result.get("reranked_chunks") or not str(result.get("answer") or "").strip():
+        raise RAGUnavailableError("The local RAG pipeline returned no answer context.")
+    return result
 
 
 def _build_citations(results: Sequence[dict]) -> list[Citation]:
@@ -341,20 +410,17 @@ async def ask(session_id: str, question: str) -> AsyncIterator[AgentEvent]:
         )
         return
 
-    llm = _create_llm(settings)
     if _rag_is_candidate(settings.mode):
         yield _record(
             store,
             AgentEvent(
                 type="tool_call",
-                tool_name="dense_search",
-                content="Searching the local news collection.",
+                tool_name="rag_pipeline",
+                content="Retrieving and reranking the local news collection.",
             ),
         )
         try:
-            results = await asyncio.to_thread(
-                _retrieve_rag_results, question, settings.rag_top_k
-            )
+            rag_result = await asyncio.to_thread(_run_rag_pipeline, question, settings)
         except RAGUnavailableError:
             logger.warning(
                 "RAG is unavailable; falling back to direct chat",
@@ -368,35 +434,26 @@ async def ask(session_id: str, question: str) -> AsyncIterator[AgentEvent]:
                 ),
             )
         else:
+            results = rag_result["reranked_chunks"]
             yield _record(
                 store,
                 AgentEvent(
                     type="tool_result",
-                    tool_name="dense_search",
+                    tool_name="rag_pipeline",
                     content=f"Found {len(results)} relevant news chunks.",
                 ),
             )
-            try:
-                answer = await asyncio.to_thread(
-                    llm.generate_rag_answer,
-                    question,
-                    [str(result.get("text") or "") for result in results],
-                )
-            except Exception:
-                logger.exception("Model gateway request failed during RAG generation")
-                yield _record(store, _gateway_failure_event())
-                return
-
             yield _record(
                 store,
                 AgentEvent(
                     type="final_answer",
-                    content=answer,
+                    content=str(rag_result["answer"]),
                     citations=_build_citations(results),
                 ),
             )
             return
 
+    llm = _create_llm(settings)
     yield _record(
         store,
         AgentEvent(
