@@ -38,7 +38,31 @@ REVIEW_DECISIONS = {
     "approve",
     "edit",
     "mark_standalone",
+    "exclude",
     "needs_adjudication",
+}
+FULL_REVIEW_LABELS = {
+    "pending",
+    "standalone",
+    "non_standalone",
+    "invalid",
+    "uncertain",
+}
+FULL_REVIEW_ISSUES = {
+    *ALLOWED_REASONS,
+    "truncated_answer",
+    "wrong_answer",
+    "wrong_evidence",
+    "yes_no_answer_mismatch",
+    "malformed_question",
+    "unanswerable_from_article",
+    "irreparable_semantic_mismatch",
+    "ambiguous_without_unique_gold",
+}
+EXCLUSION_REASONS = {
+    "unanswerable_from_article",
+    "irreparable_semantic_mismatch",
+    "ambiguous_without_unique_gold",
 }
 
 
@@ -509,6 +533,196 @@ def create_review_queue(
     return queue
 
 
+def create_full_review_document(
+    evaluation_articles: Sequence[dict],
+    proposer_tool: str = "codex-cli",
+    proposer_model: str = "sol-5.6",
+) -> dict:
+    """Create an authoritative queue containing every selected evaluation question."""
+
+    articles: list[dict] = []
+    seen_questions: set[str] = set()
+    for article in sorted(evaluation_articles, key=lambda item: item["article_id"]):
+        questions: list[dict] = []
+        for question in sorted(article["questions"], key=lambda item: item["question_id"]):
+            question_id = question["question_id"]
+            if question_id in seen_questions:
+                raise DatasetBuildError(f"Duplicate question ID {question_id}")
+            seen_questions.add(question_id)
+            source_spans = question["evidence_spans"]
+            source_answer = question["ground_truth"]
+            questions.append(
+                {
+                    "question_id": question_id,
+                    "comparison": {
+                        "original_question": question["question"],
+                        "candidate_clarified_question": "",
+                        "final_clarified_question": "",
+                    },
+                    "answer_and_evidence": {
+                        "source_expected_answer": source_answer,
+                        "expected_answer": source_answer,
+                        "accepted_answers": [source_answer],
+                        "source_evidence_spans": source_spans,
+                        "evidence_spans": source_spans,
+                        "evidence_text": " | ".join(
+                            span["text"] for span in source_spans
+                        ),
+                        "answer_modified": False,
+                        "answer_review_notes": "",
+                        "supporting_context_quotes": [],
+                    },
+                    "codex_assessment": {
+                        "label": "pending",
+                        "issue_codes": [],
+                        "rationale": "",
+                        "proposed_supporting_quotes": [],
+                        "proposal": {
+                            "status": "pending",
+                            "tool": proposer_tool,
+                            "model": proposer_model,
+                            "batch_id": "",
+                            "created_at": "",
+                        },
+                    },
+                    "human_review": {
+                        "decision": "pending",
+                        "reviewer_id": "",
+                        "supporting_quotes": [],
+                        "notes": "",
+                    },
+                }
+            )
+        articles.append(
+            {
+                "article_id": article["article_id"],
+                "source_title": article.get("metadata", {}).get("title", ""),
+                "questions": questions,
+            }
+        )
+    return {
+        "schema_version": "3.0",
+        "review_mode": "full_codex_human",
+        "instructions": {
+            "scope": "Review every question and answer against its complete source article.",
+            "proposal_labels": sorted(FULL_REVIEW_LABELS),
+            "issue_codes": sorted(FULL_REVIEW_ISSUES),
+            "human_decisions": sorted(REVIEW_DECISIONS),
+            "exclusion_reasons": sorted(EXCLUSION_REASONS),
+        },
+        "summary": {
+            "article_count": len(articles),
+            "question_count": len(seen_questions),
+            "proposer_tool": proposer_tool,
+            "proposer_model": proposer_model,
+        },
+        "articles": articles,
+    }
+
+
+def build_full_review_packets(
+    evaluation_articles: Sequence[dict],
+    distractor_articles: Sequence[dict],
+    review_document: dict,
+    max_articles: int = 20,
+    max_questions: int = 150,
+    competing_top_k: int = 5,
+) -> list[dict]:
+    """Build deterministic, bounded Codex review packets without making model calls."""
+
+    if max_articles <= 0 or max_questions <= 0 or competing_top_k <= 0:
+        raise DatasetBuildError("Review packet limits must be positive")
+    queue_articles = {
+        item["article_id"]: item for item in review_document.get("articles", [])
+    }
+    expected_ids = {item["article_id"] for item in evaluation_articles}
+    if set(queue_articles) != expected_ids:
+        raise DatasetBuildError("Review document article coverage does not match evaluation corpus")
+
+    candidate_index = ArticleCandidateIndex([*evaluation_articles, *distractor_articles])
+    packet_articles: list[dict] = []
+    packets: list[dict] = []
+    packet_questions = 0
+
+    def flush() -> None:
+        nonlocal packet_articles, packet_questions
+        if not packet_articles:
+            return
+        packet_number = len(packets) + 1
+        packets.append(
+            {
+                "schema_version": "3.0",
+                "packet_id": f"review_{packet_number:03d}",
+                "purpose": "Codex proposal preparation; human approval remains mandatory.",
+                "instructions": {
+                    "review_all_questions": True,
+                    "preserve_source_fields": True,
+                    "do_not_use_answer_in_clarification": True,
+                    "allowed_labels": sorted(FULL_REVIEW_LABELS - {"pending"}),
+                    "allowed_issue_codes": sorted(FULL_REVIEW_ISSUES),
+                },
+                "article_count": len(packet_articles),
+                "question_count": packet_questions,
+                "articles": packet_articles,
+            }
+        )
+        packet_articles = []
+        packet_questions = 0
+
+    for article in sorted(evaluation_articles, key=lambda item: item["article_id"]):
+        queued = queue_articles[article["article_id"]]
+        queue_by_id = {
+            item["question_id"]: item for item in queued.get("questions", [])
+        }
+        source_by_id = {
+            item["question_id"]: item for item in article["questions"]
+        }
+        if set(queue_by_id) != set(source_by_id):
+            raise DatasetBuildError(
+                f"Review question coverage mismatch for {article['article_id']}"
+            )
+        count = len(source_by_id)
+        if count > max_questions:
+            raise DatasetBuildError(
+                f"Article {article['article_id']} has {count} questions, exceeding "
+                f"the packet limit {max_questions}"
+            )
+        if packet_articles and (
+            len(packet_articles) >= max_articles
+            or packet_questions + count > max_questions
+        ):
+            flush()
+        questions = []
+        for question_id in sorted(source_by_id):
+            source = source_by_id[question_id]
+            questions.append(
+                {
+                    "question_id": question_id,
+                    "original_question": source["question"],
+                    "source_expected_answer": source["ground_truth"],
+                    "source_evidence_spans": source["evidence_spans"],
+                    "source_evidence_text": " | ".join(
+                        span["text"] for span in source["evidence_spans"]
+                    ),
+                    "current_review_row": queue_by_id[question_id],
+                    "competing_articles": candidate_index.candidates(
+                        source["question"], article["article_id"], competing_top_k
+                    ),
+                }
+            )
+        packet_articles.append(
+            {
+                "article_id": article["article_id"],
+                "title": article.get("metadata", {}).get("title", ""),
+                "context": article["context"],
+                "questions": questions,
+            }
+        )
+        packet_questions += count
+    flush()
+    return packets
+
+
 def _review_rows(review_path: str | Path) -> list[dict]:
     path = Path(review_path)
     if path.suffix.lower() == ".csv":
@@ -526,7 +740,8 @@ def _review_rows(review_path: str | Path) -> list[dict]:
         for item in article.get("questions") or []:
             comparison = item.get("comparison") or {}
             answer = item.get("answer_and_evidence") or {}
-            assessment = item.get("llm_assessment") or {}
+            assessment = item.get("codex_assessment") or item.get("llm_assessment") or {}
+            proposal = assessment.get("proposal") or {}
             human = item.get("human_review") or {}
             rows.append(
                 {
@@ -550,8 +765,19 @@ def _review_rows(review_path: str | Path) -> list[dict]:
                     "answer_modified": bool(answer.get("answer_modified", False)),
                     "answer_review_notes": answer.get("answer_review_notes", ""),
                     "llm_label": assessment.get("label", ""),
-                    "reason_codes": assessment.get("reason_codes", []),
+                    "assessment_rationale": assessment.get("rationale", ""),
+                    "reason_codes": assessment.get(
+                        "issue_codes", assessment.get("reason_codes", [])
+                    ),
                     "validation_warnings": assessment.get("validation_warnings", []),
+                    "proposal_status": proposal.get("status", "legacy"),
+                    "proposer_tool": proposal.get("tool", ""),
+                    "proposer_model": proposal.get("model", ""),
+                    "proposal_batch_id": proposal.get("batch_id", ""),
+                    "proposal_created_at": proposal.get("created_at", ""),
+                    "proposed_supporting_quotes": assessment.get(
+                        "proposed_supporting_quotes", []
+                    ),
                     "review_decision": human.get("decision", "pending"),
                     "review_supporting_quotes": human.get("supporting_quotes", []),
                     "reviewer_id": human.get("reviewer_id", ""),
@@ -563,14 +789,42 @@ def _review_rows(review_path: str | Path) -> list[dict]:
 
 def review_status(review_path: str | Path) -> dict:
     counts: dict[str, int] = {decision: 0 for decision in REVIEW_DECISIONS}
+    labels: dict[str, int] = {label: 0 for label in FULL_REVIEW_LABELS}
+    proposal_counts = {"pending": 0, "proposed": 0, "legacy": 0}
+    issues: dict[str, int] = {}
+    corrected_answers = 0
     total = 0
     for row in _review_rows(review_path):
         decision = (row.get("review_decision") or "pending").strip()
         if decision not in REVIEW_DECISIONS:
             raise DatasetBuildError(f"Unknown review decision {decision!r}")
         counts[decision] += 1
+        label = str(row.get("llm_label") or "pending").strip()
+        if label not in labels:
+            labels[label] = 0
+        labels[label] += 1
+        proposal_status = str(row.get("proposal_status") or "legacy").strip()
+        if proposal_status not in proposal_counts:
+            proposal_counts[proposal_status] = 0
+        proposal_counts[proposal_status] += 1
+        for issue in _review_list(row.get("reason_codes", []), "reason_codes", row.get("question_id", "")):
+            issues[str(issue)] = issues.get(str(issue), 0) + 1
+        corrected_answers += int(bool(row.get("answer_modified")))
         total += 1
-    return {"total": total, "decisions": counts, "ready": counts["pending"] == 0 and counts["needs_adjudication"] == 0}
+    unresolved = counts["pending"] + counts["needs_adjudication"]
+    proposals_complete = (
+        proposal_counts.get("proposed", 0) + proposal_counts.get("legacy", 0)
+    )
+    return {
+        "total": total,
+        "decisions": counts,
+        "labels": labels,
+        "proposal_status": proposal_counts,
+        "issue_codes": dict(sorted(issues.items())),
+        "corrected_answers": corrected_answers,
+        "excluded_questions": counts["exclude"],
+        "ready": unresolved == 0 and proposals_complete == total,
+    }
 
 
 def _parse_json_list(value: str, field: str, question_id: str) -> list:
@@ -618,6 +872,220 @@ def _validated_review_spans(
             raise DatasetBuildError(f"Reviewed evidence text mismatch for {question_id}")
         validated.append({"start": start, "end": end, "text": text})
     return validated
+
+
+def _load_full_review_annotations(
+    review_path: str | Path,
+    evaluation_articles: Sequence[dict],
+) -> dict[str, dict]:
+    status = review_status(review_path)
+    if not status["ready"]:
+        raise DatasetBuildError(
+            "Full human review is incomplete: "
+            f"decisions={status['decisions']}, proposals={status['proposal_status']}"
+        )
+    article_by_id = {item["article_id"]: item for item in evaluation_articles}
+    question_by_id = {
+        question["question_id"]: question
+        for article in evaluation_articles
+        for question in article["questions"]
+    }
+    rows = _review_rows(review_path)
+    if len(rows) != len(question_by_id):
+        raise DatasetBuildError(
+            f"Full review must contain {len(question_by_id)} questions, got {len(rows)}"
+        )
+
+    annotations: dict[str, dict] = {}
+    for row in rows:
+        question_id = str(row.get("question_id") or "").strip()
+        if question_id in annotations or question_id not in question_by_id:
+            raise DatasetBuildError(f"Duplicate or unknown reviewed question {question_id}")
+        question = question_by_id[question_id]
+        article = article_by_id.get(question["article_id"])
+        if article is None or row.get("article_id") != article["article_id"]:
+            raise DatasetBuildError(f"Review article mismatch for {question_id}")
+        if row.get("original_question") != question["question"]:
+            raise DatasetBuildError(f"Original question changed for {question_id}")
+        if row.get("source_ground_truth") != question["ground_truth"]:
+            raise DatasetBuildError(f"Source answer changed for {question_id}")
+        if row.get("source_evidence_spans") != question["evidence_spans"]:
+            raise DatasetBuildError(f"Source evidence changed for {question_id}")
+
+        proposal_status = str(row.get("proposal_status") or "").strip()
+        label = str(row.get("llm_label") or "").strip()
+        if proposal_status != "proposed" or label not in FULL_REVIEW_LABELS - {"pending"}:
+            raise DatasetBuildError(
+                f"Missing completed Codex proposal for {question_id}: "
+                f"status={proposal_status!r}, label={label!r}"
+            )
+        if not all(
+            str(row.get(field) or "").strip()
+            for field in (
+                "proposer_tool",
+                "proposer_model",
+                "proposal_batch_id",
+                "proposal_created_at",
+            )
+        ):
+            raise DatasetBuildError(f"Incomplete Codex proposal provenance for {question_id}")
+        issues = _review_list(row.get("reason_codes", []), "reason_codes", question_id)
+        unknown_issues = sorted(set(issues) - FULL_REVIEW_ISSUES)
+        if unknown_issues:
+            raise DatasetBuildError(
+                f"Unknown issue codes for {question_id}: {unknown_issues}"
+            )
+
+        reviewed_ground_truth = str(row.get("ground_truth") or "").strip()
+        if not reviewed_ground_truth:
+            raise DatasetBuildError(f"Missing reviewed answer for {question_id}")
+        reviewed_spans = _validated_review_spans(
+            row.get("evidence_spans"), article, question_id
+        )
+        answer_modified = (
+            reviewed_ground_truth != question["ground_truth"]
+            or reviewed_spans != question["evidence_spans"]
+        )
+        if bool(row.get("answer_modified")) != answer_modified:
+            raise DatasetBuildError(f"answer_modified is inconsistent for {question_id}")
+        answer_notes = str(row.get("answer_review_notes") or "").strip()
+        if answer_modified and not answer_notes:
+            raise DatasetBuildError(
+                f"Corrected answer requires answer_review_notes for {question_id}"
+            )
+        accepted_answers = row.get("accepted_answers") or [reviewed_ground_truth]
+        if not isinstance(accepted_answers, list) or not all(
+            isinstance(answer, str) and answer.strip() for answer in accepted_answers
+        ):
+            raise DatasetBuildError(f"Invalid accepted_answers for {question_id}")
+        if reviewed_ground_truth not in accepted_answers:
+            accepted_answers = [reviewed_ground_truth, *accepted_answers]
+
+        reviewer = str(row.get("reviewer_id") or "").strip()
+        decision = str(row.get("review_decision") or "pending").strip()
+        review_notes = str(row.get("review_notes") or "").strip()
+        if not reviewer:
+            raise DatasetBuildError(f"Missing reviewer_id for {question_id}")
+        answer_fields = {
+            "source_ground_truth": question["ground_truth"],
+            "source_evidence_spans": question["evidence_spans"],
+            "ground_truth": reviewed_ground_truth,
+            "accepted_answers": accepted_answers,
+            "evidence_spans": reviewed_spans,
+            "evidence": " | ".join(span["text"] for span in reviewed_spans),
+            "answer_modified": answer_modified,
+            "answer_review_notes": answer_notes,
+        }
+        provenance = {
+            "reviewer_id": reviewer,
+            "review_decision": decision,
+            "review_notes": review_notes,
+            "proposed_label": label,
+            "proposal_rationale": str(row.get("assessment_rationale") or "").strip(),
+            "proposal": {
+                "tool": row.get("proposer_tool", ""),
+                "model": row.get("proposer_model", ""),
+                "batch_id": row.get("proposal_batch_id", ""),
+                "created_at": row.get("proposal_created_at", ""),
+            },
+        }
+
+        if decision == "exclude":
+            exclusion_reasons = sorted(set(issues) & EXCLUSION_REASONS)
+            if not exclusion_reasons or not review_notes:
+                raise DatasetBuildError(
+                    f"Excluded question {question_id} needs an exclusion reason and notes"
+                )
+            annotations[question_id] = {
+                "final_label": "human_excluded",
+                "reason_codes": issues,
+                "final_clarified_question": None,
+                "excluded": True,
+                "exclusion_reasons": exclusion_reasons,
+                **answer_fields,
+                **provenance,
+            }
+            continue
+
+        if decision == "mark_standalone":
+            annotations[question_id] = {
+                "final_label": "human_standalone",
+                "reason_codes": issues,
+                "final_clarified_question": None,
+                "excluded": False,
+                **answer_fields,
+                **provenance,
+            }
+            continue
+        if decision not in {"approve", "edit"}:
+            raise DatasetBuildError(f"Unresolved review decision for {question_id}: {decision}")
+
+        candidate = str(row.get("candidate_clarified_question") or "").strip()
+        clarified = (
+            candidate
+            if decision == "approve"
+            else str(row.get("final_clarified_question") or "").strip()
+        )
+        if not clarified:
+            raise DatasetBuildError(f"Missing final clarification for {question_id}")
+        if any(_answer_leaks(answer, clarified) for answer in accepted_answers):
+            raise DatasetBuildError(f"Final clarification leaks answer for {question_id}")
+        quotes = (
+            _review_list(
+                row.get("proposed_supporting_quotes", []),
+                "proposed_supporting_quotes",
+                question_id,
+            )
+            if decision == "approve"
+            else _review_list(
+                row.get("review_supporting_quotes", []),
+                "review_supporting_quotes",
+                question_id,
+            )
+        )
+        sensitive_question = {
+            **question,
+            "evidence_spans": [*question["evidence_spans"], *reviewed_spans],
+        }
+        if not quotes or any(
+            not _quote_is_supported(article, quote, sensitive_question)
+            for quote in quotes
+        ):
+            raise DatasetBuildError(
+                f"Unsupported final clarification context for {question_id}"
+            )
+        annotations[question_id] = {
+            "final_label": "human_non_standalone",
+            "reason_codes": issues,
+            "final_clarified_question": clarified,
+            "supporting_context_quotes": quotes,
+            "excluded": False,
+            **answer_fields,
+            **provenance,
+        }
+
+    if set(annotations) != set(question_by_id):
+        missing = sorted(set(question_by_id) - set(annotations))[:5]
+        raise DatasetBuildError(f"Full review is missing questions: {missing}")
+    return annotations
+
+
+def load_review_annotations(
+    review_path: str | Path,
+    evaluation_articles: Sequence[dict],
+    triage_records: Sequence[dict] | None = None,
+) -> dict[str, dict]:
+    """Load either the full Codex/human workflow or the legacy Gemini workflow."""
+
+    path = Path(review_path)
+    if path.suffix.lower() != ".csv":
+        with path.open(encoding="utf-8") as handle:
+            document = json.load(handle)
+        if document.get("review_mode") == "full_codex_human":
+            return _load_full_review_annotations(path, evaluation_articles)
+    if triage_records is None:
+        raise DatasetBuildError("Legacy review finalization requires Gemini predictions")
+    return load_approved_annotations(review_path, evaluation_articles, triage_records)
 
 
 def load_approved_annotations(

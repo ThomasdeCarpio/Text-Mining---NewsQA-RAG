@@ -2,169 +2,234 @@
 
 ## Purpose
 
-This workflow constructs a locked, reproducible RAG benchmark rather than a new
-version of NewsQA. Original question wording is always the primary benchmark.
-Human-approved clarifications form paired and full-size secondary benchmarks
-for measuring the effect of resolving under-specified queries. Every question
-variant queries the same article collection.
+This workflow constructs a locked, reproducible benchmark for evaluating the
+news RAG pipeline. It does not silently treat every NewsQA annotation as valid.
+Every selected question, answer, and evidence span is reviewed against the full
+source article before it enters a scored reviewed benchmark.
 
-The corpus contains 1,000 articles:
+The locked corpus contains:
 
-- 200 uniformly sampled validation articles and all of their questions (1,340
-  questions for the pinned revision and seed `42`).
-- 800 uniformly sampled train articles used only as retrieval distractors.
+- 200 validation articles and all their questions (1,340 questions for revision
+  `728e52920b8e4ffcfaad93fa47556f26a1d82546` and seed `42`).
+- 800 train articles used only as retrieval distractors.
+- One shared corpus, chunking configuration, Chroma collection, and BM25 index
+  for every question variant.
 
-The source revision, seed, selected context hashes, and artifact hashes are
-recorded in committed manifests. Source text, generated JSONL, and database
-files remain under the Git-ignored `data/` directory.
+The raw NewsQA extraction remains immutable. Reviewed answers and exclusions
+are separate derived artifacts with explicit provenance.
 
-## Stage 1: Select the corpus
-
-Select and stage the locked corpus without making model calls:
+## 1. Select the locked corpus
 
 ```bash
 python scripts/prepare_evaluation_dataset.py stage1 --selection-only
 ```
 
-Selection scans each source split completely twice. It operates over sorted
-SHA-256 context identities, so the same revision and seed produce the same
-sample even if source rows are returned in another order. The second scan
-collects every question and verifies the question count observed in the first
-scan.
+Selection scans the complete validation and train splits twice. It samples
+sorted context identities with seed `42`, then rescans the source to collect
+every question belonging to each selected article. It writes:
 
-The combined `stage1` command remains available when selection and triage
-should run sequentially:
+- `staging/corpus/evaluation_articles.jsonl`: 200 articles with all questions.
+- `staging/corpus/distractor_articles.jsonl`: 800 retrieval-only articles.
+- `staging/questions/original_questions.jsonl`: immutable flattened source rows.
+- `evaluation/manifests/newsqa_200_1000.selection.json`: revision, seed,
+  selection IDs, filtering statistics, and artifact hashes.
 
-```bash
-python scripts/prepare_evaluation_dataset.py stage1
-```
+The legacy Gemini workflow is available only through the explicit
+`--legacy-gemini-triage` opt-in. It is not part of the primary full-review
+pipeline and is not required.
 
-## Stage 2: Build the baseline
-
-Build the production chunks, original test set, Chroma collection, and BM25
-index immediately after selection:
+## 2. Build the baseline corpus
 
 ```bash
 python scripts/prepare_evaluation_dataset.py build-baseline
 ```
 
-The generated variant manifest has status `baseline_ready`. At this point,
-`testset_original.jsonl` can be benchmarked even if triage has not started or
-human review is incomplete.
+This applies the current production chunker to all 1,000 articles, maps source
+evidence to relevant chunks, and builds the shared Chroma and BM25 indexes. It
+writes the immutable raw benchmark to `final/testset_original.jsonl` and sets
+the variant manifest status to `baseline_ready`.
 
-## Stage 3: Triage and human review
+The raw original file is useful for provenance and diagnostic comparisons. The
+reviewed-original file produced at finalization is the primary scored benchmark.
 
-Set `GEMINI_API_KEY` in `.env`, then run:
+## 3. Initialize the full review
+
+The first clean initialization should archive the existing Gemini-era review:
 
 ```bash
-python scripts/prepare_evaluation_dataset.py triage
-python scripts/format_review_queue.py
+python scripts/prepare_evaluation_dataset.py init-review --archive-existing
 ```
 
-Gemini receives one request per article in the current validation data (a
-25-question safety limit can split larger articles). Each question includes its
-expected answer so Gemini can preserve semantic intent and answer type, but the
-prompt prohibits copying or paraphrasing that answer into the clarification.
-All answer evidence is redacted from every source window, and BM25 candidate
-articles expose competing interpretations. Every successful article response
-is checkpointed, so interrupted runs resume without repeating valid calls.
+The old `staging/review` and `staging/triage` directories are moved under a
+timestamped `staging/legacy/gemini_review_*` directory. They are preserved but
+none of their decisions are imported.
 
-## Human review
-
-Edit the authoritative hierarchical review file directly:
+Initialization creates:
 
 ```text
-data/evaluation/newsqa_200_1000/staging/review/review_queue_readable.json
+staging/review/review_queue_readable.json
+staging/review/manifest.json
 ```
 
-`review_queue.jsonl` remains the immutable Gemini snapshot. The CSV is retained
-only as a legacy/export format and is no longer consumed by finalization. The
-formatter refuses to overwrite an existing hierarchical review file unless
-`--overwrite` is explicitly passed.
+The authoritative queue contains all 1,340 questions, including questions that
+an earlier model considered standalone. Its default proposer provenance is
+`codex-cli` / `sol-5.6`. Initialization does not need an API key and does not
+make a model call.
 
-Allowed decisions are:
+## 4. Prepare Codex review packets
 
-| Decision | Required action |
+```bash
+python scripts/prepare_evaluation_dataset.py prepare-review-packets
+```
+
+This is a deterministic preparation step, not an automatic judge. Each packet
+contains at most 20 complete source articles and 150 questions. For every
+question it includes the source answer, exact evidence offsets, and the five
+highest-ranked competing article snippets from the complete 1,000-article
+corpus. Files and their hashes are recorded under:
+
+```text
+staging/review/packets/review_001.json
+staging/review/packets/...
+staging/review/packets/manifest.json
+```
+
+Run the semantic review in Codex CLI one packet at a time. Codex should read the
+packet, update the matching rows in `review_queue_readable.json`, and save a
+packet-level proposal audit under `staging/review/audits/`. The proposal audit
+should record the packet ID, input packet SHA-256, changed question IDs, model,
+timestamp, rationales, and proposed changes. Do not mark human decisions during
+the Codex proposal pass. `staging/review/audits/schema.json` defines the required
+append-only audit fields.
+
+Use this prompt for a proposal-only packet review:
+
+```text
+Review packet review_NNN as a Codex proposal-only batch. Inspect the full
+article and every question in the packet, apply the Codex proposal contract in
+this guide, write an exact-coverage proposal file under
+staging/review/proposals/, apply it to review_queue_readable.json with an
+immutable packet audit, and validate the result. Do not make any human-review
+decision; leave every human_review.decision as pending.
+```
+
+Codex writes the machine-applicable proposal to
+`staging/review/proposals/review_NNN.json`. Apply or revalidate a packet with:
+
+```bash
+python scripts/apply_review_proposals.py \
+  --packet data/evaluation/newsqa_200_1000/staging/review/packets/review_NNN.json \
+  --proposals data/evaluation/newsqa_200_1000/staging/review/proposals/review_NNN.json
+```
+
+The command requires exact packet coverage, validates evidence offsets and
+non-answer supporting quotes, rejects answer-bearing clarifications, preserves
+all protected source and human-review fields, updates the queue atomically, and
+creates an immutable audit. It refuses to overwrite an existing audit.
+
+## 5. Codex proposal contract
+
+For every question, Codex must inspect the full article and fill:
+
+- `codex_assessment.label`: `standalone`, `non_standalone`, `invalid`, or
+  `uncertain`.
+- `codex_assessment.issue_codes`: one or more allowed issue codes where needed.
+- `codex_assessment.rationale`: a short article-grounded explanation.
+- `comparison.candidate_clarified_question`: a minimal answer-preserving repair
+  when the original is not standalone or is repairable.
+- `codex_assessment.proposed_supporting_quotes`: exact, non-answer article text
+  supporting every added detail.
+- `codex_assessment.proposal`: set `status` to `proposed` and record `tool`,
+  `model`, `batch_id`, and `created_at`.
+
+Allowed quality issues include ambiguity, malformed questions, truncated or
+wrong answers, incorrect evidence, yes/no answer mismatches, and facts that are
+not present in the article.
+
+Never change `original_question`, `source_expected_answer`, or
+`source_evidence_spans`. For a supported answer correction, update
+`expected_answer`, `accepted_answers`, `evidence_spans`, and `evidence_text`, set
+`answer_modified` to `true`, and explain it in `answer_review_notes`. Reviewed
+spans use `[start, end)` offsets and must exactly match the source article.
+
+Clarification may add only identifying article context and must not reveal any
+accepted answer. A question is excluded only when it is unanswerable from the
+article, has an irreparable semantic mismatch, or has no unique defensible gold
+answer. Repair is preferred when the original semantic target can be preserved.
+
+## 6. Human approval
+
+Review each Codex proposal and fill `human_review` in the authoritative queue.
+The default reviewer ID for this dataset is `thomas`.
+
+| Decision | Meaning |
 | --- | --- |
-| `approve` | Accept the LLM clarification and its supporting source quotes. |
-| `edit` | Fill `final_clarified_question` and `review_supporting_quotes`. |
-| `mark_standalone` | Override the suspected ambiguity; no clarification is created. |
-| `needs_adjudication` | Keep the build blocked until the disagreement is resolved. |
-| `pending` | Unreviewed; keeps the build blocked. |
+| `mark_standalone` | Keep the original wording; accept any reviewed answer fields. |
+| `approve` | Accept the Codex clarification and proposed supporting quotes. |
+| `edit` | Put accepted wording in `final_clarified_question` and exact quotes in `human_review.supporting_quotes`. |
+| `exclude` | Remove the row from scored variants; requires an allowed exclusion code and human notes. |
+| `needs_adjudication` | Record a disagreement; finalization remains blocked. |
+| `pending` | Not reviewed; finalization remains blocked. |
 
-Every resolved row requires `human_review.reviewer_id`. For an `edit`, put the
-proposed replacement in `comparison.reviewed_candidate_clarified_question`,
-copy the accepted wording to `comparison.final_clarified_question`, and put
-exact source quotes in `human_review.supporting_quotes`. The original Gemini
-proposal remains in `comparison.candidate_clarified_question` for provenance.
+Human approval never overwrites raw source fields. Preserve a batch approval
+audit under `staging/review/audits/` with the reviewer ID, timestamp, approved
+question IDs, edits, exclusions, and reasons.
 
-Answer corrections are made under `answer_and_evidence`. Preserve all
-`source_*` fields, then update `expected_answer`, `accepted_answers`,
-`evidence_text`, and `evidence_spans`; set `answer_modified` to `true` and
-record the reason in `answer_review_notes`. Corrected spans use `[start, end)`
-character offsets and are validated against the source article.
-
-Rows with a non-empty `validation_warnings` column contain an LLM proposal that
-used answer evidence, leaked the answer, or cited unsupported source text. They
-cannot use `approve`; the reviewer must choose `edit` with new supporting quotes
-or `mark_standalone`.
-
-Check the gate with:
+Check progress at any time:
 
 ```bash
 python scripts/prepare_evaluation_dataset.py review-status
 ```
 
-## Stage 4: Finalize reviewed variants
+The status report includes proposal coverage, human decision counts, labels,
+issue counts, corrected answers, exclusions, and the final readiness gate.
 
-After review is complete:
+## 7. Finalize
+
+After all proposals and human decisions are complete:
 
 ```bash
 python scripts/prepare_evaluation_dataset.py finalize
 ```
 
-Finalization rejects missing rows, unresolved decisions, answer leakage,
-unsupported clarification context, changed baseline artifacts, or collection
-count mismatches. It reuses the baseline chunks, Chroma collection, and BM25
-index; it does not rechunk, re-embed, or create a second collection.
+Finalization requires one annotation per raw question and rejects pending
+proposals, unresolved human decisions, changed source fields, invalid evidence
+offsets, undocumented answer corrections, answer-leaking clarifications,
+unsupported added context, invalid exclusions, changed baseline artifacts, and
+database count mismatches.
 
-Generated files include:
+It writes:
 
-- `testset_original.jsonl`: all original evaluation questions.
-- `testset_clarified.jsonl`: paired, human-approved clarification variants.
-- `testset_resolved.jsonl`: one row per original question, using approved
-  clarified wording where available and original wording otherwise.
-- `review_annotations.jsonl`: finalized labels and clarification provenance.
-- `chunks.jsonl` and `bm25.pkl`: sparse/hybrid retrieval artifacts.
-- `integrity_report.json`: final counts and gate results.
+- `testset_original.jsonl`: all 1,340 immutable raw NewsQA rows.
+- `testset_reviewed_original.jsonl`: primary scored set using original wording,
+  reviewed answers/evidence, and no excluded rows.
+- `testset_resolved.jsonl`: the same scored rows, using a human-approved
+  clarification where one exists.
+- `testset_clarified.jsonl`: paired clarified subset only.
+- `excluded_questions.jsonl`: raw and reviewed fields plus exclusion reasons.
+- `review_annotations.jsonl`: one finalized annotation for every raw question,
+  including excluded questions.
+- `chunks.jsonl`, `bm25.pkl`, `integrity_report.json`, and the updated variant
+  manifest.
 
-Run a manifest-verified benchmark using paths and the collection recorded by
-the generated variant manifest:
+Required count relationships are:
 
-```bash
-python scripts/run_benchmark.py \
-  --retriever hybrid \
-  --testset data/evaluation/newsqa_200_1000/final/testset_original.jsonl \
-  --variant-manifest evaluation/manifests/newsqa_200_1000.variant.json \
-  --report-dir reports/newsqa_200_hybrid
+```text
+raw original = review annotations = 1,340
+reviewed original = resolved = raw original - excluded
+clarified = approved or edited questions with a clarification
 ```
 
-The same command accepts `testset_resolved.jsonl` or
-`testset_clarified.jsonl`; manifest preflight verifies all three against the
-same collection.
+No rechunking, embedding, or second database collection occurs during
+finalization.
 
-## Interpretation and limitations
+## Reporting
 
-NewsQA is document-conditioned QA. A vague original question can be valid with
-its source article supplied but ambiguous across 1,000 articles. Report original
-questions as the primary result. Compare the same-size original and resolved
-sets, then use the clarified-only set for paired diagnostics. Do not combine
-originals and clarified duplicates into a primary aggregate because that would
-give ambiguous source questions extra weight. LLM `standalone` labels are not
-human gold labels unless separately audited.
+Report `testset_reviewed_original.jsonl` as the primary result. Compare it with
+the same-size `testset_resolved.jsonl` to measure the effect of clarification,
+and use `testset_clarified.jsonl` for paired ambiguity analysis. Report raw,
+corrected, clarified, and excluded counts from the integrity manifest.
 
-Uniform sampling improves representativeness but does not establish demographic
-or topical fairness because this NewsQA representation has no dependable topic
-or demographic fields. Distractors may also contain alternate valid evidence;
-source-article retrieval remains the primary relevance definition and suspected
-multiple matches are reported as an ambiguity reason.
+Do not combine original and clarified duplicates into one primary aggregate;
+that would give ambiguous source questions extra weight. Exclusions must be
+reported rather than hidden, together with their reason distribution.

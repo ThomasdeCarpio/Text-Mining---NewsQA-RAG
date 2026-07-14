@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import platform
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -19,9 +20,11 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.evaluation.question_review import (
     PROMPT_VERSION,
+    build_full_review_packets,
     client_from_environment,
+    create_full_review_document,
     create_review_queue,
-    load_approved_annotations,
+    load_review_annotations,
     review_status,
     run_triage,
 )
@@ -35,7 +38,7 @@ from src.evaluation.testset import (
     canonical_json,
     chunk_char_ranges,
     derive_chunked_testsets,
-    derive_reviewed_testsets,
+    derive_reviewed_artifacts,
     load_testset,
     map_spans_to_chunks,
     save_jsonl,
@@ -84,9 +87,15 @@ def _paths(root: Path) -> dict[str, Path]:
         "review_jsonl": root / "staging" / "review" / "review_queue.jsonl",
         "review_csv": root / "staging" / "review" / "review_queue.csv",
         "review_readable": root / "staging" / "review" / "review_queue_readable.json",
+        "review_manifest": root / "staging" / "review" / "manifest.json",
+        "review_packets": root / "staging" / "review" / "packets",
+        "review_packet_manifest": root / "staging" / "review" / "packets" / "manifest.json",
+        "review_audit_schema": root / "staging" / "review" / "audits" / "schema.json",
         "testset_original": root / "final" / "testset_original.jsonl",
+        "testset_reviewed_original": root / "final" / "testset_reviewed_original.jsonl",
         "testset_clarified": root / "final" / "testset_clarified.jsonl",
         "testset_resolved": root / "final" / "testset_resolved.jsonl",
+        "excluded_questions": root / "final" / "excluded_questions.jsonl",
         "review_annotations": root / "final" / "review_annotations.jsonl",
         "chunks": root / "final" / "chunks.jsonl",
         "bm25": root / "final" / "bm25.pkl",
@@ -144,8 +153,8 @@ def stage1(args: argparse.Namespace) -> None:
     print(f"Selection manifest: {args.selection_manifest}")
     print(f"Evaluation questions: {len(questions)}")
 
-    if args.selection_only:
-        print("Selection-only mode requested; LLM triage was not run.")
+    if args.selection_only or not args.legacy_gemini_triage:
+        print("Selection complete; legacy Gemini triage was not run.")
         return
 
     _run_triage(args)
@@ -202,6 +211,146 @@ def _run_triage(args: argparse.Namespace) -> None:
 
 def triage_command(args: argparse.Namespace) -> None:
     _run_triage(args)
+
+
+def _archive_legacy_review(root: Path) -> Path | None:
+    candidates = [root / "staging" / "review", root / "staging" / "triage"]
+    existing = [path for path in candidates if path.exists()]
+    if not existing:
+        return None
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    archive = root / "staging" / "legacy" / f"gemini_review_{stamp}"
+    archive.mkdir(parents=True, exist_ok=False)
+    for path in existing:
+        shutil.move(str(path), str(archive / path.name))
+    return archive
+
+
+def _review_audit_schema() -> dict:
+    return {
+        "schema_version": "3.0",
+        "description": "Append-only proposal or human-approval batch audit.",
+        "required": [
+            "audit_id",
+            "audit_type",
+            "created_at",
+            "actor",
+            "input_sha256",
+            "question_ids",
+            "changes",
+        ],
+        "audit_type": ["codex_proposal", "human_approval"],
+        "actor_fields": ["tool", "model", "reviewer_id"],
+        "notes": "Create a new file per batch; never overwrite an earlier audit.",
+    }
+
+
+def init_review(args: argparse.Namespace) -> None:
+    """Initialize a clean, all-question Codex/human review queue."""
+
+    root = Path(args.output_root).resolve()
+    evaluation_articles, _, paths = _load_corpus(root)
+    review_dir = paths["review_readable"].parent
+    triage_dir = paths["predictions"].parent
+    has_legacy = any(path.exists() for path in (review_dir, triage_dir))
+    if has_legacy and not args.archive_existing:
+        raise DatasetBuildError(
+            "Existing review/triage artifacts found; pass --archive-existing to preserve "
+            "them under staging/legacy before initializing the clean review"
+        )
+    archive = _archive_legacy_review(root) if has_legacy else None
+    document = create_full_review_document(
+        evaluation_articles,
+        proposer_tool=args.proposer_tool,
+        proposer_model=args.proposer_model,
+    )
+    _write_json(paths["review_readable"], document)
+    _write_json(paths["review_audit_schema"], _review_audit_schema())
+    manifest = {
+        "schema_version": "3.0",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "review_mode": "full_codex_human",
+        "proposer": {"tool": args.proposer_tool, "model": args.proposer_model},
+        "statistics": document["summary"],
+        "artifacts": {
+            "review_queue_readable": artifact_record(paths["review_readable"], PROJECT_ROOT),
+            "review_audit_schema": artifact_record(paths["review_audit_schema"], PROJECT_ROOT),
+        },
+    }
+    if Path(args.selection_manifest).exists():
+        manifest["selection_manifest"] = {
+            "path": os.path.relpath(args.selection_manifest, PROJECT_ROOT),
+            "sha256": sha256_file(args.selection_manifest),
+        }
+    if archive:
+        manifest["legacy_archive"] = os.path.relpath(archive, PROJECT_ROOT)
+    _write_json(paths["review_manifest"], manifest)
+    print(f"Full review queue: {paths['review_readable']}")
+    print(f"Questions requiring proposals and human decisions: {document['summary']['question_count']}")
+    if archive:
+        print(f"Archived legacy Gemini artifacts: {archive}")
+
+
+def prepare_review_packets(args: argparse.Namespace) -> None:
+    root = Path(args.output_root).resolve()
+    evaluation_articles, distractor_articles, paths = _load_corpus(root)
+    if not paths["review_readable"].exists():
+        raise DatasetBuildError("Full review queue is missing; run init-review first")
+    with paths["review_readable"].open(encoding="utf-8") as handle:
+        review_document = json.load(handle)
+    if review_document.get("review_mode") != "full_codex_human":
+        raise DatasetBuildError("Review packet generation requires a full Codex review queue")
+    _write_json(paths["review_audit_schema"], _review_audit_schema())
+    if paths["review_manifest"].exists():
+        with paths["review_manifest"].open(encoding="utf-8") as handle:
+            review_manifest = json.load(handle)
+        review_manifest.setdefault("artifacts", {})["review_audit_schema"] = artifact_record(
+            paths["review_audit_schema"], PROJECT_ROOT
+        )
+        _write_json(paths["review_manifest"], review_manifest)
+    packets = build_full_review_packets(
+        evaluation_articles,
+        distractor_articles,
+        review_document,
+        max_articles=args.max_articles,
+        max_questions=args.max_questions,
+        competing_top_k=args.competing_top_k,
+    )
+    packet_dir = paths["review_packets"]
+    packet_dir.mkdir(parents=True, exist_ok=True)
+    for old_packet in packet_dir.glob("review_[0-9][0-9][0-9].json"):
+        old_packet.unlink()
+    records = []
+    for packet in packets:
+        output = packet_dir / f"{packet['packet_id']}.json"
+        _write_json(output, packet)
+        records.append(
+            {
+                "packet_id": packet["packet_id"],
+                "article_count": packet["article_count"],
+                "question_count": packet["question_count"],
+                **artifact_record(output, PROJECT_ROOT),
+            }
+        )
+    manifest = {
+        "schema_version": "3.0",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "review_queue_sha256": sha256_file(paths["review_readable"]),
+        "limits": {
+            "max_articles": args.max_articles,
+            "max_questions": args.max_questions,
+            "competing_top_k": args.competing_top_k,
+        },
+        "statistics": {
+            "packets": len(records),
+            "articles": sum(item["article_count"] for item in records),
+            "questions": sum(item["question_count"] for item in records),
+        },
+        "packets": records,
+    }
+    _write_json(paths["review_packet_manifest"], manifest)
+    print(f"Review packets: {packet_dir}")
+    print(json.dumps(manifest["statistics"], indent=2, sort_keys=True))
 
 
 def status_command(args: argparse.Namespace) -> None:
@@ -398,12 +547,14 @@ def _map_reviewed_evidence_to_chunks(
 def finalize(args: argparse.Namespace) -> None:
     root = Path(args.output_root).resolve()
     evaluation_articles, distractor_articles, paths = _load_corpus(root)
-    required = ("predictions", "review_readable", "testset_original", "chunks")
+    required = ("review_readable", "testset_original", "chunks")
     missing = [str(paths[key]) for key in required if not paths[key].exists()]
     if missing:
         raise DatasetBuildError(f"Missing baseline or review artifacts: {missing}")
 
-    triage_records = load_testset(paths["predictions"])
+    triage_records = (
+        load_testset(paths["predictions"]) if paths["predictions"].exists() else None
+    )
     context = _build_context(args, evaluation_articles, distractor_articles)
     if not Path(args.variant_manifest).exists():
         raise DatasetBuildError("Baseline manifest is missing; run build-baseline before finalize")
@@ -439,15 +590,28 @@ def finalize(args: argparse.Namespace) -> None:
     original_rows = load_testset(paths["testset_original"])
     chunks = load_testset(paths["chunks"])
     _validate_relevant_chunks(original_rows, chunks)
-    annotations = load_approved_annotations(
+    annotations = load_review_annotations(
         paths["review_readable"], evaluation_articles, triage_records
     )
     _map_reviewed_evidence_to_chunks(
         annotations, original_rows, evaluation_articles, chunks
     )
-    clarified_rows, resolved_rows = derive_reviewed_testsets(original_rows, annotations)
+    (
+        reviewed_original_rows,
+        clarified_rows,
+        resolved_rows,
+        excluded_rows,
+    ) = derive_reviewed_artifacts(original_rows, annotations)
+    if len(annotations) != len(original_rows):
+        raise DatasetBuildError("Review annotations do not cover the raw original testset")
+    if len(reviewed_original_rows) != len(resolved_rows):
+        raise DatasetBuildError("Reviewed-original and resolved testsets must have equal size")
+    if len(reviewed_original_rows) + len(excluded_rows) != len(original_rows):
+        raise DatasetBuildError("Scored and excluded rows do not partition the raw testset")
+    save_jsonl(reviewed_original_rows, paths["testset_reviewed_original"])
     save_jsonl(clarified_rows, paths["testset_clarified"])
     save_jsonl(resolved_rows, paths["testset_resolved"])
+    save_jsonl(excluded_rows, paths["excluded_questions"])
     save_jsonl(
         ({"question_id": question_id, **annotation} for question_id, annotation in sorted(annotations.items())),
         paths["review_annotations"],
@@ -461,8 +625,11 @@ def finalize(args: argparse.Namespace) -> None:
         "evaluation_articles": len(evaluation_articles),
         "distractor_articles": len(distractor_articles),
         "original_questions": len(original_rows),
+        "reviewed_original_questions": len(reviewed_original_rows),
         "resolved_questions": len(resolved_rows),
         "clarified_questions": len(clarified_rows),
+        "excluded_questions": len(excluded_rows),
+        "review_annotations": len(annotations),
         "chunks": len(chunks),
         "indexed_chunks": variant_manifest["database"]["chunk_count"]
         if variant_manifest["database"].get("indexed")
@@ -481,16 +648,20 @@ def finalize(args: argparse.Namespace) -> None:
         {
             key: artifact_record(paths[key], PROJECT_ROOT)
             for key in (
+                "testset_reviewed_original",
                 "testset_clarified",
                 "testset_resolved",
+                "excluded_questions",
                 "review_annotations",
                 "integrity",
             )
         }
     )
     _write_json(args.variant_manifest, variant_manifest)
+    print(f"Reviewed original testset: {paths['testset_reviewed_original']}")
     print(f"Resolved testset: {paths['testset_resolved']}")
     print(f"Paired clarified testset: {paths['testset_clarified']}")
+    print(f"Excluded questions: {paths['excluded_questions']}")
     print("Review finalization reused the baseline chunks and retrieval indexes.")
 
 
@@ -498,7 +669,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    prepare = subparsers.add_parser("stage1", help="Select corpus, run triage, and create review queue")
+    prepare = subparsers.add_parser(
+        "stage1", help="Select the locked corpus (Gemini triage is legacy and optional)"
+    )
     prepare.add_argument("--dataset", default=DEFAULT_DATASET_NAME)
     prepare.add_argument("--revision", default=DEFAULT_DATASET_REVISION)
     prepare.add_argument("--evaluation-articles", type=_positive_int, default=200)
@@ -508,6 +681,11 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--requests-per-minute", type=_positive_int, default=5)
     prepare.add_argument("--max-questions-per-request", type=_positive_int, default=25)
     prepare.add_argument("--selection-only", action="store_true")
+    prepare.add_argument(
+        "--legacy-gemini-triage",
+        action="store_true",
+        help="Opt in to the deprecated Gemini triage immediately after selection",
+    )
     prepare.add_argument("--output-root", default=str(DEFAULT_ROOT))
     prepare.add_argument("--selection-manifest", default=str(DEFAULT_SELECTION_MANIFEST))
     prepare.set_defaults(func=stage1)
@@ -521,6 +699,32 @@ def build_parser() -> argparse.ArgumentParser:
     triage.add_argument("--output-root", default=str(DEFAULT_ROOT))
     triage.add_argument("--selection-manifest", default=str(DEFAULT_SELECTION_MANIFEST))
     triage.set_defaults(func=triage_command)
+
+    initialize = subparsers.add_parser(
+        "init-review", help="Create a clean all-question Codex/human review queue"
+    )
+    initialize.add_argument("--output-root", default=str(DEFAULT_ROOT))
+    initialize.add_argument(
+        "--selection-manifest", default=str(DEFAULT_SELECTION_MANIFEST)
+    )
+    initialize.add_argument("--proposer-tool", default="codex-cli")
+    initialize.add_argument("--proposer-model", default="sol-5.6")
+    initialize.add_argument(
+        "--archive-existing",
+        action="store_true",
+        help="Preserve existing Gemini review/triage artifacts under staging/legacy",
+    )
+    initialize.set_defaults(func=init_review)
+
+    packets = subparsers.add_parser(
+        "prepare-review-packets",
+        help="Create bounded article packets for Codex proposal review",
+    )
+    packets.add_argument("--output-root", default=str(DEFAULT_ROOT))
+    packets.add_argument("--max-articles", type=_positive_int, default=20)
+    packets.add_argument("--max-questions", type=_positive_int, default=150)
+    packets.add_argument("--competing-top-k", type=_positive_int, default=5)
+    packets.set_defaults(func=prepare_review_packets)
 
     status = subparsers.add_parser("review-status", help="Validate whether human review is complete")
     status.add_argument(

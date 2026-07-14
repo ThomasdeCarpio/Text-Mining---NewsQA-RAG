@@ -10,8 +10,11 @@ from unittest.mock import patch
 from src.evaluation.question_review import (
     ArticleCandidateIndex,
     build_article_request,
+    build_full_review_packets,
+    create_full_review_document,
     create_review_queue,
     load_approved_annotations,
+    load_review_annotations,
     review_status,
     validate_predictions,
 )
@@ -21,6 +24,7 @@ from src.evaluation.testset import (
     article_id_for_context,
     canonical_json,
     derive_chunked_testsets,
+    derive_reviewed_artifacts,
     derive_reviewed_testsets,
     load_testset,
     sample_articles,
@@ -29,6 +33,7 @@ from src.evaluation.testset import (
     sha256_text,
 )
 from scripts.prepare_evaluation_dataset import build_baseline, build_parser, finalize
+from scripts.apply_review_proposals import apply_proposals
 from scripts.format_review_queue import build_readable_queue
 from scripts.run_benchmark import _apply_manifest_preflight
 
@@ -64,6 +69,13 @@ class EvaluationDatasetSelectionTests(unittest.TestCase):
         self.assertEqual("gemini-3.1-flash-lite", args.model)
         self.assertIn("newsqa_200_1000", args.output_root)
         self.assertIn("newsqa_200_1000.selection.json", args.selection_manifest)
+        review_args = build_parser().parse_args(["init-review"])
+        self.assertEqual("codex-cli", review_args.proposer_tool)
+        self.assertEqual("sol-5.6", review_args.proposer_model)
+        packet_args = build_parser().parse_args(["prepare-review-packets"])
+        self.assertEqual(20, packet_args.max_articles)
+        self.assertEqual(150, packet_args.max_questions)
+        self.assertEqual(5, packet_args.competing_top_k)
 
     def test_sampling_is_row_order_independent_and_collects_all_questions(self):
         contexts = [f"Article {i} has answer value." for i in range(6)]
@@ -173,6 +185,50 @@ class EvaluationDatasetSelectionTests(unittest.TestCase):
         self.assertEqual(original[0]["ground_truth"], clarified[0]["ground_truth"])
         self.assertEqual(original[0]["relevant_chunk_ids"], clarified[0]["relevant_chunk_ids"])
         self.assertEqual("original", resolved[1]["question_variant"])
+
+    def test_reviewed_artifacts_partition_exclusions(self):
+        originals = [
+            {
+                "question_id": "kept",
+                "question": "Who won?",
+                "ground_truth": "Alice",
+                "evidence_spans": [{"start": 0, "end": 5, "text": "Alice"}],
+                "evidence": "Alice",
+                "relevant_chunk_ids": ["chunk-1"],
+            },
+            {
+                "question_id": "excluded",
+                "question": "What did it cost?",
+                "ground_truth": "wrong",
+                "evidence_spans": [{"start": 0, "end": 5, "text": "wrong"}],
+                "evidence": "wrong",
+                "relevant_chunk_ids": ["chunk-2"],
+            },
+        ]
+        annotations = {
+            "kept": {
+                "final_label": "human_standalone",
+                "reason_codes": [],
+                "final_clarified_question": None,
+            },
+            "excluded": {
+                "final_label": "human_excluded",
+                "reason_codes": ["unanswerable_from_article"],
+                "final_clarified_question": None,
+                "excluded": True,
+                "exclusion_reasons": ["unanswerable_from_article"],
+                "review_notes": "The requested cost is absent from the article.",
+            },
+        }
+
+        reviewed, clarified, resolved, excluded = derive_reviewed_artifacts(
+            originals, annotations
+        )
+
+        self.assertEqual(["kept"], [row["question_id"] for row in reviewed])
+        self.assertEqual([], clarified)
+        self.assertEqual(["kept"], [row["question_id"] for row in resolved])
+        self.assertEqual(["excluded"], [row["question_id"] for row in excluded])
 
     def test_baseline_is_available_before_review_and_finalize_reuses_it(self):
         context = "Case Alpha involved several people. Alice was acquitted on Monday."
@@ -289,6 +345,91 @@ class EvaluationDatasetSelectionTests(unittest.TestCase):
             self.assertEqual(1, len(load_testset(root / "final/testset_clarified.jsonl")))
             self.assertEqual("review_complete", json.loads(variant_manifest.read_text())["status"])
 
+    def test_full_review_finalizes_without_gemini_predictions(self):
+        context = "Case Alpha reports that Alice won the hearing."
+        article_id = article_id_for_context(context)
+        start = context.index("Alice")
+        question = {
+            "question_id": "q-1",
+            "article_id": article_id,
+            "question": "Who won the hearing in Case Alpha?",
+            "ground_truth": "Alice",
+            "evidence_spans": [{"start": start, "end": start + 5, "text": "Alice"}],
+        }
+        article = {
+            "article_id": article_id,
+            "context": context,
+            "split": "validation",
+            "role": "evaluation",
+            "metadata": {"title": "Case Alpha", "publisher": "CNN"},
+            "questions": [question],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            save_jsonl([article], root / "staging/corpus/evaluation_articles.jsonl")
+            save_jsonl([], root / "staging/corpus/distractor_articles.jsonl")
+            config_path = root / "config.yaml"
+            selection_manifest = root / "selection.json"
+            variant_manifest = root / "variant.json"
+            config_path.write_text(
+                "chunking: {strategy: recursive}\nembedding: {}\n", encoding="utf-8"
+            )
+            selection_manifest.write_text(
+                json.dumps({"sampling": {"seed": 42}}), encoding="utf-8"
+            )
+            common = {
+                "output_root": str(root),
+                "selection_manifest": str(selection_manifest),
+                "variant_manifest": str(variant_manifest),
+                "config": str(config_path),
+                "collection": None,
+            }
+            with patch(
+                "scripts.prepare_evaluation_dataset.get_chunker", return_value=FakeChunker()
+            ):
+                build_baseline(
+                    Namespace(
+                        **common,
+                        db_path=str(root / "chroma"),
+                        overwrite=False,
+                        skip_index=True,
+                    )
+                )
+
+            document = create_full_review_document([article])
+            item = document["articles"][0]["questions"][0]
+            item["codex_assessment"].update(
+                {
+                    "label": "standalone",
+                    "issue_codes": [],
+                    "rationale": "The event and subject are specific.",
+                }
+            )
+            item["codex_assessment"]["proposal"].update(
+                {
+                    "status": "proposed",
+                    "batch_id": "review_001",
+                    "created_at": "2026-07-14T00:00:00Z",
+                }
+            )
+            item["human_review"].update(
+                {"decision": "mark_standalone", "reviewer_id": "thomas"}
+            )
+            review_path = root / "staging/review/review_queue_readable.json"
+            review_path.parent.mkdir(parents=True)
+            review_path.write_text(json.dumps(document), encoding="utf-8")
+
+            finalize(Namespace(**common))
+
+            self.assertFalse((root / "staging/triage/all_predictions.jsonl").exists())
+            self.assertEqual(
+                1, len(load_testset(root / "final/testset_reviewed_original.jsonl"))
+            )
+            self.assertEqual(1, len(load_testset(root / "final/testset_resolved.jsonl")))
+            self.assertEqual(0, len(load_testset(root / "final/testset_clarified.jsonl")))
+            self.assertEqual(0, len(load_testset(root / "final/excluded_questions.jsonl")))
+            self.assertEqual(1, len(load_testset(root / "final/review_annotations.jsonl")))
+
     def test_manifest_preflight_accepts_resolved_testset(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -388,6 +529,202 @@ class QuestionReviewTests(unittest.TestCase):
         self.assertEqual("Alice", question["expected_answer"])
         self.assertNotIn("Alice", question["redacted_source_context"])
         self.assertNotIn("title", request["article"])
+
+    def test_full_review_covers_every_question_and_builds_bounded_packets(self):
+        articles = []
+        for index in range(3):
+            context = f"Case {index} reports answer {index}."
+            article_id = article_id_for_context(context)
+            start = context.index("answer")
+            articles.append(
+                {
+                    "article_id": article_id,
+                    "context": context,
+                    "split": "validation",
+                    "role": "evaluation",
+                    "metadata": {"title": f"Case {index}", "publisher": "CNN"},
+                    "questions": [
+                        {
+                            "question_id": f"q-{index}",
+                            "article_id": article_id,
+                            "question": f"What was reported in case {index}?",
+                            "ground_truth": "answer",
+                            "evidence_spans": [
+                                {"start": start, "end": start + 6, "text": "answer"}
+                            ],
+                        }
+                    ],
+                }
+            )
+        document = create_full_review_document(articles)
+        packets = build_full_review_packets(
+            articles, [], document, max_articles=2, max_questions=2, competing_top_k=1
+        )
+
+        self.assertEqual(3, document["summary"]["question_count"])
+        self.assertEqual([2, 1], [packet["question_count"] for packet in packets])
+        self.assertTrue(all(packet["article_count"] <= 2 for packet in packets))
+
+    def test_full_review_requires_codex_proposal_and_human_approval(self):
+        document = create_full_review_document([self.article])
+        item = document["articles"][0]["questions"][0]
+        item["comparison"]["candidate_clarified_question"] = (
+            "Who was acquitted in Case Alpha?"
+        )
+        item["codex_assessment"].update(
+            {
+                "label": "non_standalone",
+                "issue_codes": ["missing_subject"],
+                "rationale": "The case is unnamed.",
+                "proposed_supporting_quotes": ["Case Alpha"],
+            }
+        )
+        item["codex_assessment"]["proposal"].update(
+            {
+                "status": "proposed",
+                "batch_id": "review_001",
+                "created_at": "2026-07-14T00:00:00Z",
+            }
+        )
+        item["human_review"].update(
+            {"decision": "approve", "reviewer_id": "reviewer-1"}
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "review.json"
+            path.write_text(json.dumps(document), encoding="utf-8")
+            self.assertTrue(review_status(path)["ready"])
+            annotations = load_review_annotations(path, [self.article])
+
+        self.assertEqual(
+            "Who was acquitted in Case Alpha?",
+            annotations["q-ambiguous"]["final_clarified_question"],
+        )
+
+    def test_apply_codex_proposal_requires_exact_packet_coverage(self):
+        document = create_full_review_document([self.article])
+        packet = build_full_review_packets(
+            [self.article], [], document, max_articles=20, max_questions=150
+        )[0]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            packet_path = root / "review_001.json"
+            queue_path = root / "review_queue_readable.json"
+            proposal_path = root / "proposal.json"
+            packet_path.write_text(json.dumps(packet), encoding="utf-8")
+            queue_path.write_text(json.dumps(document), encoding="utf-8")
+            proposal_path.write_text(
+                json.dumps(
+                    {
+                        "audit_id": "review_001_codex_proposal_v1",
+                        "packet_id": "review_001",
+                        "created_at": "2026-07-14T00:00:00Z",
+                        "actor": {"tool": "codex-cli", "model": "sol-5.6"},
+                        "input_sha256": sha256_file(packet_path),
+                        "changes": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(DatasetBuildError, "exactly match"):
+                apply_proposals(packet_path, proposal_path, queue_path)
+
+    def test_apply_codex_proposal_preserves_source_and_human_fields(self):
+        document = create_full_review_document([self.article])
+        packet = build_full_review_packets(
+            [self.article], [], document, max_articles=20, max_questions=150
+        )[0]
+        source_row = document["articles"][0]["questions"][0]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            packet_path = root / "review_001.json"
+            queue_path = root / "review_queue_readable.json"
+            proposal_path = root / "proposal.json"
+            audit_path = root / "audit.json"
+            packet_path.write_text(json.dumps(packet), encoding="utf-8")
+            queue_path.write_text(json.dumps(document), encoding="utf-8")
+            proposal_path.write_text(
+                json.dumps(
+                    {
+                        "audit_id": "review_001_codex_proposal_v1",
+                        "packet_id": "review_001",
+                        "created_at": "2026-07-14T00:00:00Z",
+                        "actor": {"tool": "codex-cli", "model": "sol-5.6"},
+                        "input_sha256": sha256_file(packet_path),
+                        "changes": [
+                            {
+                                "question_id": "q-ambiguous",
+                                "label": "non_standalone",
+                                "issue_codes": ["missing_subject"],
+                                "rationale": "The case is not identified.",
+                                "candidate_clarified_question": "Who was acquitted in Case Alpha?",
+                                "proposed_supporting_quotes": ["Case Alpha"],
+                                "answer_update": None,
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            apply_proposals(
+                packet_path, proposal_path, queue_path, audit_path=audit_path
+            )
+            updated = json.loads(queue_path.read_text(encoding="utf-8"))
+            row = updated["articles"][0]["questions"][0]
+
+            self.assertEqual(
+                source_row["comparison"]["original_question"],
+                row["comparison"]["original_question"],
+            )
+            self.assertEqual(
+                source_row["answer_and_evidence"]["source_expected_answer"],
+                row["answer_and_evidence"]["source_expected_answer"],
+            )
+            self.assertEqual(
+                source_row["answer_and_evidence"]["source_evidence_spans"],
+                row["answer_and_evidence"]["source_evidence_spans"],
+            )
+            self.assertEqual("pending", row["human_review"]["decision"])
+            self.assertEqual("proposed", row["codex_assessment"]["proposal"]["status"])
+            self.assertTrue(audit_path.exists())
+
+    def test_full_review_exclusion_requires_explicit_reason(self):
+        document = create_full_review_document([self.article])
+        item = document["articles"][0]["questions"][0]
+        item["codex_assessment"].update(
+            {
+                "label": "invalid",
+                "issue_codes": ["unanswerable_from_article"],
+                "rationale": "The requested fact is absent.",
+            }
+        )
+        item["codex_assessment"]["proposal"].update(
+            {
+                "status": "proposed",
+                "batch_id": "review_001",
+                "created_at": "2026-07-14T00:00:00Z",
+            }
+        )
+        item["human_review"].update(
+            {
+                "decision": "exclude",
+                "reviewer_id": "reviewer-1",
+                "notes": "No unique supported answer is present.",
+            }
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "review.json"
+            path.write_text(json.dumps(document), encoding="utf-8")
+            annotations = load_review_annotations(path, [self.article])
+
+        self.assertTrue(annotations["q-ambiguous"]["excluded"])
+        self.assertEqual(
+            ["unanswerable_from_article"],
+            annotations["q-ambiguous"]["exclusion_reasons"],
+        )
 
     def test_review_gate_requires_approval_and_reviewer(self):
         prediction = validate_predictions(self.article, [self.prediction])[0]

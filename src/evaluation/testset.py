@@ -426,14 +426,16 @@ def derive_chunked_testsets(
     return original_rows, clarified_rows, chunks
 
 
-def derive_reviewed_testsets(
+def derive_reviewed_artifacts(
     original_rows: Sequence[dict],
     annotations: dict[str, dict],
-) -> tuple[list[dict], list[dict]]:
-    """Create paired clarified rows and a full resolved benchmark without rechunking."""
+) -> tuple[list[dict], list[dict], list[dict], list[dict]]:
+    """Create reviewed, resolved, clarified, and excluded artifacts without rechunking."""
 
+    reviewed_original_rows: list[dict] = []
     clarified_rows: list[dict] = []
     resolved_rows: list[dict] = []
+    excluded_rows: list[dict] = []
     original_ids = {row["question_id"] for row in original_rows}
     unknown_annotations = sorted(set(annotations) - original_ids)
     if unknown_annotations:
@@ -474,6 +476,27 @@ def derive_reviewed_testsets(
                     "answer_review_notes": annotation.get("answer_review_notes", ""),
                 }
             )
+        if annotation.get("excluded"):
+            excluded_rows.append(
+                {
+                    **row,
+                    **reviewed_fields,
+                    "source_question_id": question_id,
+                    "excluded": True,
+                    "exclusion_reasons": annotation.get("exclusion_reasons", []),
+                    "review_notes": annotation.get("review_notes", ""),
+                }
+            )
+            continue
+        reviewed_original_rows.append(
+            {
+                **row,
+                **reviewed_fields,
+                "source_question_id": question_id,
+                "question": row["question"],
+                "question_variant": "original",
+            }
+        )
         resolved_rows.append(
             {
                 **row,
@@ -495,8 +518,22 @@ def derive_reviewed_testsets(
                 }
             )
 
+    reviewed_original_rows.sort(key=lambda item: item["question_id"])
     clarified_rows.sort(key=lambda item: item["question_id"])
     resolved_rows.sort(key=lambda item: item["question_id"])
+    excluded_rows.sort(key=lambda item: item["question_id"])
+    return reviewed_original_rows, clarified_rows, resolved_rows, excluded_rows
+
+
+def derive_reviewed_testsets(
+    original_rows: Sequence[dict],
+    annotations: dict[str, dict],
+) -> tuple[list[dict], list[dict]]:
+    """Compatibility wrapper returning the paired clarified and resolved sets."""
+
+    _, clarified_rows, resolved_rows, _ = derive_reviewed_artifacts(
+        original_rows, annotations
+    )
     return clarified_rows, resolved_rows
 
 

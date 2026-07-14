@@ -406,7 +406,12 @@ def _apply_manifest_preflight(args, config: dict) -> None:
     accepted = {
         item.get("sha256")
         for key, item in artifacts.items()
-        if key in {"testset_original", "testset_clarified", "testset_resolved"}
+        if key in {
+            "testset_original",
+            "testset_reviewed_original",
+            "testset_clarified",
+            "testset_resolved",
+        }
     }
     if testset_hash not in accepted:
         raise SystemExit("ERROR: --testset hash is not recorded by the variant manifest")
