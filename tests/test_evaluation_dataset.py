@@ -32,7 +32,13 @@ from src.evaluation.testset import (
     sha256_file,
     sha256_text,
 )
-from scripts.prepare_evaluation_dataset import build_baseline, build_parser, finalize
+from scripts.prepare_evaluation_dataset import (
+    _evaluation_payload_hash,
+    build_baseline,
+    build_parser,
+    finalize,
+    migrate_review,
+)
 from scripts.apply_review_proposals import apply_proposals
 from scripts.format_review_queue import build_readable_queue
 from scripts.run_benchmark import _apply_manifest_preflight
@@ -64,11 +70,11 @@ class EvaluationDatasetSelectionTests(unittest.TestCase):
     def test_professional_workflow_defaults(self):
         args = build_parser().parse_args(["stage1"])
         self.assertEqual(200, args.evaluation_articles)
-        self.assertEqual(800, args.distractor_articles)
+        self.assertEqual(10_864, args.distractor_articles)
         self.assertEqual(42, args.seed)
         self.assertEqual("gemini-3.1-flash-lite", args.model)
-        self.assertIn("newsqa_200_1000", args.output_root)
-        self.assertIn("newsqa_200_1000.selection.json", args.selection_manifest)
+        self.assertIn("newsqa_200_11064", args.output_root)
+        self.assertIn("newsqa_200_11064.selection.json", args.selection_manifest)
         review_args = build_parser().parse_args(["init-review"])
         self.assertEqual("codex-cli", review_args.proposer_tool)
         self.assertEqual("sol-5.6", review_args.proposer_model)
@@ -76,6 +82,17 @@ class EvaluationDatasetSelectionTests(unittest.TestCase):
         self.assertEqual(20, packet_args.max_articles)
         self.assertEqual(150, packet_args.max_questions)
         self.assertEqual(5, packet_args.competing_top_k)
+
+    def test_evaluation_payload_hash_is_order_independent_and_content_sensitive(self):
+        first = [
+            {"article_id": "article-b", "context": "B", "questions": []},
+            {"article_id": "article-a", "context": "A", "questions": []},
+        ]
+        second = list(reversed(first))
+        changed = [dict(first[0]), {**first[1], "context": "changed"}]
+
+        self.assertEqual(_evaluation_payload_hash(first), _evaluation_payload_hash(second))
+        self.assertNotEqual(_evaluation_payload_hash(first), _evaluation_payload_hash(changed))
 
     def test_sampling_is_row_order_independent_and_collects_all_questions(self):
         contexts = [f"Article {i} has answer value." for i in range(6)]
@@ -600,6 +617,77 @@ class QuestionReviewTests(unittest.TestCase):
             "Who was acquitted in Case Alpha?",
             annotations["q-ambiguous"]["final_clarified_question"],
         )
+
+    def test_review_migration_requires_identical_evaluation_payload(self):
+        document = create_full_review_document([self.article])
+        item = document["articles"][0]["questions"][0]
+        item["codex_assessment"].update(
+            {
+                "label": "standalone",
+                "issue_codes": [],
+                "rationale": "The question is retained as written.",
+            }
+        )
+        item["codex_assessment"]["proposal"].update(
+            {
+                "status": "proposed",
+                "batch_id": "review_001",
+                "created_at": "2026-07-14T00:00:00Z",
+            }
+        )
+        item["human_review"].update(
+            {"decision": "mark_standalone", "reviewer_id": "reviewer-1"}
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            target = root / "target"
+            for dataset_root in (source, target):
+                corpus = dataset_root / "staging" / "corpus"
+                save_jsonl([self.article], corpus / "evaluation_articles.jsonl")
+                save_jsonl([], corpus / "distractor_articles.jsonl")
+            source_review = source / "staging" / "review"
+            source_review.mkdir(parents=True)
+            (source_review / "review_queue_readable.json").write_text(
+                json.dumps(document), encoding="utf-8"
+            )
+            source_selection = root / "source.selection.json"
+            target_selection = root / "target.selection.json"
+            source_selection.write_text("{}", encoding="utf-8")
+            target_selection.write_text("{}", encoding="utf-8")
+
+            migrate_review(
+                Namespace(
+                    source_root=str(source),
+                    source_selection_manifest=str(source_selection),
+                    output_root=str(target),
+                    selection_manifest=str(target_selection),
+                )
+            )
+            migrated = target / "staging" / "review"
+            self.assertEqual(
+                sha256_file(source_review / "review_queue_readable.json"),
+                sha256_file(migrated / "review_queue_readable.json"),
+            )
+            manifest = json.loads((migrated / "manifest.json").read_text())
+            self.assertEqual("distractor_only", manifest["migration"]["type"])
+            self.assertEqual(1, manifest["statistics"]["migrated_annotations"])
+
+            changed_article = {**self.article, "context": self.context + " Changed."}
+            changed_target = root / "changed-target"
+            changed_corpus = changed_target / "staging" / "corpus"
+            save_jsonl([changed_article], changed_corpus / "evaluation_articles.jsonl")
+            save_jsonl([], changed_corpus / "distractor_articles.jsonl")
+            with self.assertRaisesRegex(DatasetBuildError, "migration is unsafe"):
+                migrate_review(
+                    Namespace(
+                        source_root=str(source),
+                        source_selection_manifest=str(source_selection),
+                        output_root=str(changed_target),
+                        selection_manifest=str(target_selection),
+                    )
+                )
 
     def test_apply_codex_proposal_requires_exact_packet_coverage(self):
         document = create_full_review_document([self.article])

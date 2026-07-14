@@ -283,7 +283,7 @@ def build_selection_bundle(
     dataset_name: str = DEFAULT_DATASET_NAME,
     revision: str = DEFAULT_DATASET_REVISION,
     evaluation_count: int = 200,
-    distractor_count: int = 800,
+    distractor_count: int = 10_864,
     seed: int = 42,
     dataset_factory: Callable[[str], Iterable[dict]] | None = None,
 ) -> tuple[list[dict], list[dict], dict]:

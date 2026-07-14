@@ -17,7 +17,7 @@ from src.evaluation.question_review import FULL_REVIEW_ISSUES, FULL_REVIEW_LABEL
 from src.evaluation.testset import DatasetBuildError, sha256_file
 
 
-DEFAULT_ROOT = PROJECT_ROOT / "data" / "evaluation" / "newsqa_200_1000"
+DEFAULT_ROOT = PROJECT_ROOT / "data" / "evaluation" / "newsqa_200_11064"
 DEFAULT_QUEUE = DEFAULT_ROOT / "staging" / "review" / "review_queue_readable.json"
 
 

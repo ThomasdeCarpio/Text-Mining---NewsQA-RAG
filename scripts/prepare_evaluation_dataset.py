@@ -48,9 +48,13 @@ from src.evaluation.testset import (
 from src.ingestion.chunker import get_chunker
 
 
-DEFAULT_ROOT = PROJECT_ROOT / "data" / "evaluation" / "newsqa_200_1000"
-DEFAULT_SELECTION_MANIFEST = PROJECT_ROOT / "evaluation" / "manifests" / "newsqa_200_1000.selection.json"
-DEFAULT_VARIANT_MANIFEST = PROJECT_ROOT / "evaluation" / "manifests" / "newsqa_200_1000.variant.json"
+DEFAULT_ROOT = PROJECT_ROOT / "data" / "evaluation" / "newsqa_200_11064"
+DEFAULT_SELECTION_MANIFEST = PROJECT_ROOT / "evaluation" / "manifests" / "newsqa_200_11064.selection.json"
+DEFAULT_VARIANT_MANIFEST = PROJECT_ROOT / "evaluation" / "manifests" / "newsqa_200_11064.variant.json"
+REVIEW_SOURCE_ROOT = PROJECT_ROOT / "data" / "evaluation" / "newsqa_200_1000"
+REVIEW_SOURCE_SELECTION_MANIFEST = (
+    PROJECT_ROOT / "evaluation" / "manifests" / "newsqa_200_1000.selection.json"
+)
 
 
 def _positive_int(value: str) -> int:
@@ -289,6 +293,112 @@ def init_review(args: argparse.Namespace) -> None:
     print(f"Questions requiring proposals and human decisions: {document['summary']['question_count']}")
     if archive:
         print(f"Archived legacy Gemini artifacts: {archive}")
+
+
+def _evaluation_payload_hash(articles: list[dict]) -> str:
+    """Hash complete evaluation articles independently of file ordering."""
+
+    return sha256_text(
+        canonical_json(sorted(articles, key=lambda article: article["article_id"]))
+    )
+
+
+def migrate_review(args: argparse.Namespace) -> None:
+    """Reuse a completed review when only the distractor corpus has changed."""
+
+    source_root = Path(args.source_root).resolve()
+    target_root = Path(args.output_root).resolve()
+    source_articles, _, source_paths = _load_corpus(source_root)
+    target_articles, _, target_paths = _load_corpus(target_root)
+
+    required = {
+        "source review queue": source_paths["review_readable"],
+        "source selection manifest": Path(args.source_selection_manifest),
+        "target selection manifest": Path(args.selection_manifest),
+    }
+    missing = [f"{label}: {path}" for label, path in required.items() if not path.exists()]
+    if missing:
+        raise DatasetBuildError(f"Missing review migration inputs: {missing}")
+    if target_paths["review_readable"].exists():
+        raise DatasetBuildError(
+            f"Target review queue already exists: {target_paths['review_readable']}"
+        )
+
+    source_hash = _evaluation_payload_hash(source_articles)
+    target_hash = _evaluation_payload_hash(target_articles)
+    if source_hash != target_hash:
+        raise DatasetBuildError(
+            "Evaluation articles or their source questions changed; review migration is unsafe"
+        )
+
+    annotations = load_review_annotations(
+        source_paths["review_readable"], source_articles
+    )
+    source_question_count = sum(len(article["questions"]) for article in source_articles)
+    if len(annotations) != source_question_count:
+        raise DatasetBuildError("Source review does not cover every evaluation question")
+
+    target_paths["review_readable"].parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source_paths["review_readable"], target_paths["review_readable"])
+    _write_json(target_paths["review_audit_schema"], _review_audit_schema())
+
+    source_manifest_path = source_paths["review_manifest"]
+    source_manifest = {}
+    if source_manifest_path.exists():
+        with source_manifest_path.open(encoding="utf-8") as handle:
+            source_manifest = json.load(handle)
+
+    migration = {
+        "type": "distractor_only",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "evaluation_payload_sha256": source_hash,
+        "source_root": os.path.relpath(source_root, PROJECT_ROOT),
+        "source_selection_manifest": {
+            "path": os.path.relpath(args.source_selection_manifest, PROJECT_ROOT),
+            "sha256": sha256_file(args.source_selection_manifest),
+        },
+        "source_review_queue": artifact_record(
+            source_paths["review_readable"], PROJECT_ROOT
+        ),
+        "source_review_manifest": (
+            artifact_record(source_manifest_path, PROJECT_ROOT)
+            if source_manifest_path.exists()
+            else None
+        ),
+        "source_audits": os.path.relpath(
+            source_paths["review_readable"].parent / "audits", PROJECT_ROOT
+        ),
+    }
+    manifest = {
+        "schema_version": "3.0",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "review_mode": "full_codex_human",
+        "proposer": source_manifest.get(
+            "proposer", {"tool": "codex-cli", "model": "sol-5.6"}
+        ),
+        "statistics": {
+            "article_count": len(target_articles),
+            "question_count": source_question_count,
+            "migrated_annotations": len(annotations),
+        },
+        "selection_manifest": {
+            "path": os.path.relpath(args.selection_manifest, PROJECT_ROOT),
+            "sha256": sha256_file(args.selection_manifest),
+        },
+        "migration": migration,
+        "artifacts": {
+            "review_queue_readable": artifact_record(
+                target_paths["review_readable"], PROJECT_ROOT
+            ),
+            "review_audit_schema": artifact_record(
+                target_paths["review_audit_schema"], PROJECT_ROOT
+            ),
+        },
+    }
+    _write_json(target_paths["review_manifest"], manifest)
+    print(f"Migrated review queue: {target_paths['review_readable']}")
+    print(f"Verified evaluation payload: {source_hash}")
+    print(f"Migrated annotations: {len(annotations)}")
 
 
 def prepare_review_packets(args: argparse.Namespace) -> None:
@@ -675,7 +785,7 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--dataset", default=DEFAULT_DATASET_NAME)
     prepare.add_argument("--revision", default=DEFAULT_DATASET_REVISION)
     prepare.add_argument("--evaluation-articles", type=_positive_int, default=200)
-    prepare.add_argument("--distractor-articles", type=_positive_int, default=800)
+    prepare.add_argument("--distractor-articles", type=_positive_int, default=10_864)
     prepare.add_argument("--seed", type=int, default=42)
     prepare.add_argument("--model", default="gemini-3.1-flash-lite")
     prepare.add_argument("--requests-per-minute", type=_positive_int, default=5)
@@ -715,6 +825,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="Preserve existing Gemini review/triage artifacts under staging/legacy",
     )
     initialize.set_defaults(func=init_review)
+
+    migrate = subparsers.add_parser(
+        "migrate-review",
+        help="Reuse a completed review after a distractor-only corpus change",
+    )
+    migrate.add_argument("--source-root", default=str(REVIEW_SOURCE_ROOT))
+    migrate.add_argument(
+        "--source-selection-manifest",
+        default=str(REVIEW_SOURCE_SELECTION_MANIFEST),
+    )
+    migrate.add_argument("--output-root", default=str(DEFAULT_ROOT))
+    migrate.add_argument(
+        "--selection-manifest", default=str(DEFAULT_SELECTION_MANIFEST)
+    )
+    migrate.set_defaults(func=migrate_review)
 
     packets = subparsers.add_parser(
         "prepare-review-packets",

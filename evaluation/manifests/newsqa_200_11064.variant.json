@@ -1,0 +1,143 @@
+{
+  "artifacts": {
+    "bm25": {
+      "bytes": 43013055,
+      "path": "data/evaluation/newsqa_200_11064/final/bm25.pkl",
+      "sha256": "8af2f968a755b680f8279222a0c33692001532fcc616eee880ed7faf5b5669d5"
+    },
+    "chunks": {
+      "bytes": 44453661,
+      "path": "data/evaluation/newsqa_200_11064/final/chunks.jsonl",
+      "sha256": "9f9c3fd6b645b72c8e2e18764c461d77cccea334cd781dd8eb28950918c474a4"
+    },
+    "excluded_questions": {
+      "bytes": 3463,
+      "path": "data/evaluation/newsqa_200_11064/final/excluded_questions.jsonl",
+      "sha256": "c6d5d26e53b9505503c28f9cfb0feb5f7506a89b12c14544a87ceba616a23042"
+    },
+    "integrity": {
+      "bytes": 1444,
+      "path": "data/evaluation/newsqa_200_11064/final/integrity_report.json",
+      "sha256": "924525cc050f134956524690d20713c146bf1cd213d57b20eb0bb1c40034a4d1"
+    },
+    "review_annotations": {
+      "bytes": 1418758,
+      "path": "data/evaluation/newsqa_200_11064/final/review_annotations.jsonl",
+      "sha256": "c4c42c48af7a2e32b445e1ff6b7cc4001347f0f63766a26a1151db0897eecb41"
+    },
+    "testset_clarified": {
+      "bytes": 820054,
+      "path": "data/evaluation/newsqa_200_11064/final/testset_clarified.jsonl",
+      "sha256": "482495a2c3b678d270b750fd4da5200acbea5dedd735b1dfdf67c38f89aa0dfb"
+    },
+    "testset_original": {
+      "bytes": 655977,
+      "path": "data/evaluation/newsqa_200_11064/final/testset_original.jsonl",
+      "sha256": "99c74d2011e815bb5224c1c2ea5b854e3f721897f1a8c94c1727f637dbb655a8"
+    },
+    "testset_resolved": {
+      "bytes": 979664,
+      "path": "data/evaluation/newsqa_200_11064/final/testset_resolved.jsonl",
+      "sha256": "f41c7b78dea72867d79ce3118f0b6183bb28d8e83aab235db53ad326ec7bd544"
+    },
+    "testset_reviewed_original": {
+      "bytes": 939793,
+      "path": "data/evaluation/newsqa_200_11064/final/testset_reviewed_original.jsonl",
+      "sha256": "090e26d06a06efc27294aea04d9e044636b5cdb556ed966452f817c54c43e7b3"
+    }
+  },
+  "created_at": "2026-07-14T14:42:01.572066+00:00",
+  "database": {
+    "chunk_count": 19263,
+    "collection": "newsqa_val200_s42_7e16e8_66785e",
+    "indexed": true,
+    "path": "data/chroma_db"
+  },
+  "generator": {
+    "git_commit": "14a41ae374dae0be56c9596c0211ad4ad9b62851",
+    "python": "3.12.4"
+  },
+  "pipeline": {
+    "chunking": {
+      "chunk_overlap": 64,
+      "chunk_size": 512,
+      "sentence_overlap": 2,
+      "sentences_per_chunk": 8,
+      "strategy": "recursive"
+    },
+    "config_path": "configs/config.yaml",
+    "config_sha256": "66785e0c9ecc3ad2ca2debc62a6dc018ff1dfab7442ef175605a91f519899a58",
+    "embedding": {
+      "dimensions": 384,
+      "model_name": "all-MiniLM-L6-v2",
+      "provider": "sentence-transformers"
+    }
+  },
+  "schema_version": "2.1",
+  "selection_manifest": {
+    "path": "evaluation/manifests/newsqa_200_11064.selection.json",
+    "selection_sha256": "7e16e853d4d14f835f92fced4de6bc0fb998768efb2e1dc95cbfb07ef8bb04f7",
+    "sha256": "0ae96fe0982a03b9872a6c79397f1f869b782e0f8204ec91ee0c956552e1b971"
+  },
+  "statistics": {
+    "chunks": 19263,
+    "clarified_questions": 1078,
+    "corpus_articles": 11064,
+    "distractor_articles": 10864,
+    "evaluation_articles": 200,
+    "excluded_questions": 4,
+    "indexed_chunks": 19263,
+    "original_questions": 1340,
+    "phase": "review_complete",
+    "resolved_questions": 1336,
+    "review": {
+      "corrected_answers": 298,
+      "decisions": {
+        "approve": 1078,
+        "edit": 0,
+        "exclude": 4,
+        "mark_standalone": 258,
+        "needs_adjudication": 0,
+        "pending": 0
+      },
+      "excluded_questions": 4,
+      "issue_codes": {
+        "ambiguous_without_unique_gold": 3,
+        "generic_reference": 98,
+        "irreparable_semantic_mismatch": 3,
+        "malformed_question": 71,
+        "missing_location": 55,
+        "missing_subject": 688,
+        "missing_time": 19,
+        "multiple_corpus_matches": 27,
+        "truncated_answer": 59,
+        "unanswerable_from_article": 3,
+        "underspecified_event": 139,
+        "unresolved_coreference": 58,
+        "wrong_answer": 35,
+        "wrong_evidence": 87,
+        "yes_no_answer_mismatch": 4
+      },
+      "labels": {
+        "invalid": 4,
+        "non_standalone": 979,
+        "pending": 0,
+        "standalone": 258,
+        "uncertain": 99
+      },
+      "proposal_status": {
+        "legacy": 0,
+        "pending": 0,
+        "proposed": 1340
+      },
+      "ready": true,
+      "total": 1340
+    },
+    "review_annotations": 1340,
+    "reviewed_original_questions": 1336,
+    "schema_version": "2.1",
+    "status": "passed"
+  },
+  "status": "review_complete",
+  "updated_at": "2026-07-14T14:42:31.118196+00:00"
+}

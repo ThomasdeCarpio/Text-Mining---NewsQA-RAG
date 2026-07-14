@@ -102,21 +102,20 @@ python scripts/build_chroma_collection.py \
 
 ### Run Evaluation Benchmark
 
-The canonical evaluation workflow builds one shared 1,000-article retrieval
+The canonical evaluation workflow builds one shared 11,064-article retrieval
 collection. The original benchmark is usable while question review continues:
 
 ```bash
-# Select 200 evaluation articles and 800 distractors without making model calls
+# Select 200 evaluation articles and all 10,864 eligible train distractors
 python scripts/prepare_evaluation_dataset.py stage1 --selection-only
+
+# Reuse the completed review for the unchanged 200-article evaluation sample
+python scripts/prepare_evaluation_dataset.py migrate-review
 
 # Build the original benchmark and the shared Chroma/BM25 indexes immediately
 python scripts/prepare_evaluation_dataset.py build-baseline
 
-# Classify suspected non-standalone questions and create the hierarchical review file
-python scripts/prepare_evaluation_dataset.py triage
-python scripts/format_review_queue.py
-
-# After resolving every review row
+# Validate and finalize the reviewed question variants
 python scripts/prepare_evaluation_dataset.py review-status
 python scripts/prepare_evaluation_dataset.py finalize
 ```

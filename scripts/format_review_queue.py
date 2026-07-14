@@ -27,7 +27,7 @@ DEFAULT_INPUT = (
     PROJECT_ROOT
     / "data"
     / "evaluation"
-    / "newsqa_200_1000"
+    / "newsqa_200_11064"
     / "staging"
     / "review"
     / "review_queue.jsonl"

@@ -11,7 +11,7 @@ The locked corpus contains:
 
 - 200 validation articles and all their questions (1,340 questions for revision
   `728e52920b8e4ffcfaad93fa47556f26a1d82546` and seed `42`).
-- 800 train articles used only as retrieval distractors.
+- All 10,864 eligible train articles used only as retrieval distractors.
 - One shared corpus, chunking configuration, Chroma collection, and BM25 index
   for every question variant.
 
@@ -29,9 +29,9 @@ sorted context identities with seed `42`, then rescans the source to collect
 every question belonging to each selected article. It writes:
 
 - `staging/corpus/evaluation_articles.jsonl`: 200 articles with all questions.
-- `staging/corpus/distractor_articles.jsonl`: 800 retrieval-only articles.
+- `staging/corpus/distractor_articles.jsonl`: 10,864 retrieval-only articles.
 - `staging/questions/original_questions.jsonl`: immutable flattened source rows.
-- `evaluation/manifests/newsqa_200_1000.selection.json`: revision, seed,
+- `evaluation/manifests/newsqa_200_11064.selection.json`: revision, seed,
   selection IDs, filtering statistics, and artifact hashes.
 
 The legacy Gemini workflow is available only through the explicit
@@ -44,7 +44,7 @@ pipeline and is not required.
 python scripts/prepare_evaluation_dataset.py build-baseline
 ```
 
-This applies the current production chunker to all 1,000 articles, maps source
+This applies the current production chunker to all 11,064 articles, maps source
 evidence to relevant chunks, and builds the shared Chroma and BM25 indexes. It
 writes the immutable raw benchmark to `final/testset_original.jsonl` and sets
 the variant manifest status to `baseline_ready`.
@@ -52,9 +52,21 @@ the variant manifest status to `baseline_ready`.
 The raw original file is useful for provenance and diagnostic comparisons. The
 reviewed-original file produced at finalization is the primary scored benchmark.
 
-## 3. Initialize the full review
+## 3. Reuse or initialize the full review
 
-The first clean initialization should archive the existing Gemini-era review:
+The locked 200-article evaluation sample already has a completed Codex and
+human review. After stage 1, migrate it into the expanded corpus:
+
+```bash
+python scripts/prepare_evaluation_dataset.py migrate-review
+```
+
+Migration succeeds only when the complete evaluation articles and protected
+source question fields are identical. The new review manifest records the
+source queue, selection, and audit location. Changing retrieval-only
+distractors does not require another semantic or human review.
+
+For a genuinely new evaluation sample, initialize a clean review instead.
 
 ```bash
 python scripts/prepare_evaluation_dataset.py init-review --archive-existing
@@ -85,7 +97,7 @@ python scripts/prepare_evaluation_dataset.py prepare-review-packets
 This is a deterministic preparation step, not an automatic judge. Each packet
 contains at most 20 complete source articles and 150 questions. For every
 question it includes the source answer, exact evidence offsets, and the five
-highest-ranked competing article snippets from the complete 1,000-article
+highest-ranked competing article snippets from the complete 11,064-article
 corpus. Files and their hashes are recorded under:
 
 ```text
@@ -118,8 +130,8 @@ Codex writes the machine-applicable proposal to
 
 ```bash
 python scripts/apply_review_proposals.py \
-  --packet data/evaluation/newsqa_200_1000/staging/review/packets/review_NNN.json \
-  --proposals data/evaluation/newsqa_200_1000/staging/review/proposals/review_NNN.json
+  --packet data/evaluation/newsqa_200_11064/staging/review/packets/review_NNN.json \
+  --proposals data/evaluation/newsqa_200_11064/staging/review/proposals/review_NNN.json
 ```
 
 The command requires exact packet coverage, validates evidence offsets and
