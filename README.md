@@ -102,6 +102,30 @@ python scripts/build_chroma_collection.py \
 
 ### Run Evaluation Benchmark
 
+The canonical evaluation workflow builds one shared 1,000-article retrieval
+collection. The original benchmark is usable while question review continues:
+
+```bash
+# Select 200 evaluation articles and 800 distractors without making model calls
+python scripts/prepare_evaluation_dataset.py stage1 --selection-only
+
+# Build the original benchmark and the shared Chroma/BM25 indexes immediately
+python scripts/prepare_evaluation_dataset.py build-baseline
+
+# Classify suspected non-standalone questions and create the hierarchical review file
+python scripts/prepare_evaluation_dataset.py triage
+python scripts/format_review_queue.py
+
+# After resolving every review row
+python scripts/prepare_evaluation_dataset.py review-status
+python scripts/prepare_evaluation_dataset.py finalize
+```
+
+See [`docs/evaluation_dataset.md`](docs/evaluation_dataset.md) for artifact
+schemas, review decisions, failure conditions, and manifest-verified benchmark
+commands. The older mini builder below remains available for exploratory runs,
+but it does not provide the human approval workflow.
+
 Score the RAG pipeline (retrieval metrics; add generation + Ragas for the full
 picture). The test set and the collection **must be built from the same
 articles** — `build_mini_testset.py` does both in one command:

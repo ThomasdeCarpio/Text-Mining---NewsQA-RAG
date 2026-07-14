@@ -1,349 +1,577 @@
-"""
-NewsQA test set builder.
+"""Reproducible NewsQA evaluation-dataset construction utilities."""
 
-Loads the NewsQA dataset (lucadiliello/newsqa on HuggingFace), samples N articles,
-chunks them using the configured chunker, maps each answer span to chunk IDs, and
-saves a JSONL file for use by run_benchmark.py.
-
-Dataset fields used:
-  context  — full article text
-  question — question string
-  answers  — list of answer strings (we take the first)
-  labels   — list of {start: [int], end: [int]} character offsets (inclusive) in context
-  key      — unique sample ID
-
-JSONL output schema (one JSON line per question):
-  {
-    "question":            str,
-    "ground_truth":        str,        # first answer string
-    "article_key":         str,        # NewsQA key for the article group
-    "relevant_chunk_ids":  list[str],  # chunk IDs whose text contains the answer span
-    "evidence":            str,        # raw answer text from the label span
-    "article_chunk_ids":   list[str],  # all chunk IDs from this article (for context)
-  }
-"""
+from __future__ import annotations
 
 import hashlib
 import json
 import os
 import random
-from itertools import islice
+import re
+from collections import Counter
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable, Iterable, Iterator, Sequence
+
+
+DATASET_SCHEMA_VERSION = "2.1"
+DEFAULT_DATASET_NAME = "lucadiliello/newsqa"
+DEFAULT_DATASET_REVISION = "728e52920b8e4ffcfaad93fa47556f26a1d82546"
+
+
+class DatasetBuildError(RuntimeError):
+    """Raised when source data or generated artifacts violate the data contract."""
+
+
+@dataclass(frozen=True)
+class SampleSpec:
+    """Parameters defining one reproducible article sample."""
+
+    split: str
+    n_articles: int
+    seed: int
+    role: str
+
+
+def canonical_json(value: object) -> str:
+    """Serialize JSON deterministically for hashing and manifests."""
+
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def sha256_file(path: str | Path) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def article_id_for_context(context: str) -> str:
+    return f"newsqa_{sha256_text(context)[:16]}"
+
+
+def normalized_context_hash(context: str) -> str:
+    normalized = re.sub(r"\s+", " ", context).strip().lower()
+    return sha256_text(normalized)
+
+
+def _derived_title(context: str) -> str:
+    for line in context.splitlines():
+        value = line.strip()
+        if value:
+            return value[:160]
+    return context.strip()[:160]
+
+
+def distribution_summary(values: Sequence[float | int]) -> dict:
+    """Compact deterministic distribution summary for dataset manifests."""
+
+    if not values:
+        return {"count": 0}
+    ordered = sorted(float(value) for value in values)
+
+    def percentile(fraction: float) -> float:
+        position = round((len(ordered) - 1) * fraction)
+        return round(ordered[position], 4)
+
+    return {
+        "count": len(ordered),
+        "min": round(ordered[0], 4),
+        "median": percentile(0.5),
+        "p95": percentile(0.95),
+        "max": round(ordered[-1], 4),
+        "mean": round(sum(ordered) / len(ordered), 4),
+    }
+
+
+def extract_evidence_spans(sample: dict, context: str) -> list[dict]:
+    """Convert NewsQA inclusive offsets to validated [start, end) spans."""
+
+    spans: list[dict] = []
+    for label in sample.get("labels") or []:
+        starts = label.get("start") or []
+        ends = label.get("end") or []
+        if len(starts) != len(ends):
+            raise DatasetBuildError(
+                f"Question {sample.get('key', '<unknown>')} has mismatched evidence offsets"
+            )
+        for start_value, end_value in zip(starts, ends):
+            start = int(start_value)
+            end = int(end_value) + 1
+            if not 0 <= start < end <= len(context):
+                raise DatasetBuildError(
+                    f"Question {sample.get('key', '<unknown>')} has invalid span "
+                    f"[{start}, {end}) for context length {len(context)}"
+                )
+            spans.append({"start": start, "end": end, "text": context[start:end]})
+
+    if spans:
+        return spans
+
+    answers = sample.get("answers") or []
+    answer = str(answers[0]).strip() if answers else ""
+    start = context.find(answer) if answer else -1
+    if start < 0:
+        raise DatasetBuildError(
+            f"Question {sample.get('key', '<unknown>')} has no usable evidence span"
+        )
+    return [{"start": start, "end": start + len(answer), "text": answer}]
+
+
+def question_record(sample: dict, context: str, article_id: str) -> dict:
+    answers = sample.get("answers") or []
+    if not answers or not str(answers[0]).strip():
+        raise DatasetBuildError(f"Question {sample.get('key', '<unknown>')} has no answer")
+    question_id = str(sample.get("key") or "").strip()
+    if not question_id:
+        raise DatasetBuildError("NewsQA row is missing its question key")
+    return {
+        "question_id": question_id,
+        "article_id": article_id,
+        "question": str(sample.get("question") or "").strip(),
+        "ground_truth": str(answers[0]).strip(),
+        "evidence_spans": extract_evidence_spans(sample, context),
+    }
+
+
+def _default_dataset_factory(
+    dataset_name: str, revision: str
+) -> Callable[[str], Iterable[dict]]:
+    def load(split: str) -> Iterable[dict]:
+        from datasets import load_dataset
+
+        return load_dataset(
+            dataset_name,
+            split=split,
+            revision=revision,
+            streaming=True,
+        )
+
+    return load
+
+
+def sample_articles(
+    dataset_factory: Callable[[str], Iterable[dict]],
+    spec: SampleSpec,
+    excluded_normalized_hashes: set[str] | None = None,
+    include_questions: bool = True,
+) -> tuple[list[dict], dict]:
+    """Uniformly sample articles, then rescan the entire split to collect all rows."""
+
+    excluded = excluded_normalized_hashes or set()
+    source_counts: Counter[str] = Counter()
+    normalized_by_id: dict[str, str] = {}
+    raw_hash_by_id: dict[str, str] = {}
+    context_chars_by_id: dict[str, int] = {}
+
+    for sample in dataset_factory(spec.split):
+        context = str(sample.get("context") or "")
+        if not context:
+            raise DatasetBuildError(f"Encountered an empty context in split {spec.split}")
+        article_id = article_id_for_context(context)
+        normalized_hash = normalized_context_hash(context)
+        if normalized_hash in excluded:
+            continue
+        raw_hash = sha256_text(context)
+        previous = raw_hash_by_id.setdefault(article_id, raw_hash)
+        if previous != raw_hash:
+            raise DatasetBuildError(f"Article ID collision for {article_id}")
+        normalized_by_id[article_id] = normalized_hash
+        context_chars_by_id[article_id] = len(context)
+        source_counts[article_id] += 1
+
+    candidates = sorted(source_counts)
+    if len(candidates) < spec.n_articles:
+        raise DatasetBuildError(
+            f"Requested {spec.n_articles} {spec.split} articles, but only "
+            f"{len(candidates)} are available after exclusions"
+        )
+    selected_ids = set(random.Random(spec.seed).sample(candidates, spec.n_articles))
+
+    collected: dict[str, dict] = {}
+    seen_questions: set[str] = set()
+    second_pass_counts: Counter[str] = Counter()
+    for sample in dataset_factory(spec.split):
+        context = str(sample.get("context") or "")
+        article_id = article_id_for_context(context)
+        if article_id not in selected_ids:
+            continue
+        second_pass_counts[article_id] += 1
+        article = collected.setdefault(
+            article_id,
+            {
+                "article_id": article_id,
+                "context_sha256": sha256_text(context),
+                "normalized_context_sha256": normalized_context_hash(context),
+                "split": spec.split,
+                "role": spec.role,
+                "context": context,
+                "metadata": {"title": _derived_title(context), "publisher": "CNN"},
+                "questions": [],
+            },
+        )
+        if article["context"] != context:
+            raise DatasetBuildError(f"Conflicting contexts for {article_id}")
+        if include_questions:
+            question = question_record(sample, context, article_id)
+            if question["question_id"] in seen_questions:
+                raise DatasetBuildError(f"Duplicate question ID {question['question_id']}")
+            seen_questions.add(question["question_id"])
+            article["questions"].append(question)
+
+    if set(collected) != selected_ids:
+        missing = sorted(selected_ids - set(collected))[:5]
+        raise DatasetBuildError(f"Second pass did not recover selected articles: {missing}")
+    for article_id in selected_ids:
+        if source_counts[article_id] != second_pass_counts[article_id]:
+            raise DatasetBuildError(
+                f"Incomplete question collection for {article_id}: expected "
+                f"{source_counts[article_id]}, got {second_pass_counts[article_id]}"
+            )
+
+    articles = []
+    for article_id in sorted(collected):
+        article = collected[article_id]
+        article["source_question_count"] = source_counts[article_id]
+        article["questions"].sort(key=lambda item: item["question_id"])
+        articles.append(article)
+
+    stats = {
+        "split": spec.split,
+        "role": spec.role,
+        "seed": spec.seed,
+        "candidate_articles": len(candidates),
+        "selected_articles": len(articles),
+        "selected_questions": sum(source_counts[item] for item in selected_ids),
+        "selected_article_ids": sorted(selected_ids),
+        "coverage": {
+            "candidate_article_chars": distribution_summary(
+                [context_chars_by_id[item] for item in candidates]
+            ),
+            "candidate_questions_per_article": distribution_summary(
+                [source_counts[item] for item in candidates]
+            ),
+            "selected_article_chars": distribution_summary(
+                [len(item["context"]) for item in articles]
+            ),
+            "selected_questions_per_article": distribution_summary(
+                [source_counts[item] for item in selected_ids]
+            ),
+            "selected_question_chars": distribution_summary(
+                [len(question["question"]) for item in articles for question in item["questions"]]
+            ),
+            "selected_answer_chars": distribution_summary(
+                [len(question["ground_truth"]) for item in articles for question in item["questions"]]
+            ),
+            "selected_normalized_answer_position": distribution_summary(
+                [
+                    question["evidence_spans"][0]["start"] / max(len(item["context"]), 1)
+                    for item in articles
+                    for question in item["questions"]
+                ]
+            ),
+        },
+    }
+    return articles, stats
+
+
+def build_selection_bundle(
+    dataset_name: str = DEFAULT_DATASET_NAME,
+    revision: str = DEFAULT_DATASET_REVISION,
+    evaluation_count: int = 200,
+    distractor_count: int = 800,
+    seed: int = 42,
+    dataset_factory: Callable[[str], Iterable[dict]] | None = None,
+) -> tuple[list[dict], list[dict], dict]:
+    """Build the locked validation sample and train distractor corpus."""
+
+    factory = dataset_factory or _default_dataset_factory(dataset_name, revision)
+    evaluation_articles, evaluation_stats = sample_articles(
+        factory,
+        SampleSpec("validation", evaluation_count, seed, "evaluation"),
+        include_questions=True,
+    )
+    excluded = {item["normalized_context_sha256"] for item in evaluation_articles}
+    distractor_articles, distractor_stats = sample_articles(
+        factory,
+        SampleSpec("train", distractor_count, seed, "distractor"),
+        excluded_normalized_hashes=excluded,
+        include_questions=False,
+    )
+    manifest = {
+        "schema_version": DATASET_SCHEMA_VERSION,
+        "dataset": {"name": dataset_name, "revision": revision},
+        "sampling": {
+            "method": "uniform_without_replacement_over_sorted_context_hashes",
+            "seed": seed,
+            "evaluation": evaluation_stats,
+            "distractors": distractor_stats,
+        },
+    }
+    return evaluation_articles, distractor_articles, manifest
+
+
+def chunk_char_ranges(context: str, chunks: Sequence[dict]) -> list[tuple[int, int]]:
+    """Locate the production chunk texts in the unmodified source context."""
+
+    ranges: list[tuple[int, int]] = []
+    cursor = 0
+    for chunk in chunks:
+        text = chunk["text"]
+        position = context.find(text, cursor)
+        if position < 0:
+            position = context.find(text)
+        if position < 0:
+            raise DatasetBuildError(f"Could not align chunk {chunk['id']} to its article")
+        ranges.append((position, position + len(text)))
+        cursor = position + 1
+    return ranges
+
+
+def map_spans_to_chunks(
+    chunks: Sequence[dict], ranges: Sequence[tuple[int, int]], spans: Sequence[dict]
+) -> list[str]:
+    relevant: list[str] = []
+    for chunk, (chunk_start, chunk_end) in zip(chunks, ranges):
+        if any(chunk_start < span["end"] and span["start"] < chunk_end for span in spans):
+            relevant.append(chunk["id"])
+    if not relevant:
+        raise DatasetBuildError("Evidence spans did not overlap any production chunk")
+    return relevant
+
+
+def derive_chunked_testsets(
+    evaluation_articles: Sequence[dict],
+    distractor_articles: Sequence[dict],
+    chunker,
+    annotations: dict[str, dict] | None = None,
+) -> tuple[list[dict], list[dict], list[dict]]:
+    """Chunk the complete corpus and construct original and clarified testsets."""
+
+    annotations = annotations or {}
+    chunks: list[dict] = []
+    original_rows: list[dict] = []
+    clarified_rows: list[dict] = []
+    seen_chunk_ids: set[str] = set()
+
+    for article in [*evaluation_articles, *distractor_articles]:
+        article_chunks = chunker.chunk_article(
+            {
+                "text": article["context"],
+                "metadata": {
+                    "url": "",
+                    "title": article["metadata"].get("title", ""),
+                    "publisher": article["metadata"].get("publisher", "CNN"),
+                    "publish_date": "",
+                    "author": "",
+                },
+            },
+            filename=article["article_id"],
+        )
+        for chunk in article_chunks:
+            if chunk["id"] in seen_chunk_ids:
+                raise DatasetBuildError(f"Duplicate chunk ID {chunk['id']}")
+            seen_chunk_ids.add(chunk["id"])
+            chunk["metadata"].update(
+                {
+                    "canonical_article_id": article["article_id"],
+                    "dataset_split": article["split"],
+                    "corpus_role": article["role"],
+                }
+            )
+        chunks.extend(article_chunks)
+
+        if article["role"] != "evaluation":
+            continue
+        ranges = chunk_char_ranges(article["context"], article_chunks)
+        all_chunk_ids = [item["id"] for item in article_chunks]
+        for question in article["questions"]:
+            relevant = map_spans_to_chunks(
+                article_chunks, ranges, question["evidence_spans"]
+            )
+            annotation = annotations.get(question["question_id"], {})
+            base = {
+                "question_id": question["question_id"],
+                "question_variant": "original",
+                "question": question["question"],
+                "ground_truth": question["ground_truth"],
+                "article_key": article["article_id"],
+                "evidence_spans": question["evidence_spans"],
+                "evidence": question["evidence_spans"][0]["text"],
+                "relevant_chunk_ids": relevant,
+                "article_chunk_ids": all_chunk_ids,
+                "standalone_label": annotation.get("final_label", "unreviewed"),
+                "ambiguity_reasons": annotation.get("reason_codes", []),
+            }
+            original_rows.append(base)
+            clarified = annotation.get("final_clarified_question")
+            if clarified:
+                clarified_rows.append(
+                    {
+                        **base,
+                        "question_id": f"{question['question_id']}::clarified",
+                        "source_question_id": question["question_id"],
+                        "question": clarified,
+                        "question_variant": "clarified",
+                    }
+                )
+
+    original_rows.sort(key=lambda item: item["question_id"])
+    clarified_rows.sort(key=lambda item: item["question_id"])
+    chunks.sort(key=lambda item: item["id"])
+    return original_rows, clarified_rows, chunks
+
+
+def derive_reviewed_testsets(
+    original_rows: Sequence[dict],
+    annotations: dict[str, dict],
+) -> tuple[list[dict], list[dict]]:
+    """Create paired clarified rows and a full resolved benchmark without rechunking."""
+
+    clarified_rows: list[dict] = []
+    resolved_rows: list[dict] = []
+    original_ids = {row["question_id"] for row in original_rows}
+    unknown_annotations = sorted(set(annotations) - original_ids)
+    if unknown_annotations:
+        raise DatasetBuildError(
+            f"Review annotations contain unknown question IDs: {unknown_annotations[:5]}"
+        )
+
+    for row in original_rows:
+        question_id = row["question_id"]
+        annotation = annotations.get(question_id)
+        if annotation is None:
+            raise DatasetBuildError(f"Missing review annotation for {question_id}")
+
+        clarified = annotation.get("final_clarified_question")
+        reviewed_fields = {
+            "standalone_label": annotation.get("final_label", "unreviewed"),
+            "ambiguity_reasons": annotation.get("reason_codes", []),
+            "ground_truth": annotation.get("ground_truth", row["ground_truth"]),
+            "accepted_answers": annotation.get(
+                "accepted_answers", [annotation.get("ground_truth", row["ground_truth"])]
+            ),
+            "evidence_spans": annotation.get("evidence_spans", row["evidence_spans"]),
+            "evidence": annotation.get("evidence", row.get("evidence", "")),
+            "relevant_chunk_ids": annotation.get(
+                "relevant_chunk_ids", row["relevant_chunk_ids"]
+            ),
+            "answer_modified": annotation.get("answer_modified", False),
+        }
+        if annotation.get("answer_modified"):
+            reviewed_fields.update(
+                {
+                    "source_ground_truth": annotation.get(
+                        "source_ground_truth", row["ground_truth"]
+                    ),
+                    "source_evidence_spans": annotation.get(
+                        "source_evidence_spans", row["evidence_spans"]
+                    ),
+                    "answer_review_notes": annotation.get("answer_review_notes", ""),
+                }
+            )
+        resolved_rows.append(
+            {
+                **row,
+                **reviewed_fields,
+                "source_question_id": question_id,
+                "question": clarified or row["question"],
+                "question_variant": "clarified" if clarified else "original",
+            }
+        )
+        if clarified:
+            clarified_rows.append(
+                {
+                    **row,
+                    **reviewed_fields,
+                    "question_id": f"{question_id}::clarified",
+                    "source_question_id": question_id,
+                    "question": clarified,
+                    "question_variant": "clarified",
+                }
+            )
+
+    clarified_rows.sort(key=lambda item: item["question_id"])
+    resolved_rows.sort(key=lambda item: item["question_id"])
+    return clarified_rows, resolved_rows
+
+
+def iter_jsonl(path: str | Path) -> Iterator[dict]:
+    with open(path, encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if line:
+                yield json.loads(line)
+
+
+def load_testset(path: str | Path) -> list[dict]:
+    return list(iter_jsonl(path))
+
+
+def save_jsonl(entries: Iterable[dict], path: str | Path) -> None:
+    output = Path(path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output.with_suffix(output.suffix + ".tmp")
+    with open(temporary, "w", encoding="utf-8") as handle:
+        for entry in entries:
+            handle.write(canonical_json(entry) + "\n")
+    os.replace(temporary, output)
+
+
+def save_testset(entries: list[dict], path: str | Path) -> None:
+    save_jsonl(entries, path)
+
+
+def artifact_record(path: str | Path, root: str | Path | None = None) -> dict:
+    artifact = Path(path)
+    relative = os.path.relpath(artifact, root) if root else str(artifact)
+    return {"path": relative, "bytes": artifact.stat().st_size, "sha256": sha256_file(artifact)}
+
+
+# Backward-compatible helper used by notebooks and older scripts.
+def build_article_testset(
+    chunker,
+    n_articles: int = 15,
+    max_scan: int | None = None,
+    split: str = "validation",
+    dataset_name: str = DEFAULT_DATASET_NAME,
+) -> tuple[list[dict], list[dict]]:
+    if max_scan is not None:
+        print("WARNING: max_scan is deprecated and ignored; the complete split is scanned.")
+    factory = _default_dataset_factory(dataset_name, DEFAULT_DATASET_REVISION)
+    articles, _ = sample_articles(
+        factory,
+        SampleSpec(split, n_articles, 42, "evaluation"),
+        include_questions=True,
+    )
+    rows, _, chunks = derive_chunked_testsets(articles, [], chunker)
+    return rows, chunks
 
 
 class NewsQATestSetBuilder:
-    """Build and serialize an evaluation test set from NewsQA."""
+    """Compatibility adapter around the complete-scan builder."""
 
     def __init__(self, chunker, overlap_threshold: float = 0.6, seed: int = 42):
-        """
-        Args:
-            chunker: TextChunker (or any chunker with a chunk_article() method).
-            overlap_threshold: Minimum word overlap ratio to consider a chunk relevant.
-            seed: Random seed for reproducible article sampling.
-        """
         self.chunker = chunker
-        self.overlap_threshold = overlap_threshold
         self.seed = seed
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
 
     def build(
         self,
         n_articles: int,
         output_path: str,
-        split: str = "train",
-        dataset_name: str = "lucadiliello/newsqa",
+        split: str = "validation",
+        dataset_name: str = DEFAULT_DATASET_NAME,
     ) -> list[dict]:
-        """
-        Build the test set and save it to output_path.
-
-        Args:
-            n_articles: Number of unique articles (contexts) to sample.
-            output_path: Path for the output JSONL file.
-            split: HuggingFace dataset split ("train" / "validation" / "test").
-            dataset_name: HuggingFace dataset identifier.
-
-        Returns:
-            List of test set entries (same as written to JSONL).
-        """
-        from datasets import load_dataset
-
-        print(f"Loading NewsQA ({split}) ...")
-        raw = load_dataset(dataset_name, split=split, streaming=True)
-
-        # Group samples by unique article key (context hash)
-        print("Grouping by article ...")
-        articles = self._group_by_article(raw)
-
-        # Sample n_articles
-        all_keys = list(articles.keys())
-        if n_articles >= len(all_keys):
-            print(f"Requested {n_articles} articles but only {len(all_keys)} available. Using all.")
-            sampled_keys = all_keys
-        else:
-            rng = random.Random(self.seed)
-            sampled_keys = rng.sample(all_keys, n_articles)
-
-        print(f"Sampled {len(sampled_keys)} articles.")
-
-        entries = []
-        for idx, article_key in enumerate(sampled_keys, 1):
-            samples = articles[article_key]
-            context = samples[0]["context"]
-
-            # Chunk the article text
-            article_data = {
-                "text": context,
-                "metadata": {
-                    "url": article_key,
-                    "title": "",
-                    "publish_date": "",
-                    "publisher": "CNN",
-                    "author": "",
-                },
-            }
-            chunks = self.chunker.chunk_article(article_data, filename=article_key)
-            all_chunk_ids = [c["id"] for c in chunks]
-
-            if idx % 100 == 0:
-                print(f"  Processed {idx}/{len(sampled_keys)} articles ...")
-
-            for sample in samples:
-                answer_text, evidence_span = self._extract_answer(sample, context)
-                if not answer_text:
-                    continue  # skip unanswerable questions
-
-                relevant_ids = self._map_to_chunks(answer_text, evidence_span, chunks)
-
-                entries.append({
-                    "question": sample["question"],
-                    "ground_truth": answer_text,
-                    "article_key": article_key,
-                    "relevant_chunk_ids": relevant_ids,
-                    "evidence": evidence_span,
-                    "article_chunk_ids": all_chunk_ids,
-                })
-
-        # Save
-        os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
-        with open(output_path, "w", encoding="utf-8") as f:
-            for entry in entries:
-                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-
-        n_with_relevant = sum(1 for e in entries if e["relevant_chunk_ids"])
-        print(
-            f"\nTest set saved to {output_path}"
-            f"\n  Total questions : {len(entries)}"
-            f"\n  With relevant chunks : {n_with_relevant} ({100*n_with_relevant//max(len(entries),1)}%)"
-            f"\n  No relevant chunks  : {len(entries) - n_with_relevant}"
+        factory = _default_dataset_factory(dataset_name, DEFAULT_DATASET_REVISION)
+        articles, _ = sample_articles(
+            factory,
+            SampleSpec(split, n_articles, self.seed, "evaluation"),
+            include_questions=True,
         )
-        return entries
-
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
-
-    def _group_by_article(self, dataset_iterable) -> dict[str, list[dict]]:
-        """Stream the dataset and group samples by article key."""
-        groups: dict[str, list[dict]] = {}
-        for sample in dataset_iterable:
-            key = sample.get("key", "")
-            if not key:
-                # Derive a key from a prefix of the context if key is missing
-                key = sample["context"][:80]
-            groups.setdefault(key, []).append(sample)
-        return groups
-
-    def _extract_answer(self, sample: dict, context: str) -> tuple[str, str]:
-        """
-        Return (answer_text, evidence_span) from a sample.
-
-        Uses the first `labels` entry to extract the exact span from context;
-        falls back to the first element of `answers`.
-        """
-        answers = sample.get("answers", [])
-        labels = sample.get("labels", [])
-
-        if not answers or answers[0] in ("", "None", None):
-            return "", ""
-
-        answer_text = str(answers[0]).strip()
-
-        # Try to extract the span using character offsets from labels
-        evidence_span = answer_text
-        if labels:
-            first_label = labels[0]
-            starts = first_label.get("start", [])
-            ends = first_label.get("end", [])
-            if starts and ends:
-                start_idx = int(starts[0])
-                end_idx = int(ends[0]) + 1  # end is inclusive in this dataset
-                if 0 <= start_idx < end_idx <= len(context):
-                    evidence_span = context[start_idx:end_idx].strip()
-
-        return answer_text, evidence_span
-
-    def _map_to_chunks(
-        self, answer_text: str, evidence_span: str, chunks: list[dict]
-    ) -> list[str]:
-        """
-        Find which chunks contain the answer evidence.
-
-        Strategy (in order of preference):
-        1. Exact substring match of evidence_span in chunk text.
-        2. Exact substring match of answer_text in chunk text.
-        3. Fuzzy word overlap: overlap(evidence_words, chunk_words) >= threshold.
-        """
-        relevant = []
-        evidence_lower = evidence_span.lower()
-        answer_lower = answer_text.lower()
-        evidence_words = set(evidence_lower.split())
-
-        for chunk in chunks:
-            text_lower = chunk["text"].lower()
-
-            # Strategy 1 & 2: substring
-            if evidence_lower in text_lower or answer_lower in text_lower:
-                relevant.append(chunk["id"])
-                continue
-
-            # Strategy 3: fuzzy word overlap
-            if evidence_words:
-                chunk_words = set(text_lower.split())
-                overlap = len(evidence_words & chunk_words) / len(evidence_words)
-                if overlap >= self.overlap_threshold:
-                    relevant.append(chunk["id"])
-
-        return relevant
-
-
-# ---------------------------------------------------------------------------
-# Article-grouped builder + offset-based evidence->chunk mapping
-#
-# NewsQA `key` is per-question, so we group by `context` to get real articles
-# with multiple questions. Evidence spans are exact char offsets, so we map them
-# to chunks by range overlap (more precise than word overlap). Reference impl for
-# notebooks/03_newsqa_mini_dataset.ipynb and scripts/build_mini_testset.py.
-# ---------------------------------------------------------------------------
-
-def evidence_to_span(sample: dict, context: str) -> tuple:
-    """(start, end, text) of the answer evidence in context; fallback to answer substring."""
-    labels = sample.get("labels") or []
-    if labels and labels[0].get("start") and labels[0].get("end"):
-        a, b = int(labels[0]["start"][0]), int(labels[0]["end"][0]) + 1  # end inclusive in NewsQA
-        if 0 <= a < b <= len(context):
-            return a, b, context[a:b]
-    ans = (sample.get("answers") or [""])[0]
-    i = context.find(ans)
-    return (i, i + len(ans), ans) if i >= 0 else (None, None, ans)
-
-
-def chunk_char_ranges(context: str, chunks: list[dict]) -> list[tuple]:
-    """True [start, end) of each chunk within context, walking forward (handles overlap)."""
-    ranges, cur = [], 0
-    for c in chunks:
-        pos = context.find(c["text"], cur)
-        if pos < 0:                       # whitespace drift: retry on a short prefix
-            pos = context.find(c["text"][:40])
-        if pos < 0:
-            ranges.append((None, None))
-            continue
-        ranges.append((pos, pos + len(c["text"])))
-        cur = pos + 1                     # next chunk may overlap, so +1 not +len
-    return ranges
-
-
-def map_evidence_to_chunks(chunks: list[dict], ranges: list[tuple],
-                           start, end, evidence: str) -> list[str]:
-    """Chunk IDs whose char-range overlaps the evidence span; substring fallback."""
-    if start is not None:
-        hit = [c["id"] for c, (s, e) in zip(chunks, ranges)
-               if s is not None and s < end and start < e]
-        if hit:
-            return hit
-    evl = evidence.lower()
-    return [c["id"] for c in chunks if evl and evl in c["text"].lower()]
-
-
-def build_article_testset(
-    chunker,
-    n_articles: int = 15,
-    max_scan: int = 800,
-    split: str = "train",
-    dataset_name: str = "lucadiliello/newsqa",
-) -> tuple[list[dict], list[dict]]:
-    """
-    Build an article-grouped NewsQA test set with offset-based evidence->chunk mapping.
-
-    Returns:
-        (entries, all_chunks) — entries follow the schema in docs/evaluation.md §6.1;
-        all_chunks are the chunk dicts (for optionally building a matching collection).
-    """
-    from datasets import load_dataset
-
-    ds = load_dataset(dataset_name, split=split, streaming=True)
-    groups: dict[str, list[dict]] = {}
-    for i, s in enumerate(ds):
-        if i >= max_scan:
-            break
-        groups.setdefault(s["context"], []).append(s)
-    picked = list(groups.items())[:n_articles]
-
-    entries, all_chunks = [], []
-    for context, rows in picked:
-        akey = "newsqa_" + hashlib.md5(context.encode("utf-8")).hexdigest()[:12]
-        chunks = chunker.chunk_article(
-            {"text": context, "metadata": {"url": "", "title": context.splitlines()[0][:80], "publisher": "CNN"}},
-            filename=akey,
-        )
-        ranges = chunk_char_ranges(context, chunks)
-        all_chunks.extend(chunks)
-        for s in rows:
-            a, b, ev = evidence_to_span(s, context)
-            entries.append({
-                "question": s["question"],
-                "ground_truth": (s.get("answers") or [""])[0],
-                "article_key": akey,
-                "relevant_chunk_ids": map_evidence_to_chunks(chunks, ranges, a, b, ev),
-                "evidence": ev,
-                "article_chunk_ids": [c["id"] for c in chunks],
-            })
-    return entries, all_chunks
-
-
-# ---------------------------------------------------------------------------
-# JSONL I/O helpers
-# ---------------------------------------------------------------------------
-
-def load_testset(path: str) -> list[dict]:
-    """Load a JSONL test set file."""
-    entries = []
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                entries.append(json.loads(line))
-    return entries
-
-
-def save_testset(entries: list[dict], path: str) -> None:
-    """Save a list of test set entries to JSONL."""
-    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        for entry in entries:
-            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-
-
-if __name__ == "__main__":
-    # ponytail self-check: the offset->chunk mapping is the part that silently corrupts a test set
-    ctx = "AAA. BBB. CCC."
-    chunks = [{"id": "a", "text": "AAA. BBB."}, {"id": "b", "text": "BBB. CCC."}]
-    ranges = chunk_char_ranges(ctx, chunks)
-    assert ranges == [(0, 9), (5, 14)], ranges
-    assert map_evidence_to_chunks(chunks, ranges, 0, 3, "AAA") == ["a"]
-    assert map_evidence_to_chunks(chunks, ranges, 10, 13, "CCC") == ["b"]
-    assert map_evidence_to_chunks(chunks, ranges, 5, 8, "BBB") == ["a", "b"]  # spans the overlap
-    assert evidence_to_span({"labels": [{"start": [0], "end": [2]}]}, ctx) == (0, 3, "AAA")
-    assert evidence_to_span({"answers": ["CCC"]}, ctx) == (10, 13, "CCC")     # fallback
-    print("testset self-check OK")
+        rows, _, _ = derive_chunked_testsets(articles, [], self.chunker)
+        save_testset(rows, output_path)
+        return rows

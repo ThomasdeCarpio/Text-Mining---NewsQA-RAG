@@ -40,7 +40,7 @@ def main():
     parser.add_argument("--config", default="configs/config.yaml",
                         help="Config file path")
     parser.add_argument("--split", default="train",
-                        choices=["train", "validation", "test"],
+                        choices=["train", "validation"],
                         help="HuggingFace dataset split")
     parser.add_argument("--seed", type=int, default=42,
                         help="Random seed for article sampling")
@@ -49,6 +49,10 @@ def main():
     parser.add_argument("--dataset", default="lucadiliello/newsqa",
                         help="HuggingFace dataset name")
     args = parser.parse_args()
+    print(
+        "DEPRECATED: use scripts/prepare_evaluation_dataset.py for the locked "
+        "two-stage evaluation workflow."
+    )
 
     with open(args.config, encoding="utf-8") as f:
         config = yaml.safe_load(f)

@@ -44,12 +44,16 @@ def main():
     p.add_argument("--max-scan", type=int, default=800)
     p.add_argument("--output", default="data/testset_mini.jsonl")
     p.add_argument("--config", default="configs/config.yaml")
-    p.add_argument("--split", default="train", choices=["train", "validation", "test"])
+    p.add_argument("--split", default="train", choices=["train", "validation"])
     p.add_argument("--build-collection", action="store_true",
                    help="Also ingest the chunks into a Chroma collection")
     p.add_argument("--collection", default="newsqa_mini")
     p.add_argument("--db-path", default="data/chroma_db")
     args = p.parse_args()
+    print(
+        "DEPRECATED: use scripts/prepare_evaluation_dataset.py for reproducible "
+        "selection, review, manifests, and corpus indexing."
+    )
 
     with open(args.config, encoding="utf-8") as f:
         config = yaml.safe_load(f)

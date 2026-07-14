@@ -1,0 +1,73 @@
+{
+  "artifacts": {
+    "bm25": {
+      "bytes": 4413144,
+      "path": "data/evaluation/newsqa_200_1000/final/bm25.pkl",
+      "sha256": "389da8ef9f17bc4e7d079b0985b8fca634bd0f82bf95393751aa5f92db682cbc"
+    },
+    "chunks": {
+      "bytes": 4052570,
+      "path": "data/evaluation/newsqa_200_1000/final/chunks.jsonl",
+      "sha256": "f4848f115652130e0adb3a90aae9329e581abbf0ff1524a52e5cecd0f23723c8"
+    },
+    "integrity": {
+      "bytes": 304,
+      "path": "data/evaluation/newsqa_200_1000/final/integrity_report.json",
+      "sha256": "de6a4be91e5abd4c55eb8596ed0f725fc4201ac6053b13be12b00e1730e5afcc"
+    },
+    "testset_original": {
+      "bytes": 655977,
+      "path": "data/evaluation/newsqa_200_1000/final/testset_original.jsonl",
+      "sha256": "99c74d2011e815bb5224c1c2ea5b854e3f721897f1a8c94c1727f637dbb655a8"
+    }
+  },
+  "created_at": "2026-07-13T17:39:12.158861+00:00",
+  "database": {
+    "chunk_count": 1757,
+    "collection": "newsqa_val200_s42_f6f358_66785e",
+    "indexed": true,
+    "path": "data/chroma_db"
+  },
+  "generator": {
+    "git_commit": "c2772337f72e5c8f4c01ac140561773a23cb8f69",
+    "python": "3.12.4"
+  },
+  "pipeline": {
+    "chunking": {
+      "chunk_overlap": 64,
+      "chunk_size": 512,
+      "sentence_overlap": 2,
+      "sentences_per_chunk": 8,
+      "strategy": "recursive"
+    },
+    "config_path": "configs/config.yaml",
+    "config_sha256": "66785e0c9ecc3ad2ca2debc62a6dc018ff1dfab7442ef175605a91f519899a58",
+    "embedding": {
+      "dimensions": 384,
+      "model_name": "all-MiniLM-L6-v2",
+      "provider": "sentence-transformers"
+    }
+  },
+  "schema_version": "2.1",
+  "selection_manifest": {
+    "path": "evaluation/manifests/newsqa_200_1000.selection.json",
+    "selection_sha256": "f6f35854a74962389c201fb326a4effe46079ae1d4c2d20941e6100ab97e103d",
+    "sha256": "04c7c4e5d2e24f5e012de0ce862da7d5dc102ab65ec5e4171ef4bbf311d29e12"
+  },
+  "statistics": {
+    "chunks": 1757,
+    "corpus_articles": 1000,
+    "distractor_articles": 800,
+    "evaluation_articles": 200,
+    "indexed_chunks": 1757,
+    "original_questions": 1340,
+    "phase": "baseline_ready",
+    "review": {
+      "ready": false,
+      "state": "pending"
+    },
+    "schema_version": "2.1",
+    "status": "passed"
+  },
+  "status": "baseline_ready"
+}

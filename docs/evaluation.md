@@ -215,10 +215,11 @@ Metric functions in `src/evaluation/metrics.py` are pure — they take lists of 
 ### 7.1. The pipeline at a glance
 
 ```
-                 build_mini_testset.py  (--build-collection)
-NewsQA (HF)  ─────────────────────────────────────────────►  data/testset_*.jsonl
-   │                    │  uses testset.py + chunker              +  Chroma collection
-   │                    │                                         +  chunks/<name>.jsonl
+ prepare_evaluation_dataset.py  (select → baseline ─┬─► original benchmark)
+NewsQA (HF)  ─────────────────────────────────────────────►  final/testset_*.jsonl
+   │                    │                         └─► triage → review → reviewed variants
+   │                    │  uses testset.py + production chunker   +  one 1,000-article collection
+   │                    │                                         +  one chunks.jsonl/BM25 index
    │                    ▼
    │            [ same articles + same chunker on both sides = IDs match ]
    │                    │
@@ -230,8 +231,8 @@ run_benchmark.py  ──►  metrics.py  ──►  reports/<name>/report.json
 ```
 
 **One rule that keeps everything correct:** the collection you score against must be built from the
-**same articles + same chunker** as the test set. That is why `build_mini_testset.py` builds both in
-one step. Do **not** score a NewsQA-derived test set against `newsqa_cnn` (ingested from raw CNN HTML
+**same articles + same chunker** as the test set. The canonical builder records both in a
+variant manifest. Do **not** score a NewsQA-derived test set against `newsqa_cnn` (ingested from raw CNN HTML
 with a different chunker/ID scheme) — every metric reads 0. `run_benchmark.py` prints a warning when it
 detects this (all `hit_rate@k = 0` while `n_samples > 0`).
 
@@ -239,14 +240,14 @@ detects this (all `hit_rate@k = 0` while `n_samples > 0`).
 
 | Job | File |
 | --- | --- |
-| Build a matched test set + eval collection (one command) | `scripts/build_mini_testset.py` |
+| Build the reviewed test sets + 1,000-article corpus | `scripts/prepare_evaluation_dataset.py` |
 | Test-set build logic (grouping, evidence→chunk mapping) | `src/evaluation/testset.py` |
 | Run a benchmark, write a report | `scripts/run_benchmark.py` |
 | Metric math (all of it) | `src/evaluation/metrics.py` |
 | Reports → dashboard shapes | `src/services/eval_service.py` → `api/routers/admin.py` |
 | Driver notebook (run everything, plot) | `notebooks/02_evaluation.ipynb` |
 | Learn / debug the evidence→chunk mapping | `notebooks/03_newsqa_mini_dataset.ipynb` |
-| Full-scale (1000-article) test-set builder | `scripts/prepare_testset.py` (class `NewsQATestSetBuilder`) |
+| Construction and human-review protocol | `docs/evaluation_dataset.md` |
 
 ### 7.3. Swap / improve points (per RAG module)
 

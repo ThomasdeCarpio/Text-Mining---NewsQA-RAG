@@ -43,6 +43,7 @@ Args:
 """
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -58,7 +59,7 @@ from src.ingestion.chunker import load_chunks
 from src.retrieval.retriever_factory import get_retriever
 from src.retrieval.reranker import get_reranker
 from src.agents.rag_agent import RAGAgent
-from src.evaluation.testset import load_testset
+from src.evaluation.testset import canonical_json, load_testset, sha256_file
 from src.evaluation.metrics import (
     evaluate_retrieval,
     evaluate_qa,
@@ -75,11 +76,13 @@ def main():
     parser.add_argument("--n-eval", type=int, default=None, help="Max questions to evaluate")
     parser.add_argument("--top-k", type=int, default=None, help="Retriever top-k")
     parser.add_argument("--rerank-top-n", type=int, default=None, help="Reranker top-n")
-    parser.add_argument("--db-path", default="database/chroma/")
-    parser.add_argument("--collection", default="basic_collection")
+    parser.add_argument("--db-path", default=None)
+    parser.add_argument("--collection", default=None)
     parser.add_argument("--chunks-path", default=None, help="JSONL chunks for bm25/hybrid")
     parser.add_argument("--bm25-path", default=None, help="BM25 pickle path")
     parser.add_argument("--config", default="configs/config.yaml")
+    parser.add_argument("--variant-manifest", default=None,
+                        help="Validate testset, config, collection, and chunks against a dataset manifest")
     parser.add_argument("--report-dir", required=True)
     parser.add_argument("--run-generator", action="store_true",
                         help="Generate answers with LLM and compute EM/F1")
@@ -99,6 +102,11 @@ def main():
 
     with open(args.config, encoding="utf-8") as f:
         config = yaml.safe_load(f)
+
+    if args.variant_manifest:
+        _apply_manifest_preflight(args, config)
+    args.db_path = args.db_path or "database/chroma/"
+    args.collection = args.collection or "basic_collection"
 
     retrieval_cfg = config.get("retrieval", {})
     top_k = args.top_k or retrieval_cfg.get("top_k", 10)
@@ -146,6 +154,13 @@ def main():
     print(f"\nSetting up retriever: {args.retriever} ...")
     ef = get_embedding_function(config)
     store = ChromaStore(args.db_path, ef)
+    if getattr(args, "manifest_chunk_count", None) is not None:
+        collection_stats = store.get_collection_stats(args.collection)
+        if not collection_stats["exists"] or collection_stats["count"] != args.manifest_chunk_count:
+            raise SystemExit(
+                f"ERROR: collection count does not match manifest: expected "
+                f"{args.manifest_chunk_count}, got {collection_stats['count']}"
+            )
 
     chunks = None
     if args.retriever in ("bm25", "hybrid"):
@@ -211,6 +226,8 @@ def main():
         retrieval_samples.append({
             "relevant_chunk_ids": entry["relevant_chunk_ids"],
             "retrieved_ids": retrieved_ids,
+            "article_key": entry.get("article_key", "unknown"),
+            "standalone_label": entry.get("standalone_label", "unlabeled"),
         })
 
         # Record retrieval misses for the dashboard's Failure Analysis table (cap at 20)
@@ -227,6 +244,8 @@ def main():
             qa_samples.append({
                 "prediction": answer,
                 "ground_truth": entry["ground_truth"],
+                "article_key": entry.get("article_key", "unknown"),
+                "standalone_label": entry.get("standalone_label", "unlabeled"),
             })
             if args.run_ragas:
                 ragas_samples.append({
@@ -244,6 +263,24 @@ def main():
     # ------------------------------------------------------------------
     print("\nComputing metrics ...")
     retrieval_metrics = evaluate_retrieval(retrieval_samples)
+    article_groups = {}
+    for sample in retrieval_samples:
+        article_groups.setdefault(sample["article_key"], []).append(sample)
+    article_metrics = [evaluate_retrieval(samples) for samples in article_groups.values()]
+    retrieval_article_macro = {}
+    if article_metrics:
+        metric_names = [key for key in article_metrics[0] if key != "n_samples"]
+        retrieval_article_macro = {
+            key: round(sum(item[key] for item in article_metrics) / len(article_metrics), 4)
+            for key in metric_names
+        }
+        retrieval_article_macro["n_articles"] = len(article_metrics)
+    retrieval_by_label = {
+        label: evaluate_retrieval(
+            [sample for sample in retrieval_samples if sample["standalone_label"] == label]
+        )
+        for label in sorted({sample["standalone_label"] for sample in retrieval_samples})
+    }
 
     # Diagnose the classic silent failure: metrics all 0 because the test set's
     # relevant_chunk_ids don't belong to this collection (different articles/chunker/ID scheme).
@@ -258,6 +295,23 @@ def main():
         )
 
     qa_metrics = evaluate_qa(qa_samples) if qa_samples else {}
+    qa_by_label = {
+        label: evaluate_qa(
+            [sample for sample in qa_samples if sample["standalone_label"] == label]
+        )
+        for label in sorted({sample["standalone_label"] for sample in qa_samples})
+    }
+    qa_article_macro = {}
+    if qa_samples:
+        qa_groups = {}
+        for sample in qa_samples:
+            qa_groups.setdefault(sample["article_key"], []).append(sample)
+        per_article_qa = [evaluate_qa(samples) for samples in qa_groups.values()]
+        qa_article_macro = {
+            key: round(sum(item[key] for item in per_article_qa) / len(per_article_qa), 4)
+            for key in ("exact_match", "f1")
+        }
+        qa_article_macro["n_articles"] = len(per_article_qa)
 
     ragas_metrics = {}
     if ragas_samples:
@@ -266,7 +320,7 @@ def main():
         ragas_metrics = evaluate_ragas(
             ragas_samples,
             metrics=ragas_cfg.get("metrics"),
-            llm_model=ragas_cfg.get("llm", "gpt-4o-mini"),
+            llm_model=ragas_cfg.get("llm_model", "gpt-4o-mini"),
         )
 
     config_snapshot = {
@@ -290,6 +344,11 @@ def main():
         ragas_metrics=ragas_metrics or None,
     )
     report["failures"] = failures
+    report["retrieval_article_macro"] = retrieval_article_macro
+    report["retrieval_by_standalone_label"] = retrieval_by_label
+    if qa_samples:
+        report["qa_article_macro"] = qa_article_macro
+        report["qa_by_standalone_label"] = qa_by_label
 
     # ------------------------------------------------------------------
     # Save report
@@ -306,6 +365,61 @@ def main():
     print(f"\nReport saved to {report_path}")
     print(f"Summary  saved to {summary_path}")
     _print_summary(report)
+
+
+def _manifest_artifact_path(manifest_path: str, record: dict) -> str:
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    value = record["path"]
+    return value if os.path.isabs(value) else os.path.join(project_root, value)
+
+
+def _apply_manifest_preflight(args, config: dict) -> None:
+    """Fail before model initialization when benchmark artifacts do not match."""
+    with open(args.variant_manifest, encoding="utf-8") as handle:
+        manifest = json.load(handle)
+    expected_config = manifest.get("pipeline", {}).get("config_sha256")
+    actual_config = hashlib.sha256(canonical_json(config).encode("utf-8")).hexdigest()
+    if expected_config != actual_config:
+        raise SystemExit(
+            f"ERROR: config does not match variant manifest: expected {expected_config}, got {actual_config}"
+        )
+    database = manifest.get("database", {})
+    if not database.get("indexed", False):
+        raise SystemExit("ERROR: variant manifest records that the retrieval database was not built")
+    expected_collection = database.get("collection")
+    if args.collection and args.collection != expected_collection:
+        raise SystemExit(
+            f"ERROR: collection {args.collection!r} does not match manifest {expected_collection!r}"
+        )
+    args.collection = expected_collection
+    args.manifest_chunk_count = database.get("chunk_count")
+    manifest_db_path = database.get("path")
+    if args.db_path and os.path.abspath(args.db_path) != os.path.abspath(
+        _manifest_artifact_path(args.variant_manifest, {"path": manifest_db_path})
+    ):
+        raise SystemExit("ERROR: --db-path does not match the variant manifest")
+    if not args.db_path:
+        args.db_path = _manifest_artifact_path(args.variant_manifest, {"path": manifest_db_path})
+
+    artifacts = manifest.get("artifacts", {})
+    testset_hash = sha256_file(args.testset)
+    accepted = {
+        item.get("sha256")
+        for key, item in artifacts.items()
+        if key in {"testset_original", "testset_clarified", "testset_resolved"}
+    }
+    if testset_hash not in accepted:
+        raise SystemExit("ERROR: --testset hash is not recorded by the variant manifest")
+    chunks_record = artifacts.get("chunks")
+    if chunks_record:
+        manifest_chunks = _manifest_artifact_path(args.variant_manifest, chunks_record)
+        if args.chunks_path and sha256_file(args.chunks_path) != chunks_record["sha256"]:
+            raise SystemExit("ERROR: --chunks-path hash does not match the variant manifest")
+        args.chunks_path = args.chunks_path or manifest_chunks
+    bm25_record = artifacts.get("bm25")
+    if bm25_record and not args.bm25_path:
+        args.bm25_path = _manifest_artifact_path(args.variant_manifest, bm25_record)
+    print(f"Manifest preflight passed: {args.variant_manifest}")
 
 
 def _write_summary(path: str, report: dict) -> None:
