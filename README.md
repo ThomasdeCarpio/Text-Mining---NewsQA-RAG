@@ -122,8 +122,15 @@ python scripts/prepare_evaluation_dataset.py finalize
 
 See [`docs/evaluation_dataset.md`](docs/evaluation_dataset.md) for artifact
 schemas, review decisions, failure conditions, and manifest-verified benchmark
-commands. The older mini builder below remains available for exploratory runs,
-but it does not provide the human approval workflow.
+commands. See
+[`docs/final_evaluation_output.md`](docs/final_evaluation_output.md) for the
+final `newsqa_200_11064` file inventory, row schemas, counts, and scoring usage.
+See
+[`docs/evaluation_dataset_handoff.md`](docs/evaluation_dataset_handoff.md) for
+the required scripts, reproducible build commands, complete artifact inventory,
+and teammate sharing instructions.
+The older mini builder below remains available for exploratory runs, but it
+does not provide the human approval workflow.
 
 Score the RAG pipeline (retrieval metrics; add generation + Ragas for the full
 picture). The test set and the collection **must be built from the same

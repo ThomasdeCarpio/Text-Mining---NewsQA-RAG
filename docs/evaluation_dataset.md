@@ -235,6 +235,13 @@ clarified = approved or edited questions with a clarification
 No rechunking, embedding, or second database collection occurs during
 finalization.
 
+The complete file-by-file output contract, finalized counts, schemas,
+manifests, and benchmark commands are documented in
+[`final_evaluation_output.md`](final_evaluation_output.md).
+The code and artifact handoff checklist, including archive and reconstruction
+instructions, is documented in
+[`evaluation_dataset_handoff.md`](evaluation_dataset_handoff.md).
+
 ## Reporting
 
 Report `testset_reviewed_original.jsonl` as the primary result. Compare it with
