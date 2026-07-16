@@ -1,0 +1,4 @@
+# Optional dependencies for running and visualizing benchmark notebooks.
+jupyterlab
+ipykernel
+matplotlib

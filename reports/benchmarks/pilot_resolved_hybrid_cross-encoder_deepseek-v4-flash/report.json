@@ -1,0 +1,223 @@
+{
+  "citations": {
+    "answer_citation_coverage": 0.9,
+    "citation_f1": 0.6833,
+    "citation_precision": 0.6607,
+    "citation_recall": 0.76,
+    "citation_validity": 0.9,
+    "n_samples": 50
+  },
+  "config": {
+    "collection": "newsqa_val200_s42_7e16e8_66785e",
+    "config_sha256": "b1dc2a816b8c3364ffd7b02fec6037d9a04e01e3476d3705e5093907d58a33fc",
+    "embedding": {},
+    "generator_model": "deepseek-v4-flash",
+    "generator_provider": "openai-compatible",
+    "implementation_sha256": "84089e1b3e6b587e16b2091fb6e4808b1ee2123529174083f7a55571469a9121",
+    "n_eval": 50,
+    "question_ids": [
+      "fc702af4678a4967bd9d8200f35b5df3",
+      "2b614698b55045c78b57cc7ed925f504",
+      "0a3b187e277c41cca2bd6c9592f86150",
+      "6a85d330e9b948fda0c33536760ff0b9",
+      "5fcc6fb126e14d65ba4d0d86bb28a8be",
+      "568e71d3966d49cd9d3ae1c99ac195d7",
+      "366758dc520c473db2b9157d39a2ad10",
+      "28ae4259c5bd485a899ec68af2eb4264",
+      "d58e98347651493d99ad62e97fbe7902",
+      "23d1c9c515f3417ab70aba3c3bc43ec8",
+      "e8ac0eb458ea4dcabf252184b9da9bae",
+      "a42a58af650a4ec3b6948870d36e95cd",
+      "0d29f96a620a43bd99661dbfb7072b59",
+      "0c1c6f6b44e3466eac1a68dadefd06ab",
+      "263ac68d0d564969908cdec34ad10b8d",
+      "547765c1158b4a5a8100d6a300aa88b1",
+      "5a3bf32e88574c78a5ef3fcb1756502f",
+      "c61125f708f444a08a74f67c940ed77a",
+      "ef04d080cbcb459b8803c4c04a7ab199",
+      "0a9b90b0d783413c9c6ff456e7dfe0ee",
+      "dc0659b5894a487fa98b941caa1486b1",
+      "4e7c7187fe8a4636ac095b31bfc91433",
+      "ff89789e7aab4c31b15fed6597f67770",
+      "a36a9969dee14e6f90fc1785e4d8151a",
+      "5579074640614bacbdd03ed34a3ddf08",
+      "af5a0954d5ee4800bfc755fed87274db",
+      "e82fa7a590004a5091ed4ff9d55156b5",
+      "6bc25fd1669d435fbb8b7d5fb1f08bb0",
+      "02a006ec43e94d8a8fec1ab448fa5e00",
+      "3ef9db99eba14a2db167a1a13f553a95",
+      "a463b547f86240248cbeca805df114fb",
+      "87ac9682d8b541de8ef5f78175be9615",
+      "3dd74943ebab4b1d828661d36a868dab",
+      "5372bffd269e45f5b80bfa12e294af8f",
+      "85c04b3d7724447880a73aad3a81da3b",
+      "2616151407964974abead40e1f46a464",
+      "94b10c393a7e4c55959a283da2c4d78f",
+      "274afac6641443f7b27638c937cdb43e",
+      "8ccdb4a0320940ea982529d8cb9c97a4",
+      "8914c97e8b7143239e4c0f5be45b7a7a",
+      "ef463e57439c4b01af0a1f501f2a074f",
+      "66485f565d3c4c248cafd2ef5708d9d7",
+      "1239f593603846238d67b686d7fd6192",
+      "b3f08e2a732a4b8aac4bdb22efbb6a03",
+      "d2e9097aa9a8438c820acdc165cc2785",
+      "308816ab37144748816002e1b38d2e0b",
+      "942bf4f0c7314363b7e4c3ec2b28128f",
+      "1fe3dce165394bee88bb3829fc87ba0c",
+      "d86c4a3e9c944a5595ffd076817380c9",
+      "7074419bbc394a039c03413007094b94"
+    ],
+    "rag_prompt": "You are a helpful assistant answering questions based on provided context. Answer concisely and only based on the given context. Cite supporting context using its bracketed number, for example [1]. Every factual claim must have a citation, and you must not cite context that does not support the claim. If the answer is not in the context, say: 'I cannot find this information in the provided context.'",
+    "rerank_top_n": 5,
+    "reranker": "cross-encoder",
+    "reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "retrieval_only": false,
+    "retriever": "hybrid",
+    "seed": 42,
+    "testset_sha256": "f41c7b78dea72867d79ce3118f0b6183bb28d8e83aab235db53ad326ec7bd544",
+    "timestamp": "2026-07-16T09:49:56.309828+00:00",
+    "top_k": 10,
+    "variant_manifest_sha256": "b4d8a817d0e5eff39ac80d14526b465eb072bf2fb18b7fdf346511d912ef12c2"
+  },
+  "coverage": {
+    "expected": 50,
+    "failed": 0,
+    "missing": 0,
+    "recorded": 50,
+    "success_rate": 1.0,
+    "successful": 50
+  },
+  "failures": [
+    {
+      "expected": "Kurt Cobain",
+      "question": "Who committed suicide at age 27, 15 years ago?",
+      "question_id": "fc702af4678a4967bd9d8200f35b5df3",
+      "reason": "No ground-truth chunk in reranked top 5"
+    },
+    {
+      "expected": "administration's controversial system of military trials for some Guantanamo Bay detainees.",
+      "question": "What did Obama revive of Bush's?",
+      "question_id": "366758dc520c473db2b9157d39a2ad10",
+      "reason": "No ground-truth chunk in reranked top 5"
+    },
+    {
+      "expected": "Benedict XVI",
+      "question": "What is the name of the Pope?",
+      "question_id": "263ac68d0d564969908cdec34ad10b8d",
+      "reason": "No ground-truth chunk in reranked top 5"
+    },
+    {
+      "expected": "1,073 immigration detainees",
+      "question": "who had medical escorts?",
+      "question_id": "0a9b90b0d783413c9c6ff456e7dfe0ee",
+      "reason": "No ground-truth chunk in reranked top 5"
+    },
+    {
+      "expected": "$8.8 million",
+      "question": "What did Madea Goes to Jail gross?",
+      "question_id": "94b10c393a7e4c55959a283da2c4d78f",
+      "reason": "No ground-truth chunk in reranked top 5"
+    },
+    {
+      "expected": "Swat Valley.",
+      "question": "Where was the fighting between government soldiers and Taliban militants?",
+      "question_id": "942bf4f0c7314363b7e4c3ec2b28128f",
+      "reason": "No ground-truth chunk in reranked top 5"
+    },
+    {
+      "expected": "Afghan opium trade",
+      "question": "What does the U.N. suggest NATO forces should attack in Afghanistan?",
+      "question_id": "7074419bbc394a039c03413007094b94",
+      "reason": "No ground-truth chunk in reranked top 5"
+    }
+  ],
+  "generated_at": "2026-07-16T09:49:56.309816+00:00",
+  "latency": {
+    "llm_ms": {
+      "max_ms": 11436.7,
+      "mean_ms": 3072.0,
+      "n_samples": 50,
+      "p50_ms": 2488.5,
+      "p95_ms": 7165.1
+    },
+    "rerank_ms": {
+      "max_ms": 10073.1,
+      "mean_ms": 601.4,
+      "n_samples": 50,
+      "p50_ms": 396.3,
+      "p95_ms": 544.4
+    },
+    "retrieve_ms": {
+      "max_ms": 7702.9,
+      "mean_ms": 431.6,
+      "n_samples": 50,
+      "p50_ms": 241.1,
+      "p95_ms": 834.6
+    },
+    "total": {
+      "max_ms": 25291.6,
+      "mean_ms": 4105.0,
+      "n_samples": 50,
+      "p50_ms": 3080.5,
+      "p95_ms": 7914.9
+    }
+  },
+  "qa": {
+    "exact_match": 0.0,
+    "f1": 0.2899,
+    "n_samples": 50
+  },
+  "qa_success_only": {
+    "exact_match": 0.0,
+    "f1": 0.2899,
+    "n_samples": 50
+  },
+  "ragas": {
+    "coverage": 0.8,
+    "n_samples": 40
+  },
+  "reranker_delta": {
+    "delta_mrr@1": 0.08,
+    "delta_mrr@3": 0.0667,
+    "delta_mrr@5": 0.0667,
+    "delta_ndcg@1": 0.08,
+    "delta_ndcg@3": 0.0696,
+    "delta_ndcg@5": 0.0663
+  },
+  "retrieval": {
+    "hit_rate@1": 0.64,
+    "hit_rate@3": 0.84,
+    "hit_rate@5": 0.86,
+    "mrr@1": 0.64,
+    "mrr@3": 0.7267,
+    "mrr@5": 0.7317,
+    "n_samples": 50,
+    "ndcg@1": 0.64,
+    "ndcg@3": 0.748,
+    "ndcg@5": 0.7533,
+    "recall@1": 0.63,
+    "recall@3": 0.83,
+    "recall@5": 0.84
+  },
+  "retrieval_initial": {
+    "hit_rate@1": 0.56,
+    "hit_rate@10": 0.86,
+    "hit_rate@3": 0.78,
+    "hit_rate@5": 0.8,
+    "mrr@1": 0.56,
+    "mrr@10": 0.6726,
+    "mrr@3": 0.66,
+    "mrr@5": 0.665,
+    "n_samples": 50,
+    "ndcg@1": 0.56,
+    "ndcg@10": 0.7094,
+    "ndcg@3": 0.6783,
+    "ndcg@5": 0.6869,
+    "recall@1": 0.55,
+    "recall@10": 0.85,
+    "recall@3": 0.76,
+    "recall@5": 0.78
+  },
+  "run_fingerprint": "9401cadc9ea72d085ba4c3824641bf27bed9417d74863800c80fc9340f549643",
+  "schema_version": 2
+}

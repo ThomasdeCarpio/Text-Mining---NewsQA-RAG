@@ -126,7 +126,8 @@ Below are the evaluation requirements for each specific module in the RAG pipeli
 ## 6. Data Contracts (I/O Schemas)
 
 > This is the source of truth for every hand-off in the eval pipeline. Producers and consumers
-> below **must** agree on these shapes. `notebooks/02_evaluation.ipynb` is the reference driver.
+> below **must** agree on these shapes. `docs/benchmarking.md` is the canonical
+> resumable driver; the older `run_benchmark.py` contract remains supported.
 
 Flow: `testset.jsonl` → `run_benchmark.py` → `reports/<name>/report.json` → `eval_service.py` → dashboard.
 
@@ -224,8 +225,11 @@ NewsQA (HF)  ──────────────────────�
    │            [ same articles + same chunker on both sides = IDs match ]
    │                    │
    ▼                    ▼
-run_benchmark.py  ──►  metrics.py  ──►  reports/<name>/report.json
-   (retriever/reranker/agent)                    │
+collect_benchmark_predictions.py ─► predictions.jsonl ─► score / judge scripts
+   (retriever/reranker/agent)                              │
+                                                           ▼
+                                               reports/<run>/report.json
+                                                           │
                                                  ▼
                               eval_service.py ─► /admin/* (FastAPI) ─► Dashboard (React)
 ```
@@ -241,11 +245,14 @@ detects this (all `hit_rate@k = 0` while `n_samples > 0`).
 | Job | File |
 | --- | --- |
 | Build the reviewed test sets + 1,000-article corpus | `scripts/prepare_evaluation_dataset.py` |
+| Score chunking and index integrity | `scripts/benchmark_corpus.py` |
 | Test-set build logic (grouping, evidence→chunk mapping) | `src/evaluation/testset.py` |
-| Run a benchmark, write a report | `scripts/run_benchmark.py` |
+| Collect resumable RAG traces | `scripts/collect_benchmark_predictions.py` |
+| Score deterministic metrics | `scripts/score_benchmark_predictions.py` |
+| Run cached RAGAS judging | `scripts/judge_benchmark_predictions.py` |
 | Metric math (all of it) | `src/evaluation/metrics.py` |
 | Reports → dashboard shapes | `src/services/eval_service.py` → `api/routers/admin.py` |
-| Driver notebook (run everything, plot) | `notebooks/02_evaluation.ipynb` |
+| Compare completed final reports | `notebooks/04_final_benchmark_analysis.ipynb` |
 | Learn / debug the evidence→chunk mapping | `notebooks/03_newsqa_mini_dataset.ipynb` |
 | Construction and human-review protocol | `docs/evaluation_dataset.md` |
 
@@ -261,11 +268,12 @@ when you swap a module — that's the point of the contract in §6.
 | Retriever | `src/retrieval/*` via `retriever_factory.py` | `retrieval` | `evaluate_retrieval` → hit_rate / MRR / recall / NDCG |
 | Reranker | `src/retrieval/reranker.py` | `retrieval.reranker` | `delta_mrr`, NDCG |
 | Generator (LLM) | `src/llm.py` | `llm` | `evaluate_qa` (EM/F1), `evaluate_ragas` (faithfulness, answer relevance) |
-| End-to-end | `src/agents/rag_agent.py` | all of the above | `run_benchmark.py --run-generator --run-ragas` (RAG triad + latency) |
+| End-to-end | `src/agents/rag_agent.py` | all of the above | resumable collection + scoring + judge (RAG triad, citations, latency, failures) |
 
-**To compare a change:** run `run_benchmark.py` before and after into two `--report-dir`s and diff the
-report JSONs. To compare retrievers side by side, use report dirs named `dense` and `hybrid` — the
-dashboard's bar chart reads exactly those two.
+**To compare a change:** create a separate run directory for every predeclared
+configuration and diff the report JSONs. Never overwrite or resume a directory
+with a different fingerprint. See [`benchmarking.md`](benchmarking.md) for the
+full experiment matrix and commands.
 
 ### 7.4. Using it in the UI
 

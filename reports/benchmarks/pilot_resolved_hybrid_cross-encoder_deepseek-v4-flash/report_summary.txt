@@ -1,0 +1,71 @@
+=== Benchmark Report ===
+Timestamp  : 2026-07-16T09:49:56.309828+00:00
+Retriever  : hybrid | Reranker: cross-encoder
+top_k=10 | rerank_top_n=5 | n_eval=50
+Collection : newsqa_val200_s42_7e16e8_66785e
+Embedding  : None / None
+
+--- Coverage ---
+  expected: 50
+  recorded: 50
+  successful: 50
+  failed: 0
+  missing: 0
+  success_rate: 1.0
+
+--- Initial Retrieval ---
+  hit_rate@1: 0.56
+  mrr@1: 0.56
+  recall@1: 0.55
+  ndcg@1: 0.56
+  hit_rate@3: 0.78
+  mrr@3: 0.66
+  recall@3: 0.76
+  ndcg@3: 0.6783
+  hit_rate@5: 0.8
+  mrr@5: 0.665
+  recall@5: 0.78
+  ndcg@5: 0.6869
+  hit_rate@10: 0.86
+  mrr@10: 0.6726
+  recall@10: 0.85
+  ndcg@10: 0.7094
+  n_samples: 50
+
+--- Retrieval ---
+  hit_rate@1: 0.64
+  mrr@1: 0.64
+  recall@1: 0.63
+  ndcg@1: 0.64
+  hit_rate@3: 0.84
+  mrr@3: 0.7267
+  recall@3: 0.83
+  ndcg@3: 0.748
+  hit_rate@5: 0.86
+  mrr@5: 0.7317
+  recall@5: 0.84
+  ndcg@5: 0.7533
+  n_samples: 50
+
+--- QA ---
+  exact_match: 0.0
+  f1: 0.2899
+  n_samples: 50
+
+--- RAGAS ---
+  n_samples: 40
+  coverage: 0.8
+
+--- Citations ---
+  citation_validity: 0.9
+  citation_precision: 0.6607
+  citation_recall: 0.76
+  citation_f1: 0.6833
+  answer_citation_coverage: 0.9
+  n_samples: 50
+
+--- Latency ---
+  total: {'mean_ms': 4105.0, 'p50_ms': 3080.5, 'p95_ms': 7914.9, 'max_ms': 25291.6, 'n_samples': 50}
+  retrieve_ms: {'mean_ms': 431.6, 'p50_ms': 241.1, 'p95_ms': 834.6, 'max_ms': 7702.9, 'n_samples': 50}
+  rerank_ms: {'mean_ms': 601.4, 'p50_ms': 396.3, 'p95_ms': 544.4, 'max_ms': 10073.1, 'n_samples': 50}
+  llm_ms: {'mean_ms': 3072.0, 'p50_ms': 2488.5, 'p95_ms': 7165.1, 'max_ms': 11436.7, 'n_samples': 50}

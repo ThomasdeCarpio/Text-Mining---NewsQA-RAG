@@ -71,7 +71,11 @@ from src.evaluation.metrics import (
 def main():
     parser = argparse.ArgumentParser(description="Run RAG pipeline benchmark.")
     parser.add_argument("--retriever", choices=["dense", "bm25", "hybrid"], default="dense")
-    parser.add_argument("--reranker", choices=["noop"], default="noop")
+    parser.add_argument("--reranker", choices=["noop", "cross-encoder"], default="noop")
+    parser.add_argument(
+        "--reranker-model",
+        default="cross-encoder/ms-marco-MiniLM-L-6-v2",
+    )
     parser.add_argument("--testset", required=True, help="JSONL test set path")
     parser.add_argument("--n-eval", type=int, default=None, help="Max questions to evaluate")
     parser.add_argument("--top-k", type=int, default=None, help="Retriever top-k")
@@ -105,6 +109,9 @@ def main():
 
     if args.variant_manifest:
         _apply_manifest_preflight(args, config)
+    config.setdefault("retrieval", {}).setdefault("reranker", {}).update(
+        {"type": args.reranker, "model": args.reranker_model}
+    )
     args.db_path = args.db_path or "database/chroma/"
     args.collection = args.collection or "basic_collection"
 
@@ -244,6 +251,7 @@ def main():
             qa_samples.append({
                 "prediction": answer,
                 "ground_truth": entry["ground_truth"],
+                "accepted_answers": entry.get("accepted_answers") or [entry["ground_truth"]],
                 "article_key": entry.get("article_key", "unknown"),
                 "standalone_label": entry.get("standalone_label", "unlabeled"),
             })
@@ -438,6 +446,18 @@ def _write_summary(path: str, report: dict) -> None:
     lines.append(f"Embedding  : {cfg.get('embedding', {}).get('provider')} / {cfg.get('embedding', {}).get('model_name')}")
     lines.append("")
 
+    if "coverage" in report:
+        lines.append("--- Coverage ---")
+        for k, v in report["coverage"].items():
+            lines.append(f"  {k}: {v}")
+        lines.append("")
+
+    if "retrieval_initial" in report:
+        lines.append("--- Initial Retrieval ---")
+        for k, v in report["retrieval_initial"].items():
+            lines.append(f"  {k}: {v}")
+        lines.append("")
+
     if "retrieval" in report:
         lines.append("--- Retrieval ---")
         for k, v in report["retrieval"].items():
@@ -454,6 +474,18 @@ def _write_summary(path: str, report: dict) -> None:
         lines.append("--- RAGAS ---")
         for k, v in report["ragas"].items():
             lines.append(f"  {k}: {v}")
+        lines.append("")
+
+    if "citations" in report:
+        lines.append("--- Citations ---")
+        for k, v in report["citations"].items():
+            lines.append(f"  {k}: {v}")
+        lines.append("")
+
+    if "latency" in report:
+        lines.append("--- Latency ---")
+        for stage, values in report["latency"].items():
+            lines.append(f"  {stage}: {values}")
         lines.append("")
 
     with open(path, "w", encoding="utf-8") as f:

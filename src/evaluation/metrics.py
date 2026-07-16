@@ -29,8 +29,8 @@ def recall_at_k(relevant: list[str], retrieved: list[str], k: int) -> float:
     """Fraction of relevant IDs that appear in top-k results."""
     if not relevant:
         return 0.0
-    hits = sum(1 for r in retrieved[:k] if r in set(relevant))
-    return hits / len(relevant)
+    hits = len(set(relevant) & set(retrieved[:k]))
+    return hits / len(set(relevant))
 
 
 def ndcg_at_k(relevant: list[str], retrieved: list[str], k: int) -> float:
@@ -109,16 +109,66 @@ def evaluate_qa(samples: list[dict]) -> dict:
     Aggregate QA metrics.
 
     Args:
-        samples: list of {prediction: str, ground_truth: str}
+        samples: list of {prediction: str, ground_truth: str, accepted_answers?: list[str]}
 
     Returns:
         {exact_match, f1, n_samples}
     """
-    em_scores = [exact_match(s["prediction"], s["ground_truth"]) for s in samples]
-    f1_scores = [f1_score_qa(s["prediction"], s["ground_truth"]) for s in samples]
+    em_scores = []
+    f1_scores = []
+    for sample in samples:
+        prediction = re.sub(r"\[\d+]", "", sample["prediction"])
+        answers = sample.get("accepted_answers") or [sample["ground_truth"]]
+        em_scores.append(max(exact_match(prediction, answer) for answer in answers))
+        f1_scores.append(max(f1_score_qa(prediction, answer) for answer in answers))
     return {
         "exact_match": round(float(np.mean(em_scores)), 4),
         "f1": round(float(np.mean(f1_scores)), 4),
+        "n_samples": len(samples),
+    }
+
+
+def evaluate_citations(samples: list[dict]) -> dict:
+    """Evaluate numbered citations against gold relevant chunk IDs."""
+    if not samples:
+        return {
+            "citation_validity": 0.0,
+            "citation_precision": 0.0,
+            "citation_recall": 0.0,
+            "citation_f1": 0.0,
+            "answer_citation_coverage": 0.0,
+            "n_samples": 0,
+        }
+
+    validity_scores = []
+    precision_scores = []
+    recall_scores = []
+    f1_scores = []
+    coverage_scores = []
+    for sample in samples:
+        cited = set(sample.get("citation_chunk_ids") or [])
+        relevant = set(sample.get("relevant_chunk_ids") or [])
+        invalid = sample.get("invalid_citation_indices") or []
+        total_refs = len(cited) + len(invalid)
+        validity_scores.append(len(cited) / total_refs if total_refs else 0.0)
+        coverage_scores.append(float(bool(cited)))
+        hits = len(cited & relevant)
+        precision = hits / len(cited) if cited else 0.0
+        recall = hits / len(relevant) if relevant else 0.0
+        precision_scores.append(precision)
+        recall_scores.append(recall)
+        f1_scores.append(
+            2 * precision * recall / (precision + recall)
+            if precision + recall
+            else 0.0
+        )
+
+    return {
+        "citation_validity": round(float(np.mean(validity_scores)), 4),
+        "citation_precision": round(float(np.mean(precision_scores)), 4),
+        "citation_recall": round(float(np.mean(recall_scores)), 4),
+        "citation_f1": round(float(np.mean(f1_scores)), 4),
+        "answer_citation_coverage": round(float(np.mean(coverage_scores)), 4),
         "n_samples": len(samples),
     }
 
@@ -127,7 +177,23 @@ def evaluate_qa(samples: list[dict]) -> dict:
 # Chunking diagnostic metrics
 # ---------------------------------------------------------------------------
 
-def evaluate_chunking(chunks: list[dict]) -> dict:
+def count_chunk_tokens(texts: list[str]) -> tuple[list[int], str]:
+    """Count tokens with cl100k when available and an explicit offline fallback."""
+    try:
+        import tiktoken
+
+        encoding = tiktoken.get_encoding("cl100k_base")
+        return [len(encoding.encode(text)) for text in texts], "cl100k_base"
+    except Exception:
+        pattern = re.compile(r"\w+|[^\w\s]", re.UNICODE)
+        return [len(pattern.findall(text)) for text in texts], "regex_approximation"
+
+
+def evaluate_chunking(
+    chunks: list[dict],
+    token_counts: list[int] | None = None,
+    tokenizer: str | None = None,
+) -> dict:
     """
     Diagnostic stats for a chunked collection. No ground truth needed.
 
@@ -138,10 +204,10 @@ def evaluate_chunking(chunks: list[dict]) -> dict:
         {total_chunks, mean_tokens, std_tokens, min_tokens, max_tokens,
          chunks_per_article_mean, chunks_per_article_std}
     """
-    import tiktoken
-
-    enc = tiktoken.get_encoding("cl100k_base")
-    token_counts = [len(enc.encode(c["text"])) for c in chunks]
+    if token_counts is None:
+        token_counts, tokenizer = count_chunk_tokens(
+            [chunk["text"] for chunk in chunks]
+        )
 
     article_ids = [c["metadata"].get("article_id", c["id"]) for c in chunks]
     from collections import Counter as _Counter
@@ -149,6 +215,7 @@ def evaluate_chunking(chunks: list[dict]) -> dict:
 
     return {
         "total_chunks": len(chunks),
+        "tokenizer": tokenizer or "caller_supplied",
         "mean_tokens": round(float(np.mean(token_counts)), 1),
         "std_tokens": round(float(np.std(token_counts)), 1),
         "min_tokens": int(np.min(token_counts)),
@@ -206,13 +273,13 @@ def _ragas_shim() -> None:
         _llms.VertexAI = type("VertexAI", (), {})
 
 
-def _ragas_judge(llm_model: str):
+def _ragas_judge(llm_model: str, provider: str = "auto"):
     """
-    Build the RAGAS judge LLM from env, cheapest option first.
+    Build the RAGAS judge LLM from environment configuration.
 
-    DEEPSEEK_API_KEY set → DeepSeek (OpenAI-compatible, ~10x cheaper than GPT-4o).
-    Else → OpenAI with OPENAI_API_KEY. Embeddings are always local (free): DeepSeek
-    has no embeddings endpoint and answer_relevancy needs one.
+    Gemini uses GEMINI_API_KEY, DeepSeek uses DEEPSEEK_API_KEY, and OpenAI or
+    an OpenAI-compatible gateway uses OPENAI_API_KEY. Embeddings are always
+    local because answer_relevancy requires an embedding model.
     """
     import os
 
@@ -222,16 +289,35 @@ def _ragas_judge(llm_model: str):
     except Exception:
         pass
 
-    from langchain_openai import ChatOpenAI
     from langchain_community.embeddings import HuggingFaceEmbeddings
     from ragas.llms import LangchainLLMWrapper
     from ragas.embeddings import LangchainEmbeddingsWrapper
 
-    if os.getenv("DEEPSEEK_API_KEY"):
+    if provider == "gemini":
+        if not os.getenv("GEMINI_API_KEY"):
+            raise RuntimeError("GEMINI_API_KEY is required for the Gemini judge")
+        from langchain_openai import ChatOpenAI
+
+        chat = ChatOpenAI(
+            model=llm_model,
+            api_key=os.environ["GEMINI_API_KEY"],
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+            temperature=0,
+            max_retries=2,
+        )
+    elif provider == "deepseek" or (
+        provider == "auto" and bool(os.getenv("DEEPSEEK_API_KEY"))
+    ):
+        if not os.getenv("DEEPSEEK_API_KEY"):
+            raise RuntimeError("DEEPSEEK_API_KEY is required for the DeepSeek judge")
+        from langchain_openai import ChatOpenAI
+
         model = llm_model if llm_model.startswith("deepseek") else "deepseek-chat"
         chat = ChatOpenAI(model=model, api_key=os.environ["DEEPSEEK_API_KEY"],
                           base_url="https://api.deepseek.com", temperature=0, max_retries=2)
     else:
+        from langchain_openai import ChatOpenAI
+
         chat = ChatOpenAI(model=llm_model, temperature=0)
 
     emb = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
@@ -242,6 +328,7 @@ def evaluate_ragas(
     samples: list[dict],
     metrics: Optional[list[str]] = None,
     llm_model: str = "deepseek-chat",
+    provider: str = "auto",
 ) -> dict:
     """
     Run RAGAS evaluation with a configurable judge LLM.
@@ -256,11 +343,40 @@ def evaluate_ragas(
     Returns:
         Dict of metric_name → mean score.
     """
+    rows = evaluate_ragas_rows(
+        samples,
+        metrics=metrics,
+        llm_model=llm_model,
+        provider=provider,
+    )
+    metric_names = metrics or [
+        "faithfulness",
+        "answer_relevancy",
+        "context_precision",
+        "context_recall",
+        "answer_correctness",
+    ]
+    return {
+        name: round(float(np.mean([row[name] for row in rows if name in row])), 4)
+        for name in metric_names
+        if any(name in row for row in rows)
+    }
+
+
+def evaluate_ragas_rows(
+    samples: list[dict],
+    metrics: Optional[list[str]] = None,
+    llm_model: str = "deepseek-chat",
+    provider: str = "auto",
+    max_workers: int = 4,
+) -> list[dict]:
+    """Run RAGAS and return one score dictionary per input sample."""
     import os
 
     _ragas_shim()
 
     from ragas import evaluate
+    from ragas.run_config import RunConfig
     from ragas.metrics import (
         faithfulness,
         answer_relevancy,
@@ -282,10 +398,13 @@ def evaluate_ragas(
         metrics = list(metric_map.keys())
 
     selected = [metric_map[m] for m in metrics if m in metric_map]
-    judge, embeddings = _ragas_judge(llm_model)
+    judge, embeddings = _ragas_judge(llm_model, provider=provider)
 
-    # DeepSeek only supports n=1; answer_relevancy defaults to 3 generations -> 400 error.
-    if os.getenv("DEEPSEEK_API_KEY"):
+    # Keep judge requests at one candidate for providers that do not implement
+    # RAGAS's default three-candidate answer-relevancy request consistently.
+    if provider in {"deepseek", "gemini"} or (
+        provider == "auto" and os.getenv("DEEPSEEK_API_KEY")
+    ):
         answer_relevancy.strictness = 1
 
     dataset = Dataset.from_list([
@@ -298,10 +417,30 @@ def evaluate_ragas(
         for s in samples
     ])
 
-    result = evaluate(dataset=dataset, metrics=selected, llm=judge, embeddings=embeddings)
+    result = evaluate(
+        dataset=dataset,
+        metrics=selected,
+        llm=judge,
+        embeddings=embeddings,
+        run_config=RunConfig(max_workers=max_workers, max_retries=2, seed=42),
+        show_progress=False,
+    )
 
     df = result.to_pandas()
-    return {m: round(float(df[m].mean()), 4) for m in metrics if m in df.columns}
+    rows = []
+    for _, item in df.iterrows():
+        scores = {}
+        for metric in metrics:
+            if metric not in df.columns:
+                continue
+            try:
+                value = float(item[metric])
+            except (TypeError, ValueError):
+                continue
+            if not math.isnan(value):
+                scores[metric] = round(value, 4)
+        rows.append(scores)
+    return rows
 
 
 # ---------------------------------------------------------------------------

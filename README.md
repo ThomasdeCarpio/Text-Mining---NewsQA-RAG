@@ -132,30 +132,25 @@ and teammate sharing instructions.
 The older mini builder below remains available for exploratory runs, but it
 does not provide the human approval workflow.
 
-Score the RAG pipeline (retrieval metrics; add generation + Ragas for the full
-picture). The test set and the collection **must be built from the same
-articles** — `build_mini_testset.py` does both in one command:
+Score the finalized RAG pipeline with durable collection, deterministic
+scoring, and LLM judging as separate resumable stages:
 
 ```bash
-# 1) Build a matched test set + eval collection
-python scripts/build_mini_testset.py --n-articles 40 \
-    --output data/testset_eval.jsonl --build-collection --collection newsqa_eval
+.venv/bin/python scripts/collect_benchmark_predictions.py \
+  --retriever hybrid --reranker noop --retrieval-only \
+  --testset data/evaluation/newsqa_200_11064/final/testset_reviewed_original.jsonl \
+  --variant-manifest evaluation/manifests/newsqa_200_11064.variant.json \
+  --run-dir reports/benchmarks/original_hybrid_noop
 
-# 2) Retrieval-only (fast, no API key)
-python scripts/run_benchmark.py --retriever dense \
-    --testset data/testset_eval.jsonl --collection newsqa_eval \
-    --report-dir reports/dense
-
-# 3) Full: generation (EM/F1) + Ragas judge (Faithfulness, ...) — needs a key in .env
-python scripts/run_benchmark.py --retriever hybrid \
-    --testset data/testset_eval.jsonl --collection newsqa_eval \
-    --chunks-path data/chroma_db/chunks/newsqa_eval.jsonl \
-    --run-generator --run-ragas --report-dir reports/hybrid
+.venv/bin/python scripts/score_benchmark_predictions.py \
+  --run-dir reports/benchmarks/original_hybrid_noop
 ```
 
-Reports land in `reports/<name>/report.json` and feed the Evaluation Desk. See
-`notebooks/02_evaluation.ipynb` for the guided version, and
-`docs/evaluation.md` §7 for the full flow. Run `run_benchmark.py --help` for all flags.
+See [`docs/benchmarking.md`](docs/benchmarking.md) for cross-encoder,
+generation, retry/resume, LLM judge, and original-versus-resolved commands.
+Completed reports can be compared in `notebooks/04_final_benchmark_analysis.ipynb`.
+The complete workflow can also be run interactively from
+`notebooks/05_run_final_benchmark.ipynb`.
 
 
 ### Query CLI (Quick Test)

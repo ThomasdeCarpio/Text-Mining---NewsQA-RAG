@@ -25,6 +25,9 @@ class OpenAILLM:
     DEFAULT_SYSTEM_PROMPT = (
         "You are a helpful assistant answering questions based on provided context. "
         "Answer concisely and only based on the given context. "
+        "Cite supporting context using its bracketed number, for example [1]. "
+        "Every factual claim must have a citation, and you must not cite context that "
+        "does not support the claim. "
         "If the answer is not in the context, say: "
         "'I cannot find this information in the provided context.'"
     )

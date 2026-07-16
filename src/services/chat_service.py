@@ -434,7 +434,7 @@ async def ask(session_id: str, question: str) -> AsyncIterator[AgentEvent]:
                 ),
             )
         else:
-            results = rag_result["reranked_chunks"]
+            results = rag_result.get("cited_chunks") or rag_result["reranked_chunks"]
             yield _record(
                 store,
                 AgentEvent(

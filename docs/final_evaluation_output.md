@@ -152,26 +152,38 @@ runner.
 Use the variant manifest on every run. Its preflight validates the test-set
 hash, config hash, collection, chunk file, and BM25 artifact before evaluation.
 
-Primary retrieval benchmark:
+Primary resumable retrieval benchmark:
 
 ```bash
-.venv/bin/python scripts/run_benchmark.py \
+.venv/bin/python scripts/collect_benchmark_predictions.py \
   --retriever hybrid \
+  --reranker noop \
+  --retrieval-only \
   --testset data/evaluation/newsqa_200_11064/final/testset_reviewed_original.jsonl \
   --variant-manifest evaluation/manifests/newsqa_200_11064.variant.json \
-  --report-dir reports/newsqa_200_11064/original
+  --run-dir reports/benchmarks/original_hybrid_noop
+
+.venv/bin/python scripts/score_benchmark_predictions.py \
+  --run-dir reports/benchmarks/original_hybrid_noop
 ```
 
 Clarification comparison:
 
 ```bash
-.venv/bin/python scripts/run_benchmark.py \
+.venv/bin/python scripts/collect_benchmark_predictions.py \
   --retriever hybrid \
+  --reranker noop \
+  --retrieval-only \
   --testset data/evaluation/newsqa_200_11064/final/testset_resolved.jsonl \
   --variant-manifest evaluation/manifests/newsqa_200_11064.variant.json \
-  --report-dir reports/newsqa_200_11064/resolved
+  --run-dir reports/benchmarks/resolved_hybrid_noop
+
+.venv/bin/python scripts/score_benchmark_predictions.py \
+  --run-dir reports/benchmarks/resolved_hybrid_noop
 ```
 
 Report the primary and resolved results separately. Their paired difference
 measures the effect of clarification while holding answers, evidence, articles,
 chunks, retrieval configuration, and question count constant.
+The complete generation, cross-encoder, retry/resume, LLM-judge, and artifact
+instructions are in [`benchmarking.md`](benchmarking.md).

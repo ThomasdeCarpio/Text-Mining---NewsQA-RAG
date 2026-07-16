@@ -1,0 +1,39 @@
+{
+  "chunking": {
+    "chunk_size_compliance": 1.0,
+    "chunk_size_limit": 512,
+    "chunks_per_article_mean": 1.74,
+    "chunks_per_article_std": 0.46,
+    "deduplication_rate": 0.0007,
+    "max_tokens": 504,
+    "mean_tokens": 383.9,
+    "metadata_completeness": 1.0,
+    "min_tokens": 12,
+    "required_metadata_fields": [
+      "article_id",
+      "canonical_article_id",
+      "chunk_index",
+      "corpus_role",
+      "dataset_split",
+      "publisher",
+      "title"
+    ],
+    "semantic_integrity": 0.7114,
+    "std_tokens": 109.2,
+    "tokenizer": "cl100k_base",
+    "total_chunks": 19263
+  },
+  "generated_at": "2026-07-16T13:41:02.405505+00:00",
+  "indexing": {
+    "collection": "newsqa_val200_s42_7e16e8_66785e",
+    "count_matches_manifest": true,
+    "expected_chunks": 19263,
+    "indexed_chunks": 19263,
+    "self_retrieval_recall@1": 0.96,
+    "self_retrieval_samples": 50,
+    "write_latency_ms": null,
+    "write_latency_note": "Measure during a fresh index build; the finalized collection is read-only for evaluation."
+  },
+  "schema_version": 1,
+  "variant_manifest": "/Users/thomas200905/Documents/Thomas/HCMUS/Third Year/Semester 9/Text Mining/project/Text-Mining---NewsQA-RAG/evaluation/manifests/newsqa_200_11064.variant.json"
+}
