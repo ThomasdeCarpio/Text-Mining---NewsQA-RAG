@@ -187,3 +187,69 @@ measures the effect of clarification while holding answers, evidence, articles,
 chunks, retrieval configuration, and question count constant.
 The complete generation, cross-encoder, retry/resume, LLM-judge, and artifact
 instructions are in [`benchmarking.md`](benchmarking.md).
+
+## Semantic-deduplicated derived benchmark
+
+`final_deduplicated/` is the recommended derived dataset when each distinct
+within-article information need should contribute only once to aggregate
+metrics. It does not replace or modify `final/`.
+
+| Component | Rows |
+| --- | ---: |
+| Raw source questions retained for provenance | 1,340 |
+| Valid questions before deduplication | 1,336 |
+| Deduplicated scored questions | 1,152 |
+| Deduplicated clarified subset | 924 |
+| Duplicate question rows removed from scoring | 184 |
+| Multi-question semantic clusters | 155 |
+| Singleton clusters | 997 |
+
+Deduplication is restricted to questions from the same article. Codex proposed
+candidate clusters without using retrieval or generation results, and a human
+reviewer approved all 155 multi-question clusters. The representative is the
+lexicographically smallest stable source question ID. Its reviewed accepted
+answers, evidence spans, and relevant chunk IDs are the union of the cluster's
+reviewed members.
+
+Duplicate detection operates on the human-approved resolved wording. The same
+approved partition is then applied to `testset_reviewed_original.jsonl` and
+`testset_resolved.jsonl`, preserving their paired comparison. Raw
+`testset_original.jsonl` remains complete and is never deduplicated.
+
+The derived directory adds two audit files:
+
+| File | Purpose |
+| --- | --- |
+| `question_clusters.jsonl` | Complete partition of all 1,336 valid questions into 1,152 semantic targets, including singleton clusters. |
+| `duplicate_questions.jsonl` | The 184 non-representative rows removed from scored variants and their representative IDs. |
+
+`testset_original.jsonl` and `review_annotations.jsonl` remain complete at
+1,340 rows. `chunks.jsonl`, `bm25.pkl`, the Chroma collection, the 200 evaluation
+articles, and all 10,864 distractors are byte-identical to the original final
+dataset. Thus old and deduplicated scores differ only in question weighting.
+
+Rebuild the derived output from the reviewed base dataset and checked-in
+semantic decisions with:
+
+```bash
+.venv/bin/python scripts/deduplicate_evaluation_dataset.py --overwrite
+```
+
+Run it with the matching manifest:
+
+```bash
+.venv/bin/python scripts/collect_benchmark_predictions.py \
+  --retriever hybrid \
+  --reranker noop \
+  --retrieval-only \
+  --testset data/evaluation/newsqa_200_11064/final_deduplicated/testset_resolved.jsonl \
+  --variant-manifest evaluation/manifests/newsqa_200_11064.deduplicated.variant.json \
+  --run-dir reports/benchmarks/deduplicated_resolved_hybrid_noop
+```
+
+The semantic decision source is
+`evaluation/question_dedup/newsqa_200_11064.semantic_clusters.json`. The
+human audit is
+`evaluation/question_dedup/newsqa_200_11064.human_approval.json`. The derived
+manifest records both hashes, the parent manifest hash, every output artifact
+hash, and the unchanged index identity.

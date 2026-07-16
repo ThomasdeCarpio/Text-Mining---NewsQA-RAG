@@ -1,0 +1,639 @@
+{
+  "base_testset_sha256": "f41c7b78dea72867d79ce3118f0b6183bb28d8e83aab235db53ad326ec7bd544",
+  "cluster_reviews": [
+    {
+      "cluster_id": "qcluster_011604439d2693c8",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_027136dee1efcb95",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_02c654fe045b96dd",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_038d9c82042cc572",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_0500256a8277bbb6",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_09974166eb5dceeb",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_0a985ee8bbc09fc0",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_0c24a2525480eaab",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_0e24942952e0f5b5",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_12bfff384bffd377",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_166b31979fbd3d9a",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_1731ae7602da86f8",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_178dae9cdeced9fe",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_19da64734607c624",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_1c685a547ae9cbe2",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_1da88ee7c838d040",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_1e788acf3fd395dd",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_1eb8f63d098e25b2",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_212a388849dc396c",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_228a1decce862faa",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_2352d3bce6a141f5",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_26900709b3358b5c",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_26b3dd32afd6b41a",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_26d1ee99c3c2f697",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_2b8bb06273fd9f4a",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_2bd1e68fed454acb",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_2ce975c7fdce58f7",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_2dda5e2a2d7a0329",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_2fdaab3775c0c7f7",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_3036539cfb009fed",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_31618b760ec50257",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_32553d988f0d4584",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_3421d0a70b5c9c32",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_3432ac7a1c7535c7",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_36ad480ed2d6be6f",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_3b1316658a80a5a9",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_3c9b7359b964d698",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_3cbe7aaa5c270d13",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_3d882fd45f4b67d1",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_3f23eec74c5c6106",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_45d2bd9e06367dce",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_48953fbed938487b",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_4dded8f70f66ab17",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_4eed9760fd11f120",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_4f5d9f818ccfef55",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_4f5f11e17642e19e",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_4f774cc6a4cb68fc",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_50c4084a74607476",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_5171bb9825838ad7",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_53d5a53b33569698",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_547e99f5797779a8",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_54c590943eab3724",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_551272d7bfe5abab",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_55a68a014ca7bdad",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_59c3f1d834791ed1",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_5a6167597074146f",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_5b21862c2a12dfef",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_5d62670c84fa4480",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_5dd4cfb55b7aba65",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_5e57b248f8282e3e",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_5fca3afecc619b1a",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_5fe4a45fd04126a7",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_60d78ae0e78a43e8",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_66bb4bafcbf285ae",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_681dd633c28399a1",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_681f6ad4c900ab0f",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_6de09248d180d047",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_6e53757f4a00951d",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_71794b32b104b6be",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_71c51e0f653edc5d",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_725fcf4358814cbd",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_72bc4248cf40a713",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_7488185552dd3eef",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_76fe7527a723e8f5",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_785356146cf14043",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_785c33223d265033",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_7976831cd7a41006",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_7cbca724e7193744",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_7d9d5110786263ae",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_7ea88ba842c32c21",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_7f0899d384e3834d",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_7f374a520b30dac1",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_8012d9102b5640c3",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_85c6d7f49e589a10",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_85e8cce7e2198802",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_8672ec64bc89431c",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_8701064b1287d882",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_881fa270b5e5fc75",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_8924f7607c328067",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_8bcb986eca1ff169",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_8c278b9bf32b55f0",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_8f31bef6e94626a0",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_906d6434b9218af0",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_91b96b661c9b61b3",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_91e1acafd85cc277",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_94df09cc1d8b43d4",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_950ce1dff26db18a",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_96dee53a76be1a70",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_9926bdb98faa6017",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_999be15e8654a065",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_9a60a56711cd008b",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_9ccd31cfb12655a2",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_a036238cac38d302",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_a2a14bafcbf5ad7f",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_a3431f41b05ed037",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_a592171dccd81f4f",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_ab53fa3b6a75844f",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_af173bfcfc8fef09",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_b2172944be655fd7",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_b36a24e770feca79",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_b3ca9e573717df6f",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_b4a1ff5bf7eddd3c",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_b521b19d77977ab8",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_b9009714006a04e0",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_ba968654c55cb5aa",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_bc391f0897facaae",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_bd7a5d7d33e613d1",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_be5ddef5ce068484",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_bf6b56451f3d929a",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_c029d1732b5dcd84",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_c088d86db7064add",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_c19a264a0d23be21",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_c3e99d94f02b47cd",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_c955bb4284b62de6",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_cbb30af43bd61d6f",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_cc8bdec22120b2c2",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_cfa512700eb4ba8c",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_d10467caddcf89d0",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_d369d5aa57161c95",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_d6c91a82e5ce82f4",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_d85008593aee139f",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_d8d84a61f0030f4c",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_dacbec27e3374f3e",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_db1e2475cac4459f",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_db4ed3078a9ed849",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_dc54bcc107af5b44",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_dddc3f05ad5f2f99",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_e05b34a895bb498d",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_e36c8e38f008c686",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_e5569fbef51ef19a",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_e6a378a6ace98925",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_e73f92b701cf30b2",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_e7540f7a250c60f5",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_ebe064d8528854ba",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_eca5c8ec5ec5d506",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_eec62dbad2c0fa55",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_f133e15206165407",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_f2f4b5c0c42867e7",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_f8830b095ddc2a4f",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_f8937d78376b1133",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_f92a8b955d65b4c1",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_fa804e3a9fbfd515",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_fb20fa979b1d90b8",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_fb814ccbe58c811f",
+      "decision": "approve"
+    },
+    {
+      "cluster_id": "qcluster_fe5428234419c3ed",
+      "decision": "approve"
+    }
+  ],
+  "human_review": {
+    "method": "Manual review of every proposed multi-question cluster.",
+    "notes": "Reviewer read duplicate_questions_readable.md and explicitly approved all Codex duplicate-cluster decisions in the project session.",
+    "reviewed_at": "2026-07-16T17:35:31.646825+00:00",
+    "reviewer_id": "thomas",
+    "status": "approved"
+  },
+  "proposal_path": "evaluation/question_dedup/newsqa_200_11064.semantic_clusters.json",
+  "proposal_sha256": "959c7d9cae3f56afcdbd29034c738e61113370cb8c23467ab43dcb3d9b136695",
+  "reviewed_report": {
+    "path": "data/evaluation/newsqa_200_11064/staging/dedup/duplicate_questions_readable.md",
+    "sha256": "17697dbf06dcb732f88dd74d101dc9832b3e5a37beb986c3df65654b905c5858"
+  },
+  "schema_version": "1.0"
+}
