@@ -43,6 +43,7 @@ class OpenAILLM:
         self.max_tokens = max_tokens
         self._client = None
         self._effective_model = model
+        self.last_usage: dict[str, int] = {}
 
     def _get_client(self):
         if self._client is None:
@@ -87,6 +88,28 @@ class OpenAILLM:
             request["max_tokens"] = self.max_tokens
 
         response = client.chat.completions.create(**request)
+        usage = getattr(response, "usage", None)
+        input_tokens = getattr(usage, "prompt_tokens", None)
+        if input_tokens is None:
+            input_tokens = getattr(usage, "input_tokens", None)
+        output_tokens = getattr(usage, "completion_tokens", None)
+        if output_tokens is None:
+            output_tokens = getattr(usage, "output_tokens", None)
+        total_tokens = getattr(usage, "total_tokens", None)
+        if total_tokens is None and isinstance(input_tokens, (int, float)) and isinstance(
+            output_tokens, (int, float)
+        ):
+            total_tokens = input_tokens + output_tokens
+        values = {
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": total_tokens,
+        }
+        self.last_usage = {
+            key: int(value)
+            for key, value in values.items()
+            if isinstance(value, (int, float))
+        }
         return response.choices[0].message.content or ""
 
     def generate_rag_answer(self, question: str, contexts: list[str]) -> str:

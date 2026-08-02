@@ -28,19 +28,6 @@ export interface LoginResponse {
   role: "user" | "admin";
 }
 
-export interface FailureCase {
-  question: string;
-  expected: string;
-  retrieved: string;
-  reason: string;
-}
-
-export interface SearchComparisonRow {
-  metric: string;
-  vector_search: number;
-  hybrid_search: number;
-}
-
 export interface AlgorithmOption {
   id: string;
   label: string;
@@ -72,4 +59,51 @@ export interface RetrievalTiming {
 export interface RetrievalSearchResponse {
   results: RetrievalResult[];
   timing: RetrievalTiming;
+}
+
+export interface ExperimentRun {
+  run_id: string;
+  parameters: Record<string, string | number | boolean>;
+}
+
+export interface ExperimentSummary {
+  filename: string;
+  id: string;
+  name: string;
+  description: string;
+  run_count: number;
+  status: "pending" | "running" | "complete" | "failed";
+  status_counts: Record<string, number>;
+  result_ready: boolean;
+  error: string | null;
+  runs?: ExperimentRun[];
+  partitions?: Record<
+    string,
+    Record<string, { articles: number; questions: Record<string, number> }>
+  >;
+}
+
+export interface ExperimentResults {
+  experiment_id: string;
+  generated_at: string;
+  runs: Array<Record<string, string | number | boolean | null>>;
+  pareto_run_ids: string[];
+  history: Array<{
+    run_id: string;
+    status: string;
+    wall_time_seconds?: number;
+  }>;
+}
+
+export interface ExperimentRunDetail {
+  run_id: string;
+  parameters: Record<string, string | number | boolean>;
+  generated_at: string | null;
+  coverage: Record<string, number>;
+  failures: Array<{
+    question_id: string;
+    question: string;
+    expected: string;
+    reason: string;
+  }>;
 }

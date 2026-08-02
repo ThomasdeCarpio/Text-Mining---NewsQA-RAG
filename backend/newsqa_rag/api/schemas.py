@@ -42,10 +42,6 @@ class AskRequest(BaseModel):
     question: str
 
 
-class TriggerCrawlerResponse(BaseModel):
-    triggered: bool
-
-
 class AlgorithmOption(BaseModel):
     id: str
     label: str

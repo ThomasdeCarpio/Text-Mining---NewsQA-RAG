@@ -1,0 +1,10 @@
+{"attempt": 1, "finished_at": "2026-08-02T08:18:35.247681+00:00", "question_id": "1dc2fde787694953a64b5c5b60b4fd7c", "stage": "retrieval", "started_at": "2026-08-02T08:17:20.863384+00:00", "status": "success"}
+{"attempt": 1, "finished_at": "2026-08-02T08:18:36.551517+00:00", "question_id": "706ce26401d54a5d94687fb541f7350c", "stage": "retrieval", "started_at": "2026-08-02T08:18:35.256641+00:00", "status": "success"}
+{"attempt": 1, "finished_at": "2026-08-02T08:18:38.187975+00:00", "question_id": "6a85d330e9b948fda0c33536760ff0b9", "stage": "retrieval", "started_at": "2026-08-02T08:18:36.558290+00:00", "status": "success"}
+{"attempt": 1, "finished_at": "2026-08-02T08:18:39.932615+00:00", "question_id": "0161b1de8e9944f58ba3663305c9759a", "stage": "retrieval", "started_at": "2026-08-02T08:18:38.195482+00:00", "status": "success"}
+{"attempt": 1, "finished_at": "2026-08-02T08:18:41.367448+00:00", "question_id": "f5fd77e9ba374d4d89e90f52b3aa681d", "stage": "retrieval", "started_at": "2026-08-02T08:18:39.938779+00:00", "status": "success"}
+{"attempt": 1, "finished_at": "2026-08-02T08:18:43.030524+00:00", "question_id": "1fe3dce165394bee88bb3829fc87ba0c", "stage": "retrieval", "started_at": "2026-08-02T08:18:41.377121+00:00", "status": "success"}
+{"attempt": 1, "finished_at": "2026-08-02T08:18:44.576288+00:00", "question_id": "c1e18f0bb23a4243b70eec0f92d21f71", "stage": "retrieval", "started_at": "2026-08-02T08:18:43.040489+00:00", "status": "success"}
+{"attempt": 1, "finished_at": "2026-08-02T08:18:46.333423+00:00", "question_id": "b33e0d818b364b87878b747b09987f28", "stage": "retrieval", "started_at": "2026-08-02T08:18:44.587862+00:00", "status": "success"}
+{"attempt": 1, "finished_at": "2026-08-02T08:18:48.049654+00:00", "question_id": "5cc168d69c69444cb1abd767d8fd7e37", "stage": "retrieval", "started_at": "2026-08-02T08:18:46.351609+00:00", "status": "success"}
+{"attempt": 1, "finished_at": "2026-08-02T08:18:49.854993+00:00", "question_id": "0760573d4a6644b5a9528bd111cc597a", "stage": "retrieval", "started_at": "2026-08-02T08:18:48.057435+00:00", "status": "success"}

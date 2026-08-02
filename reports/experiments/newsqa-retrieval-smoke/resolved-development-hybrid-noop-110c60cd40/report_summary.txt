@@ -1,0 +1,54 @@
+=== Benchmark Report ===
+Timestamp  : 2026-08-02T08:17:09.423429+00:00
+Retriever  : hybrid | Reranker: noop
+top_k=10 | rerank_top_n=5 | n_eval=10
+Collection : newsqa_val200_s42_7e16e8_66785e
+Embedding  : None / None
+
+--- Coverage ---
+  expected: 10
+  recorded: 10
+  successful: 10
+  failed: 0
+  missing: 0
+  success_rate: 1.0
+
+--- Initial Retrieval ---
+  hit_rate@1: 0.8
+  mrr@1: 0.8
+  recall@1: 0.8
+  ndcg@1: 0.8
+  hit_rate@3: 0.8
+  mrr@3: 0.8
+  recall@3: 0.8
+  ndcg@3: 0.8
+  hit_rate@5: 0.8
+  mrr@5: 0.8
+  recall@5: 0.8
+  ndcg@5: 0.8
+  hit_rate@10: 1.0
+  mrr@10: 0.8222
+  recall@10: 1.0
+  ndcg@10: 0.8602
+  n_samples: 10
+
+--- Retrieval ---
+  hit_rate@1: 0.8
+  mrr@1: 0.8
+  recall@1: 0.8
+  ndcg@1: 0.8
+  hit_rate@3: 0.8
+  mrr@3: 0.8
+  recall@3: 0.8
+  ndcg@3: 0.8
+  hit_rate@5: 0.8
+  mrr@5: 0.8
+  recall@5: 0.8
+  ndcg@5: 0.8
+  n_samples: 10
+
+--- Latency ---
+  total: {'mean_ms': 1224.8, 'p50_ms': 264.0, 'p95_ms': 5654.5, 'max_ms': 10013.8, 'n_samples': 10}
+  retrieve_ms: {'mean_ms': 1224.8, 'p50_ms': 264.0, 'p95_ms': 5654.3, 'max_ms': 10013.5, 'n_samples': 10}
+  rerank_ms: {'mean_ms': 0.0, 'p50_ms': 0.0, 'p95_ms': 0.0, 'max_ms': 0.0, 'n_samples': 10}
+  llm_ms: {'n_samples': 0}

@@ -1,89 +1,60 @@
 # Evaluation pipeline
 
-This is the technical overview. Use [benchmarking.md](benchmarking.md) for
-commands and [evaluation_dataset.md](evaluation_dataset.md) for dataset review.
-
-## Scope
-
-The current benchmark evaluates a fixed single-pass pipeline:
+CLI and dashboard share one resumable path:
 
 ```text
-question → retrieve → optional rerank → optional generate → score → optional judge
+locked testset + matching index manifest
+  -> collect retrieval/generation traces
+  -> score deterministic metrics
+  -> judge with RAGAS (optional)
+  -> summarize experiment runs
 ```
-
-It does not evaluate multi-step planning or tool selection.
-
-## Stages
-
-| Stage | Implementation | Output |
-| --- | --- | --- |
-| Dataset/index validation | `apply_manifest_preflight` | A coherent test set, chunks, BM25 index, and Chroma collection |
-| Collection | `collect_benchmark_predictions.py` | Resumable retrieval and prediction JSONL traces |
-| Deterministic scoring | `score_benchmark_predictions.py` | Retrieval, QA, citation, latency, and coverage metrics |
-| LLM judging | `judge_benchmark_predictions.py` | Cached RAGAS scores |
-| Reporting | scorer + `eval_service.py` | JSON/text reports and dashboard responses |
-
-`backend/newsqa_rag/evaluation/benchmark_io.py` owns shared artifact, preflight, retry, resume,
-and summary behavior. Metric functions in `backend/newsqa_rag/evaluation/metrics.py` are pure
-and do not access the database.
 
 ## Required invariants
 
-1. The test set and retrieval indexes come from the same article corpus and
-   chunking configuration.
-2. Every scored question has at least one `relevant_chunk_ids` value.
-3. A run directory belongs to one immutable fingerprint. Changed inputs or
-   models require a new directory.
-4. Original and resolved variants remain separate paired runs.
-5. Failed generations stay in deterministic coverage/QA denominators.
-6. The primary judge model differs from the generator model.
+- Testset, chunks, BM25, Chroma collection, config, and manifest must describe the same corpus.
+- Original and resolved variants use the same locked articles and source question IDs.
+- Successful questions are reused on resume; failed attempts remain auditable.
+- Development and final-test articles never overlap.
+- Final-test stays closed until development choices are locked.
 
-## Main records
+Manifest preflight runs before model initialization. The prepared NewsQA corpus
+contains 200 evaluation articles, 10,864 distractors, and 19,263 indexed chunks.
 
-### Test-set row
+## Retrieval stages
 
-```json
-{
-  "question_id": "q-123",
-  "article_id": "newsqa_...",
-  "question": "Who won the hearing?",
-  "ground_truth": "Alice",
-  "accepted_answers": ["Alice"],
-  "relevant_chunk_ids": ["newsqa_..._chunk_0"]
-}
-```
+The scorer keeps both rankings:
 
-### Prediction record
+- `retrieval_initial`: top K returned by dense, BM25, or hybrid retrieval;
+- `retrieval`: the final top N after no-op truncation or cross-encoder reranking.
 
-Each row records `question_id`, status, attempts, ground truth, relevant chunk
-IDs, and either a successful full RAG trace or a sanitized terminal error.
-Retrieval is checkpointed separately so generation retries do not query the
-index again.
+This distinction explains cases where a gold chunk starts at rank 9, is removed
+by a top-5 no-op baseline, but is moved into the top five by a reranker.
 
-### Report
+## Metrics
 
-`report.json` contains:
+| Group | Metrics |
+| --- | --- |
+| Retrieval | Hit rate, recall, MRR, NDCG at K |
+| Answer | Exact match and token F1 over accepted answers |
+| Citation | Validity, precision, recall, F1 |
+| Operations | Coverage, failures, stage latency, token usage, estimated cost |
+| Comparison | Article macro mean, bootstrap 95% CI, paired delta, Pareto frontier |
 
-- `coverage`: expected, recorded, successful, failed, and missing counts.
-- `retrieval_initial` and `retrieval`: Hit Rate, Recall, MRR, and NDCG.
-- `reranker_delta`: post-rerank change in MRR/NDCG.
-- `qa`: Exact Match and token F1 against all accepted answers.
-- `citations`: validity and gold-chunk precision/recall/F1.
-- `latency`: mean, p50, p95, max, and sample count by stage.
-- `ragas`: optional judge metrics plus judge coverage.
+A retrieval failure means the gold chunk missed the evaluated cutoff. Verify
+chunk presence and collection count separately before diagnosing missing data.
 
-## Extension points
+## Run artifacts
 
-| Change | Main location | Rebuild required? |
-| --- | --- | --- |
-| Chunking | `backend/newsqa_rag/ingestion/chunker.py` | Chunks, evidence mapping, BM25, Chroma |
-| Embedding | `backend/newsqa_rag/indexing/embeddings.py` | Chroma collection |
-| Retrieval/fusion | `backend/newsqa_rag/retrieval/` | Usually no; reuse matching indexes |
-| Reranker | `backend/newsqa_rag/retrieval/reranker.py` | No; reuse retrieval candidates |
-| Generator/prompt | `backend/newsqa_rag/llm.py`, `backend/newsqa_rag/agents/rag_agent.py` | No; reuse retrieval traces when compatible |
-| Metrics | `backend/newsqa_rag/evaluation/metrics.py` | No; rescore saved predictions |
+| File | Purpose |
+| --- | --- |
+| `run_manifest.json` | Fingerprint, paths, status, and controls |
+| `retrievals.jsonl` | Resumable retrieval cache |
+| `predictions.jsonl` | Answers, citations, latency, usage |
+| `deterministic_scores.jsonl` | Per-question scores and pairing keys |
+| `report.json` | Aggregate metrics, coverage, and failures |
+| `judge_results.jsonl` | Optional cached judge scores |
+| `environment.json` | Git/runtime/hardware provenance |
 
-The next planned layer is experiment orchestration: YAML specs, fixed
-article-level development/final-test partitions, run matrices, cross-run
-summaries, confidence intervals, and cost/environment logging. It should call
-the existing scripts rather than duplicate the pipeline.
+Use [benchmarking.md](benchmarking.md) for one-off commands and
+[experiments.md](experiments.md) for matrix runs and dashboard behavior.

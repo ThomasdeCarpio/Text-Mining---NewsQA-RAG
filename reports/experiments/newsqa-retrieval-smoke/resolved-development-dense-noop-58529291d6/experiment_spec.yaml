@@ -1,0 +1,46 @@
+schema_version: 1
+
+experiment:
+  id: newsqa-retrieval-smoke
+  name: NewsQA retrieval smoke test
+  description: Compare retrievers and rerankers on locked, paired article subsets.
+
+output_dir: reports/experiments
+seed: 42
+
+dataset:
+  article_field: article_key
+  development_articles: 50
+  indexes:
+    baseline:
+      config: configs/config.yaml
+      variant_manifest: evaluation/manifests/newsqa_200_11064.variant.json
+      testsets:
+        original: data/evaluation/newsqa_200_11064/final/testset_reviewed_original.jsonl
+        resolved: data/evaluation/newsqa_200_11064/final/testset_resolved.jsonl
+
+fixed:
+  index: baseline
+  partition: development
+  retrieval_only: true
+  top_k: 10
+  rerank_top_n: 5
+
+matrix:
+  variant: [original, resolved]
+  retriever: [dense, hybrid]
+  reranker: [noop, cross-encoder]
+
+runtime:
+  n_eval: 10
+  max_attempts: 2
+  progress: true
+
+judge:
+  enabled: false
+
+summary:
+  metrics: [retrieval.mrr@5, retrieval.ndcg@5, retrieval.recall@5]
+  paired_metric: retrieval.mrr@5
+  quality_metric: retrieval.mrr@5.mean
+  latency_metric: latency.total.p95_ms

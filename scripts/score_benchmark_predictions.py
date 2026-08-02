@@ -70,6 +70,7 @@ def main() -> None:
     score_rows = []
     failures = []
     total_latencies = []
+    usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
     stage_latencies: dict[str, list[float]] = {
         "retrieve_ms": [],
         "rerank_ms": [],
@@ -114,6 +115,8 @@ def main() -> None:
         }
         citation_samples.append(citation_sample)
         timing = result.get("timing_ms", {})
+        for name in usage:
+            usage[name] += int(result.get("usage", {}).get(name, 0))
         for name in stage_latencies:
             if name in timing:
                 stage_latencies[name].append(float(timing[name]))
@@ -128,6 +131,11 @@ def main() -> None:
         reranked_k_values = [value for value in (1, 3, 5, 10) if value <= top_n]
         row = {
             "question_id": question_id,
+            "source_question_id": record.get("source_question_id", question_id),
+            "article_key": record.get("article_key"),
+            "question_variant": record.get("question_variant", "original"),
+            "standalone_label": record.get("standalone_label", "unlabeled"),
+            "answer_modified": bool(record.get("answer_modified", False)),
             "status": record.get("status"),
             "retrieval": evaluate_retrieval([reranked_sample], reranked_k_values),
             "retrieval_initial": evaluate_retrieval([initial_sample], initial_k_values),
@@ -223,6 +231,7 @@ def main() -> None:
         "failures": failures[:100],
     }
     if not retrieval_only:
+        report["usage"] = usage
         report["qa"] = evaluate_qa(qa_all)
         report["qa_success_only"] = (
             evaluate_qa(qa_success) if qa_success else {"n_samples": 0}

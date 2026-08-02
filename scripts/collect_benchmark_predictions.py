@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import copy
 import json
-import random
 import sys
 from pathlib import Path
 
@@ -58,6 +57,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--rerank-top-n", type=int, default=None)
     parser.add_argument("--generator-model", default=None)
     parser.add_argument("--retrieval-only", action="store_true")
+    parser.add_argument(
+        "--question-ids-file",
+        default=None,
+        help="JSON list of locked question IDs to evaluate after manifest preflight.",
+    )
     parser.add_argument("--n-eval", type=int, default=None)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max-attempts", type=int, default=3)
@@ -85,6 +89,7 @@ def _common_record(entry: dict, fingerprint: str) -> dict:
         "article_key": entry.get("article_key"),
         "question_variant": entry.get("question_variant", "original"),
         "standalone_label": entry.get("standalone_label", "unlabeled"),
+        "answer_modified": bool(entry.get("answer_modified", False)),
         "question": entry["question"],
         "ground_truth": entry["ground_truth"],
         "accepted_answers": entry.get("accepted_answers") or [entry["ground_truth"]],
@@ -96,6 +101,8 @@ def main() -> None:
     args = parse_args()
     if args.max_attempts < 1:
         raise SystemExit("--max-attempts must be at least 1")
+    if args.n_eval is not None and args.n_eval < 1:
+        raise SystemExit("--n-eval must be at least 1")
 
     config_path = PROJECT_ROOT / args.config
     with config_path.open(encoding="utf-8") as handle:
@@ -115,8 +122,30 @@ def main() -> None:
         retrieval_config.get("reranker", {}).get("top_n", 5)
     )
     entries = [entry for entry in load_testset(args.testset) if entry.get("relevant_chunk_ids")]
+    if args.question_ids_file:
+        requested = json.loads(Path(args.question_ids_file).read_text(encoding="utf-8"))
+        if not isinstance(requested, list) or not requested or not all(
+            isinstance(question_id, str) for question_id in requested
+        ):
+            raise SystemExit("--question-ids-file must contain a non-empty JSON string list")
+        if len(requested) != len(set(requested)):
+            raise SystemExit("--question-ids-file contains duplicate question IDs")
+        available = {entry["question_id"] for entry in entries}
+        missing = sorted(set(requested) - available)
+        if missing:
+            raise SystemExit(f"Question IDs are absent from the testset: {missing[:5]}")
+        requested_set = set(requested)
+        entries = [entry for entry in entries if entry["question_id"] in requested_set]
     if args.n_eval:
-        entries = random.Random(args.seed).sample(entries, min(args.n_eval, len(entries)))
+        entries = sorted(
+            entries,
+            key=lambda entry: stable_hash(
+                {
+                    "seed": args.seed,
+                    "question_id": entry.get("source_question_id", entry["question_id"]),
+                }
+            ),
+        )[: args.n_eval]
     if not entries:
         raise SystemExit("No scorable questions were found")
 

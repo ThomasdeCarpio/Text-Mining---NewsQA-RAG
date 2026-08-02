@@ -1,7 +1,5 @@
 import json
 
-import pandas as pd
-
 from newsqa_rag.services.session_store import get_session_store
 from newsqa_rag.services.types import AgentEvent
 from newsqa_rag.model_gateway import PROJECT_ROOT
@@ -44,29 +42,25 @@ def get_dashboard_metrics() -> dict[str, float]:
     }
 
 
-def get_search_comparison() -> pd.DataFrame:
+def get_search_comparison() -> list[dict]:
     reports = _load_reports()
     dense, hybrid = reports.get("dense"), reports.get("hybrid")
-    return pd.DataFrame([
+    return [
         {
             "metric": label,
             "vector_search": _pick(dense, group, key) or 0.0,
             "hybrid_search": _pick(hybrid, group, key) or 0.0,
         }
         for label, group, key in _METRIC_SPECS
-    ])
+    ]
 
 
-def get_failure_cases() -> pd.DataFrame:
+def get_failure_cases() -> list[dict]:
     for report in _load_reports().values():
         if report.get("failures"):
-            return pd.DataFrame(report["failures"])
-    return pd.DataFrame(columns=["question", "expected", "retrieved", "reason"])
+            return report["failures"]
+    return []
 
 
 def get_pipeline_logs(limit: int = 50) -> list[AgentEvent]:
     return get_session_store().get_recent_trace(limit=limit)
-
-
-def trigger_crawler() -> bool:
-    return True

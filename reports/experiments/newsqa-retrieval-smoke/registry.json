@@ -1,0 +1,143 @@
+{
+  "created_at": "2026-08-02T08:15:25.538530+00:00",
+  "experiment_id": "newsqa-retrieval-smoke",
+  "runs": [
+    {
+      "parameters": {
+        "index": "baseline",
+        "partition": "development",
+        "rerank_top_n": 5,
+        "reranker": "noop",
+        "retrieval_only": true,
+        "retriever": "dense",
+        "top_k": 10,
+        "variant": "original"
+      },
+      "run_id": "original-development-dense-noop-ccafe3a01a",
+      "started_at": "2026-08-02T08:15:25.710994+00:00",
+      "status": "complete",
+      "updated_at": "2026-08-02T08:34:42.668991+00:00",
+      "wall_time_seconds": 22.399
+    },
+    {
+      "parameters": {
+        "index": "baseline",
+        "partition": "development",
+        "rerank_top_n": 5,
+        "reranker": "noop",
+        "retrieval_only": true,
+        "retriever": "dense",
+        "top_k": 10,
+        "variant": "resolved"
+      },
+      "run_id": "resolved-development-dense-noop-58529291d6",
+      "started_at": "2026-08-02T08:15:48.234303+00:00",
+      "status": "complete",
+      "updated_at": "2026-08-02T08:34:42.700601+00:00",
+      "wall_time_seconds": 21.522
+    },
+    {
+      "parameters": {
+        "index": "baseline",
+        "partition": "development",
+        "rerank_top_n": 5,
+        "reranker": "noop",
+        "retrieval_only": true,
+        "retriever": "hybrid",
+        "top_k": 10,
+        "variant": "original"
+      },
+      "run_id": "original-development-hybrid-noop-662a86d944",
+      "started_at": "2026-08-02T08:16:09.876177+00:00",
+      "status": "complete",
+      "updated_at": "2026-08-02T08:34:42.706037+00:00",
+      "wall_time_seconds": 30.064
+    },
+    {
+      "parameters": {
+        "index": "baseline",
+        "partition": "development",
+        "rerank_top_n": 5,
+        "reranker": "noop",
+        "retrieval_only": true,
+        "retriever": "hybrid",
+        "top_k": 10,
+        "variant": "resolved"
+      },
+      "run_id": "resolved-development-hybrid-noop-110c60cd40",
+      "started_at": "2026-08-02T08:16:40.045727+00:00",
+      "status": "complete",
+      "updated_at": "2026-08-02T08:34:42.712350+00:00",
+      "wall_time_seconds": 29.404
+    },
+    {
+      "parameters": {
+        "index": "baseline",
+        "partition": "development",
+        "rerank_top_n": 5,
+        "reranker": "cross-encoder",
+        "retrieval_only": true,
+        "retriever": "dense",
+        "top_k": 10,
+        "variant": "original"
+      },
+      "run_id": "original-development-dense-cross-encoder-cc176f8139",
+      "started_at": "2026-08-02T08:17:09.583339+00:00",
+      "status": "complete",
+      "updated_at": "2026-08-02T08:34:42.719707+00:00",
+      "wall_time_seconds": 103.41
+    },
+    {
+      "parameters": {
+        "index": "baseline",
+        "partition": "development",
+        "rerank_top_n": 5,
+        "reranker": "cross-encoder",
+        "retrieval_only": true,
+        "retriever": "dense",
+        "top_k": 10,
+        "variant": "resolved"
+      },
+      "run_id": "resolved-development-dense-cross-encoder-5f9478fe25",
+      "started_at": "2026-08-02T08:18:53.118640+00:00",
+      "status": "complete",
+      "updated_at": "2026-08-02T08:34:42.727851+00:00",
+      "wall_time_seconds": 47.626
+    },
+    {
+      "parameters": {
+        "index": "baseline",
+        "partition": "development",
+        "rerank_top_n": 5,
+        "reranker": "cross-encoder",
+        "retrieval_only": true,
+        "retriever": "hybrid",
+        "top_k": 10,
+        "variant": "original"
+      },
+      "run_id": "original-development-hybrid-cross-encoder-6e8a1df63a",
+      "started_at": "2026-08-02T08:19:40.854351+00:00",
+      "status": "complete",
+      "updated_at": "2026-08-02T08:34:42.735598+00:00",
+      "wall_time_seconds": 48.511
+    },
+    {
+      "parameters": {
+        "index": "baseline",
+        "partition": "development",
+        "rerank_top_n": 5,
+        "reranker": "cross-encoder",
+        "retrieval_only": true,
+        "retriever": "hybrid",
+        "top_k": 10,
+        "variant": "resolved"
+      },
+      "run_id": "resolved-development-hybrid-cross-encoder-07ae89088d",
+      "started_at": "2026-08-02T08:20:29.461382+00:00",
+      "status": "complete",
+      "updated_at": "2026-08-02T08:34:42.743017+00:00",
+      "wall_time_seconds": 45.332
+    }
+  ],
+  "schema_version": 1
+}

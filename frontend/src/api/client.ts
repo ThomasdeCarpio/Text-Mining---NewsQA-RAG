@@ -3,10 +3,11 @@ import type {
   AlgorithmOption,
   ChatMessage,
   CollectionStats,
-  FailureCase,
+  ExperimentResults,
+  ExperimentRunDetail,
+  ExperimentSummary,
   LoginResponse,
   RetrievalSearchResponse,
-  SearchComparisonRow,
 } from "./types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
@@ -48,27 +49,6 @@ export function clearChat(sessionId: string): Promise<{ cleared: boolean }> {
   return postJson(`/chat/clear/${sessionId}`);
 }
 
-export function getMetrics(): Promise<Record<string, number>> {
-  return getJson("/admin/metrics");
-}
-
-export function getSearchComparison(): Promise<SearchComparisonRow[]> {
-  return getJson("/admin/search-comparison");
-}
-
-export function getFailureCases(): Promise<FailureCase[]> {
-  return getJson("/admin/failure-cases");
-}
-
-export function getPipelineLogs(): Promise<AgentEvent[]> {
-  return getJson("/admin/pipeline-logs");
-}
-
-export async function triggerCrawler(): Promise<boolean> {
-  const data = await postJson<{ triggered: boolean }>("/admin/trigger-crawler");
-  return data.triggered;
-}
-
 export function getAlgorithms(): Promise<AlgorithmOption[]> {
   return getJson("/retrieval/algorithms");
 }
@@ -83,6 +63,26 @@ export function searchRetrieval(
   topK: number,
 ): Promise<RetrievalSearchResponse> {
   return postJson("/retrieval/search", { query, algorithm, top_k: topK });
+}
+
+export function getExperiments(): Promise<ExperimentSummary[]> {
+  return getJson("/experiments");
+}
+
+export function previewExperiment(filename: string): Promise<ExperimentSummary> {
+  return getJson(`/experiments/${encodeURIComponent(filename)}/preview`);
+}
+
+export function runExperiment(filename: string): Promise<ExperimentSummary> {
+  return postJson(`/experiments/${encodeURIComponent(filename)}/run`);
+}
+
+export function getExperimentResults(filename: string): Promise<ExperimentResults> {
+  return getJson(`/experiments/${encodeURIComponent(filename)}/results`);
+}
+
+export function getExperimentRun(filename: string, runId: string): Promise<ExperimentRunDetail> {
+  return getJson(`/experiments/${encodeURIComponent(filename)}/runs/${encodeURIComponent(runId)}`);
 }
 
 /**

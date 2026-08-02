@@ -88,6 +88,7 @@ class RAGAgent:
             "citation_chunk_ids": [chunk["id"] for chunk in cited_chunks],
             "invalid_citation_indices": invalid_indices,
             "cited_chunks": cited_chunks,
+            "usage": dict(getattr(self.llm, "last_usage", {}) or {}),
             "timing_ms": timing,
         }
 

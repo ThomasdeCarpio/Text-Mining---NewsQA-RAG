@@ -104,7 +104,8 @@ class ModelClientIntegrationTests(unittest.TestCase):
 
         client = Mock()
         client.chat.completions.create.return_value = SimpleNamespace(
-            choices=[SimpleNamespace(message=SimpleNamespace(content="answer"))]
+            choices=[SimpleNamespace(message=SimpleNamespace(content="answer"))],
+            usage=SimpleNamespace(prompt_tokens=12, completion_tokens=3, total_tokens=15),
         )
         client_factory.return_value = (client, "remote-chat")
         llm = OpenAILLM(model="remote-chat", temperature=0.2, max_tokens=321)
@@ -112,6 +113,10 @@ class ModelClientIntegrationTests(unittest.TestCase):
         answer = llm.generate("system", "question")
 
         self.assertEqual(answer, "answer")
+        self.assertEqual(
+            llm.last_usage,
+            {"input_tokens": 12, "output_tokens": 3, "total_tokens": 15},
+        )
         client.chat.completions.create.assert_called_once_with(
             model="remote-chat",
             messages=[
