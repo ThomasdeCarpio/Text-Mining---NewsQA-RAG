@@ -1,0 +1,218 @@
+{"kind":"deck","id":"pr/7eo3ru","name":"Deck"}
+{"kind":"layout","layoutId":"e90621ec-cef4-4081-a276-408bb783a49d","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"dc9cf452-72cf-4912-89f0-4056c81fc6b4","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/6kp4d9","slide":1,"title":"01","textShapes":7}
+{"kind":"textbox","id":"sh/epknqh8b","slide":1,"name":"section-1","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/1cv6lw72","slide":1,"name":"title-1","text":"Xây dựng và đánh giá NewsQA-RAG","textPreview":"Xây dựng và đánh giá NewsQA-RAG","textChars":31,"textLines":1,"bbox":[64,118,1120,150]}
+{"kind":"textbox","id":"sh/0bm5srqh","slide":1,"name":"subtitle-1","text":"Hỏi đáp có dẫn nguồn trên một thư viện gồm nhiều bài báo.","textPreview":"Hỏi đáp có dẫn nguồn trên một thư viện gồm nhiều bài báo.","textChars":57,"textLines":1,"bbox":[64,286,1030,62]}
+{"kind":"shape","id":"sh/nedonmp8","slide":1,"name":"news-doc-0","bbox":[120,398,360,205]}
+{"kind":"shape","id":"sh/2d4nuh8n","slide":1,"name":"news-doc-1","bbox":[148,380,360,205]}
+{"kind":"shape","id":"sh/9gv6pw7y","slide":1,"name":"news-doc-2","bbox":[176,362,360,205]}
+{"kind":"shape","id":"sh/ofmpwrqd","slide":1,"name":"news-doc-3","bbox":[204,344,360,205]}
+{"kind":"shape","id":"sh/3i9ob2po","slide":1,"name":"news-doc-4","bbox":[232,326,360,205]}
+{"kind":"textbox","id":"sh/ih0nix83","slide":1,"name":"news-label","text":"THƯ VIỆN TIN TỨC","textPreview":"THƯ VIỆN TIN TỨC","textChars":16,"textLines":1,"bbox":[180,455,240,30]}
+{"kind":"shape","id":"sh/cvmh0jux","slide":1,"name":"title-arrow","bbox":[535,480,110,14]}
+{"kind":"textbox","id":"sh/dwvy9obi","slide":1,"name":"answer-sheet","text":"Câu trả lời\n[1] [2]","textPreview":"Câu trả lời | [1] [2]","textChars":19,"textLines":2,"bbox":[720,385,360,220]}
+{"kind":"textbox","id":"sh/qtkzytcr","slide":1,"name":"title-caption","text":"Truy hồi bằng chứng trước khi sinh câu trả lời","textPreview":"Truy hồi bằng chứng trước khi sinh câu trả lời","textChars":46,"textLines":1,"bbox":[430,628,420,26]}
+{"kind":"textbox","id":"sh/butg7etc","slide":1,"name":"footer-1","text":"NEWSQA-RAG  ·  1/15","textPreview":"NEWSQA-RAG  ·  1/15","textChars":19,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"notes","id":"nt/6kp4d9","slide":1,"text":"Mở đầu bằng mục tiêu của project: không chỉ xây chatbot, mà xây một pipeline RAG có thể đo được từng thành phần. Điểm khác biệt là câu hỏi được truy hồi trên toàn thư viện thay vì được cung cấp sẵn bài báo nguồn."}
+{"kind":"slide","id":"sl/75wrau","slide":2,"title":"02","textShapes":7}
+{"kind":"textbox","id":"sh/rux4fytg","slide":2,"name":"section-2","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/cv6583a1","slide":2,"name":"title-2","text":"Bài toán yêu cầu tìm bằng chứng trên toàn thư viện","textPreview":"Bài toán yêu cầu tìm bằng chứng trên toàn thư viện","textChars":50,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/dgfmh8bm","slide":2,"name":"subtitle-2","text":"Input là câu hỏi tự nhiên và kho bài báo; output là câu trả lời ngắn kèm citation.","textPreview":"Input là câu hỏi tự nhiên và kho bài báo; output là câu trả lời ngắn kèm citation.","textChars":82,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"shape","id":"sh/2p4n2tsj","slide":2,"name":"a1","bbox":[320,438,90,12]}
+{"kind":"shape","id":"sh/3qd4byt4","slide":2,"name":"a2","bbox":[795,438,90,12]}
+{"kind":"textbox","id":"sh/4rm54jap","slide":2,"name":"question","text":"CÂU HỎI","textPreview":"CÂU HỎI","textChars":7,"textLines":1,"bbox":[80,385,240,120]}
+{"kind":"textbox","id":"sh/psvmdoba","slide":2,"name":"library","text":"11.064\nBÀI BÁO","textPreview":"11.064 | BÀI BÁO","textChars":14,"textLines":2,"bbox":[430,360,365,170]}
+{"kind":"textbox","id":"sh/ml8neds3","slide":2,"name":"answer","text":"ANSWER\n+ CITATIONS","textPreview":"ANSWER | + CITATIONS","textChars":18,"textLines":2,"bbox":[885,385,300,120]}
+{"kind":"textbox","id":"sh/nmhonito","slide":2,"name":"footer-2","text":"NEWSQA-RAG  ·  2/15","textPreview":"NEWSQA-RAG  ·  2/15","textChars":19,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"notes","id":"nt/75wrau","slide":2,"text":"Hiện tại hệ thống tập trung factual QA. Mục tiêu tiếp theo là so sánh và tổng hợp đa nguồn. Cần phân biệt rõ phần hiện tại với phần agentic multi-source trong roadmap."}
+{"kind":"slide","id":"sl/7ocbai","slide":3,"title":"03","textShapes":12}
+{"kind":"textbox","id":"sh/p0zudwzq","slide":3,"name":"section-3","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/2dov210f","slide":3,"name":"title-3","text":"Pipeline được tách thành các module có I/O rõ ràng","textPreview":"Pipeline được tách thành các module có I/O rõ ràng","textChars":50,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/nexcb6hk","slide":3,"name":"subtitle-3","text":"Ingestion, indexing, retrieval, reranking, generation và evaluation có thể kiểm tra độc lập.","textPreview":"Ingestion, indexing, retrieval, reranking, generation và evaluation có thể kiểm tra độc lập.","textChars":92,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"shape","id":"sh/0b6d0ri9","slide":3,"name":"pipe-a-0","bbox":[215,438,55,10]}
+{"kind":"shape","id":"sh/1cfu9wzu","slide":3,"name":"pipe-a-1","bbox":[415,438,55,10]}
+{"kind":"shape","id":"sh/e9ovyh03","slide":3,"name":"pipe-a-2","bbox":[615,438,55,10]}
+{"kind":"shape","id":"sh/faxc7mho","slide":3,"name":"pipe-a-3","bbox":[815,438,55,10]}
+{"kind":"shape","id":"sh/s7mdwrix","slide":3,"name":"pipe-a-4","bbox":[1015,438,55,10]}
+{"kind":"textbox","id":"sh/d8vu5czi","slide":3,"name":"pipe-0","text":"INGEST","textPreview":"INGEST","textChars":6,"textLines":1,"bbox":[70,385,145,110]}
+{"kind":"textbox","id":"sh/pw7ed4ja","slide":3,"name":"pipe-1","text":"CHUNK","textPreview":"CHUNK","textChars":5,"textLines":1,"bbox":[270,385,145,110]}
+{"kind":"textbox","id":"sh/4vyd4ji5","slide":3,"name":"pipe-2","text":"INDEX","textPreview":"INDEX","textChars":5,"textLines":1,"bbox":[470,385,145,110]}
+{"kind":"textbox","id":"sh/3upwbe1k","slide":3,"name":"pipe-3","text":"RETRIEVE","textPreview":"RETRIEVE","textChars":8,"textLines":1,"bbox":[670,385,145,110]}
+{"kind":"textbox","id":"sh/2tgv290z","slide":3,"name":"pipe-4","text":"RERANK","textPreview":"RERANK","textChars":6,"textLines":1,"bbox":[870,385,145,110]}
+{"kind":"textbox","id":"sh/hs7e94je","slide":3,"name":"pipe-5","text":"GENERATE","textPreview":"GENERATE","textChars":8,"textLines":1,"bbox":[1070,385,145,110]}
+{"kind":"textbox","id":"sh/gred0zit","slide":3,"name":"offline","text":"OFFLINE","textPreview":"OFFLINE","textChars":7,"textLines":1,"bbox":[70,520,545,24]}
+{"kind":"textbox","id":"sh/fq5w7u18","slide":3,"name":"online","text":"ONLINE","textPreview":"ONLINE","textChars":6,"textLines":1,"bbox":[670,520,545,24]}
+{"kind":"textbox","id":"sh/u5wvyp0n","slide":3,"name":"footer-3","text":"NEWSQA-RAG  ·  3/15","textPreview":"NEWSQA-RAG  ·  3/15","textChars":19,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"notes","id":"nt/7ocbai","slide":3,"text":"Giải thích luồng offline: article, clean, chunk, embedding, ChromaDB và BM25. Luồng online: question, retrieve top-10, rerank top-5, generate answer và citation. Evaluation nhận gold evidence và kết quả từng stage."}
+{"kind":"slide","id":"sl/3pudge","slide":4,"title":"04","textShapes":10}
+{"kind":"textbox","id":"sh/4rqhgjml","slide":4,"name":"section-4","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/3qhg7el0","slide":4,"name":"title-4","text":"Kiến trúc cho phép thay model mà không đổi pipeline","textPreview":"Kiến trúc cho phép thay model mà không đổi pipeline","textChars":51,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/ip8ze94f","slide":4,"name":"subtitle-4","text":"Embedding, retriever, reranker, generator và judge đều là các điểm có thể hoán đổi.","textPreview":"Embedding, retriever, reranker, generator và judge đều là các điểm có thể hoán đổi.","textChars":83,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"textbox","id":"sh/dgjido32","slide":4,"name":"module-0","text":"Embedding\nMiniLM / BGE","textPreview":"Embedding | MiniLM / BGE","textChars":22,"textLines":2,"bbox":[70,350,205,155]}
+{"kind":"textbox","id":"sh/cfahkjmh","slide":4,"name":"module-1","text":"Retriever\nDense / BM25 / Hybrid","textPreview":"Retriever | Dense / BM25 / Hybrid","textChars":31,"textLines":2,"bbox":[300,350,205,155]}
+{"kind":"textbox","id":"sh/re1gbelw","slide":4,"name":"module-2","text":"Reranker\nNo-op / Cross-encoder","textPreview":"Reranker | No-op / Cross-encoder","textChars":30,"textLines":2,"bbox":[530,350,205,155]}
+{"kind":"textbox","id":"sh/qtszit4r","slide":4,"name":"module-3","text":"Generator\nDeepSeek / GPT","textPreview":"Generator | DeepSeek / GPT","textChars":24,"textLines":2,"bbox":[760,350,205,155]}
+{"kind":"textbox","id":"sh/tkfy14ny","slide":4,"name":"module-4","text":"Judge\nGemini / GPT","textPreview":"Judge | Gemini / GPT","textChars":18,"textLines":2,"bbox":[990,350,205,155]}
+{"kind":"shape","id":"sh/8j6h8zmd","slide":4,"name":"module-flow","bbox":[135,550,1010,10]}
+{"kind":"textbox","id":"sh/mxkjmx8n","slide":4,"name":"contract","text":"Một data contract xuyên suốt pipeline","textPreview":"Một data contract xuyên suốt pipeline","textChars":37,"textLines":1,"bbox":[390,575,500,30]}
+{"kind":"textbox","id":"sh/nyd0f298","slide":4,"name":"footer-4","text":"NEWSQA-RAG  ·  4/15","textPreview":"NEWSQA-RAG  ·  4/15","textChars":19,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"notes","id":"nt/3pudge","slide":4,"text":"Retriever và reranker dùng interface chung. Benchmark lưu retrieval, prediction và judge result riêng, nên có thể chạy lại generation mà không truy hồi lại. Lưu ý live chat hiện chưa nối đúng toàn bộ cấu hình tốt nhất của benchmark."}
+{"kind":"slide","id":"sl/9oanxp","slide":5,"title":"05","textShapes":7}
+{"kind":"textbox","id":"sh/je98ja98","slide":5,"name":"section-5","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/4fi9sfat","slide":5,"name":"title-5","text":"NewsQA gốc không phù hợp retrieval toàn thư viện","textPreview":"NewsQA gốc không phù hợp retrieval toàn thư viện","textChars":48,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/5grqlkre","slide":5,"name":"subtitle-5","text":"Các câu như “Who is protesting?” chỉ rõ nghĩa khi đã biết bài báo nguồn.","textPreview":"Các câu như “Who is protesting?” chỉ rõ nghĩa khi đã biết bài báo nguồn.","textChars":72,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"textbox","id":"sh/upgrm5sr","slide":5,"name":"known-article","text":"1 ARTICLE\n\nWho is protesting?","textPreview":"1 ARTICLE |  | Who is protesting?","textChars":29,"textLines":3,"bbox":[95,350,420,210]}
+{"kind":"textbox","id":"sh/vq98fa9w","slide":5,"name":"known-caption","text":"Thiết lập cũ: đã biết bài nguồn","textPreview":"Thiết lập cũ: đã biết bài nguồn","textChars":31,"textLines":1,"bbox":[95,580,420,30]}
+{"kind":"shape","id":"sh/wri9ofah","slide":5,"name":"lib-0-0","bbox":[680,335,80,54]}
+{"kind":"shape","id":"sh/hsrqh0r2","slide":5,"name":"lib-0-1","bbox":[785,335,80,54]}
+{"kind":"shape","id":"sh/elkrypsv","slide":5,"name":"lib-0-2","bbox":[890,335,80,54]}
+{"kind":"shape","id":"sh/fmtsru9g","slide":5,"name":"lib-0-3","bbox":[995,335,80,54]}
+{"kind":"shape","id":"sh/v6pkji98","slide":5,"name":"lib-1-0","bbox":[680,413,80,54]}
+{"kind":"shape","id":"sh/u5g3qdsn","slide":5,"name":"lib-1-1","bbox":[785,413,80,54]}
+{"kind":"shape","id":"sh/hs72l8re","slide":5,"name":"lib-1-2","bbox":[890,413,80,54]}
+{"kind":"shape","id":"sh/grylsnat","slide":5,"name":"lib-1-3","bbox":[995,413,80,54]}
+{"kind":"shape","id":"sh/3upkni94","slide":5,"name":"lib-2-0","bbox":[680,491,80,54]}
+{"kind":"shape","id":"sh/itg3udsj","slide":5,"name":"lib-2-1","bbox":[785,491,80,54]}
+{"kind":"shape","id":"sh/5wrmpsra","slide":5,"name":"lib-2-2","bbox":[890,491,80,54]}
+{"kind":"shape","id":"sh/4vylwnap","slide":5,"name":"lib-2-3","bbox":[995,491,80,54]}
+{"kind":"textbox","id":"sh/ry94r29g","slide":5,"name":"library-question","text":"Who is protesting?","textPreview":"Who is protesting?","textChars":18,"textLines":1,"bbox":[720,580,360,30]}
+{"kind":"textbox","id":"sh/qx03yxsv","slide":5,"name":"footer-5","text":"NEWSQA-RAG  ·  5/15","textPreview":"NEWSQA-RAG  ·  5/15","textChars":19,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"notes","id":"nt/9oanxp","slide":5,"text":"Trong thiết lập cũ, model đọc đúng article rồi trả lời. Trong hệ mới, câu hỏi phải tự xác định article giữa hàng nghìn distractor. Vì vậy các câu thiếu chủ ngữ, địa điểm hoặc sự kiện trở nên mơ hồ."}
+{"kind":"slide","id":"sl/2aclc2","slide":6,"title":"06","textShapes":7}
+{"kind":"textbox","id":"sh/bmdkvatw","slide":6,"name":"section-6","text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/cnm1ofuh","slide":6,"name":"title-6","text":"Benchmark mới giữ độ khó, giảm chi phí đánh giá","textPreview":"Benchmark mới giữ độ khó, giảm chi phí đánh giá","textChars":47,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/xov2xkbm","slide":6,"name":"subtitle-6","text":"200 bài evaluation được đặt trong corpus 11.064 bài, tạo thành 19.263 chunks.","textPreview":"200 bài evaluation được đặt trong corpus 11.064 bài, tạo thành 19.263 chunks.","textChars":77,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"shape","id":"sh/2hkji5cz","slide":6,"name":"bench-a1","bbox":[330,432,85,12]}
+{"kind":"shape","id":"sh/nitkrqtk","slide":6,"name":"bench-a2","bbox":[800,432,85,12]}
+{"kind":"textbox","id":"sh/oj21kvu5","slide":6,"name":"candidate","text":"638\nvalidation articles","textPreview":"638 | validation articles","textChars":23,"textLines":2,"bbox":[70,370,260,145]}
+{"kind":"textbox","id":"sh/pkb2t0bq","slide":6,"name":"sample","text":"200 evaluation\n+\n10.864 distractors","textPreview":"200 evaluation | + | 10.864 distractors","textChars":35,"textLines":3,"bbox":[415,350,385,185]}
+{"kind":"textbox","id":"sh/et0jelc3","slide":6,"name":"final-corpus","text":"11.064 articles\n19.263 chunks\n1.336 scored questions","textPreview":"11.064 articles | 19.263 chunks | 1.336 scored questions","textChars":52,"textLines":3,"bbox":[885,350,320,185]}
+{"kind":"textbox","id":"sh/fe9knqdo","slide":6,"name":"footer-6","text":"NEWSQA-RAG  ·  6/15","textPreview":"NEWSQA-RAG  ·  6/15","textChars":19,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"notes","id":"nt/2aclc2","slide":6,"text":"Từ 638 validation articles, chọn 200 bài bằng seed 42 và giữ toàn bộ 1.340 câu hỏi. Thêm 10.864 train articles làm distractor. Sau review còn 1.336 câu chấm điểm. Mọi variant dùng cùng corpus, chunker và manifest."}
+{"kind":"slide","id":"sl/jdvq7h","slide":7,"title":"07","textShapes":4}
+{"kind":"textbox","id":"sh/u14j65sz","slide":7,"name":"section-7","text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/h4f2h0rq","slide":7,"name":"title-7","text":"Chỉ 1,8% corpus chứa câu hỏi đánh giá","textPreview":"Chỉ 1,8% corpus chứa câu hỏi đánh giá","textChars":37,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/w3m18fa5","slide":7,"name":"subtitle-7","text":"200 bài evaluation nằm giữa 10.864 bài distractor; trung bình mỗi bài tạo 1,74 chunks.","textPreview":"200 bài evaluation nằm giữa 10.864 bài distractor; trung bình mỗi bài tạo 1,74 chunks.","textChars":86,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"textbox","id":"sh/90vid0re","slide":7,"name":"footer-7","text":"NEWSQA-RAG  ·  7/15","textPreview":"NEWSQA-RAG  ·  7/15","textChars":19,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"chart","id":"ch/nixwny18","slide":7,"name":"","chartType":"doughnut","bbox":[70,305,480,285]}
+{"kind":"chart","id":"ch/2hovetk3","slide":7,"name":"","chartType":"bar","bbox":[650,315,520,270]}
+{"kind":"notes","id":"nt/jdvq7h","slide":7,"text":"Corpus có 11.064 articles và 19.263 chunks. Mean tokens mỗi chunk là 383,9; maximum 504 với limit 512. Không gian retrieval vẫn lớn dù số bài cần annotation và generation đã giảm."}
+{"kind":"slide","id":"sl/uqnlab","slide":8,"title":"08","textShapes":8}
+{"kind":"textbox","id":"sh/72hcvado","slide":8,"name":"section-8","text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/83qdofu9","slide":8,"name":"title-8","text":"Thiếu ngữ cảnh là vấn đề dữ liệu phổ biến nhất","textPreview":"Thiếu ngữ cảnh là vấn đề dữ liệu phổ biến nhất","textChars":46,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/t4zuxkve","slide":8,"name":"subtitle-8","text":"1.078 câu được làm rõ, 298 đáp án được sửa và 4 câu bị loại.","textPreview":"1.078 câu được làm rõ, 298 đáp án được sửa và 4 câu bị loại.","textChars":60,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"textbox","id":"sh/jexcrqdc","slide":8,"name":"before-tag","text":"ORIGINAL","textPreview":"ORIGINAL","textChars":8,"textLines":1,"bbox":[780,318,150,24]}
+{"kind":"textbox","id":"sh/kf6dkvex","slide":8,"name":"before-q","text":"Who is protesting?","textPreview":"Who is protesting?","textChars":18,"textLines":1,"bbox":[760,350,390,85]}
+{"kind":"shape","id":"sh/lgfut0vi","slide":8,"name":"resolve-arrow","bbox":[940,452,28,52]}
+{"kind":"textbox","id":"sh/i98vupcb","slide":8,"name":"after-tag","text":"RESOLVED","textPreview":"RESOLVED","textChars":8,"textLines":1,"bbox":[780,500,150,24]}
+{"kind":"textbox","id":"sh/3a1w3udw","slide":8,"name":"after-q","text":"Who is protesting the results of the presidential election in Gabon?","textPreview":"Who is protesting the results of the presidential election in Gabon?","textChars":68,"textLines":1,"bbox":[760,530,390,85]}
+{"kind":"textbox","id":"sh/3md43yhs","slide":8,"name":"footer-8","text":"NEWSQA-RAG  ·  8/15","textPreview":"NEWSQA-RAG  ·  8/15","textChars":19,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"chart","id":"ch/6583mxc7","slide":8,"name":"","chartType":"bar","bbox":[55,290,650,325]}
+{"kind":"notes","id":"nt/uqnlab","slide":8,"text":"Missing subject xuất hiện 688 lần, tiếp theo là underspecified event 139 và generic reference 98. Issue codes là multi-label. Ví dụ: Who is protesting? được bổ sung context về kết quả bầu cử tổng thống Gabon nhưng không tiết lộ đáp án."}
+{"kind":"slide","id":"sl/6cxjuy","slide":9,"title":"09","textShapes":11}
+{"kind":"textbox","id":"sh/fyl47m1s","slide":9,"name":"section-9","text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/0ju5gr2d","slide":9,"name":"title-9","text":"Evaluation phải xác định lỗi nằm ở module nào","textPreview":"Evaluation phải xác định lỗi nằm ở module nào","textChars":45,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/1k3m9cjy","slide":9,"name":"subtitle-9","text":"Corpus, retrieval, reranking, generation, citation và vận hành được đo riêng.","textPreview":"Corpus, retrieval, reranking, generation, citation và vận hành được đo riêng.","textChars":77,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"shape","id":"sh/2lcnihk3","slide":9,"name":"eval-a-0","bbox":[210,438,50,10]}
+{"kind":"shape","id":"sh/nmlobm1o","slide":9,"name":"eval-a-1","bbox":[415,438,50,10]}
+{"kind":"shape","id":"sh/onu5kr29","slide":9,"name":"eval-a-2","bbox":[620,438,50,10]}
+{"kind":"shape","id":"sh/pon6dwju","slide":9,"name":"eval-a-3","bbox":[825,438,50,10]}
+{"kind":"shape","id":"sh/apwnm1kf","slide":9,"name":"eval-a-4","bbox":[1030,438,50,10]}
+{"kind":"textbox","id":"sh/bq5of610","slide":9,"name":"eval-0","text":"CORPUS\ncompliance","textPreview":"CORPUS | compliance","textChars":17,"textLines":2,"bbox":[55,385,155,115]}
+{"kind":"textbox","id":"sh/n2hs3md4","slide":9,"name":"eval-1","text":"RETRIEVAL\nHit · MRR","textPreview":"RETRIEVAL | Hit · MRR","textChars":19,"textLines":2,"bbox":[260,385,155,115]}
+{"kind":"textbox","id":"sh/m18rahcj","slide":9,"name":"eval-2","text":"RERANK\nΔMRR","textPreview":"RERANK | ΔMRR","textChars":11,"textLines":2,"bbox":[465,385,155,115]}
+{"kind":"textbox","id":"sh/94za5wva","slide":9,"name":"eval-3","text":"GENERATION\nEM · F1","textPreview":"GENERATION | EM · F1","textChars":18,"textLines":2,"bbox":[670,385,155,115]}
+{"kind":"textbox","id":"sh/o3q9crup","slide":9,"name":"eval-4","text":"CITATION\nP · R · F1","textPreview":"CITATION | P · R · F1","textChars":19,"textLines":2,"bbox":[875,385,155,115]}
+{"kind":"textbox","id":"sh/zexsz2d8","slide":9,"name":"eval-5","text":"OPERATION\nlatency · coverage","textPreview":"OPERATION | latency · coverage","textChars":28,"textLines":2,"bbox":[1080,385,155,115]}
+{"kind":"textbox","id":"sh/edor6hcn","slide":9,"name":"eval-message","text":"Đo riêng từng tầng để xác định đúng nguyên nhân lỗi","textPreview":"Đo riêng từng tầng để xác định đúng nguyên nhân lỗi","textChars":51,"textLines":1,"bbox":[340,550,600,30]}
+{"kind":"textbox","id":"sh/10za1cve","slide":9,"name":"footer-9","text":"NEWSQA-RAG  ·  9/15","textPreview":"NEWSQA-RAG  ·  9/15","textChars":19,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"notes","id":"nt/6cxjuy","slide":9,"text":"Corpus dùng compliance, duplicate rate và self-retrieval. Retrieval dùng Hit, Recall, MRR, NDCG. Reranker dùng delta MRR và NDCG. Generation dùng EM và token F1. Citation dùng precision, recall, validity và F1. Operation báo latency, coverage và failures."}
+{"kind":"slide","id":"sl/baxazl","slide":10,"title":"10","textShapes":17}
+{"kind":"textbox","id":"sh/2t07mdk7","slide":10,"name":"section-10","text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/pwb6xs3y","slide":10,"name":"title-10","text":"Retrieval được chấm bằng exact chunk-ID match","textPreview":"Retrieval được chấm bằng exact chunk-ID match","textChars":45,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/ov2pon2d","slide":10,"name":"subtitle-10","text":"Evidence span được map thành gold chunk IDs rồi so với thứ hạng top-k trả về.","textPreview":"Evidence span được map thành gold chunk IDs rồi so với thứ hạng top-k trả về.","textChars":77,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"textbox","id":"sh/f69orilw","slide":10,"name":"chunk-0","text":"C11\n[0,500)","textPreview":"C11 | [0,500)","textChars":11,"textLines":2,"bbox":[70,330,150,88]}
+{"kind":"textbox","id":"sh/e50nyd4b","slide":10,"name":"chunk-1","text":"C12\n[436,920)","textPreview":"C12 | [436,920)","textChars":13,"textLines":2,"bbox":[245,330,150,88]}
+{"kind":"textbox","id":"sh/1sr6t83m","slide":10,"name":"chunk-2","text":"C13\n[856,1330)","textPreview":"C13 | [856,1330)","textChars":14,"textLines":2,"bbox":[420,330,150,88]}
+{"kind":"textbox","id":"sh/g7ip03m1","slide":10,"name":"chunk-3","text":"C14\n[1266,1740)","textPreview":"C14 | [1266,1740)","textChars":15,"textLines":2,"bbox":[595,330,150,88]}
+{"kind":"textbox","id":"sh/z2do32l0","slide":10,"name":"evidence","text":"Evidence [700,970)","textPreview":"Evidence [700,970)","textChars":18,"textLines":1,"bbox":[255,445,330,52]}
+{"kind":"textbox","id":"sh/y1k7uxkf","slide":10,"name":"gold-ids","text":"Gold IDs = {C12, C13}","textPreview":"Gold IDs = {C12, C13}","textChars":21,"textLines":1,"bbox":[230,515,380,30]}
+{"kind":"textbox","id":"sh/gzypcbi1","slide":10,"name":"rank-0","text":"C7","textPreview":"C7","textChars":2,"textLines":1,"bbox":[820,350,62,62]}
+{"kind":"textbox","id":"sh/h0rqlgj6","slide":10,"name":"rank-1","text":"C12","textPreview":"C12","textChars":3,"textLines":1,"bbox":[894,350,62,62]}
+{"kind":"textbox","id":"sh/uxg7q10v","slide":10,"name":"rank-2","text":"C4","textPreview":"C4","textChars":2,"textLines":1,"bbox":[968,350,62,62]}
+{"kind":"textbox","id":"sh/vypoj61g","slide":10,"name":"rank-3","text":"C13","textPreview":"C13","textChars":3,"textLines":1,"bbox":[1042,350,62,62]}
+{"kind":"textbox","id":"sh/8vypobip","slide":10,"name":"rank-4","text":"C9","textPreview":"C9","textChars":2,"textLines":1,"bbox":[1116,350,62,62]}
+{"kind":"textbox","id":"sh/tw76hgja","slide":10,"name":"ranking-label","text":"Retrieved top-5","textPreview":"Retrieved top-5","textChars":15,"textLines":1,"bbox":[810,315,390,25]}
+{"kind":"textbox","id":"sh/69g7m1kj","slide":10,"name":"metric-values","text":"Hit@5 = 1   ·   MRR@5 = 0,50\nRecall@5 = 1   ·   NDCG@5 ≈ 0,65","textPreview":"Hit@5 = 1   ·   MRR@5 = 0,50 | Recall@5 = 1   ·   NDCG@5 ≈ 0,65","textChars":61,"textLines":2,"bbox":[800,455,410,78]}
+{"kind":"textbox","id":"sh/7upof614","slide":10,"name":"footer-10","text":"NEWSQA-RAG  ·  10/15","textPreview":"NEWSQA-RAG  ·  10/15","textChars":20,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"notes","id":"nt/baxazl","slide":10,"text":"Ví dụ evidence overlap C12 và C13 nên gold set là {C12, C13}. Nếu ranking top-5 là C7, C12, C4, C13, C9 thì Hit@5=1; MRR@5=1/2 vì gold đầu ở rank 2; Recall@5=2/2; NDCG khoảng 0,65 vì gold chưa ở vị trí lý tưởng. Exact ID chỉ hợp lệ khi testset và collection dùng cùng article, chunker và ID scheme."}
+{"kind":"slide","id":"sl/ys49f9","slide":11,"title":"11","textShapes":23}
+{"kind":"textbox","id":"sh/wnqlszm1","slide":11,"name":"section-11","text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/vmhkjulg","slide":11,"name":"title-11","text":"So sánh 12 cấu hình trên cùng 1.336 câu","textPreview":"So sánh 12 cấu hình trên cùng 1.336 câu","textChars":39,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/ulo3qp4v","slide":11,"name":"subtitle-11","text":"Original/resolved × dense/BM25/hybrid × no-op/cross-encoder.","textPreview":"Original/resolved × dense/BM25/hybrid × no-op/cross-encoder.","textChars":60,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"shape","id":"sh/5czmp43i","slide":11,"name":"mx-h-0","bbox":[155,315,230,55]}
+{"kind":"textbox","id":"sh/4bqlwz2x","slide":11,"name":"mx-h-1","text":"Dense","textPreview":"Dense","textChars":5,"textLines":1,"bbox":[400,315,230,55]}
+{"kind":"textbox","id":"sh/jahknels","slide":11,"name":"mx-h-2","text":"BM25","textPreview":"BM25","textChars":4,"textLines":1,"bbox":[645,315,230,55]}
+{"kind":"textbox","id":"sh/i983u9k7","slide":11,"name":"mx-h-3","text":"Hybrid","textPreview":"Hybrid","textChars":6,"textLines":1,"bbox":[890,315,230,55]}
+{"kind":"textbox","id":"sh/dgjmto3u","slide":11,"name":"mx-r-0","text":"Original · No-op","textPreview":"Original · No-op","textChars":16,"textLines":1,"bbox":[155,375,230,50]}
+{"kind":"textbox","id":"sh/sfal0j29","slide":11,"name":"mx-0-1","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[400,375,230,50]}
+{"kind":"textbox","id":"sh/ydony54b","slide":11,"name":"mx-0-2","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[645,375,230,50]}
+{"kind":"textbox","id":"sh/zexoralw","slide":11,"name":"mx-0-3","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[890,375,230,50]}
+{"kind":"textbox","id":"sh/0f650vm1","slide":11,"name":"mx-r-1","text":"Original · CE","textPreview":"Original · CE","textChars":13,"textLines":1,"bbox":[155,433,230,50]}
+{"kind":"textbox","id":"sh/lgf6t03m","slide":11,"name":"mx-1-1","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[400,433,230,50]}
+{"kind":"textbox","id":"sh/mh8n2547","slide":11,"name":"mx-1-2","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[645,433,230,50]}
+{"kind":"textbox","id":"sh/nihovals","slide":11,"name":"mx-1-3","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[890,433,230,50]}
+{"kind":"textbox","id":"sh/8jq54fmd","slide":11,"name":"mx-r-2","text":"Resolved · No-op","textPreview":"Resolved · No-op","textChars":16,"textLines":1,"bbox":[155,491,230,50]}
+{"kind":"textbox","id":"sh/9kz6xk3y","slide":11,"name":"mx-2-1","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[400,491,230,50]}
+{"kind":"textbox","id":"sh/2l4nql43","slide":11,"name":"mx-2-2","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[645,491,230,50]}
+{"kind":"textbox","id":"sh/3mdojqlo","slide":11,"name":"mx-2-3","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[890,491,230,50]}
+{"kind":"textbox","id":"sh/7q9krm1g","slide":11,"name":"mx-r-3","text":"Resolved · CE","textPreview":"Resolved · CE","textChars":13,"textLines":1,"bbox":[155,549,230,50]}
+{"kind":"textbox","id":"sh/6p03ihkv","slide":11,"name":"mx-3-1","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[400,549,230,50]}
+{"kind":"textbox","id":"sh/tsb2tcj6","slide":11,"name":"mx-3-2","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[645,549,230,50]}
+{"kind":"textbox","id":"sh/sr2lkr21","slide":11,"name":"mx-3-3","text":"✓","textPreview":"✓","textChars":1,"textLines":1,"bbox":[890,549,230,50]}
+{"kind":"textbox","id":"sh/jm9kn214","slide":11,"name":"footer-11","text":"NEWSQA-RAG  ·  11/15","textPreview":"NEWSQA-RAG  ·  11/15","textChars":20,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"notes","id":"nt/ys49f9","slide":11,"text":"Mọi run dùng seed 42, MiniLM 384 chiều, chunk 512 overlap 64, retrieve top-10 và rerank top-5. Cùng question IDs và corpus giúp so sánh module theo paired design."}
+{"kind":"slide","id":"sl/zrq3me","slide":12,"title":"12","textShapes":7}
+{"kind":"textbox","id":"sh/8jat4fqt","slide":12,"name":"section-12","text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/ni1sva98","slide":12,"name":"title-12","text":"BM25 kết hợp cross-encoder cho retrieval tốt nhất","textPreview":"BM25 kết hợp cross-encoder cho retrieval tốt nhất","textChars":49,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/mhsb258n","slide":12,"name":"subtitle-12","text":"Trên resolved questions: Hit@5 đạt 82,56% và MRR@5 đạt 73,69%.","textPreview":"Trên resolved questions: Hit@5 đạt 82,56% và MRR@5 đạt 73,69%.","textChars":62,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"textbox","id":"sh/0fqt0vqh","slide":12,"name":"best-model","text":"BM25 + Cross-encoder","textPreview":"BM25 + Cross-encoder","textChars":20,"textLines":1,"bbox":[850,350,300,32]}
+{"kind":"textbox","id":"sh/zehsrq9w","slide":12,"name":"best-hit","text":"Hit@5\n82,56%","textPreview":"Hit@5 | 82,56%","textChars":12,"textLines":2,"bbox":[835,405,150,115]}
+{"kind":"textbox","id":"sh/et8byl8r","slide":12,"name":"best-mrr","text":"MRR@5\n73,69%","textPreview":"MRR@5 | 73,69%","textChars":12,"textLines":2,"bbox":[1000,405,150,115]}
+{"kind":"textbox","id":"sh/5c3u54rm","slide":12,"name":"footer-12","text":"NEWSQA-RAG  ·  12/15","textPreview":"NEWSQA-RAG  ·  12/15","textChars":20,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"chart","id":"ch/xw32pkfe","slide":12,"name":"","chartType":"bar","bbox":[55,300,720,320]}
+{"kind":"notes","id":"nt/zrq3me","slide":12,"text":"Cross-encoder cải thiện cả dense, BM25 và hybrid. Dense + CE có MRR@5 64,70%; hybrid + CE 67,66%; BM25 + CE 73,69%. Kết quả cho thấy không nên chọn hybrid chỉ vì kiến trúc phức tạp hơn; cần tune fusion weight."}
+{"kind":"slide","id":"sl/semguw","slide":13,"title":"13","textShapes":4}
+{"kind":"textbox","id":"sh/ip4nyhcj","slide":13,"name":"section-13","text":"13","textPreview":"13","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/5sv6twba","slide":13,"name":"title-13","text":"Question resolution tác động mạnh hơn đổi retriever","textPreview":"Question resolution tác động mạnh hơn đổi retriever","textChars":51,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/krm50rup","slide":13,"name":"subtitle-13","text":"BM25 + cross-encoder tăng Hit@5 từ 36,83% lên 82,56% khi dùng resolved questions.","textPreview":"BM25 + cross-encoder tăng Hit@5 từ 36,83% lên 82,56% khi dùng resolved questions.","textChars":81,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"textbox","id":"sh/alknuhcn","slide":13,"name":"footer-13","text":"NEWSQA-RAG  ·  13/15","textPreview":"NEWSQA-RAG  ·  13/15","textChars":20,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"chart","id":"ch/nex4vmls","slide":13,"name":"","chartType":"bar","bbox":[150,295,980,330]}
+{"kind":"notes","id":"nt/semguw","slide":13,"text":"Đây là data effect, không phải model gain. Model, corpus và chunker không đổi; query được bổ sung context nhận diện. Kết quả chứng minh formulation của benchmark có ảnh hưởng rất lớn đến kết luận về retrieval."}
+{"kind":"slide","id":"sl/5lkabo","slide":14,"title":"14","textShapes":10}
+{"kind":"textbox","id":"sh/0fu9kbeh","slide":14,"name":"section-14","text":"14","textPreview":"14","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/zelsr6xw","slide":14,"name":"title-14","text":"Kết quả end-to-end vẫn bị giới hạn bởi API coverage","textPreview":"Kết quả end-to-end vẫn bị giới hạn bởi API coverage","textChars":51,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/edsri1wb","slide":14,"name":"subtitle-14","text":"Retrieval hoàn tất 1.336 câu, nhưng generation chỉ thành công 760 câu — tương đương 56,89%.","textPreview":"Retrieval hoàn tất 1.336 câu, nhưng generation chỉ thành công 760 câu — tương đương 56,89%.","textChars":91,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"textbox","id":"sh/9k3axgfy","slide":14,"name":"funnel-1","text":"1.336 retrievals","textPreview":"1.336 retrievals","textChars":16,"textLines":1,"bbox":[120,330,520,70]}
+{"kind":"textbox","id":"sh/oju9obed","slide":14,"name":"funnel-2","text":"760 generated answers","textPreview":"760 generated answers","textChars":21,"textLines":1,"bbox":[175,420,410,70]}
+{"kind":"textbox","id":"sh/nilsv6xs","slide":14,"name":"funnel-3","text":"576 API failures","textPreview":"576 API failures","textChars":16,"textLines":1,"bbox":[230,510,300,70]}
+{"kind":"textbox","id":"sh/mhcrm1wn","slide":14,"name":"kpi-f1","text":"F1 success only\n29,76%","textPreview":"F1 success only | 29,76%","textChars":22,"textLines":2,"bbox":[750,340,190,110]}
+{"kind":"textbox","id":"sh/5ojalwfu","slide":14,"name":"kpi-cite","text":"Citation F1\n38,35%","textPreview":"Citation F1 | 38,35%","textChars":18,"textLines":2,"bbox":[960,340,190,110]}
+{"kind":"textbox","id":"sh/4na9cre9","slide":14,"name":"kpi-latency","text":"Mean latency\n2,39 giây","textPreview":"Mean latency | 2,39 giây","textChars":22,"textLines":2,"bbox":[855,485,190,110]}
+{"kind":"textbox","id":"sh/y9ozq5kb","slide":14,"name":"footer-14","text":"NEWSQA-RAG  ·  14/15","textPreview":"NEWSQA-RAG  ·  14/15","textChars":20,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"notes","id":"nt/5lkabo","slide":14,"text":"Full run có Hit@5 76,57% và MRR@5 67,51%. Trên 760 câu generation thành công, F1 là 29,76%. Citation F1 tính toàn bộ là 38,35%; latency trung bình 2,39 giây. 576 câu lỗi kết nối API. RAGAS chưa có score hợp lệ nên không công bố."}
+{"kind":"slide","id":"sl/feqm22","slide":15,"title":"15","textShapes":10}
+{"kind":"textbox","id":"sh/rudobq9k","slide":15,"name":"section-15","text":"15","textPreview":"15","textChars":2,"textLines":1,"bbox":[64,42,60,28]}
+{"kind":"textbox","id":"sh/svm5kvq5","slide":15,"name":"title-15","text":"Roadmap 5 tuần ưu tiên độ tin cậy và ablation","textPreview":"Roadmap 5 tuần ưu tiên độ tin cậy và ablation","textChars":45,"textLines":1,"bbox":[64,78,1120,104]}
+{"kind":"textbox","id":"sh/dwv6dgrq","slide":15,"name":"subtitle-15","text":"Ổn định benchmark → thử data/model → chọn cấu hình tốt nhất → đánh giá end-to-end.","textPreview":"Ổn định benchmark → thử data/model → chọn cấu hình tốt nhất → đánh giá end-to-end.","textChars":82,"textLines":1,"bbox":[64,194,1030,62]}
+{"kind":"shape","id":"sh/ipkne1s3","slide":15,"name":"roadmap-line","bbox":[100,438,1050,10]}
+{"kind":"textbox","id":"sh/3qd4769o","slide":15,"name":"week-0","text":"W1\nỔn định\nbenchmark","textPreview":"W1 | Ổn định | benchmark","textChars":20,"textLines":3,"bbox":[75,350,180,175]}
+{"kind":"textbox","id":"sh/4rm5gba9","slide":15,"name":"week-1","text":"W2\nData &\nembedding","textPreview":"W2 | Data & | embedding","textChars":19,"textLines":3,"bbox":[305,350,180,175]}
+{"kind":"textbox","id":"sh/5sv69gru","slide":15,"name":"week-2","text":"W3\nRetriever &\nreranker","textPreview":"W3 | Retriever & | reranker","textChars":23,"textLines":3,"bbox":[535,350,180,175]}
+{"kind":"textbox","id":"sh/mlonq587","slide":15,"name":"week-3","text":"W4\nGeneration &\nagent","textPreview":"W4 | Generation & | agent","textChars":21,"textLines":3,"bbox":[765,350,180,175]}
+{"kind":"textbox","id":"sh/nmxoja9s","slide":15,"name":"week-4","text":"W5\nFinal eval\n& demo","textPreview":"W5 | Final eval | & demo","textChars":20,"textLines":3,"bbox":[995,350,180,175]}
+{"kind":"textbox","id":"sh/f69grito","slide":15,"name":"team-effort","text":"4 thành viên × 3–4 giờ/tuần · tổng 60–80 giờ","textPreview":"4 thành viên × 3–4 giờ/tuần · tổng 60–80 giờ","textChars":44,"textLines":1,"bbox":[350,565,580,34]}
+{"kind":"textbox","id":"sh/e50zyxc3","slide":15,"name":"footer-15","text":"NEWSQA-RAG  ·  15/15","textPreview":"NEWSQA-RAG  ·  15/15","textChars":20,"textLines":1,"bbox":[64,681,1152,18]}
+{"kind":"notes","id":"nt/feqm22","slide":15,"text":"Tuần 1 retry generation và sửa judge. Tuần 2 thử chunking và embedding. Tuần 3 tune retriever, fusion và reranker. Tuần 4 so generator, citation prompt và prototype multi-source. Tuần 5 chạy final benchmark, bootstrap 95% CI và hoàn thiện demo. UI chỉ chiếm phần nhỏ nguồn lực."}

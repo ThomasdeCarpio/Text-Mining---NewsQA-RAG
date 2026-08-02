@@ -1,0 +1,387 @@
+<title>NewsQA-RAG — Xây dựng và đánh giá</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="assets/slides.css" />
+
+<div class="controls">
+  <button id="btn-notes" type="button">Ghi chú (N)</button>
+  <button id="btn-prev" type="button">&larr;</button>
+  <span id="slide-counter" style="align-self:center;font-size:13px;color:var(--muted);"></span>
+  <button id="btn-next" type="button">&rarr;</button>
+</div>
+
+<div class="deck">
+
+  <section class="slide active">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 1</span></div>
+    <h1>Xây dựng và đánh giá NewsQA-RAG</h1>
+    <h2 class="subtitle">Hỏi đáp có dẫn nguồn trên một thư viện gồm nhiều bài báo</h2>
+    <div class="slide-body">
+      <ul>
+        <li>Không chỉ là một chatbot &mdash; trọng tâm là đo chất lượng từng phần của hệ thống RAG.</li>
+        <li>Khác NewsQA gốc: hệ thống không được cung cấp sẵn bài báo chứa đáp án.</li>
+        <li>Bài trình bày tập trung nhiều nhất vào <strong>dữ liệu</strong> và <strong>phương pháp đánh giá</strong>.</li>
+      </ul>
+      <div class="figure-note"><strong>Gợi ý hình:</strong> sơ đồ câu hỏi &rarr; thư viện bài báo &rarr; câu trả lời kèm citation; hoặc screenshot giao diện chat / retrieval playground.</div>
+    </div>
+    <div class="slide-footer"><span>Thời lượng đề xuất: 15 phút &middot; 15 slide</span><span>Trọng tâm: Data &amp; Evaluation</span></div>
+    <aside class="notes">
+      <p>Đây không chỉ là một chatbot; project tập trung đo chất lượng của từng phần trong hệ thống RAG.</p>
+      <p>Khác NewsQA gốc, hệ thống không được cung cấp sẵn bài báo chứa đáp án.</p>
+      <p>Bài trình bày tập trung nhiều nhất vào dữ liệu và phương pháp đánh giá.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 2</span></div>
+    <h1>Định nghĩa bài toán</h1>
+    <div class="slide-body">
+      <ul>
+        <li><strong>Input:</strong> câu hỏi + thư viện bài báo.</li>
+        <li><strong>Output:</strong> câu trả lời ngắn + nguồn/chunk làm bằng chứng.</li>
+        <li><strong>Hiện tại:</strong> factual question answering.</li>
+        <li><strong>Tiếp theo:</strong> câu hỏi cần tổng hợp nhiều nguồn.</li>
+      </ul>
+    </div>
+    <aside class="notes">
+      <p>Bài toán cốt lõi là tìm đúng bằng chứng trong toàn bộ corpus trước khi sinh câu trả lời.</p>
+      <p>Hệ thống tốt phải đồng thời: tìm đúng, xếp đúng thứ tự, trả lời đúng và dẫn nguồn đúng.</p>
+      <p>Vì vậy chúng ta sẽ đánh giá đồng thời từng module và toàn bộ hệ thống với metric cụ thể, để chỉ ra điểm mạnh từng phần, cũng như đánh giá tổng thể của hệ thống.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 3</span></div>
+    <h1>Các module và input/output</h1>
+    <div class="slide-body">
+      <table>
+        <thead><tr><th>Module</th><th>Input</th><th>Output</th></tr></thead>
+        <tbody>
+          <tr><td>Preprocessing</td><td>Article</td><td>Clean article</td></tr>
+          <tr><td>Chunking</td><td>Clean article</td><td>Chunks + metadata</td></tr>
+          <tr><td>Indexing</td><td>Chunks</td><td>Dense/BM25 index</td></tr>
+          <tr><td>Retrieval</td><td>Question</td><td>Top-10 chunks</td></tr>
+          <tr><td>Reranking</td><td>Question + top-10</td><td>Top-5 chunks</td></tr>
+          <tr><td>Generation</td><td>Question + top-5</td><td>Answer + citations</td></tr>
+          <tr><td>Evaluation</td><td>Predictions + labels</td><td>Metrics + error analysis</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <aside class="notes">
+      <p>Các phần như preprocessing, chunking, index thì được chuẩn bị trước.</p>
+      <p>Khi người dùng hỏi 1 câu hỏi, hệ thống sẽ bắt đầu truy xuất từ database thông qua các thuật toán truy xuất.</p>
+      <p>Một điều lưu ý về dữ liệu là metadata phải giữ được article ID, chunk ID và vị trí trong đoạn văn bản để bước sau phục vụ đánh giá.</p>
+      <p>Các module được thiết kế theo OOP để có thể dễ dàng thay thế và đánh giá độc lập.</p>
+      <p>Luồng dữ liệu trung gian: corpus &rarr; chunks &rarr; index &rarr; ranked chunks &rarr; answer.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 4</span></div>
+    <h1>Kiến trúc có thể mở rộng</h1>
+    <h2 class="subtitle">Các thành phần có thể thay thế độc lập</h2>
+    <div class="slide-body">
+      <ul>
+        <li>Embedding model</li>
+        <li>Retriever: Dense / BM25 / Hybrid</li>
+        <li>Reranker: No-op / Cross-Encoder</li>
+        <li>Generator và Judge</li>
+        <li>Chunking strategy</li>
+      </ul>
+    </div>
+    <aside class="notes">
+      <p>Các module được định nghĩa theo từng class, có interface thống nhất, giúp việc thêm mô hình mới dễ dàng mà không viết lại toàn pipeline.</p>
+      <p>Khi một module đã chạy xong, các module phía sau có thể tận dụng lại kết quả này mà không cần phải chạy lại toàn bộ pipeline.</p>
+      <p>Lưu ý khi demo: cấu hình live chat hiện có thể khác cấu hình benchmark; cần ghi rõ retriever/reranker thực sự đang dùng.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 5</span></div>
+    <h1>Vì sao NewsQA gốc chưa phù hợp?</h1>
+    <div class="slide-body">
+      <div class="two-col">
+        <div class="col-box">
+          <h3>NewsQA gốc</h3>
+          <ul>
+            <li>Câu hỏi được viết khi đã biết bài báo.</li>
+            <li>Nhiều câu phụ thuộc ngữ cảnh của bài.</li>
+            <li>Phù hợp đánh giá đọc hiểu trong một document.</li>
+          </ul>
+        </div>
+        <div class="col-box">
+          <h3>Bài toán mới</h3>
+          <ul>
+            <li>Tìm evidence trong <strong>11.064 bài báo</strong>.</li>
+            <li>Câu hỏi phải tự đứng độc lập.</li>
+            <li>Có thêm nhiều bài nhiễu.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout">Ví dụ &mdash; gốc: &ldquo;Who is protesting?&rdquo; &rarr; sau chỉnh sửa: &ldquo;Who is protesting the results of the presidential election in Gabon?&rdquo;</div>
+    </div>
+    <aside class="notes">
+      <p>NewsQA ban đầu được dùng để đánh giá các mô hình cũ (BERT) khi cửa sổ ngữ cảnh còn hạn chế, nên các chunk cần đủ nhỏ (vài chục token) so với 512 token như hiện tại; dữ liệu ban đầu chỉ thiết kế để đánh giá khả năng truy xuất chunk trong từng document.</p>
+      <p>Việc làm rõ câu hỏi không chỉ là làm sạch văn bản; nó thay đổi benchmark thành bài toán retrieval thực tế hơn.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 6</span></div>
+    <h1>Xây dựng bộ benchmark mới</h1>
+    <div class="slide-body">
+      <ul>
+        <li><strong>638</strong> bài ứng viên được kiểm tra &rarr; chọn <strong>200</strong> bài để đánh giá.</li>
+        <li><strong>1.340</strong> câu hỏi ban đầu, loại <strong>4</strong> mẫu không hợp lệ &rarr; <strong>1.336</strong> mẫu được chấm.</li>
+        <li>Thêm <strong>10.864</strong> bài nhiễu &rarr; corpus cuối <strong>11.064 bài</strong>, <strong>19.263 chunks</strong>.</li>
+        <li>Random seed: <strong>42</strong>.</li>
+      </ul>
+    </div>
+    <aside class="notes">
+      <p>Từ dữ liệu NewsQA gốc, chọn ra tập 200 bài để làm câu hỏi và ground-truth evidence; dùng LLM để điều chỉnh lại câu hỏi cho cụ thể hơn, phục vụ tìm kiếm khi bài báo nằm trong corpus nhiều bài báo.</p>
+      <p>Tất cả các bài trong tập train (~10k bài) được chọn làm corpus test, cộng thêm các bài khác đóng vai trò distractor để kiểm tra khả năng tìm kiếm bài mục tiêu ở quy mô thư viện.</p>
+      <p>Mọi cấu hình benchmark dùng chung corpus, chunker và quy tắc gán evidence để so sánh công bằng.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 7</span></div>
+    <h1>EDA và đặc trưng của thư viện</h1>
+    <div class="slide-body">
+      <table>
+        <thead><tr><th>Đặc trưng</th><th class="num">Giá trị</th></tr></thead>
+        <tbody>
+          <tr><td>Eval articles</td><td class="num">200 &mdash; 1,8%</td></tr>
+          <tr><td>Distractor articles</td><td class="num">10.864 &mdash; 98,2%</td></tr>
+          <tr><td>Tổng chunks</td><td class="num">19.263</td></tr>
+          <tr><td>Trung bình chunks/article</td><td class="num">1,74</td></tr>
+          <tr><td>Trung bình tokens/chunk</td><td class="num">383,9</td></tr>
+          <tr><td>Max tokens/chunk</td><td class="num">504 (limit 512)</td></tr>
+          <tr><td>Chunk compliance / Metadata completeness</td><td class="num">100% / 100%</td></tr>
+          <tr><td>Deduplication rate</td><td class="num">0,07%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <aside class="notes">
+      <p>Corpus rất mất cân bằng có chủ đích: phần lớn tài liệu là distractor.</p>
+      <p>Chunk trung bình khá dài nhưng vẫn nằm dưới giới hạn 512 token.</p>
+      <p>Self-retrieval sanity check trên 50 mẫu đạt Recall@1 = 0,96.</p>
+      <p>Trong 200 bài eval: độ dài bài trung bình 2.947 ký tự, p95 4.201; trung bình 6,7 câu hỏi/bài, tối đa 23.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 8</span></div>
+    <h1>Chất lượng dữ liệu sau hiệu chỉnh</h1>
+    <div class="slide-body">
+      <div class="kpi-row">
+        <div class="kpi"><div class="num">1.078</div><div class="label">câu hỏi được làm rõ</div></div>
+        <div class="kpi"><div class="num">298</div><div class="label">đáp án được sửa</div></div>
+        <div class="kpi"><div class="num">4</div><div class="label">mẫu bị loại</div></div>
+      </div>
+      <table>
+        <thead><tr><th>Nhãn chất lượng</th><th class="num">Số mẫu</th></tr></thead>
+        <tbody>
+          <tr><td>Non-standalone</td><td class="num">979</td></tr>
+          <tr><td>Uncertain</td><td class="num">99</td></tr>
+          <tr><td>Standalone</td><td class="num">258</td></tr>
+          <tr><td>Invalid</td><td class="num">4</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <aside class="notes">
+      <p>Sau khi dùng LLM để đánh giá bộ test (200 bài báo nói trên), rút ra các số liệu trên. (Bổ sung system prompt dùng để đánh giá khi trình bày.)</p>
+      <p>Các lỗi phổ biến nhất: thiếu chủ thể 688, thiếu sự kiện cụ thể 139, tham chiếu chung chung 98, evidence sai 87, malformed 71.</p>
+      <p>Ngoài ra: đáp án bị cắt 59, unresolved coreference 58, thiếu địa điểm 55, đáp án sai 35.</p>
+      <p>Đây là lý do cần audit và sửa dữ liệu trước khi so sánh mô hình.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 9</span></div>
+    <h1>Khung đánh giá từng module trên toàn hệ thống</h1>
+    <div class="slide-body">
+      <ol>
+        <li><strong>Corpus:</strong> compliance, duplicate, metadata.</li>
+        <li><strong>Retrieval:</strong> Hit, Recall, MRR, NDCG.</li>
+        <li><strong>Reranking:</strong> thay đổi MRR/NDCG trước và sau rerank.</li>
+        <li><strong>Generation:</strong> Exact Match, token F1.</li>
+        <li><strong>Citation:</strong> validity, precision, recall, F1.</li>
+        <li><strong>Operation:</strong> latency, coverage, failure rate.</li>
+      </ol>
+    </div>
+    <aside class="notes">
+      <p>Đánh giá theo từng thành phần giúp phân biệt lỗi trực quan hơn: ví dụ &ldquo;không tìm thấy evidence&rdquo; (lỗi retriever) khác với &ldquo;đã có evidence nhưng trả lời sai&rdquo; (lỗi generator).</p>
+      <p>Pipeline cuối phải báo cả chất lượng và độ ổn định của toàn bộ hệ thống khi vận hành, được đánh giá bằng trải nghiệm thật của thành viên nhóm ở một số bài test, và bằng phương pháp Ragas ở bộ test lớn hơn.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 10</span></div>
+    <h1>Retrieval được chấm như thế nào?</h1>
+    <h2 class="subtitle">Chuyển evidence sang chunk ID</h2>
+    <div class="slide-body">
+      <p>Một chunk là relevant nếu khoảng ký tự của nó giao với evidence:</p>
+      <div class="formula">chunk_start &lt; evidence_end
+AND
+evidence_start &lt; chunk_end</div>
+      <p>Ví dụ &mdash; relevant chunks: <strong>{C12, C13}</strong>, kết quả xếp hạng: <strong>[C7, C12, C4, C13, C9]</strong></p>
+      <div class="kpi-row">
+        <div class="kpi"><div class="num">1</div><div class="label">Hit@5</div></div>
+        <div class="kpi"><div class="num">0,50</div><div class="label">MRR@5 = 1/2</div></div>
+        <div class="kpi"><div class="num">1,00</div><div class="label">Recall@5 = 2/2</div></div>
+        <div class="kpi"><div class="num">&asymp;0,65</div><div class="label">NDCG@5</div></div>
+      </div>
+    </div>
+    <aside class="notes">
+      <p>NewsQA cung cấp evidence bằng vị trí ký tự trong bài; production retrieval trả về chunk ID.</p>
+      <p>Ta ánh xạ mọi chunk giao với evidence thành tập relevant_chunk_ids, rồi so sánh chính xác với retrieved_ids.</p>
+      <p>Hit@k: chỉ hỏi có ít nhất một evidence trong top-k hay không. MRR@k: nghịch đảo vị trí của evidence đầu tiên. Recall@k: bao nhiêu relevant chunks đã được lấy ra. NDCG@k: thưởng cho việc xếp nhiều relevant chunks ở vị trí cao, có chiết khấu theo rank.</p>
+      <p>Tính metric theo từng câu hỏi rồi lấy trung bình trên 1.336 mẫu.</p>
+      <p><strong>Ý nghĩa và giới hạn:</strong> Hit cao là điều kiện cần, chưa chứng minh câu trả lời sinh ra đúng. MRR chỉ quan tâm chunk liên quan đầu tiên. Recall phụ thuộc cách chia chunk và số lượng chunk liên quan. NDCG ở đây dùng binary relevance, chưa phản ánh mức độ evidence mạnh/yếu. Vì vậy phải đọc các chỉ số này cùng với QA F1, citation metrics, coverage và latency.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 11</span></div>
+    <h1>Thiết lập thực nghiệm retrieval</h1>
+    <div class="slide-body">
+      <ul>
+        <li><strong>2 phiên bản câu hỏi:</strong> Original / Resolved &mdash; <strong>3 retriever:</strong> Dense / BM25 / Hybrid &mdash; <strong>2 reranker:</strong> No-op / Cross-Encoder</li>
+        <li>Tổng cộng: <strong>12 cấu hình &times; 1.336 câu hỏi</strong></li>
+        <li>Chunk size <strong>512</strong>, overlap <strong>64</strong> &middot; retrieve top-10 &rarr; rerank top-5</li>
+        <li>Dense embedding: MiniLM, <strong>384 dimensions</strong> &middot; Hybrid RRF weights: Dense 0,7 / BM25 0,3</li>
+        <li>Cross-Encoder: <code>ms-marco-MiniLM-L-6-v2</code></li>
+      </ul>
+      <div class="figure-note"><strong>Gợi ý hình:</strong> ma trận 2 &times; 3 &times; 2 cho 12 cấu hình; sơ đồ top-10 &rarr; Cross-Encoder &rarr; top-5.</div>
+    </div>
+    <aside class="notes">
+      <p>Với các chuẩn đầu vào/đầu ra đã định nghĩa rõ ràng, chúng tôi dùng factory design pattern để quản lý các phiên bản cũng như method khác nhau cho từng module một cách hiệu quả.</p>
+      <p>Từng cấu hình chạy trên cùng benchmark để so sánh với nhau.</p>
+      <p>Cần báo cáo cả metric chất lượng lẫn latency vì Cross-Encoder tăng chi phí đáng kể.</p>
+      <p>Retriever chưa có cài gì đặc biệt, kể cả system prompt cho query; chỉ đi embed rồi truy vấn query gốc.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 12</span></div>
+    <h1>Kết quả benchmark retrieval</h1>
+    <h2 class="subtitle">Kết quả trên resolved questions</h2>
+    <div class="slide-body">
+      <table>
+        <thead><tr><th>Retriever</th><th>Reranker</th><th class="num">Hit@5</th><th class="num">MRR@5</th><th class="num">Latency</th></tr></thead>
+        <tbody>
+          <tr><td>Dense</td><td>No-op</td><td class="num">0,6759</td><td class="num">0,5206</td><td class="num">24,7 ms</td></tr>
+          <tr><td>Dense</td><td>Cross-Encoder</td><td class="num">0,7253</td><td class="num">0,6470</td><td class="num">390,1 ms</td></tr>
+          <tr><td>BM25</td><td>No-op</td><td class="num">0,7919</td><td class="num">0,6561</td><td class="num">77,0 ms</td></tr>
+          <tr class="best"><td>BM25</td><td>Cross-Encoder</td><td class="num">0,8256</td><td class="num">0,7369</td><td class="num">422,3 ms</td></tr>
+          <tr><td>Hybrid</td><td>No-op</td><td class="num">0,7320</td><td class="num">0,5955</td><td class="num">107,4 ms</td></tr>
+          <tr><td>Hybrid</td><td>Cross-Encoder</td><td class="num">0,7672</td><td class="num">0,6766</td><td class="num">476,7 ms</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">Best quality: <strong>BM25 + Cross-Encoder</strong></div>
+    </div>
+    <aside class="notes">
+      <p>Cross-Encoder cải thiện cả ba retriever, nhưng latency tăng rõ rệt.</p>
+      <p>BM25 + Cross-Encoder là cấu hình tốt nhất hiện tại về Hit@5 và MRR@5.</p>
+      <p>Hybrid chưa vượt BM25; nguyên nhân có thể là trọng số RRF hoặc dense embedding chưa phù hợp.</p>
+      <p>Không nên mặc định kiến trúc phức tạp hơn sẽ tốt hơn; cần dựa vào benchmark.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 13</span></div>
+    <h1>Tác động của việc hiệu chỉnh dữ liệu</h1>
+    <h2 class="subtitle">So sánh Hit@5 khi đều dùng Cross-Encoder</h2>
+    <div class="slide-body">
+      <table>
+        <thead><tr><th>Retriever</th><th class="num">Original</th><th class="num">Resolved</th><th class="num">Thay đổi</th></tr></thead>
+        <tbody>
+          <tr><td>Dense</td><td class="num">0,3256</td><td class="num">0,7253</td><td class="num">+39,97 điểm %</td></tr>
+          <tr><td>BM25</td><td class="num">0,3683</td><td class="num">0,8256</td><td class="num">+45,73 điểm %</td></tr>
+          <tr><td>Hybrid</td><td class="num">0,3570</td><td class="num">0,7672</td><td class="num">+41,02 điểm %</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">Đây là <strong>data effect</strong>, không phải model gain.</div>
+    </div>
+    <aside class="notes">
+      <p>Câu hỏi khi được làm rõ chủ thể, sự kiện và địa điểm giúp cả lexical lẫn semantic retrieval trở nên tốt hơn.</p>
+      <p>Mức tăng lớn cho thấy formulation của benchmark có thể ảnh hưởng nhiều hơn việc đổi mô hình.</p>
+      <p>Khi báo kết quả phải ghi rõ đang dùng original hay resolved questions.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 14</span></div>
+    <h1>Đánh giá end-to-end và các lưu ý</h1>
+    <h2 class="subtitle">Resolved + Hybrid + Cross-Encoder + DeepSeek V4 Flash</h2>
+    <div class="slide-body">
+      <table>
+        <thead><tr><th>Chỉ số</th><th class="num">Kết quả</th></tr></thead>
+        <tbody>
+          <tr><td>Retrieval Hit@5 / MRR@5</td><td class="num">0,7657 / 0,6751</td></tr>
+          <tr><td>Request thành công / Coverage</td><td class="num">760 / 1.336 &mdash; 56,89%</td></tr>
+          <tr><td>QA F1 &mdash; toàn bộ / thành công</td><td class="num">0,1693 / 0,2976</td></tr>
+          <tr><td>EM &mdash; request thành công</td><td class="num">0,0368</td></tr>
+          <tr><td>Citation F1 / validity</td><td class="num">0,3835 / 0,4963</td></tr>
+          <tr><td>Mean / P95 latency</td><td class="num">2.391,4 ms / 4.804,6 ms</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">576 request lỗi (chủ yếu APIConnectionError) &mdash; chưa phải kết quả end-to-end hoàn chỉnh.</div>
+    </div>
+    <aside class="notes">
+      <p>Có 576 request lỗi, chủ yếu là APIConnectionError; vì vậy chưa thể coi đây là kết quả end-to-end hoàn chỉnh.</p>
+      <p>Luôn báo song song điểm trên toàn bộ tập, điểm trên request thành công và coverage.</p>
+      <p>Pilot 50 mẫu có generation chạy đủ: QA F1 0,2899, Citation F1 0,6833.</p>
+      <p>RAGAS mới có coverage 40/50, nhưng record điểm đang trống; chưa công bố RAGAS score.</p>
+      <p>Retrieval tốt không đảm bảo generation đúng; đây là hai nguồn lỗi riêng.</p>
+    </aside>
+  </section>
+
+  <section class="slide">
+    <div class="slide-eyebrow"><span>NewsQA-RAG · Data &amp; Evaluation</span><span>Slide 15</span></div>
+    <h1>Kết luận và kế hoạch 5 tuần</h1>
+    <div class="slide-body">
+      <ul>
+        <li>Data formulation là yếu tố ảnh hưởng lớn nhất; Cross-Encoder tạo cải thiện ổn định.</li>
+        <li><strong>BM25 + Cross-Encoder</strong> là baseline tốt nhất hiện tại.</li>
+        <li>Phải báo đồng thời quality, coverage và latency.</li>
+        <li>Nguồn lực: 4 người &times; 3&ndash;4 giờ/tuần &times; 5 tuần = <strong>60&ndash;80 giờ</strong>.</li>
+      </ul>
+      <table>
+        <thead><tr><th>Tuần</th><th>Milestone</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Retry 576 lỗi, sửa judge/RAGAS, khóa baseline tái lập được</td></tr>
+          <tr><td>2</td><td>Thử chunk 256/512/768, overlap; MiniLM vs MPNet/BGE; tập multi-source nhỏ</td></tr>
+          <tr><td>3</td><td>Tune RRF weights, thử reranker thứ hai, chọn top-2 cấu hình</td></tr>
+          <tr><td>4</td><td>So sánh generator; cải thiện prompt citation; prototype multi-source retrieval</td></tr>
+          <tr><td>5</td><td>Full end-to-end; independent judge; failure analysis; bootstrap 95% CI; hoàn thiện demo</td></tr>
+        </tbody>
+      </table>
+      <div class="sources-strip">Nguồn số liệu: integrity_report.json &middot; selection/variant manifest &middot; newsqa_200_11064_corpus.json &middot; reports/benchmarks/*/report.json &middot; src/evaluation/metrics.py, testset.py &middot; docs/evaluation_dataset.md, docs/benchmarking.md</div>
+    </div>
+    <aside class="notes">
+      <p>Phân bổ đề xuất: Data/Eval 30%, Retrieval 25%, Generation/Agent 25%, Integration 15%, UI/UX 5%.</p>
+      <p>Ưu tiên đầu tiên là benchmark đáng tin cậy và có thể tái lập.</p>
+      <p>Agentic/multi-source QA chỉ nên mở rộng sau khi baseline một lượt retrieval đã ổn định.</p>
+      <p>UI/UX tập trung vào hiển thị citation, evidence và trạng thái lỗi thay vì nhiều tính năng trang trí.</p>
+      <p><strong>Các lưu ý bắt buộc khi trình bày:</strong></p>
+      <ul>
+        <li>Không gọi mức tăng Original &rarr; Resolved là &ldquo;model improvement&rdquo;; đây là ảnh hưởng của dữ liệu.</li>
+        <li>Không nói Hybrid là tốt nhất: kết quả hiện tại cho thấy BM25 + Cross-Encoder tốt nhất.</li>
+        <li>Không công bố RAGAS score khi score records còn trống.</li>
+        <li>Khi nói về generation phải nêu coverage 56,89% và 576 request lỗi.</li>
+        <li>Retrieval Hit không đồng nghĩa answer đúng.</li>
+        <li>Chưa khẳng định khác biệt có ý nghĩa thống kê cho đến khi chạy paired test hoặc bootstrap confidence interval.</li>
+      </ul>
+    </aside>
+  </section>
+
+</div>
+
+<div class="notes-drawer" id="notes-drawer">
+  <h4>Ghi chú thuyết trình</h4>
+  <div id="notes-body"></div>
+</div>
+
+<script src="assets/slides.js"></script>
