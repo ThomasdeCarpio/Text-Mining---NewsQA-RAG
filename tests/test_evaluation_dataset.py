@@ -7,7 +7,7 @@ from argparse import Namespace
 from pathlib import Path
 from unittest.mock import patch
 
-from src.evaluation.question_review import (
+from newsqa_rag.evaluation.question_review import (
     ArticleCandidateIndex,
     build_article_request,
     build_full_review_packets,
@@ -18,7 +18,7 @@ from src.evaluation.question_review import (
     review_status,
     validate_predictions,
 )
-from src.evaluation.testset import (
+from newsqa_rag.evaluation.testset import (
     DatasetBuildError,
     SampleSpec,
     article_id_for_context,

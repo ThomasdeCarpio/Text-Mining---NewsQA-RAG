@@ -34,8 +34,8 @@ import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.ingestion.chunker import get_chunker
-from src.evaluation.testset import build_article_testset, save_testset
+from newsqa_rag.ingestion.chunker import get_chunker
+from newsqa_rag.evaluation.testset import build_article_testset, save_testset
 
 
 def main():
@@ -78,8 +78,8 @@ def main():
     if args.build_collection:
         import json
 
-        from src.indexing.embeddings import get_embedding_function
-        from src.indexing.chroma_store import ChromaStore
+        from newsqa_rag.indexing.embeddings import get_embedding_function
+        from newsqa_rag.indexing.chroma_store import ChromaStore
 
         print(f"\nIngesting {len(all_chunks)} chunks into collection '{args.collection}' ...")
         store = ChromaStore(args.db_path, get_embedding_function(config))

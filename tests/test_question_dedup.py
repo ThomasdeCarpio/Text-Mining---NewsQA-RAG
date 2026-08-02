@@ -1,6 +1,6 @@
 import unittest
 
-from src.evaluation.question_dedup import (
+from newsqa_rag.evaluation.question_dedup import (
     DEDUP_APPROVAL_SCHEMA_VERSION,
     DEDUP_SCHEMA_VERSION,
     derive_deduplicated_artifacts,
@@ -8,7 +8,7 @@ from src.evaluation.question_dedup import (
     validate_cluster_decisions,
     validate_human_approval,
 )
-from src.evaluation.testset import DatasetBuildError
+from newsqa_rag.evaluation.testset import DatasetBuildError
 
 
 def item(question_id, question, answer, article="article-1", variant="clarified"):

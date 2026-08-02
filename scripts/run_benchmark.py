@@ -43,7 +43,6 @@ Args:
 """
 
 import argparse
-import hashlib
 import json
 import os
 import sys
@@ -53,14 +52,18 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.indexing.embeddings import get_embedding_function
-from src.indexing.chroma_store import ChromaStore
-from src.ingestion.chunker import load_chunks
-from src.retrieval.retriever_factory import get_retriever
-from src.retrieval.reranker import get_reranker
-from src.agents.rag_agent import RAGAgent
-from src.evaluation.testset import canonical_json, load_testset, sha256_file
-from src.evaluation.metrics import (
+from newsqa_rag.indexing.embeddings import get_embedding_function
+from newsqa_rag.indexing.chroma_store import ChromaStore
+from newsqa_rag.ingestion.chunker import load_chunks
+from newsqa_rag.retrieval.retriever_factory import get_retriever
+from newsqa_rag.retrieval.reranker import get_reranker
+from newsqa_rag.agents.rag_agent import RAGAgent
+from newsqa_rag.evaluation.benchmark_io import (
+    apply_manifest_preflight as _apply_manifest_preflight,
+    write_summary as _write_summary,
+)
+from newsqa_rag.evaluation.testset import load_testset
+from newsqa_rag.evaluation.metrics import (
     evaluate_retrieval,
     evaluate_qa,
     evaluate_ragas,
@@ -147,7 +150,7 @@ def main():
         sys.exit(
             "ERROR: no rows have a non-empty 'relevant_chunk_ids', so retrieval cannot be scored.\n"
             "       This field must be engineered by mapping answer spans to chunk IDs\n"
-            "       (see docs/evaluation.md section 6.1 and src/evaluation/testset.py)."
+            "       (see docs/evaluation.md and newsqa_rag.evaluation.testset)."
         )
 
     if args.n_eval:
@@ -190,7 +193,7 @@ def main():
 
     llm = None
     if args.run_generator:
-        from src.llm import get_llm
+        from newsqa_rag.llm import get_llm
         llm = get_llm(config)
 
     agent = RAGAgent(
@@ -373,123 +376,6 @@ def main():
     print(f"\nReport saved to {report_path}")
     print(f"Summary  saved to {summary_path}")
     _print_summary(report)
-
-
-def _manifest_artifact_path(manifest_path: str, record: dict) -> str:
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    value = record["path"]
-    return value if os.path.isabs(value) else os.path.join(project_root, value)
-
-
-def _apply_manifest_preflight(args, config: dict) -> None:
-    """Fail before model initialization when benchmark artifacts do not match."""
-    with open(args.variant_manifest, encoding="utf-8") as handle:
-        manifest = json.load(handle)
-    expected_config = manifest.get("pipeline", {}).get("config_sha256")
-    actual_config = hashlib.sha256(canonical_json(config).encode("utf-8")).hexdigest()
-    if expected_config != actual_config:
-        raise SystemExit(
-            f"ERROR: config does not match variant manifest: expected {expected_config}, got {actual_config}"
-        )
-    database = manifest.get("database", {})
-    if not database.get("indexed", False):
-        raise SystemExit("ERROR: variant manifest records that the retrieval database was not built")
-    expected_collection = database.get("collection")
-    if args.collection and args.collection != expected_collection:
-        raise SystemExit(
-            f"ERROR: collection {args.collection!r} does not match manifest {expected_collection!r}"
-        )
-    args.collection = expected_collection
-    args.manifest_chunk_count = database.get("chunk_count")
-    manifest_db_path = database.get("path")
-    if args.db_path and os.path.abspath(args.db_path) != os.path.abspath(
-        _manifest_artifact_path(args.variant_manifest, {"path": manifest_db_path})
-    ):
-        raise SystemExit("ERROR: --db-path does not match the variant manifest")
-    if not args.db_path:
-        args.db_path = _manifest_artifact_path(args.variant_manifest, {"path": manifest_db_path})
-
-    artifacts = manifest.get("artifacts", {})
-    testset_hash = sha256_file(args.testset)
-    accepted = {
-        item.get("sha256")
-        for key, item in artifacts.items()
-        if key in {
-            "testset_original",
-            "testset_reviewed_original",
-            "testset_clarified",
-            "testset_resolved",
-        }
-    }
-    if testset_hash not in accepted:
-        raise SystemExit("ERROR: --testset hash is not recorded by the variant manifest")
-    chunks_record = artifacts.get("chunks")
-    if chunks_record:
-        manifest_chunks = _manifest_artifact_path(args.variant_manifest, chunks_record)
-        if args.chunks_path and sha256_file(args.chunks_path) != chunks_record["sha256"]:
-            raise SystemExit("ERROR: --chunks-path hash does not match the variant manifest")
-        args.chunks_path = args.chunks_path or manifest_chunks
-    bm25_record = artifacts.get("bm25")
-    if bm25_record and not args.bm25_path:
-        args.bm25_path = _manifest_artifact_path(args.variant_manifest, bm25_record)
-    print(f"Manifest preflight passed: {args.variant_manifest}")
-
-
-def _write_summary(path: str, report: dict) -> None:
-    lines = []
-    cfg = report.get("config", {})
-    lines.append(f"=== Benchmark Report ===")
-    lines.append(f"Timestamp  : {cfg.get('timestamp', '')}")
-    lines.append(f"Retriever  : {cfg.get('retriever')} | Reranker: {cfg.get('reranker')}")
-    lines.append(f"top_k={cfg.get('top_k')} | rerank_top_n={cfg.get('rerank_top_n')} | n_eval={cfg.get('n_eval')}")
-    lines.append(f"Collection : {cfg.get('collection')}")
-    lines.append(f"Embedding  : {cfg.get('embedding', {}).get('provider')} / {cfg.get('embedding', {}).get('model_name')}")
-    lines.append("")
-
-    if "coverage" in report:
-        lines.append("--- Coverage ---")
-        for k, v in report["coverage"].items():
-            lines.append(f"  {k}: {v}")
-        lines.append("")
-
-    if "retrieval_initial" in report:
-        lines.append("--- Initial Retrieval ---")
-        for k, v in report["retrieval_initial"].items():
-            lines.append(f"  {k}: {v}")
-        lines.append("")
-
-    if "retrieval" in report:
-        lines.append("--- Retrieval ---")
-        for k, v in report["retrieval"].items():
-            lines.append(f"  {k}: {v}")
-        lines.append("")
-
-    if "qa" in report:
-        lines.append("--- QA ---")
-        for k, v in report["qa"].items():
-            lines.append(f"  {k}: {v}")
-        lines.append("")
-
-    if "ragas" in report:
-        lines.append("--- RAGAS ---")
-        for k, v in report["ragas"].items():
-            lines.append(f"  {k}: {v}")
-        lines.append("")
-
-    if "citations" in report:
-        lines.append("--- Citations ---")
-        for k, v in report["citations"].items():
-            lines.append(f"  {k}: {v}")
-        lines.append("")
-
-    if "latency" in report:
-        lines.append("--- Latency ---")
-        for stage, values in report["latency"].items():
-            lines.append(f"  {stage}: {values}")
-        lines.append("")
-
-    with open(path, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines))
 
 
 def _print_summary(report: dict) -> None:

@@ -6,15 +6,15 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from src.agents.rag_agent import RAGAgent
-from src.evaluation.benchmark_io import (
+from newsqa_rag.agents.rag_agent import RAGAgent
+from newsqa_rag.evaluation.benchmark_io import (
     append_jsonl,
     latest_by_question,
     load_jsonl,
     run_with_retries,
 )
-from src.evaluation.metrics import evaluate_citations, evaluate_qa, recall_at_k
-from src.retrieval.reranker import CrossEncoderReranker, NoOpReranker
+from newsqa_rag.evaluation.metrics import evaluate_citations, evaluate_qa, recall_at_k
+from newsqa_rag.retrieval.reranker import CrossEncoderReranker, NoOpReranker
 
 
 class _Retriever:

@@ -35,8 +35,8 @@ import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.indexing.embeddings import get_embedding_function
-from src.indexing.chroma_store import ChromaStore
+from newsqa_rag.indexing.embeddings import get_embedding_function
+from newsqa_rag.indexing.chroma_store import ChromaStore
 
 
 def main():

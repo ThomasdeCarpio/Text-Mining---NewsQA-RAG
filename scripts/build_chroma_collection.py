@@ -21,12 +21,12 @@ import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.ingestion.loader import DataLoader
-from src.ingestion.cleaner import NewsCleaner
-from src.ingestion.chunker import get_chunker, save_chunks, load_chunks
-from src.indexing.embeddings import get_embedding_function
-from src.indexing.chroma_store import ChromaStore
-from src.indexing.bm25_index import BM25Index
+from newsqa_rag.ingestion.loader import DataLoader
+from newsqa_rag.ingestion.cleaner import NewsCleaner
+from newsqa_rag.ingestion.chunker import get_chunker, save_chunks, load_chunks
+from newsqa_rag.indexing.embeddings import get_embedding_function
+from newsqa_rag.indexing.chroma_store import ChromaStore
+from newsqa_rag.indexing.bm25_index import BM25Index
 
 
 def main():

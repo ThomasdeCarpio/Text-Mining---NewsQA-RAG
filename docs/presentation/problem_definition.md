@@ -43,7 +43,7 @@ retrieve -> rerank -> generate -> map citations
 ```
 
 Nó chưa tự lập kế hoạch, tự chọn công cụ, viết lại truy vấn hay quyết định truy
-xuất nhiều vòng. `src/agents/orchestrator.py` và các tệp trong `src/tools/` hiện
+xuất nhiều vòng. `backend/newsqa_rag/agents/orchestrator.py` và các tệp trong `backend/newsqa_rag/tools/` hiện
 chưa chứa logic điều phối hoạt động. Các sự kiện `tool_call` trên giao diện chỉ
 mô tả tiến trình của pipeline cố định, không phải quá trình suy luận của một
 agent.
@@ -143,15 +143,15 @@ Theo trách nhiệm vận hành, repo hiện tại được chia thành **9 mô-
 
 | STT | Mô-đun | Vai trò | Đầu vào | Đầu ra | Mã nguồn chính |
 |---:|---|---|---|---|---|
-| 1 | Giao diện người dùng | Nhận câu hỏi, hiển thị lịch sử, tiến trình, câu trả lời và nguồn | Thao tác người dùng, SSE từ API | HTTP request và giao diện kết quả | `ui/src/` |
-| 2 | API và service | Quản lý session, gọi pipeline, stream kết quả | `session_id`, `question` | SSE events và lịch sử hội thoại | `api/`, `src/services/` |
-| 3 | Ingestion | Đọc HTML, trích xuất text/metadata và chia bài báo thành chunk | Raw HTML hoặc article context | Các chunk đã chuẩn hóa | `src/ingestion/` |
-| 4 | Indexing và lưu trữ | Sinh embedding, lưu vector và tạo BM25 index | Danh sách chunk | Chroma collection, BM25 index | `src/indexing/` |
-| 5 | Retrieval | Tìm chunk bằng dense, BM25 hoặc hybrid RRF | Câu hỏi, `top_k` | Candidate chunks đã xếp hạng | `src/retrieval/` |
-| 6 | Reranking | Chấm điểm lại candidate hoặc giữ thứ tự baseline | Câu hỏi, candidates, `top_n` | Evidence chunks theo thứ tự mới | `src/retrieval/reranker.py` |
-| 7 | Generation và citation | Sinh câu trả lời từ context đánh số và ánh xạ `[n]` về chunk | Câu hỏi, contexts | Answer, citation IDs, cited chunks | `src/llm.py` |
-| 8 | Điều phối RAG | Chạy pipeline cố định và ghi trace/thời gian | Câu hỏi và các component đã cấu hình | Full RAG trace | `src/agents/rag_agent.py` |
-| 9 | Evaluation và benchmark | Thu prediction, tính metric, LLM judging và resume | Testset, ground truth, RAG traces | Checkpoint JSONL và report | `src/evaluation/`, `scripts/*benchmark*` |
+| 1 | Giao diện người dùng | Nhận câu hỏi, hiển thị lịch sử, tiến trình, câu trả lời và nguồn | Thao tác người dùng, SSE từ API | HTTP request và giao diện kết quả | `frontend/src/` |
+| 2 | API và service | Quản lý session, gọi pipeline, stream kết quả | `session_id`, `question` | SSE events và lịch sử hội thoại | `backend/newsqa_rag/api/`, `backend/newsqa_rag/services/` |
+| 3 | Ingestion | Đọc HTML, trích xuất text/metadata và chia bài báo thành chunk | Raw HTML hoặc article context | Các chunk đã chuẩn hóa | `backend/newsqa_rag/ingestion/` |
+| 4 | Indexing và lưu trữ | Sinh embedding, lưu vector và tạo BM25 index | Danh sách chunk | Chroma collection, BM25 index | `backend/newsqa_rag/indexing/` |
+| 5 | Retrieval | Tìm chunk bằng dense, BM25 hoặc hybrid RRF | Câu hỏi, `top_k` | Candidate chunks đã xếp hạng | `backend/newsqa_rag/retrieval/` |
+| 6 | Reranking | Chấm điểm lại candidate hoặc giữ thứ tự baseline | Câu hỏi, candidates, `top_n` | Evidence chunks theo thứ tự mới | `backend/newsqa_rag/retrieval/reranker.py` |
+| 7 | Generation và citation | Sinh câu trả lời từ context đánh số và ánh xạ `[n]` về chunk | Câu hỏi, contexts | Answer, citation IDs, cited chunks | `backend/newsqa_rag/llm.py` |
+| 8 | Điều phối RAG | Chạy pipeline cố định và ghi trace/thời gian | Câu hỏi và các component đã cấu hình | Full RAG trace | `backend/newsqa_rag/agents/rag_agent.py` |
+| 9 | Evaluation và benchmark | Thu prediction, tính metric, LLM judging và resume | Testset, ground truth, RAG traces | Checkpoint JSONL và report | `backend/newsqa_rag/evaluation/`, `scripts/*benchmark*` |
 
 ### 3.1. Ingestion
 

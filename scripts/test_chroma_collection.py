@@ -12,11 +12,11 @@ import tempfile
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from src.indexing.embeddings import (
+from newsqa_rag.indexing.embeddings import (
     SentenceTransformerEmbeddingFunction,
     get_embedding_function,
 )
-from src.indexing.chroma_store import ChromaStore
+from newsqa_rag.indexing.chroma_store import ChromaStore
 
 TEST_DB_PATH = os.path.join("..", "database", "chroma_test_db")
 COLLECTION_NAME = "test_collection"

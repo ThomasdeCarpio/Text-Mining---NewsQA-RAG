@@ -289,12 +289,9 @@ uses resolved wording, then applies the approved partition to both the
 reviewed-original and resolved scored variants so their question populations
 remain paired. The raw original extraction is not deduplicated.
 
-The complete file-by-file output contract, finalized counts, schemas,
-manifests, and benchmark commands are documented in
-[`final_evaluation_output.md`](final_evaluation_output.md).
-The code and artifact handoff checklist, including archive and reconstruction
-instructions, is documented in
-[`evaluation_dataset_handoff.md`](evaluation_dataset_handoff.md).
+Artifact contracts and metrics are summarized in
+[`evaluation.md`](evaluation.md); runnable benchmark commands are in
+[`benchmarking.md`](benchmarking.md).
 
 ## Reporting
 

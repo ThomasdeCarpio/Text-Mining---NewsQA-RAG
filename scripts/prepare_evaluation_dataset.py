@@ -18,7 +18,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.evaluation.question_review import (
+from newsqa_rag.evaluation.question_review import (
     PROMPT_VERSION,
     build_full_review_packets,
     client_from_environment,
@@ -28,7 +28,7 @@ from src.evaluation.question_review import (
     review_status,
     run_triage,
 )
-from src.evaluation.testset import (
+from newsqa_rag.evaluation.testset import (
     DATASET_SCHEMA_VERSION,
     DEFAULT_DATASET_NAME,
     DEFAULT_DATASET_REVISION,
@@ -41,11 +41,12 @@ from src.evaluation.testset import (
     derive_reviewed_artifacts,
     load_testset,
     map_spans_to_chunks,
+    portable_relpath,
     save_jsonl,
     sha256_file,
     sha256_text,
 )
-from src.ingestion.chunker import get_chunker
+from newsqa_rag.ingestion.chunker import get_chunker
 
 
 DEFAULT_ROOT = PROJECT_ROOT / "data" / "evaluation" / "newsqa_200_11064"
@@ -204,7 +205,7 @@ def _run_triage(args: argparse.Namespace) -> None:
     }
     if Path(args.selection_manifest).exists():
         triage_manifest["selection_manifest"] = {
-            "path": os.path.relpath(args.selection_manifest, PROJECT_ROOT),
+            "path": portable_relpath(args.selection_manifest, PROJECT_ROOT),
             "sha256": sha256_file(args.selection_manifest),
         }
     _write_json(paths["triage_manifest"], triage_manifest)
@@ -283,11 +284,11 @@ def init_review(args: argparse.Namespace) -> None:
     }
     if Path(args.selection_manifest).exists():
         manifest["selection_manifest"] = {
-            "path": os.path.relpath(args.selection_manifest, PROJECT_ROOT),
+            "path": portable_relpath(args.selection_manifest, PROJECT_ROOT),
             "sha256": sha256_file(args.selection_manifest),
         }
     if archive:
-        manifest["legacy_archive"] = os.path.relpath(archive, PROJECT_ROOT)
+        manifest["legacy_archive"] = portable_relpath(archive, PROJECT_ROOT)
     _write_json(paths["review_manifest"], manifest)
     print(f"Full review queue: {paths['review_readable']}")
     print(f"Questions requiring proposals and human decisions: {document['summary']['question_count']}")
@@ -352,9 +353,9 @@ def migrate_review(args: argparse.Namespace) -> None:
         "type": "distractor_only",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "evaluation_payload_sha256": source_hash,
-        "source_root": os.path.relpath(source_root, PROJECT_ROOT),
+        "source_root": portable_relpath(source_root, PROJECT_ROOT),
         "source_selection_manifest": {
-            "path": os.path.relpath(args.source_selection_manifest, PROJECT_ROOT),
+            "path": portable_relpath(args.source_selection_manifest, PROJECT_ROOT),
             "sha256": sha256_file(args.source_selection_manifest),
         },
         "source_review_queue": artifact_record(
@@ -365,7 +366,7 @@ def migrate_review(args: argparse.Namespace) -> None:
             if source_manifest_path.exists()
             else None
         ),
-        "source_audits": os.path.relpath(
+        "source_audits": portable_relpath(
             source_paths["review_readable"].parent / "audits", PROJECT_ROOT
         ),
     }
@@ -382,7 +383,7 @@ def migrate_review(args: argparse.Namespace) -> None:
             "migrated_annotations": len(annotations),
         },
         "selection_manifest": {
-            "path": os.path.relpath(args.selection_manifest, PROJECT_ROOT),
+            "path": portable_relpath(args.selection_manifest, PROJECT_ROOT),
             "sha256": sha256_file(args.selection_manifest),
         },
         "migration": migration,
@@ -543,9 +544,9 @@ def build_baseline(args: argparse.Namespace) -> None:
 
     indexed_count = 0
     if not args.skip_index:
-        from src.indexing.bm25_index import BM25Index
-        from src.indexing.chroma_store import ChromaStore
-        from src.indexing.embeddings import get_embedding_function
+        from newsqa_rag.indexing.bm25_index import BM25Index
+        from newsqa_rag.indexing.chroma_store import ChromaStore
+        from newsqa_rag.indexing.embeddings import get_embedding_function
 
         store = ChromaStore(args.db_path, get_embedding_function(config))
         stats = store.get_collection_stats(collection_name)
@@ -589,19 +590,19 @@ def build_baseline(args: argparse.Namespace) -> None:
         "status": "baseline_ready",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "selection_manifest": {
-            "path": os.path.relpath(args.selection_manifest, PROJECT_ROOT),
+            "path": portable_relpath(args.selection_manifest, PROJECT_ROOT),
             "sha256": sha256_file(args.selection_manifest),
             "selection_sha256": context["selection_hash"],
         },
         "generator": {"git_commit": _git_commit(), "python": platform.python_version()},
         "pipeline": {
-            "config_path": os.path.relpath(args.config, PROJECT_ROOT),
+            "config_path": portable_relpath(args.config, PROJECT_ROOT),
             "config_sha256": context["config_hash"],
             "chunking": config.get("chunking", {}),
             "embedding": config.get("embedding", {}),
         },
         "database": {
-            "path": os.path.relpath(args.db_path, PROJECT_ROOT),
+            "path": portable_relpath(args.db_path, PROJECT_ROOT),
             "collection": context["collection_name"],
             "indexed": not args.skip_index,
             "chunk_count": len(chunks),
@@ -682,8 +683,8 @@ def finalize(args: argparse.Namespace) -> None:
     _verify_artifact(variant_manifest, "chunks", paths["chunks"])
     if variant_manifest.get("database", {}).get("indexed"):
         _verify_artifact(variant_manifest, "bm25", paths["bm25"])
-        from src.indexing.chroma_store import ChromaStore
-        from src.indexing.embeddings import get_embedding_function
+        from newsqa_rag.indexing.chroma_store import ChromaStore
+        from newsqa_rag.indexing.embeddings import get_embedding_function
 
         database = variant_manifest["database"]
         db_path = Path(database["path"])

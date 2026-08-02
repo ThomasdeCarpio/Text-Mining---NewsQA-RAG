@@ -24,13 +24,16 @@ conversation directly to the configured model gateway. `CHAT_MODE=direct`
 always skips retrieval. `CHAT_MODE=rag` requests retrieval but still falls back
 to direct chat when the local RAG pipeline cannot initialize or has no data.
 
+`RAG_DB_PATH` and `RAG_COLLECTION` select the ChromaDB directory and collection
+used by both the retrieval and RAG chat endpoints.
+
 ## Test the chat UI without RAG
 
 Create `.env` from `.env.example`, set a valid XAH key and chat model, then run:
 
 ```powershell
 # Terminal 1
-uvicorn api.main:app --reload --port 8000
+python -m uvicorn newsqa_rag.api.main:app --reload --port 8000
 
 # Terminal 2
 Set-Location ui

@@ -13,14 +13,14 @@ import numpy as np
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.run_benchmark import _write_summary
-from src.evaluation.benchmark_io import (
+from newsqa_rag.evaluation.benchmark_io import (
     atomic_write_json,
     latest_by_question,
     load_jsonl,
     utc_now,
+    write_summary,
 )
-from src.evaluation.metrics import (
+from newsqa_rag.evaluation.metrics import (
     evaluate_citations,
     evaluate_qa,
     evaluate_retrieval,
@@ -260,7 +260,7 @@ def main() -> None:
             handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
     temporary.replace(deterministic_path)
     atomic_write_json(run_dir / "report.json", report)
-    _write_summary(str(run_dir / "report_summary.txt"), report)
+    write_summary(run_dir / "report_summary.txt", report)
     print(f"Report: {run_dir / 'report.json'}")
     print(f"Coverage: {report['coverage']}")
 

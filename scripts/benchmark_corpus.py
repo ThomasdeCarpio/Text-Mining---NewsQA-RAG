@@ -16,17 +16,17 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.evaluation.benchmark_io import atomic_write_json, utc_now
-from src.evaluation.metrics import (
+from newsqa_rag.evaluation.benchmark_io import atomic_write_json, utc_now
+from newsqa_rag.evaluation.metrics import (
     count_chunk_tokens,
     deduplication_rate,
     evaluate_chunking,
     semantic_integrity,
 )
-from src.evaluation.testset import canonical_json, sha256_file
-from src.indexing.chroma_store import ChromaStore
-from src.indexing.embeddings import get_embedding_function
-from src.ingestion.chunker import load_chunks
+from newsqa_rag.evaluation.testset import canonical_json, sha256_file
+from newsqa_rag.indexing.chroma_store import ChromaStore
+from newsqa_rag.indexing.embeddings import get_embedding_function
+from newsqa_rag.ingestion.chunker import load_chunks
 
 REQUIRED_METADATA = {
     "article_id",

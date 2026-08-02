@@ -27,8 +27,8 @@ import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.ingestion.chunker import get_chunker
-from src.evaluation.testset import NewsQATestSetBuilder, load_testset
+from newsqa_rag.ingestion.chunker import get_chunker
+from newsqa_rag.evaluation.testset import NewsQATestSetBuilder, load_testset
 
 
 def main():

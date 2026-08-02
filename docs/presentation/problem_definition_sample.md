@@ -153,15 +153,15 @@ the current evaluation target.
 
 | No. | Module | Responsibility | Principal implementation |
 |---:|---|---|---|
-| 1 | Configuration and artifact governance | Load configuration, resolve paths, fingerprint corpus settings, and reject incompatible artifacts | `configs/setting.py` |
-| 2 | Ingestion and chunking | Extract article text and metadata, assign stable IDs, and split articles into overlapping passages | `src/ingestion/` |
-| 3 | Indexing | Embed chunks, persist the Chroma collection, and construct the BM25 index | `src/indexing/` |
-| 4 | Retrieval | Run dense and sparse searches and combine rankings with reciprocal rank fusion | `src/retrieval/` |
-| 5 | Reranking | Transform a retrieved candidate ranking into the context ranking supplied to generation | `src/retrieval/reranker.py` |
-| 6 | Generation and citation policy | Generate an evidence-constrained answer, repair invalid citation markers once, and abstain when validation fails | `src/llm.py`, `src/agents/rag_agent.py` |
-| 7 | RAG coordination | Construct configured components and execute retrieve, rerank, generate, validate, and trace | `src/pipeline.py`, `RAGAgent` |
-| 8 | Service and presentation | Stream pipeline events, store chat history, expose HTTP/CLI interfaces, and display answers and references | `src/services/`, `api/`, `scripts/query.py`, `ui/` |
-| 9 | Evaluation | Prepare NewsQA ground truth and compute retrieval and answer-quality metrics | `src/evaluation/`, `scripts/run_benchmark.py` |
+| 1 | Configuration and artifact governance | Load configuration, resolve paths, fingerprint corpus settings, and reject incompatible artifacts | `configs/config.yaml`, variant manifests |
+| 2 | Ingestion and chunking | Extract article text and metadata, assign stable IDs, and split articles into overlapping passages | `backend/newsqa_rag/ingestion/` |
+| 3 | Indexing | Embed chunks, persist the Chroma collection, and construct the BM25 index | `backend/newsqa_rag/indexing/` |
+| 4 | Retrieval | Run dense and sparse searches and combine rankings with reciprocal rank fusion | `backend/newsqa_rag/retrieval/` |
+| 5 | Reranking | Transform a retrieved candidate ranking into the context ranking supplied to generation | `backend/newsqa_rag/retrieval/reranker.py` |
+| 6 | Generation and citation policy | Generate an evidence-constrained answer, repair invalid citation markers once, and abstain when validation fails | `backend/newsqa_rag/llm.py`, `backend/newsqa_rag/agents/rag_agent.py` |
+| 7 | RAG coordination | Construct configured components and execute retrieve, rerank, generate, validate, and trace | `backend/newsqa_rag/pipeline.py`, `RAGAgent` |
+| 8 | Service and presentation | Stream pipeline events, store chat history, expose HTTP/CLI interfaces, and display answers and references | `backend/newsqa_rag/services/`, `backend/newsqa_rag/api/`, `scripts/query.py`, `frontend/` |
+| 9 | Evaluation | Prepare NewsQA ground truth and compute retrieval and answer-quality metrics | `backend/newsqa_rag/evaluation/`, `scripts/run_benchmark.py` |
 
 The name `RAGAgent` is retained in the code for compatibility, but its current
 behavior is a deterministic pipeline. It does not autonomously select tools.

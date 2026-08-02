@@ -13,11 +13,16 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.evaluation.question_dedup import (
+from newsqa_rag.evaluation.question_dedup import (
     DEDUP_APPROVAL_SCHEMA_VERSION,
     validate_cluster_decisions,
 )
-from src.evaluation.testset import DatasetBuildError, load_testset, sha256_file
+from newsqa_rag.evaluation.testset import (
+    DatasetBuildError,
+    load_testset,
+    portable_relpath,
+    sha256_file,
+)
 
 
 DEFAULT_PROPOSAL = PROJECT_ROOT / "evaluation/question_dedup/newsqa_200_11064.semantic_clusters.json"
@@ -63,11 +68,11 @@ def main() -> int:
     ]
     approval = {
         "schema_version": DEDUP_APPROVAL_SCHEMA_VERSION,
-        "proposal_path": os.path.relpath(args.proposal.resolve(), PROJECT_ROOT),
+        "proposal_path": portable_relpath(args.proposal, PROJECT_ROOT),
         "proposal_sha256": sha256_file(args.proposal),
         "base_testset_sha256": sha256_file(args.resolved),
         "reviewed_report": {
-            "path": os.path.relpath(args.reviewed_report.resolve(), PROJECT_ROOT),
+            "path": portable_relpath(args.reviewed_report, PROJECT_ROOT),
             "sha256": sha256_file(args.reviewed_report),
         },
         "human_review": {

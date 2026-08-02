@@ -13,8 +13,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.evaluation.question_review import FULL_REVIEW_ISSUES, FULL_REVIEW_LABELS
-from src.evaluation.testset import DatasetBuildError, sha256_file
+from newsqa_rag.evaluation.question_review import FULL_REVIEW_ISSUES, FULL_REVIEW_LABELS
+from newsqa_rag.evaluation.testset import DatasetBuildError, sha256_file
 
 
 DEFAULT_ROOT = PROJECT_ROOT / "data" / "evaluation" / "newsqa_200_11064"

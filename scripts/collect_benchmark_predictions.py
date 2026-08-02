@@ -15,9 +15,9 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.run_benchmark import _apply_manifest_preflight
-from src.agents.rag_agent import RAGAgent
-from src.evaluation.benchmark_io import (
+from newsqa_rag.agents.rag_agent import RAGAgent
+from newsqa_rag.evaluation.benchmark_io import (
+    apply_manifest_preflight,
     append_jsonl,
     atomic_write_json,
     latest_by_question,
@@ -26,14 +26,14 @@ from src.evaluation.benchmark_io import (
     stable_hash,
     utc_now,
 )
-from src.evaluation.testset import load_testset, sha256_file
-from src.indexing.chroma_store import ChromaStore
-from src.indexing.embeddings import get_embedding_function
-from src.ingestion.chunker import load_chunks
-from src.llm import OpenAILLM, get_llm
-from src.model_gateway import DEEPSEEK_BASE_URL, load_generation_client_settings
-from src.retrieval.reranker import get_reranker
-from src.retrieval.retriever_factory import get_retriever
+from newsqa_rag.evaluation.testset import load_testset, sha256_file
+from newsqa_rag.indexing.chroma_store import ChromaStore
+from newsqa_rag.indexing.embeddings import get_embedding_function
+from newsqa_rag.ingestion.chunker import load_chunks
+from newsqa_rag.llm import OpenAILLM, get_llm
+from newsqa_rag.model_gateway import DEEPSEEK_BASE_URL, load_generation_client_settings
+from newsqa_rag.retrieval.reranker import get_reranker
+from newsqa_rag.retrieval.retriever_factory import get_retriever
 
 
 def parse_args() -> argparse.Namespace:
@@ -69,10 +69,10 @@ def parse_args() -> argparse.Namespace:
 def _implementation_hash() -> str:
     paths = [
         Path(__file__),
-        PROJECT_ROOT / "src/agents/rag_agent.py",
-        PROJECT_ROOT / "src/llm.py",
-        PROJECT_ROOT / "src/retrieval/retriever_factory.py",
-        PROJECT_ROOT / "src/retrieval/reranker.py",
+        PROJECT_ROOT / "backend/newsqa_rag/agents/rag_agent.py",
+        PROJECT_ROOT / "backend/newsqa_rag/llm.py",
+        PROJECT_ROOT / "backend/newsqa_rag/retrieval/retriever_factory.py",
+        PROJECT_ROOT / "backend/newsqa_rag/retrieval/reranker.py",
     ]
     return stable_hash({str(path.relative_to(PROJECT_ROOT)): sha256_file(path) for path in paths})
 
@@ -101,7 +101,7 @@ def main() -> None:
     with config_path.open(encoding="utf-8") as handle:
         original_config = yaml.safe_load(handle) or {}
 
-    _apply_manifest_preflight(args, original_config)
+    apply_manifest_preflight(args, original_config)
     config = copy.deepcopy(original_config)
     config.setdefault("retrieval", {}).setdefault("reranker", {}).update(
         {"type": args.reranker, "model": args.reranker_model}

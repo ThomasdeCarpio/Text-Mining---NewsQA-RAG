@@ -1,3 +1,5 @@
+-e .
+
 # Core Frameworks
 langchain
 langchain-openai

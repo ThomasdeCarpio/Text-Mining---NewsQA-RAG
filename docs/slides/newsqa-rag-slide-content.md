@@ -413,8 +413,8 @@ Thiết lập: Resolved + Hybrid + Cross-Encoder + DeepSeek V4 Flash
 | Corpus và chunk diagnostics | `newsqa_200_11064_corpus.json` |
 | 12 retrieval benchmark | `reports/benchmarks/{original,resolved}_*/report.json` |
 | End-to-end benchmark | Full resolved report và attempts |
-| Công thức metric | `src/evaluation/metrics.py` |
-| Ánh xạ evidence → chunk ID | `src/evaluation/testset.py` |
+| Công thức metric | `backend/newsqa_rag/evaluation/metrics.py` |
+| Ánh xạ evidence → chunk ID | `backend/newsqa_rag/evaluation/testset.py` |
 | Mô tả dataset/evaluation | `docs/evaluation_dataset.md`, `docs/benchmarking.md` |
 
 # Các lưu ý bắt buộc khi trình bày

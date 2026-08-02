@@ -5,8 +5,8 @@ from __future__ import annotations
 import unittest
 from unittest.mock import Mock, patch
 
-from src.services import chat_service
-from src.services.types import ChatMessage
+from newsqa_rag.services import chat_service
+from newsqa_rag.services.types import ChatMessage
 
 
 def _settings(mode: chat_service.ChatMode = "auto") -> chat_service.ChatSettings:

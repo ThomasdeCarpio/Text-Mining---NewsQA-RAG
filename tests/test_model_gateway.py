@@ -19,9 +19,9 @@ except ModuleNotFoundError:
         Embeddings=list,
     )
 
-from src.indexing.embeddings import OpenAIEmbeddingFunction
-from src.llm import OpenAILLM
-from src.model_gateway import (
+from newsqa_rag.indexing.embeddings import OpenAIEmbeddingFunction
+from newsqa_rag.llm import OpenAILLM
+from newsqa_rag.model_gateway import (
     create_openai_client,
     load_generation_client_settings,
     load_openai_client_settings,
@@ -85,7 +85,7 @@ class ModelGatewaySettingsTests(unittest.TestCase):
 class ModelClientIntegrationTests(unittest.TestCase):
     """Verify LLM and embedding wrappers use the shared gateway factory."""
 
-    @patch("src.llm.create_generation_client")
+    @patch("newsqa_rag.llm.create_generation_client")
     def test_llm_uses_shared_client_factory(self, client_factory):
         """Create the chat client lazily and reuse it across calls."""
 
@@ -98,7 +98,7 @@ class ModelClientIntegrationTests(unittest.TestCase):
         client_factory.assert_called_once_with("gpt-4o-mini")
         self.assertEqual(llm._effective_model, "effective-chat")
 
-    @patch("src.llm.create_generation_client")
+    @patch("newsqa_rag.llm.create_generation_client")
     def test_llm_generation_preserves_model_configuration(self, client_factory):
         """Send configured model controls through the shared gateway client."""
 
@@ -122,7 +122,7 @@ class ModelClientIntegrationTests(unittest.TestCase):
             max_tokens=321,
         )
 
-    @patch("src.llm.create_generation_client")
+    @patch("newsqa_rag.llm.create_generation_client")
     def test_llm_can_defer_output_limit_to_reasoning_model(self, client_factory):
         """Omit max_tokens when the gateway should choose a model-appropriate limit."""
 
@@ -142,7 +142,7 @@ class ModelClientIntegrationTests(unittest.TestCase):
             temperature=0.0,
         )
 
-    @patch("src.indexing.embeddings.create_openai_client")
+    @patch("newsqa_rag.indexing.embeddings.create_openai_client")
     def test_embedding_batches_preserve_order_and_request_dimensions(self, client_factory):
         """Batch large embedding inputs without reordering returned vectors."""
 

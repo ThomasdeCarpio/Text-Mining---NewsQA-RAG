@@ -8,8 +8,8 @@ from unittest.mock import Mock, patch
 
 from fastapi.testclient import TestClient
 
-from api.main import app
-from src.services import chat_service, retrieval_service
+from newsqa_rag.api.main import app
+from newsqa_rag.services import chat_service, retrieval_service
 
 
 class OptionalRAGApiTests(unittest.TestCase):
@@ -34,6 +34,22 @@ class OptionalRAGApiTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
+
+    def test_retrieval_configuration_comes_from_environment(self):
+        """Use one database path and collection setting across API flows."""
+
+        with patch.dict(
+            "os.environ",
+            {
+                "RAG_DB_PATH": "data/custom_chroma",
+                "RAG_COLLECTION": "custom_news",
+            },
+        ):
+            self.assertEqual(
+                retrieval_service.get_database_path(),
+                retrieval_service.PROJECT_ROOT / "data" / "custom_chroma",
+            )
+            self.assertEqual(retrieval_service.get_collection_name(), "custom_news")
 
     def test_chat_cors_accepts_both_local_vite_addresses(self):
         """Allow the UI to call chat when Vite is opened by hostname or IP address."""

@@ -49,7 +49,7 @@ class NewsChunkMetadata(TypedDict):
 
 ## Chunking Strategies
 
-The chunking strategy is **configurable** via `configs/config.yaml`. The `src/ingestion/chunker.py` module must support swapping strategies without changing downstream code.
+The chunking strategy is **configurable** via `configs/config.yaml`. The `backend/newsqa_rag/ingestion/chunker.py` module must support swapping strategies without changing downstream code.
 
 ### Supported Strategies
 
@@ -127,7 +127,7 @@ configuration = {
 
 **Docs:** https://docs.trychroma.com/docs/embeddings/embedding-functions
 
-**Implementation:** `src/indexing/embeddings.py`
+**Implementation:** `backend/newsqa_rag/indexing/embeddings.py`
 
 The embedding function is configurable between OpenAI API and local Sentence-Transformers models via `configs/config.yaml`.
 

@@ -6,10 +6,10 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, ".."))
 sys.path.append(project_root)
 
-from src.ingestion.cleaner import NewsCleaner
-from src.ingestion.chunker import TextChunker
-from src.indexing.embeddings import get_embedding_function  
-from src.indexing.chroma_store import ChromaStore
+from newsqa_rag.ingestion.cleaner import NewsCleaner
+from newsqa_rag.ingestion.chunker import TextChunker
+from newsqa_rag.indexing.embeddings import get_embedding_function
+from newsqa_rag.indexing.chroma_store import ChromaStore
 
 load_dotenv()
 

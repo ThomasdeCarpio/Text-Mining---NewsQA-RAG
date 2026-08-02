@@ -17,12 +17,17 @@ import argparse
 import csv
 import json
 import os
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Iterable
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from newsqa_rag.evaluation.testset import portable_relpath
+
 DEFAULT_INPUT = (
     PROJECT_ROOT
     / "data"
@@ -98,10 +103,7 @@ def _load_review_csv(path: Path, question_ids: set[str]) -> dict[str, dict]:
 
 
 def _relative_display(path: Path) -> str:
-    try:
-        return str(path.resolve().relative_to(PROJECT_ROOT))
-    except ValueError:
-        return str(path.resolve())
+    return portable_relpath(path, PROJECT_ROOT)
 
 
 def build_readable_queue(

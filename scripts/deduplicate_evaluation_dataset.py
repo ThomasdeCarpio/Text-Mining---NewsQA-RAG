@@ -16,17 +16,18 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.evaluation.question_dedup import (
+from newsqa_rag.evaluation.question_dedup import (
     DEDUP_APPROVAL_SCHEMA_VERSION,
     DEDUP_SCHEMA_VERSION,
     derive_deduplicated_artifacts,
     validate_cluster_decisions,
     validate_human_approval,
 )
-from src.evaluation.testset import (
+from newsqa_rag.evaluation.testset import (
     DatasetBuildError,
     artifact_record,
     load_testset,
+    portable_relpath,
     save_jsonl,
     sha256_file,
 )
@@ -196,18 +197,18 @@ def build(args: argparse.Namespace) -> None:
             "python": platform.python_version(),
         },
         "parent_manifest": {
-            "path": os.path.relpath(base_manifest_path, PROJECT_ROOT),
+            "path": portable_relpath(base_manifest_path, PROJECT_ROOT),
             "sha256": sha256_file(base_manifest_path),
         },
         "cluster_decisions": {
             "schema_version": DEDUP_SCHEMA_VERSION,
-            "path": os.path.relpath(decisions_path, PROJECT_ROOT),
+            "path": portable_relpath(decisions_path, PROJECT_ROOT),
             "sha256": sha256_file(decisions_path),
             "review": decisions.get("review", {}),
         },
         "human_approval": {
             "schema_version": DEDUP_APPROVAL_SCHEMA_VERSION,
-            "path": os.path.relpath(approval_path, PROJECT_ROOT),
+            "path": portable_relpath(approval_path, PROJECT_ROOT),
             "sha256": sha256_file(approval_path),
             "review": approval["human_review"],
         },

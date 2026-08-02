@@ -15,7 +15,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.evaluation.benchmark_io import (
+from newsqa_rag.evaluation.benchmark_io import (
     append_jsonl,
     latest_by_question,
     load_jsonl,
@@ -23,7 +23,7 @@ from src.evaluation.benchmark_io import (
     stable_hash,
     utc_now,
 )
-from src.evaluation.metrics import evaluate_ragas_rows
+from newsqa_rag.evaluation.metrics import evaluate_ragas_rows
 
 DEFAULT_METRICS = [
     "faithfulness",

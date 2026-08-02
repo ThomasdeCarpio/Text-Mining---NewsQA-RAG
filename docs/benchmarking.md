@@ -178,18 +178,18 @@ resumes the cache; add `--retry-failed` after a transient provider failure.
 The separate corpus report contains chunking, metadata, duplicate, collection
 count, and index self-retrieval diagnostics.
 
-Use `notebooks/05_run_final_benchmark.ipynb` to execute corpus checks,
+Use `experiments/notebooks/05_run_final_benchmark.ipynb` to execute corpus checks,
 retrieval experiments, generation, scoring, and judging through the same
 resumable CLI commands. Its cost-bearing cells are disabled by default. Use
-`notebooks/04_final_benchmark_analysis.ipynb` only to compare completed reports;
+`experiments/notebooks/04_final_benchmark_analysis.ipynb` only to compare completed reports;
 that notebook does not query the pipeline or spend API credit.
 
 Install and open the optional notebook environment with:
 
 ```bash
-.venv/bin/python -m pip install -r requirements-notebook.txt
+.venv/bin/python -m pip install -r experiments/requirements-notebook.txt
 .venv/bin/python -m ipykernel install --user --name newsqa-rag --display-name "NewsQA RAG"
-.venv/bin/jupyter lab notebooks/05_run_final_benchmark.ipynb
+.venv/bin/jupyter lab experiments/notebooks/05_run_final_benchmark.ipynb
 ```
 
 Select the `NewsQA RAG` kernel when Jupyter opens.
