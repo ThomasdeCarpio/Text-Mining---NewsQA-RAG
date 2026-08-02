@@ -13,7 +13,7 @@ Usage:
     python scripts/build_mini_testset.py --n-articles 15 --output data/testset_mini.jsonl \\
         --build-collection --collection newsqa_mini --db-path data/chroma_db
     python scripts/run_benchmark.py --retriever dense --testset data/testset_mini.jsonl \\
-        --collection newsqa_mini --db-path data/chroma_db --report-dir reports/mini
+        --collection newsqa_mini --db-path data/chroma_db --report-dir outputs/benchmarks/mini
 
 Args:
     --n-articles        Number of articles to select (default: 15)
@@ -96,7 +96,7 @@ def main():
         print(f"\nReady. Score it with:\n"
               f"  python scripts/run_benchmark.py --retriever dense "
               f"--testset {args.output} --collection {args.collection} "
-              f"--db-path {args.db_path} --report-dir reports/mini")
+              f"--db-path {args.db_path} --report-dir outputs/benchmarks/mini")
 
 
 if __name__ == "__main__":

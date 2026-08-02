@@ -1,125 +1,145 @@
-# Run and inspect experiments
+# Test tính năng bằng experiment
 
-An experiment YAML defines a locked dataset/index pair and a matrix of retrieval
-settings. CLI and dashboard use the same runner and artifacts.
+## Chọn đúng việc cần làm
 
-## Quick start in the dashboard
+| Trường hợp | Việc cần làm |
+| --- | --- |
+| Đổi retriever, reranker, top K hoặc model | Tạo experiment YAML mới |
+| Đổi embedding/chunking và có index mới | Khai báo thêm index trong YAML |
+| Chỉ muốn xem kết quả cũ | Bấm **Load saved results** |
+| Thay câu hỏi, đáp án đúng hoặc corpus | Tạo evaluation dataset mới |
 
-1. Start the API and frontend.
-2. Sign in as `admin` and open **Evaluation Desk**.
-3. Select an experiment.
-4. Use **Preview config** to inspect its partitions and run matrix.
-5. Use **Run / resume** for missing work, or **Load saved results** for an existing report.
+Phần lớn feature mới thuộc hai dòng đầu. Không tạo lại dataset nếu ground truth
+không thay đổi.
 
-The bundled `newsqa_retrieval_smoke.yaml` expands to eight retrieval-only runs:
+## Tạo experiment mới
 
-```text
-2 question variants x 2 retrievers x 2 rerankers = 8 runs
+### 1. Copy smoke config
+
+```powershell
+Copy-Item configs/experiments/newsqa_retrieval_smoke.yaml `
+  configs/experiments/reranker_v2.yaml
 ```
 
-Each run samples 10 questions from the locked 50-article development partition.
-It is a UI/pipeline smoke test, not a final benchmark.
+Dashboard tự nhận mọi file `.yaml` trong `configs/experiments/`.
 
-### Dashboard controls
+### 2. Đặt ID mới
 
-| Control | What it does | Model work |
-| --- | --- | --- |
-| Preview config | Validates and displays articles, questions, and matrix | None |
-| Run / resume | Executes incomplete runs and reuses successful questions | Only missing work |
-| Rebuild summary | Recreates comparison files from completed artifacts | None |
-| Load saved results | Reads existing comparison and per-run reports | None |
+```yaml
+experiment:
+  id: reranker-v2
+  name: Baseline vs reranker v2
+  description: Kiểm tra reranker mới trên development set.
+```
 
-A completed experiment is immutable. For a genuinely fresh run, copy its YAML
-and change `experiment.id`; do not delete or overwrite the old result.
+`experiment.id` phải mới vì nó cũng là tên thư mục kết quả. Không tái sử dụng
+ID cũ cho một phép thử khác.
 
-## Read the results
+### 3. Chỉ so sánh một thay đổi
 
-Choose a run in **Run being viewed**. Metric cards and Failure Analysis always
-refer to that exact run. The bar chart compares every run in the selected
-experiment.
+Giữ baseline trong `fixed`; đặt đúng yếu tố cần so sánh trong `matrix`:
 
-| Metric | Meaning |
-| --- | --- |
-| MRR@5 | Reciprocal rank of the first gold chunk in the top five; higher is better |
-| NDCG@5 | Rewards gold chunks appearing near the top; higher is better |
-| Recall@5 | Fraction of gold chunks present in the top five |
-| P95 latency | 95% of questions completed within this time, including cold starts |
-| Coverage | Fraction of expected questions that completed successfully |
-| Run time | Wall-clock time for the whole configuration |
+```yaml
+fixed:
+  index: baseline
+  partition: development
+  variant: original
+  retriever: hybrid
+  retrieval_only: true
+  top_k: 10
+  rerank_top_n: 5
 
-`★` marks a run that is not dominated on both MRR@5 and P95 latency.
+matrix:
+  reranker: [noop, cross-encoder]
+```
 
-### Interpret failures correctly
+Ví dụ này tạo 2 run. Nếu để `variant`, `retriever` và `reranker` đều có 2 giá
+trị thì sẽ tạo `2 x 2 x 2 = 8` run.
 
-`No ground-truth chunk in reranked top 5` means the gold chunk was not in the
-final evaluated top five. It does not by itself mean the article or chunk is
-missing from the database.
+Các trục hiện được hỗ trợ: `index`, `variant`, `partition`, `retriever`,
+`reranker`, `top_k`, `rerank_top_n`, `retrieval_only`, `generator_model` và
+`reranker_model`.
 
-For example, a retriever may find the gold chunk at rank 9:
-
-- `noop` keeps only the configured top five, so the question fails Recall@5;
-- a cross-encoder may move rank 9 to rank 3, so the same question passes.
-
-Check corpus integrity and collection count before treating retrieval failures
-as data-loading failures.
-
-## CLI equivalent
+### 4. Chạy thử cấu hình trước
 
 ```bash
-# Validate and print commands only
-python scripts/run_experiment.py configs/experiments/newsqa_retrieval_smoke.yaml --dry-run
-
-# Run or resume
-python scripts/run_experiment.py configs/experiments/newsqa_retrieval_smoke.yaml
-
-# Rebuild comparison.json and comparison.csv
-python scripts/summarize_experiments.py reports/experiments/newsqa-retrieval-smoke
+python scripts/run_experiment.py configs/experiments/reranker_v2.yaml --dry-run
 ```
 
-## Main YAML fields
+Lệnh này chỉ validate và in các run, không load model. Kiểm tra số run trước khi
+chạy thật để tránh vô tình tạo một matrix quá lớn.
 
-| Section | Meaning |
+### 5. Chạy và xem kết quả
+
+```bash
+python scripts/run_experiment.py configs/experiments/reranker_v2.yaml
+```
+
+Hoặc mở **Evaluation Desk**, chọn file, bấm **Preview config**, rồi
+**Run / resume**. Khi xong, chọn từng run để xem metric và Failure Analysis.
+
+## Test loại feature nào?
+
+### Retriever/reranker mới
+
+Feature phải được CLI `collect_benchmark_predictions.py` nhận trước. Sau đó thêm
+tên của nó vào `matrix`. Luôn để baseline và candidate trong cùng experiment.
+
+### Embedding, chunking hoặc index mới
+
+Build index + variant manifest mới, rồi đăng ký cả hai dưới
+`dataset.indexes` và so sánh bằng:
+
+```yaml
+matrix:
+  index: [baseline, candidate]
+```
+
+Mỗi index phải trỏ đến đúng config, manifest và testset của chính nó.
+
+### Generator model mới
+
+Đặt `retrieval_only: false`, thêm `generator_model` vào `matrix`, và bật
+`judge.enabled` nếu cần RAGAS. Judge model nên khác generator model.
+
+### Thay đổi code không có trục YAML
+
+Chạy baseline trước, implement feature, rồi tạo experiment ID mới và chạy lại.
+`environment.json` lưu Git commit để biết mỗi kết quả đến từ phiên bản code nào.
+Chỉ thêm một trục YAML mới khi feature đó thực sự cần được chạy lặp lại.
+
+## Đọc dashboard
+
+| Thành phần | Ý nghĩa |
 | --- | --- |
-| `dataset.indexes` | Config, variant manifest, and testsets for each index |
-| `fixed` | Controls shared by every run |
-| `matrix` | Values to expand: variant, retriever, reranker, K, model, partition |
-| `runtime` | Retry count, progress, and optional smoke `n_eval` |
-| `judge` | Optional LLM judge provider/model |
-| `summary` | Metrics used for confidence intervals, paired delta, and Pareto comparison |
+| MRR@5 | Gold chunk đầu tiên đứng càng cao càng tốt |
+| NDCG@5 | Thưởng khi gold chunks nằm gần đầu danh sách |
+| Recall@5 | Tỷ lệ gold chunks xuất hiện trong top 5 |
+| P95 latency | 95% câu hỏi hoàn thành nhanh hơn thời gian này |
+| Coverage | Tỷ lệ câu hỏi chạy thành công |
+| Failure Analysis | Câu hỏi thất bại của run đang chọn và lý do |
 
-Keep the development article count and seed fixed while tuning. Open the
-final-test partition only after selecting and locking the final configuration.
+`No ground-truth chunk in reranked top 5` chỉ nghĩa là gold chunk không nằm
+trong top 5 cuối cùng; không tự động có nghĩa database thiếu dữ liệu.
 
-## Artifacts and resume
+## Nút trên dashboard
 
-Results live under `reports/experiments/<experiment-id>/`:
+| Nút | Làm gì | Có chạy model? |
+| --- | --- | --- |
+| Preview config | Validate và hiển thị matrix | Không |
+| Run / resume | Chạy phần còn thiếu | Có |
+| Rebuild summary | Tính lại comparison từ report có sẵn | Không |
+| Load saved results | Đọc kết quả cũ | Không |
 
-```text
-registry.json                 run status and wall time
-comparison.json / .csv       cross-run comparison
-partitions/                   locked article and question IDs
-<run-id>/report.json          aggregate metrics and failures
-<run-id>/predictions.jsonl    generated/retrieval results
-<run-id>/retrievals.jsonl     reusable retrieval traces
-<run-id>/environment.json     Git, Python, package, and hardware provenance
-```
+Kết quả nằm ở `outputs/experiments/<experiment.id>/`. Dừng giữa chừng không làm
+mất các câu đã hoàn thành; chạy lại cùng YAML sẽ resume.
 
-Stopping the API interrupts the active subprocess, but saved JSONL records
-remain reusable. Start the API again and choose **Run / resume**.
-
-## Hugging Face downloads
-
-Each run uses an isolated Python subprocess. Sentence Transformers may check
-Hugging Face and reload cached model weights for each subprocess. Usually only
-the first request downloads the model; later runs use the local cache.
-
-After all required models are cached, network checks can be disabled before
-starting the API or CLI:
+Nếu Hugging Face model đã được cache, có thể tắt network check trước khi chạy:
 
 ```powershell
 $env:HF_HUB_OFFLINE="1"
 $env:TRANSFORMERS_OFFLINE="1"
 ```
 
-Do not enable offline mode before the embedding and cross-encoder models have
-been downloaded at least once.
+Chỉ tạo dataset mới khi corpus/ground truth thay đổi; xem
+[evaluation_dataset.md](evaluation_dataset.md).

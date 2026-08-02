@@ -6,8 +6,8 @@ for comparisons.
 ## Retrieval-only run
 
 ```bash
-python scripts/collect_benchmark_predictions.py --retriever hybrid --reranker noop --retrieval-only --testset data/evaluation/newsqa_200_11064/final/testset_reviewed_original.jsonl --variant-manifest evaluation/manifests/newsqa_200_11064.variant.json --run-dir reports/benchmarks/hybrid_noop --progress
-python scripts/score_benchmark_predictions.py --run-dir reports/benchmarks/hybrid_noop
+python scripts/collect_benchmark_predictions.py --retriever hybrid --reranker noop --retrieval-only --testset data/evaluation/newsqa_200_11064/final/testset_reviewed_original.jsonl --variant-manifest evaluation/manifests/newsqa_200_11064.variant.json --run-dir outputs/benchmarks/hybrid_noop --progress
+python scripts/score_benchmark_predictions.py --run-dir outputs/benchmarks/hybrid_noop
 ```
 
 `collect` validates the manifest before loading models. Repeating the same
@@ -27,15 +27,15 @@ Remove `--retrieval-only` and optionally add `--generator-model MODEL`. Provider
 credentials come from `.env`; they are never written to reports.
 
 ```bash
-python scripts/collect_benchmark_predictions.py --retriever hybrid --reranker cross-encoder --generator-model gpt-4o-mini --testset data/evaluation/newsqa_200_11064/final/testset_resolved.jsonl --variant-manifest evaluation/manifests/newsqa_200_11064.variant.json --run-dir reports/benchmarks/resolved_rag --progress
-python scripts/score_benchmark_predictions.py --run-dir reports/benchmarks/resolved_rag
+python scripts/collect_benchmark_predictions.py --retriever hybrid --reranker cross-encoder --generator-model gpt-4o-mini --testset data/evaluation/newsqa_200_11064/final/testset_resolved.jsonl --variant-manifest evaluation/manifests/newsqa_200_11064.variant.json --run-dir outputs/benchmarks/resolved_rag --progress
+python scripts/score_benchmark_predictions.py --run-dir outputs/benchmarks/resolved_rag
 ```
 
 ## Optional LLM judge
 
 ```bash
-python scripts/judge_benchmark_predictions.py --run-dir reports/benchmarks/resolved_rag --judge-provider openai --judge-model gpt-4.1-mini --n-eval 50 --progress
-python scripts/score_benchmark_predictions.py --run-dir reports/benchmarks/resolved_rag
+python scripts/judge_benchmark_predictions.py --run-dir outputs/benchmarks/resolved_rag --judge-provider openai --judge-model gpt-4.1-mini --n-eval 50 --progress
+python scripts/score_benchmark_predictions.py --run-dir outputs/benchmarks/resolved_rag
 ```
 
 Use a judge model different from the generator. The judge reads cached
@@ -46,5 +46,5 @@ predictions and can resume independently.
 Run once before a final benchmark:
 
 ```bash
-python scripts/benchmark_corpus.py --variant-manifest evaluation/manifests/newsqa_200_11064.variant.json --output reports/benchmarks/corpus.json
+python scripts/benchmark_corpus.py --variant-manifest evaluation/manifests/newsqa_200_11064.variant.json --output outputs/benchmarks/corpus.json
 ```

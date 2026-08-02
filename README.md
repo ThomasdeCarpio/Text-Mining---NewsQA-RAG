@@ -1,87 +1,103 @@
 # NewsQA RAG
 
-Question answering over the NewsQA/CNN corpus with dense, BM25, and hybrid
-retrieval, optional cross-encoder reranking, cited answers, and reproducible
-evaluation experiments.
+Hệ thống hỏi đáp trên NewsQA/CNN: tìm kiếm dense/BM25/hybrid, rerank,
+sinh câu trả lời có trích dẫn và so sánh các cấu hình bằng experiment.
 
-## Setup
+## Bắt đầu từ đâu?
 
-Python 3.11+ and Node.js 20+ are recommended.
+| Bạn muốn làm gì? | Đọc/chạy ở đâu? |
+| --- | --- |
+| Chạy web app | Phần **Chạy ứng dụng** bên dưới |
+| Test một retriever, reranker hoặc model mới | [Hướng dẫn experiment](docs/experiments.md) |
+| Hiểu MRR, NDCG, Recall và failure | [Metrics và kết quả](docs/evaluation.md) |
+| Tạo bộ câu hỏi/ground truth mới | [Tạo evaluation dataset](docs/evaluation_dataset.md) |
+| Chạy thủ công một cấu hình | [Benchmark CLI](docs/benchmarking.md) |
+
+Điểm dễ nhầm nhất:
+
+- **evaluation dataset** là bộ câu hỏi + đáp án/chunk đúng;
+- **experiment** là một phép so sánh các cấu hình trên cùng dataset;
+- **run** là một cấu hình cụ thể trong experiment;
+- **report** là kết quả đã sinh ra sau khi run.
+
+Test tính năng mới thường chỉ cần tạo **experiment YAML mới**, không cần tạo
+dataset mới.
+
+## Cài đặt
+
+Khuyến nghị Python 3.11+ và Node.js 20+.
 
 ```bash
 python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-Copy `.env.example` to `.env`. BM25 needs no API key; dense retrieval downloads
-its Sentence Transformer model on first use.
+Copy `.env.example` thành `.env`. Dense retrieval tải Sentence Transformer ở
+lần dùng đầu tiên; BM25 không cần API key.
 
-## Run the app
+## Chạy ứng dụng
 
 ```bash
-# Terminal 1: http://localhost:8000
+# Terminal 1: API tại http://localhost:8000
 python -m uvicorn newsqa_rag.api.main:app --reload --port 8000
 
-# Terminal 2: http://localhost:5173
+# Terminal 2: UI tại http://localhost:5173
 cd frontend
 npm install
 npm run dev
 ```
 
-Demo admin login: `admin` / `admin123`.
+Tài khoản demo: `admin` / `admin123`.
 
-## Evaluation
+## Test nhanh một tính năng mới
 
-```text
-experiment YAML
-  -> locked testset + matching index manifest
-  -> collect retrieval/generation traces (resumable)
-  -> score deterministic metrics (no API calls)
-  -> judge with RAGAS (optional, resumable)
-  -> compare runs in CLI or Evaluation Desk
+```powershell
+Copy-Item configs/experiments/newsqa_retrieval_smoke.yaml `
+  configs/experiments/my_feature.yaml
 ```
 
-Validate the bundled smoke matrix without loading models:
+Trong file mới, đổi `experiment.id`, giữ baseline trong `fixed`, chỉ đặt yếu tố
+cần so sánh trong `matrix`. Sau đó:
 
 ```bash
-python scripts/run_experiment.py configs/experiments/newsqa_retrieval_smoke.yaml --dry-run
+python scripts/run_experiment.py configs/experiments/my_feature.yaml --dry-run
+python scripts/run_experiment.py configs/experiments/my_feature.yaml
 ```
 
-The testset and index must share articles, chunk IDs, chunking, and embedding
-configuration. Variant manifests enforce this before model initialization.
+Kết quả nằm ở `outputs/experiments/<experiment.id>/` và xuất hiện trong trang
+**Evaluation Desk**. Xem ví dụ đầy đủ tại [docs/experiments.md](docs/experiments.md).
 
-- [Run experiments and use the dashboard](docs/experiments.md)
-- [Run one benchmark configuration](docs/benchmarking.md)
-- [Understand evaluation contracts and metrics](docs/evaluation.md)
-- [Build or review the evaluation dataset](docs/evaluation_dataset.md)
+## Bản đồ repository
 
-## Repository map
+| Đường dẫn | Loại | Công dụng |
+| --- | --- | --- |
+| `backend/newsqa_rag/` | Code | Thư viện Python và FastAPI backend |
+| `frontend/` | Code | React/Vite frontend |
+| `configs/config.yaml` | Cấu hình | Chunking, embedding, retrieval và LLM mặc định |
+| `configs/experiments/` | Cấu hình | Mỗi YAML định nghĩa một experiment có thể chạy |
+| `evaluation/` | Metadata | Manifest dataset/index và quyết định review; không phải code |
+| `data/` | Dữ liệu local | Raw/processed data, Chroma và BM25; Git bỏ qua |
+| `scripts/` | CLI | Các lệnh ingest, build index, benchmark và experiment |
+| `outputs/` | Kết quả | Experiment, benchmark, trace và presentation đã sinh |
+| `notebooks/` | Tham khảo | Notebook nghiên cứu cũ; không thuộc luồng chạy chính |
+| `docs/` | Tài liệu | Hướng dẫn theo từng công việc |
+| `tests/` | Kiểm tra | Test offline cho backend/pipeline |
+| `outputs/` | Artifact | Slide và tài liệu đã xuất |
 
-| Path | Purpose |
-| --- | --- |
-| `backend/newsqa_rag/api/` | FastAPI routes and schemas |
-| `backend/newsqa_rag/services/` | Chat, retrieval, and experiment workflows |
-| `backend/newsqa_rag/agents/` | Single-pass RAG pipeline |
-| `backend/newsqa_rag/retrieval/` | Dense, BM25, hybrid, and rerankers |
-| `backend/newsqa_rag/indexing/` | Embeddings and persisted indexes |
-| `backend/newsqa_rag/ingestion/` | Load, clean, and chunk articles |
-| `backend/newsqa_rag/evaluation/` | Dataset, metrics, cache, retry, and review logic |
-| `backend/newsqa_rag/experiments.py` | Matrix, partitions, runner, and summaries |
-| `frontend/` | React/Vite client |
-| `configs/experiments/` | Versioned experiment specifications |
-| `scripts/` | CLI entry points |
-| `evaluation/` | Dataset manifests and review decisions |
-| `reports/` | Versioned benchmark and experiment artifacts |
-| `tests/` | Offline tests |
+Nếu thấy `database/`, `models/` hoặc `dev-docs/` ở máy local: chúng không được
+Git theo dõi. Database đang dùng được đặt bởi `RAG_DB_PATH` (mặc định
+`data/chroma_db`); `database/` chỉ là dữ liệu thử/legacy.
 
-## More documentation
+## Luồng evaluation hiện tại
 
-- [Architecture](docs/architecture.md)
-- [Database and chunk contract](docs/database.md)
-- [Model gateway](docs/model_gateway.md)
-- [Web UI](docs/ui.md)
-- [Crawler](docs/crawler.md)
+```text
+YAML experiment
+  -> testset + manifest/index tương ứng
+  -> collect retrieval/generation traces (resume được)
+  -> tính metric deterministic
+  -> RAGAS judge (tùy chọn)
+  -> comparison trong outputs/ + dashboard
+```
 
-The current RAG path is one retrieve -> rerank -> generate pass. Multi-source
-planning, production authentication, Redis sessions, and deployment
-infrastructure are outside the current coursework scope.
+Đọc thêm: [kiến trúc](docs/architecture.md), [database](docs/database.md),
+[model gateway](docs/model_gateway.md), [UI](docs/ui.md), [crawler](docs/crawler.md).

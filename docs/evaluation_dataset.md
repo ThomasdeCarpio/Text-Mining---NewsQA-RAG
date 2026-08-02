@@ -1,64 +1,68 @@
-# NewsQA evaluation dataset
+# Tạo evaluation dataset mới
 
-The locked corpus contains 200 validation articles and 10,864 train distractor
-articles (NewsQA revision `728e529...`, seed `42`). Raw extraction stays
-immutable; reviewed answers, clarifications, exclusions, and dedup decisions
-are derived artifacts with hashes.
+Đây là workflow hiếm dùng. Nếu chỉ test retriever, reranker, model hoặc prompt
+mới, hãy giữ dataset hiện tại và tạo [experiment YAML](experiments.md).
 
-## Build workflow
+Chỉ tạo dataset mới khi thay đổi ít nhất một trong các phần sau:
+
+- tập bài báo hoặc câu hỏi;
+- đáp án/evidence được xem là ground truth;
+- chunking hoặc embedding khiến chunk ID/index thay đổi.
+
+## Dataset hiện tại
+
+`newsqa_200_11064` gồm 200 bài validation để đánh giá và 10.864 bài train làm
+distractor, seed `42`. Dữ liệu lớn nằm trong `data/evaluation/...` và không được
+Git theo dõi. Metadata kiểm chứng nằm trong `evaluation/manifests/`.
+
+## Build một dataset mới
+
+Các lệnh dưới đây dùng mặc định `newsqa_200_11064`. Muốn tạo biến thể khác,
+xem `--help` của từng subcommand và truyền output/manifest path riêng; không ghi
+đè bộ đã khóa.
 
 ```bash
-# Select locked articles/questions
+# 1. Chọn article và question
 python scripts/prepare_evaluation_dataset.py stage1 --selection-only
 
-# Chunk the shared corpus and build Chroma/BM25
+# 2. Chunk corpus, build Chroma/BM25 và tạo baseline testset
 python scripts/prepare_evaluation_dataset.py build-baseline
 
-# Reuse the completed review when source fields match
+# 3a. Tái sử dụng review tương thích
 python scripts/prepare_evaluation_dataset.py migrate-review
 
-# For a genuinely new sample instead
+# Hoặc 3b. Tạo review mới
 python scripts/prepare_evaluation_dataset.py init-review --archive-existing
 python scripts/prepare_evaluation_dataset.py prepare-review-packets
 
-# Check approval progress, then finalize
+# 4. Kiểm tra review và khóa final artifacts
 python scripts/prepare_evaluation_dataset.py review-status
 python scripts/prepare_evaluation_dataset.py finalize
 ```
 
-Review proposals are packet-complete JSON files applied with:
+Review proposal được áp dụng bằng:
 
 ```bash
 python scripts/apply_review_proposals.py --packet PATH_TO_PACKET --proposals PATH_TO_PROPOSALS
 ```
 
-Codex proposes labels, supported minimal clarifications, answer/evidence fixes,
-and rationales. It must not change raw question, answer, or evidence fields.
-Human review then marks each proposal `mark_standalone`, `approve`, `edit`,
-`exclude`, or `needs_adjudication`; pending/adjudication rows block finalization.
+Human reviewer phải quyết định `mark_standalone`, `approve`, `edit`, `exclude`
+hoặc `needs_adjudication`. Còn dòng pending/adjudication thì `finalize` sẽ chặn.
 
-Finalization validates exact evidence offsets, protected source fields,
-answer-leak-free clarifications, documented corrections/exclusions, artifact
-hashes, and database counts.
+## Sau khi finalize
 
-## Final artifacts
-
-| File | Use |
+| Artifact | Công dụng |
 | --- | --- |
-| `testset_original.jsonl` | Immutable raw extraction |
-| `testset_reviewed_original.jsonl` | Primary scored original wording |
-| `testset_resolved.jsonl` | Same rows with approved clarification |
-| `testset_clarified.jsonl` | Paired clarified subset |
-| `excluded_questions.jsonl` | Explicit exclusions and reasons |
-| `review_annotations.jsonl` | Complete review provenance |
-| `chunks.jsonl`, `bm25.pkl` | Shared retrieval corpus |
-| `integrity_report.json`, variant manifest | Counts and hashes |
+| `testset_reviewed_original.jsonl` | Câu hỏi gốc dùng để chấm chính |
+| `testset_resolved.jsonl` | Cùng câu hỏi nhưng đã làm rõ |
+| `chunks.jsonl`, `bm25.pkl` | Corpus/index cho retrieval |
+| `integrity_report.json` | Counts và hash kiểm chứng |
+| `evaluation/manifests/*.variant.json` | Khóa testset với đúng Chroma/BM25/config |
 
-Required counts: raw rows equal review annotations; reviewed-original equals
-resolved; both equal raw minus exclusions. No rechunking or second collection
-occurs during finalization.
+Tiếp theo, copy một YAML trong `configs/experiments/`, khai báo manifest/testset
+mới dưới `dataset.indexes`, chạy `--dry-run`, rồi mới chạy experiment thật.
 
-## Optional semantic deduplication
+## Semantic dedup tùy chọn
 
 ```bash
 python scripts/export_duplicate_question_report.py
@@ -66,10 +70,4 @@ python scripts/record_question_dedup_approval.py --reviewer-id ID --approve-all
 python scripts/deduplicate_evaluation_dataset.py
 ```
 
-Only use `--approve-all` after reviewing every proposed cluster. Deduplication
-keeps raw/review artifacts intact and applies one approved within-article
-partition to both scored variants.
-
-Report reviewed-original as primary, compare same-size resolved rows for the
-clarification effect, and always report correction/clarification/exclusion
-counts. See [evaluation.md](evaluation.md) for metric contracts.
+Chỉ dùng `--approve-all` sau khi đã đọc toàn bộ cluster proposal.

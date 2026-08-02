@@ -45,5 +45,5 @@ python scripts/run_experiment.py configs/experiments/newsqa_retrieval_smoke.yaml
 ```
 
 Change HTTP behavior in a router plus its service; retrieval behavior under
-`retrieval/`; provider behavior in `llm.py`/`model_gateway.py`; and benchmark
-contracts under `evaluation/` or `experiments.py`.
+`retrieval/`; provider behavior in `llm.py`/`model_gateway.py`; benchmark
+contracts under `evaluation/`; and research notebooks under `notebooks/`.

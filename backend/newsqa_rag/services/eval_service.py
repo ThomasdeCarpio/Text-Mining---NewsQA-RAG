@@ -4,8 +4,8 @@ from newsqa_rag.services.session_store import get_session_store
 from newsqa_rag.services.types import AgentEvent
 from newsqa_rag.model_gateway import PROJECT_ROOT
 
-# Reports written by scripts/run_benchmark.py --report-dir reports/<name>/
-REPORTS_DIR = PROJECT_ROOT / "reports"
+# Legacy one-off reports written by scripts/run_benchmark.py.
+REPORTS_DIR = PROJECT_ROOT / "outputs" / "benchmarks"
 
 # (dashboard card label, report group, key inside that group)
 _METRIC_SPECS = [
@@ -17,7 +17,7 @@ _METRIC_SPECS = [
 
 
 def _load_reports() -> dict[str, dict]:
-    """All report.json under reports/, keyed by retriever type (dense/bm25/hybrid)."""
+    """Load one-off benchmark reports, keyed by retriever type."""
     reports = {}
     for path in sorted(REPORTS_DIR.glob("*/report.json")):
         with open(path, encoding="utf-8") as f:

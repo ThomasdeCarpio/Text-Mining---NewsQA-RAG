@@ -31,7 +31,7 @@ def _spec_path(filename: str) -> Path:
 
 
 def _output_dir(spec: dict) -> Path:
-    root = Path(spec.get("output_dir", "reports/experiments"))
+    root = Path(spec.get("output_dir", "outputs/experiments"))
     if not root.is_absolute():
         root = PROJECT_ROOT / root
     root = root.resolve()

@@ -293,7 +293,7 @@ def run_experiment(spec_path: str | Path, *, dry_run: bool = False) -> Path:
     runs = expand_run_matrix(spec)
     seed = int(spec.get("seed", 42))
     experiment_id = spec["experiment"]["id"]
-    output_root = _project_path(spec.get("output_dir", "reports/experiments"))
+    output_root = _project_path(spec.get("output_dir", "outputs/experiments"))
     experiment_root = output_root / experiment_id
     partition_payloads = {
         name: build_article_partitions(

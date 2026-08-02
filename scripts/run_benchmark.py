@@ -9,7 +9,7 @@ Usage:
         --retriever dense \\
         --testset data/testset_1000.jsonl \\
         --n-eval 200 \\
-        --report-dir reports/dense/
+        --report-dir outputs/benchmarks/dense/
 
     # Hybrid retrieval
     python scripts/run_benchmark.py \\
@@ -17,13 +17,13 @@ Usage:
         --chunks-path database/chroma/chunks/basic_collection.jsonl \\
         --bm25-path   database/chroma/bm25/basic_collection.pkl \\
         --testset data/testset_1000.jsonl \\
-        --report-dir reports/hybrid/
+        --report-dir outputs/benchmarks/hybrid/
 
     # Full pipeline including LLM generation + RAGAS (requires OPENAI_API_KEY)
     python scripts/run_benchmark.py \\
         --retriever dense --run-generator --run-ragas \\
         --testset data/testset_1000.jsonl \\
-        --report-dir reports/dense_full/
+        --report-dir outputs/benchmarks/dense_full/
 
 Args:
     --retriever       dense | bm25 | hybrid  (default: dense)

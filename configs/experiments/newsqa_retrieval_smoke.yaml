@@ -5,7 +5,7 @@ experiment:
   name: NewsQA retrieval smoke test
   description: Compare retrievers and rerankers on locked, paired article subsets.
 
-output_dir: reports/experiments
+output_dir: outputs/experiments
 seed: 42
 
 dataset:

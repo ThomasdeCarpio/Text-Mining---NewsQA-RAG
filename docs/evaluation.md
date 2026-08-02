@@ -1,4 +1,8 @@
-# Evaluation pipeline
+# Metrics và cấu trúc kết quả
+
+Tài liệu này giải thích cách chấm điểm sau khi một run đã có prediction. Muốn
+tạo phép thử cho feature mới, đọc [experiments.md](experiments.md). Muốn thay
+đổi câu hỏi/ground truth, đọc [evaluation_dataset.md](evaluation_dataset.md).
 
 CLI and dashboard share one resumable path:
 
