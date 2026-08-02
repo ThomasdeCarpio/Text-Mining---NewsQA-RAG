@@ -1,0 +1,1593 @@
+{
+  "base_testset_sha256": "f41c7b78dea72867d79ce3118f0b6183bb28d8e83aab235db53ad326ec7bd544",
+  "clusters": [
+    {
+      "article_id": "newsqa_acbdec69c4e19135",
+      "member_question_ids": [
+        "02bb9745c7f8413fa1c809402b8ea81f",
+        "8ec338260290400aa6b3ae6685666a80"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "02bb9745c7f8413fa1c809402b8ea81f",
+      "semantic_target": "Where did the mass shooting involving Spc. Logan Burnette take place?"
+    },
+    {
+      "article_id": "newsqa_17c7ce3ad71dfae3",
+      "member_question_ids": [
+        "02dab2bb8ea24f2d8796223f83f28014",
+        "d838b4a128d648ec8beda32fd8a4e19d"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "02dab2bb8ea24f2d8796223f83f28014",
+      "semantic_target": "Which country's intelligence agents were suspected of involvement in the July 7 bombing of India's embassy in Kabul?"
+    },
+    {
+      "article_id": "newsqa_443d6416eafb191d",
+      "member_question_ids": [
+        "0372808323d540e3859a93d9ae4843f1",
+        "bae7071c3f5d47edac66d6ecf05633b7"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "0372808323d540e3859a93d9ae4843f1",
+      "semantic_target": "Who is the U.S. Air Force member who died in a roadside bombing in Afghanistan on Saturday?"
+    },
+    {
+      "article_id": "newsqa_17c27b355a1a5aab",
+      "member_question_ids": [
+        "03905a27a5b841e59153c2e3de3c99f4",
+        "23d1c9c515f3417ab70aba3c3bc43ec8",
+        "7951ebb574024ca7958ac8e4f56cc046"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "03905a27a5b841e59153c2e3de3c99f4",
+      "semantic_target": "What nationality were the passengers on the tour bus that overturned near Hoover Dam?"
+    },
+    {
+      "article_id": "newsqa_e94c6ff873e518fb",
+      "member_question_ids": [
+        "047c102fd84d4e478afe36ce9a384265",
+        "61f45cf18f2c47f18ba19d8e971f5712"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "047c102fd84d4e478afe36ce9a384265",
+      "semantic_target": "When did voters go to the polls for the presidential election in Gabon?"
+    },
+    {
+      "article_id": "newsqa_3d899a5170c5ecf9",
+      "member_question_ids": [
+        "04aba1b206a74b468046427c8ba664a9",
+        "5504cb34682f415d83c81e33fbc13214"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "04aba1b206a74b468046427c8ba664a9",
+      "semantic_target": "What does Iran deny its nuclear program is to be used for?"
+    },
+    {
+      "article_id": "newsqa_245acfdafc0e918c",
+      "member_question_ids": [
+        "051e0cb33cb64409bbf8e8e79165bacf",
+        "cf18870732dc40f89d6dd59b7c67e691"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "051e0cb33cb64409bbf8e8e79165bacf",
+      "semantic_target": "What made landfall near Cocodrie, Louisiana?"
+    },
+    {
+      "article_id": "newsqa_41db8003adf24b20",
+      "member_question_ids": [
+        "074bf4298dbc432dbe7989c913948a6c",
+        "decd6f636da04b8ca01d4353ece9323e"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "074bf4298dbc432dbe7989c913948a6c",
+      "semantic_target": "What does Michelle Obama wear?"
+    },
+    {
+      "article_id": "newsqa_3d899a5170c5ecf9",
+      "member_question_ids": [
+        "0760573d4a6644b5a9528bd111cc597a",
+        "30fa17868c604959b1bca6654cb7b6e2",
+        "74499298c6294de997f203b1415d21d4"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "0760573d4a6644b5a9528bd111cc597a",
+      "semantic_target": "What did Israel's vice prime minister compare Iran's nuclear effort to?"
+    },
+    {
+      "article_id": "newsqa_b1893e80b00a4c2f",
+      "member_question_ids": [
+        "09dc411bbb1f48eaa2263fd2feedfd7e",
+        "6f63891debcb465aaee5fcbd3ede0a86",
+        "70f76d8aab60460f8933a443a2209d67",
+        "861b642c508e487798f314f2c3ade27a",
+        "b460e2ad790b419e84c17ee5ae051a26"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "09dc411bbb1f48eaa2263fd2feedfd7e",
+      "semantic_target": "What drug makes up half of Afghanistan's gross domestic product?"
+    },
+    {
+      "article_id": "newsqa_c073c12fbeeb48c9",
+      "member_question_ids": [
+        "0a255f0d0a964a13914f508a9a99f50c",
+        "1f851796112743eb9929ce58de7b2b38"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "0a255f0d0a964a13914f508a9a99f50c",
+      "semantic_target": "Where is the Al Nisr Al Saudi being held?"
+    },
+    {
+      "article_id": "newsqa_1f36fa85d4124a37",
+      "member_question_ids": [
+        "0af0869096df4dff8325c3f2ff584087",
+        "e23472157c0d4ebe81a0fa5c027b3359"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "0af0869096df4dff8325c3f2ff584087",
+      "semantic_target": "What features could Wally Island's forward deck accommodate?"
+    },
+    {
+      "article_id": "newsqa_277973033ea63154",
+      "member_question_ids": [
+        "0c9774b9297641e39224f703c4e13ec6",
+        "c01e2730fd0544988a6e4c5dc11e0734",
+        "e6a17a43379a40d1a0388edd679e1fc3"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "0c9774b9297641e39224f703c4e13ec6",
+      "semantic_target": "Which group rejected the controversial surtax mentioned in the Democratic jobs bill proposal?"
+    },
+    {
+      "article_id": "newsqa_e50966b209d8763a",
+      "member_question_ids": [
+        "0eebb69418524a59813c284930197bc9",
+        "1dc2fde787694953a64b5c5b60b4fd7c"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "0eebb69418524a59813c284930197bc9",
+      "semantic_target": "What did George Harrison die from?"
+    },
+    {
+      "article_id": "newsqa_15ad27bc9976f73e",
+      "member_question_ids": [
+        "128b2d769fe045ca8e1bff19e037b7da",
+        "be34ac10abbf40838b850950f70bdcd5"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "128b2d769fe045ca8e1bff19e037b7da",
+      "semantic_target": "Who was working on a New York law to warn renters about foreclosure proceedings?"
+    },
+    {
+      "article_id": "newsqa_105a1e34ff5176cd",
+      "member_question_ids": [
+        "1364ba1827604428a0d1e1ce8fd8fdc9",
+        "5043888646d5421d81fc3b47f8aef68e"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "1364ba1827604428a0d1e1ce8fd8fdc9",
+      "semantic_target": "Where did Christopher Coleman go after leaving the family home?"
+    },
+    {
+      "article_id": "newsqa_0b5df5e8e97d150a",
+      "member_question_ids": [
+        "136d8cfca1384d459b264083a4f98710",
+        "21d9ee49ecc144ab9ca0a426c203d559"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "136d8cfca1384d459b264083a4f98710",
+      "semantic_target": "Which team won the Bundesliga match against Hamburg with an early Kevin Kuranyi goal?"
+    },
+    {
+      "article_id": "newsqa_277973033ea63154",
+      "member_question_ids": [
+        "13c7ec87c0324be5bee05d51772027c5",
+        "c4eb8e9e88a64fa49128ad4e99776c91"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "13c7ec87c0324be5bee05d51772027c5",
+      "semantic_target": "What would the Senate Democrats' proposed jobs bill provide for those leaving the military?"
+    },
+    {
+      "article_id": "newsqa_0f93bba9f85114b7",
+      "member_question_ids": [
+        "14749a452bd346f9abbffc18ac1278e9",
+        "f1afe460fefa4535a3ff8d744086e5d7"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "14749a452bd346f9abbffc18ac1278e9",
+      "semantic_target": "Who seeks a dismissal of Tim Masters murder case?"
+    },
+    {
+      "article_id": "newsqa_b580df2d204c219d",
+      "member_question_ids": [
+        "1582018cb34e4a81a4e3bd6c09c30e80",
+        "d2db4a1fc8aa479c81d9546911c79dfe"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "1582018cb34e4a81a4e3bd6c09c30e80",
+      "semantic_target": "How many Americans were killed in the attack in Baghdad?"
+    },
+    {
+      "article_id": "newsqa_29785b5a4a777927",
+      "member_question_ids": [
+        "16e5c8bb8ce841de8613411fcbcfedad",
+        "706ce26401d54a5d94687fb541f7350c",
+        "d3be7c50925040dca87dc6d971145ccb"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "16e5c8bb8ce841de8613411fcbcfedad",
+      "semantic_target": "What does the Dalai Lama seek from Bejing?"
+    },
+    {
+      "article_id": "newsqa_ede2531a00661102",
+      "member_question_ids": [
+        "171414c078ce452d9374be8989aa0147",
+        "2712e3b995a849349843ff869f4c5820"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "171414c078ce452d9374be8989aa0147",
+      "semantic_target": "What does Harry Nicolaides' book \"Verisimilitude\" include?"
+    },
+    {
+      "article_id": "newsqa_4fe9657ccca5e9c1",
+      "member_question_ids": [
+        "17ba9abcc2d34d24b383137f643a09c0",
+        "74fe5cbec55e4c79b40ae84889093d27"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "17ba9abcc2d34d24b383137f643a09c0",
+      "semantic_target": "What hit single did Brian Hyland release in 1960 that helped the bikini rocket to fame?"
+    },
+    {
+      "article_id": "newsqa_b4a8232d618b4dd7",
+      "member_question_ids": [
+        "188ddb201c1e42eb91dab05b6afab94a",
+        "9cbffa1d44044b6885bc0566f5ebfd0f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "188ddb201c1e42eb91dab05b6afab94a",
+      "semantic_target": "Where did Anne Frank die?"
+    },
+    {
+      "article_id": "newsqa_19127b0ebd431052",
+      "member_question_ids": [
+        "194bd503229c46c3b308896e770e1eb1",
+        "642ade1eebc04179b6ee599028cbb9b0"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "194bd503229c46c3b308896e770e1eb1",
+      "semantic_target": "What did the impeachment complaint allege that Gloria Arroyo and her husband were involved in?"
+    },
+    {
+      "article_id": "newsqa_a7b7e7555ee6888d",
+      "member_question_ids": [
+        "199178bd55f849279f0e163c691d0903",
+        "805a6afa477c45d18a26ebba495ac1b7",
+        "ccb81b6865484234ab334d34412a6b35"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "199178bd55f849279f0e163c691d0903",
+      "semantic_target": "What was the final aggregate score of the Bayern Munich vs. Sporting Lisbon Champions League tie?"
+    },
+    {
+      "article_id": "newsqa_ff6d7105a471e9ab",
+      "member_question_ids": [
+        "19d6ff42a894452a88032c752d5faf90",
+        "1fd8126d933f4bbeba9ce4310a7d0573"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "19d6ff42a894452a88032c752d5faf90",
+      "semantic_target": "Whats the BET founder called?"
+    },
+    {
+      "article_id": "newsqa_6a547adad08deaf7",
+      "member_question_ids": [
+        "19fdbf5cb17843f1b6afc14de8604661",
+        "28dbd333877249afbb95296f3404dfd7"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "19fdbf5cb17843f1b6afc14de8604661",
+      "semantic_target": "Which member of the Jena 6 faced misdemeanor assault charges after an incident at Hebron High School?"
+    },
+    {
+      "article_id": "newsqa_63ea7be484579129",
+      "member_question_ids": [
+        "1d7d93b9022543dca084d0fa1c352457",
+        "ceb298b8c9064b5d94824599481fdef8"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "1d7d93b9022543dca084d0fa1c352457",
+      "semantic_target": "Who visits the Angolan football squad to look at the passion behind their play?"
+    },
+    {
+      "article_id": "newsqa_03d2bba360416aa2",
+      "member_question_ids": [
+        "1df83e933ab24ff0b54b67700f2cfa1b",
+        "88d0ad4c27184b2886a42cd1aa074e19"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "1df83e933ab24ff0b54b67700f2cfa1b",
+      "semantic_target": "How many driverless pods were being tested at London Heathrow's Terminal 5?"
+    },
+    {
+      "article_id": "newsqa_a6b4cb4d6cd09f63",
+      "member_question_ids": [
+        "1eede7107c9e48419d330929137ee37b",
+        "474cf4bfc8ed41268f0e9d6b62bde784"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "1eede7107c9e48419d330929137ee37b",
+      "semantic_target": "What did the ACLU call the military commission decision?"
+    },
+    {
+      "article_id": "newsqa_3d899a5170c5ecf9",
+      "member_question_ids": [
+        "201020dcae5841dfacf83d089035f079",
+        "ab6ae284b7a3413791e69f7f5f368192"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "201020dcae5841dfacf83d089035f079",
+      "semantic_target": "Who spoke on Israel's Holocaust remembrance day at the site of a death camp?"
+    },
+    {
+      "article_id": "newsqa_fe86c3422cc34b34",
+      "member_question_ids": [
+        "21a75de34c68413c9e418decc5c71d2f",
+        "e09dea004dc14ca394d37b263e129ac3"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "21a75de34c68413c9e418decc5c71d2f",
+      "semantic_target": "What items were thrown during the clashes between pro-democracy activists and Egyptian security forces?"
+    },
+    {
+      "article_id": "newsqa_520826022e8bd023",
+      "member_question_ids": [
+        "23406aeb357e4344bc1c22a24bf8b757",
+        "49aa2a1e0fb443169edf8af22288973b"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "23406aeb357e4344bc1c22a24bf8b757",
+      "semantic_target": "What entity will take over the role of escorting U.N. vessels carrying food and relief supplies to war-torn Somalia?"
+    },
+    {
+      "article_id": "newsqa_fb954d9c374f66c5",
+      "member_question_ids": [
+        "23f830d9e6c24104852473a27360624c",
+        "3f28f7be13ad43cda7681b7fa874843c"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "23f830d9e6c24104852473a27360624c",
+      "semantic_target": "Who is the Korean-American missionary believed to be held in North Korea?"
+    },
+    {
+      "article_id": "newsqa_19127b0ebd431052",
+      "member_question_ids": [
+        "26782a326a394d688dda2441308bf00a",
+        "775656e96e4747f5a17cc2b57edd12b7"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "26782a326a394d688dda2441308bf00a",
+      "semantic_target": "When were the first impeachment charges brought against Gloria Arroyo?"
+    },
+    {
+      "article_id": "newsqa_20a28f814c4a52e0",
+      "member_question_ids": [
+        "26946b22375240aca1f36b8280a59a11",
+        "bb9aadd4bff44abd87cc35736d98cd41"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "26946b22375240aca1f36b8280a59a11",
+      "semantic_target": "What did Barack Obama promise his daughters Sasha and Malia in his victory speech?"
+    },
+    {
+      "article_id": "newsqa_6df904df5fb09fd7",
+      "member_question_ids": [
+        "28ae4259c5bd485a899ec68af2eb4264",
+        "8c42e3acb5934672bfdc3c713a75d371",
+        "a5d866dd01974343ba3475ba0ca2387c"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "28ae4259c5bd485a899ec68af2eb4264",
+      "semantic_target": "Who defeated Carl Froch to win the WBC super-middleweight title?"
+    },
+    {
+      "article_id": "newsqa_10d93b738d2657b2",
+      "member_question_ids": [
+        "2984697f6d3c4ac79d2c916f3496a4d2",
+        "32e19ff72cc948d5bba10d5b45071a03"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "2984697f6d3c4ac79d2c916f3496a4d2",
+      "semantic_target": "What did Sen. Joe Lieberman intend to do about allegations that ICE drugged detainees?"
+    },
+    {
+      "article_id": "newsqa_a6b4cb4d6cd09f63",
+      "member_question_ids": [
+        "2a993576ba994b8da9b170bdd1613c12",
+        "3a866b6d298b41afb982db6c34e1cd12"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "2a993576ba994b8da9b170bdd1613c12",
+      "semantic_target": "What will the new system for military commissions include?"
+    },
+    {
+      "article_id": "newsqa_21bc17a4d743572e",
+      "member_question_ids": [
+        "2aa93a690e904c89b259f98500106b69",
+        "3000fad50c3e4d449a952b1a0b9f7f4f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "2aa93a690e904c89b259f98500106b69",
+      "semantic_target": "What is the first name of Osama bin Laden's son who spoke to CNN near Cairo?"
+    },
+    {
+      "article_id": "newsqa_f2750e2ee0f22dcd",
+      "member_question_ids": [
+        "2aaa26fff7be41698806089edb69a0b9",
+        "6b27b26ced424638a3b9c75a67d6f49d"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "2aaa26fff7be41698806089edb69a0b9",
+      "semantic_target": "Who is the father of Haleigh Cummings that plans to file for divorce?"
+    },
+    {
+      "article_id": "newsqa_d973319d09baa363",
+      "member_question_ids": [
+        "2c289df329d5411989370e36f4d4fc97",
+        "4f667caccc9e49a8b5a6dede296fbd1e",
+        "88c911ecac0e4af284c5eb43fe8d9eb5"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "2c289df329d5411989370e36f4d4fc97",
+      "semantic_target": "Where in Italy would the majority of the troops be sent to combat the recent wave of crime?"
+    },
+    {
+      "article_id": "newsqa_f4e5aa92fb2dbf29",
+      "member_question_ids": [
+        "2c9d87584b86413d86f28eb40a1af7cf",
+        "ed2ba8953b6a49bb8f961969603a956f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "2c9d87584b86413d86f28eb40a1af7cf",
+      "semantic_target": "Who did Spain deny asylum to?"
+    },
+    {
+      "article_id": "newsqa_92ce2fbdf1c6766c",
+      "member_question_ids": [
+        "2d006592676144faac44e16423bfb178",
+        "beefda6210c047899b54a61290a9837c"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "2d006592676144faac44e16423bfb178",
+      "semantic_target": "What type of helicopters crashed in northern Baghdad on Saturday?"
+    },
+    {
+      "article_id": "newsqa_b57deaf09272f436",
+      "member_question_ids": [
+        "2ea97cfbe22340cdabec8b67b75b0f0e",
+        "e412730b37274c11bad105b38ed9e196"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "2ea97cfbe22340cdabec8b67b75b0f0e",
+      "semantic_target": "How many pesos will the National Infrastructure Program spend?"
+    },
+    {
+      "article_id": "newsqa_9d176d3c2bb8bcf5",
+      "member_question_ids": [
+        "2efef198621244dc8f660e49bcb0b54e",
+        "811443af769846bd88db9031899cf838"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "2efef198621244dc8f660e49bcb0b54e",
+      "semantic_target": "Who did the president of Toyota say should be responsible for the company's safety issues?"
+    },
+    {
+      "article_id": "newsqa_520826022e8bd023",
+      "member_question_ids": [
+        "2f627367a8e64574b1a3fc00c386aac8",
+        "89863b3cc756459497568b3bdc70588d",
+        "ac20eebd924947158dc6de1c9cb9039d"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "2f627367a8e64574b1a3fc00c386aac8",
+      "semantic_target": "Where are the warships patrolling the Gulf of Aden from?"
+    },
+    {
+      "article_id": "newsqa_694aad2931f01003",
+      "member_question_ids": [
+        "31f8a4e5f2d542c9904b80d29a0e9dab",
+        "79b62004336a4ee8bc64e1b588407038"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "31f8a4e5f2d542c9904b80d29a0e9dab",
+      "semantic_target": "What was Fujimori convicted of?"
+    },
+    {
+      "article_id": "newsqa_0f93bba9f85114b7",
+      "member_question_ids": [
+        "32c38f892d754ad89a9cfffa3d6afd7d",
+        "b1f93e5763f3443e812bb02db0b34dff"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "32c38f892d754ad89a9cfffa3d6afd7d",
+      "semantic_target": "What was Masters convicted of?"
+    },
+    {
+      "article_id": "newsqa_25a5c22cc9b7159e",
+      "member_question_ids": [
+        "331ff9acbc094ef7b4ecdd751637c564",
+        "4443abaa1aaf48d1b44d99d10e0968ec"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "331ff9acbc094ef7b4ecdd751637c564",
+      "semantic_target": "Where are the Marines from Camp Lejeune heading to this week to support soldiers fighting the Taliban?"
+    },
+    {
+      "article_id": "newsqa_4965107d6037c0d1",
+      "member_question_ids": [
+        "33e4070dbdca45ebb435ba3b44c71771",
+        "47159fd3a28d47b38edc4ec20f19f4d6"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "33e4070dbdca45ebb435ba3b44c71771",
+      "semantic_target": "What is the name of Apple's voice-assistant?"
+    },
+    {
+      "article_id": "newsqa_594e4f7b305cef6e",
+      "member_question_ids": [
+        "342bc95b32974fda9e6737cb3f524f59",
+        "3dd8316956464ff9bbe2ba917cbd02ad"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "342bc95b32974fda9e6737cb3f524f59",
+      "semantic_target": "Which band was Cobain a part of?"
+    },
+    {
+      "article_id": "newsqa_9d176d3c2bb8bcf5",
+      "member_question_ids": [
+        "35d000cd64d14585bd474322dc4f4f70",
+        "ffa4d47207614c1a94eed9f7a08fc862"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "35d000cd64d14585bd474322dc4f4f70",
+      "semantic_target": "What did the president of Toyota say regarding his responsibility for the company's safety issues?"
+    },
+    {
+      "article_id": "newsqa_2a4c80978eebf106",
+      "member_question_ids": [
+        "37b3b28e375e4216888e4da3c16a3f4c",
+        "fe3dc6c9564e490f8e5b857613093186"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "37b3b28e375e4216888e4da3c16a3f4c",
+      "semantic_target": "Who told California wildfire victims they won't be forgotten in Washington?"
+    },
+    {
+      "article_id": "newsqa_1210c2a6a84dc580",
+      "member_question_ids": [
+        "37d0106de39b4828ab2db59814510282",
+        "ad65a15e844a4f078e4598b8cfe6ab87"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "37d0106de39b4828ab2db59814510282",
+      "semantic_target": "When was the U.N. International Criminal Tribunal for Rwanda established?"
+    },
+    {
+      "article_id": "newsqa_fa23df5a09ac9a3b",
+      "member_question_ids": [
+        "3811aec484274bd99fb8231b001e9e02",
+        "6ecfb1c98af64534bda5385ce6253550"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "3811aec484274bd99fb8231b001e9e02",
+      "semantic_target": "Which comic book character's story was cited by the Dutch patent office to block Karl Kr\u00f8yer from getting a patent?"
+    },
+    {
+      "article_id": "newsqa_ff6d7105a471e9ab",
+      "member_question_ids": [
+        "39b27b09528b44b6b53c10b42e0ba36b",
+        "3ed50e9d4fab41f1b18c6c91425fc9bf"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "39b27b09528b44b6b53c10b42e0ba36b",
+      "semantic_target": "Which Democratic presidential candidate accused the Obama camp of distorting remarks by her and her husband?"
+    },
+    {
+      "article_id": "newsqa_d23f33651501a878",
+      "member_question_ids": [
+        "39b831ae82844d62a7e981b94ddb37ef",
+        "64bc1a2e9ed348e5abe5add0e6e7dcf0",
+        "769f1ed90a044b4ebee75a26c7572ddb"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "39b831ae82844d62a7e981b94ddb37ef",
+      "semantic_target": "How many refugees have come to Aden since January?"
+    },
+    {
+      "article_id": "newsqa_0d79def954fd24dd",
+      "member_question_ids": [
+        "39cb589172e84effa1e2d22eb157da0f",
+        "efacc04e1812429f83fd4409ea5093de"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "39cb589172e84effa1e2d22eb157da0f",
+      "semantic_target": "What proportion of its byproducts does Hyundai Steel say it recycles at its Dangjin plant?"
+    },
+    {
+      "article_id": "newsqa_1410c9eb3296d4dc",
+      "member_question_ids": [
+        "3ca19860d31d40d58c3d6018498bbc5e",
+        "6254496b903a42e680fd882f3283fb49",
+        "bd35d7a651974bb181849a4486692264"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "3ca19860d31d40d58c3d6018498bbc5e",
+      "semantic_target": "How long had Chris Robinson and Allison Bridges been dating?"
+    },
+    {
+      "article_id": "newsqa_8db4b769ce5b0df1",
+      "member_question_ids": [
+        "3d05c6f2b8364971bb5f58d40f42a5a7",
+        "a7ad336fd9164278b9f5af9c66bc17ff"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "3d05c6f2b8364971bb5f58d40f42a5a7",
+      "semantic_target": "On which day of the week did Gadhafi die?"
+    },
+    {
+      "article_id": "newsqa_42a0b49b5ffcfbc4",
+      "member_question_ids": [
+        "3e4aa100c744486d883502dd35d3569c",
+        "c7c63ad1a040451eaf13ad8160295ba0",
+        "e75dd8d226914bd9b9070a34d57ff0c9"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "3e4aa100c744486d883502dd35d3569c",
+      "semantic_target": "How long has the ethnic Tamil minority in Sri Lanka been fighting?"
+    },
+    {
+      "article_id": "newsqa_fde121e7b36ce49c",
+      "member_question_ids": [
+        "3ef9db99eba14a2db167a1a13f553a95",
+        "493a0407ac6747ee89cbd1944cd53d29"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "3ef9db99eba14a2db167a1a13f553a95",
+      "semantic_target": "Who selects the members of the lower house of Egypt's parliament?"
+    },
+    {
+      "article_id": "newsqa_4777e0afeb7aa8fa",
+      "member_question_ids": [
+        "3fbd68661ad646c5a5e859934c9f9f79",
+        "74bddc4c04a845bea80ae16c5bd1fd9b"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "3fbd68661ad646c5a5e859934c9f9f79",
+      "semantic_target": "What does the FAA say about the impact of the new policy regarding pilots taking antidepressants?"
+    },
+    {
+      "article_id": "newsqa_6994369cd73006b7",
+      "member_question_ids": [
+        "3fef6306e73548568dc9ea2747801b4b",
+        "95b699a446f346298c2fae56ed9e0fc9",
+        "a0d214f6804e4725b7de25e93c53c411"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "3fef6306e73548568dc9ea2747801b4b",
+      "semantic_target": "How many people did police arrest during the violence against foreign nationals in South Africa?"
+    },
+    {
+      "article_id": "newsqa_d973319d09baa363",
+      "member_question_ids": [
+        "40a50aaeb28e4892956a7667321f0fd5",
+        "5223d20b95664375ad1b2133f36ba1ca"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "40a50aaeb28e4892956a7667321f0fd5",
+      "semantic_target": "How many times since the 1990s has the Italian army been sent in to combat Mafia crime in southern Italy?"
+    },
+    {
+      "article_id": "newsqa_e103965bf4dcc4a3",
+      "member_question_ids": [
+        "4141a787f20a49ff845742502d21baba",
+        "b9570d5dc5754c3da865896d3c701553"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "4141a787f20a49ff845742502d21baba",
+      "semantic_target": "What did the Mumbai terror attacker Kasab admit to investigators?"
+    },
+    {
+      "article_id": "newsqa_8a813705ad9b2ac6",
+      "member_question_ids": [
+        "41d5a6d229964b50b3c73d5bc9a5d1fa",
+        "ac55787c46dc4d7b84b2856b8bf2dc93"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "41d5a6d229964b50b3c73d5bc9a5d1fa",
+      "semantic_target": "How many cases of the Listeria monocytogenes outbreak have been reported in 26 states?"
+    },
+    {
+      "article_id": "newsqa_20bc9fee57d27225",
+      "member_question_ids": [
+        "45c6b42c27e84dc48bc37bccd095980b",
+        "d94300f7464c401db93e557fec221320"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "45c6b42c27e84dc48bc37bccd095980b",
+      "semantic_target": "What is the name of Rosie O'Donnell's new nightly talk show?"
+    },
+    {
+      "article_id": "newsqa_b580df2d204c219d",
+      "member_question_ids": [
+        "45f8a09242f04f1a804f6fce37d3d020",
+        "90e20a8ca8b8461994b6731460d74160"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "45f8a09242f04f1a804f6fce37d3d020",
+      "semantic_target": "Who was killed in the attack in Baghdad?"
+    },
+    {
+      "article_id": "newsqa_5aa7425b7e373ea6",
+      "member_question_ids": [
+        "46921e1f3e304da5b75f8ca3afff20ff",
+        "fc87a9e0038f41a7856ce71bc10a51ac"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "46921e1f3e304da5b75f8ca3afff20ff",
+      "semantic_target": "What did the defector tell CNN about the risks of speaking openly about North Korea?"
+    },
+    {
+      "article_id": "newsqa_7cccf327893f3b51",
+      "member_question_ids": [
+        "4740a5c55c1f47bf93a59c65525f43e9",
+        "ed00bbd0da8841fa9bb15f15859a9876",
+        "f002078c2ea2435db1e405606b820e19"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "4740a5c55c1f47bf93a59c65525f43e9",
+      "semantic_target": "What is the age of the politician Madhav Kumar Nepal?"
+    },
+    {
+      "article_id": "newsqa_57d01be97106f8c7",
+      "member_question_ids": [
+        "4973d06104ff42a48ec95b6d8266cffa",
+        "727106ef76a0404cbf006524c2e6529f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "4973d06104ff42a48ec95b6d8266cffa",
+      "semantic_target": "How many former Argentine military officers were sentenced for human rights abuses during the 1976 to 1983 dictatorship?"
+    },
+    {
+      "article_id": "newsqa_d973319d09baa363",
+      "member_question_ids": [
+        "49d9ebe7135b4a2890ced8b689c6dbd8",
+        "e4feceb16c4441d8b4ce29dcae36016f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "49d9ebe7135b4a2890ced8b689c6dbd8",
+      "semantic_target": "How many people were killed in the recent Camorra massacre in Italy?"
+    },
+    {
+      "article_id": "newsqa_9439e736107bb92f",
+      "member_question_ids": [
+        "49db254b761e4e4199cd037cf89f3575",
+        "50cc5fd5df684303b18d21732c69c85e"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "49db254b761e4e4199cd037cf89f3575",
+      "semantic_target": "What were the motives of Abdulhakim Bledsoe in the shooting attack?"
+    },
+    {
+      "article_id": "newsqa_29e3afd17d5ca955",
+      "member_question_ids": [
+        "4acfdfd9af1f459f9a0e34526b3bd68c",
+        "822b186317c04e1db6315150718e194e"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "4acfdfd9af1f459f9a0e34526b3bd68c",
+      "semantic_target": "Which carbon-offset provider did Jet Republic partner with to become carbon neutral?"
+    },
+    {
+      "article_id": "newsqa_20bc9fee57d27225",
+      "member_question_ids": [
+        "4b7de03eac3642c5aad653d3fe1600dc",
+        "51a0d143d66d4312b89e4e00929ee837"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "4b7de03eac3642c5aad653d3fe1600dc",
+      "semantic_target": "What did Rosie O'Donnell say she might not have done if she had known Michelle Rounds was gay?"
+    },
+    {
+      "article_id": "newsqa_0ae09e66a653a582",
+      "member_question_ids": [
+        "4d8a017ec36c420984653e239a12606b",
+        "be9df164a96b4ae8a5cad6d0bdffb257"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "4d8a017ec36c420984653e239a12606b",
+      "semantic_target": "What image did Mike Meehan put on billboards to encourage Republican votes?"
+    },
+    {
+      "article_id": "newsqa_520826022e8bd023",
+      "member_question_ids": [
+        "4e2b7b6be2784668bb3d2e749a2fe9e1",
+        "b52c72e60b6d49a5a650724e57141268"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "4e2b7b6be2784668bb3d2e749a2fe9e1",
+      "semantic_target": "How many ships have pirates attacked off the coast of Somalia this year?"
+    },
+    {
+      "article_id": "newsqa_277a3c4da1583ab6",
+      "member_question_ids": [
+        "4ef90843df6b46609bb78fe1748c188e",
+        "6cf873665ae247898bae6330c367c09f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "4ef90843df6b46609bb78fe1748c188e",
+      "semantic_target": "What kind of organization canceled Creative Steps' swimming privileges?"
+    },
+    {
+      "article_id": "newsqa_d8ee9a36d2898601",
+      "member_question_ids": [
+        "4ff0076b7fe74648806429e78621f265",
+        "f97696deb9704d2f8ae5834f9fcdd88c"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "4ff0076b7fe74648806429e78621f265",
+      "semantic_target": "Where is the Palm Jumeirah island located?"
+    },
+    {
+      "article_id": "newsqa_8aede228ce213884",
+      "member_question_ids": [
+        "530b0b3b0802450d9e7ebda6283e6b6c",
+        "77b194a548d2400a96ecd5709b8b1d64"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "530b0b3b0802450d9e7ebda6283e6b6c",
+      "semantic_target": "In the prisoner swap between Israel and Hezbollah, how many Lebanese prisoners will be released?"
+    },
+    {
+      "article_id": "newsqa_e68f0a4c9f0b9842",
+      "member_question_ids": [
+        "53c64df9090c45cb80df1707e3276239",
+        "b849fa3ccdd941a2a81fab71b34644a2",
+        "d58e98347651493d99ad62e97fbe7902"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "53c64df9090c45cb80df1707e3276239",
+      "semantic_target": "Who was found dead in a Fayetteville motel room?"
+    },
+    {
+      "article_id": "newsqa_fa23df5a09ac9a3b",
+      "member_question_ids": [
+        "53c67cb7647d4cc4bb23eaf2d317008d",
+        "ebc8ddb0bc9e409e88de995ce9a063ab",
+        "fee8b22532204c5c87bb96182e128d56"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "53c67cb7647d4cc4bb23eaf2d317008d",
+      "semantic_target": "In the radio series \"The Adventures of Superman,\" what group did Superman battle in the storyline titled \"Clan of the Fiery Cross\"?"
+    },
+    {
+      "article_id": "newsqa_ede2531a00661102",
+      "member_question_ids": [
+        "5579074640614bacbdd03ed34a3ddf08",
+        "6a80ae4b171345c3ba541b8aa343b1be"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "5579074640614bacbdd03ed34a3ddf08",
+      "semantic_target": "What did Thai authorities consider Harry Nicolaides' book \"Verisimilitude\" to be?"
+    },
+    {
+      "article_id": "newsqa_694aad2931f01003",
+      "member_question_ids": [
+        "55f63d74a744491aae187434ac8c4809",
+        "81f733a833b14d018b0b4d4492e92d20"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "55f63d74a744491aae187434ac8c4809",
+      "semantic_target": "What did Jos\u00e9 Miguel Vivanco say regarding the conviction of former Peruvian president Alberto Fujimori?"
+    },
+    {
+      "article_id": "newsqa_ab94c027e434df32",
+      "member_question_ids": [
+        "57351304b16347d58b309e84d19b79aa",
+        "5d464ecc16894c0cbc33ed95ac502289"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "57351304b16347d58b309e84d19b79aa",
+      "semantic_target": "What were pilots told to watch out for?"
+    },
+    {
+      "article_id": "newsqa_ef97c256051a405d",
+      "member_question_ids": [
+        "5746b6864dc24560aff89223011a242b",
+        "5ac07aac0de34bf88eec492a2a3fd199",
+        "bc65525f5d3e4e24a5e44c7043a0f580"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "5746b6864dc24560aff89223011a242b",
+      "semantic_target": "Which Brazilian star scored twice for AC Milan against Bologna?"
+    },
+    {
+      "article_id": "newsqa_7ec972b8aba83a64",
+      "member_question_ids": [
+        "58224fe8e4ed454f9c42ea3331a9a46f",
+        "e8ac0eb458ea4dcabf252184b9da9bae"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "58224fe8e4ed454f9c42ea3331a9a46f",
+      "semantic_target": "What did animal rights activist Jasmin Singer say?"
+    },
+    {
+      "article_id": "newsqa_febc7f8b7a378cdc",
+      "member_question_ids": [
+        "5b5d465a7ab2427485a00f3638543996",
+        "ae35f52b8069416da505e192383e1cab",
+        "bb1589db33fa4309b9b3f7fb5e4b3480"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "5b5d465a7ab2427485a00f3638543996",
+      "semantic_target": "What does Mark Warner claim President Bush never asked Americans to do?"
+    },
+    {
+      "article_id": "newsqa_f54c16e0358bdcff",
+      "member_question_ids": [
+        "5d27fdf94cc74998bd78ccda5998134a",
+        "8f6c0a2a8ad24bed90083ee1fade53da"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "5d27fdf94cc74998bd78ccda5998134a",
+      "semantic_target": "Which Dancing With the Stars contestant co-founded Apple?"
+    },
+    {
+      "article_id": "newsqa_594e4f7b305cef6e",
+      "member_question_ids": [
+        "6118310e56f44b68bd3507c69aab4605",
+        "adfc122496824596b75ef249b137e164"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "6118310e56f44b68bd3507c69aab4605",
+      "semantic_target": "Who was Kurt Cobain's widow?"
+    },
+    {
+      "article_id": "newsqa_fe86c3422cc34b34",
+      "member_question_ids": [
+        "61df2ca95986481da92fc106c8a6a1f0",
+        "d6ee51c48856447ebba5d4192903e56a"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "61df2ca95986481da92fc106c8a6a1f0",
+      "semantic_target": "What caused the violence during the clashes in Cairo?"
+    },
+    {
+      "article_id": "newsqa_e94c6ff873e518fb",
+      "member_question_ids": [
+        "6285e913cb0d4e5f9ab9b2f23383933e",
+        "6e5fcb94e6a14465b0a57e26e693271e",
+        "869b6218682e464bae6c1328ea6b2a7e"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "6285e913cb0d4e5f9ab9b2f23383933e",
+      "semantic_target": "Who was declared the winner of the presidential election in Gabon?"
+    },
+    {
+      "article_id": "newsqa_b1893e80b00a4c2f",
+      "member_question_ids": [
+        "62c23c6b9c3b4d9896873ec4a545e70a",
+        "d360891ed1b84beea625c88b3d894e9b"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "62c23c6b9c3b4d9896873ec4a545e70a",
+      "semantic_target": "What is the U.N. drug chief advocating regarding NATO's role in Afghanistan?"
+    },
+    {
+      "article_id": "newsqa_5aadc76e12e47405",
+      "member_question_ids": [
+        "62d1568d094842c390de7d3319f03c28",
+        "8a9c6dc3980740d18d876d0e75fe2f27"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "62d1568d094842c390de7d3319f03c28",
+      "semantic_target": "What percent of mobile games are Tetris?"
+    },
+    {
+      "article_id": "newsqa_02018b09dce6af73",
+      "member_question_ids": [
+        "6392f94b4c9f4fd38b24b66e0f2aead8",
+        "76bde369225e4bbda0147da9063ff142",
+        "cd7cad43372b4947834b1f92e929ba96"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "6392f94b4c9f4fd38b24b66e0f2aead8",
+      "semantic_target": "Who was killed during an attempted carjacking in Johannesburg?"
+    },
+    {
+      "article_id": "newsqa_cae344ccd74efc56",
+      "member_question_ids": [
+        "64395311a5d54d79baae78a2162cf8b9",
+        "be20cc1e18b54ecc87e4a1e34d45bff6"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "64395311a5d54d79baae78a2162cf8b9",
+      "semantic_target": "Which TV programs did Ed McMahon host?"
+    },
+    {
+      "article_id": "newsqa_2fdb5bff777534c4",
+      "member_question_ids": [
+        "647d0669235a41a8a2fe0b37134a6832",
+        "d1811934388341ae98b2cd3946c77b45"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "647d0669235a41a8a2fe0b37134a6832",
+      "semantic_target": "What voyage did the Pilgrims take in 1620?"
+    },
+    {
+      "article_id": "newsqa_d87850f7e081b741",
+      "member_question_ids": [
+        "65bf7e1dc06d4affa15e9f99b800d94a",
+        "991079f7ad3d4e86b206d44758bee040"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "65bf7e1dc06d4affa15e9f99b800d94a",
+      "semantic_target": "When did the Spanish flu pandemic ravage military camps?"
+    },
+    {
+      "article_id": "newsqa_72f24641e6397ed8",
+      "member_question_ids": [
+        "6778d6c630a84294a6dd81fbfabf9177",
+        "987b4118a9304f2f8193ab27a36b0489"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "6778d6c630a84294a6dd81fbfabf9177",
+      "semantic_target": "What topics will be discussed at the Latin American and Caribbean summit?"
+    },
+    {
+      "article_id": "newsqa_51e27ebc93e28585",
+      "member_question_ids": [
+        "689aed65128147c2948d8fc665e6ef0d",
+        "9a83f32bddac46a19097e899dd1e1d65"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "689aed65128147c2948d8fc665e6ef0d",
+      "semantic_target": "What background is Rima Fakih's family from?"
+    },
+    {
+      "article_id": "newsqa_7ec972b8aba83a64",
+      "member_question_ids": [
+        "6961695f789f4da9a9c3fa718b135d0e",
+        "df292cfff75d46a8963765ee12c341f0",
+        "ef463e57439c4b01af0a1f501f2a074f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "6961695f789f4da9a9c3fa718b135d0e",
+      "semantic_target": "When does the Worldwide Vegan Bake Sale run?"
+    },
+    {
+      "article_id": "newsqa_621efba87e6111fb",
+      "member_question_ids": [
+        "6974b36e9aa949de8791f1545e7bef62",
+        "cdc323e4b9f94668b7099f2f958f2a29"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "6974b36e9aa949de8791f1545e7bef62",
+      "semantic_target": "where is all flight-plan information processed"
+    },
+    {
+      "article_id": "newsqa_8541ced268bbc91a",
+      "member_question_ids": [
+        "6a3cfa2f24494994bb285aa0a444492e",
+        "f7d5f07f09814ae6bde8fd535228203f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "6a3cfa2f24494994bb285aa0a444492e",
+      "semantic_target": "Where does Carl Edwards go for what he calls the best burger in the world?"
+    },
+    {
+      "article_id": "newsqa_6994369cd73006b7",
+      "member_question_ids": [
+        "6a46f17684194695b99b053c0a8ab490",
+        "baace490a2214705a98eb69dfe65893c"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "6a46f17684194695b99b053c0a8ab490",
+      "semantic_target": "At least how many people were killed in the violence directed at foreign nationals in South Africa?"
+    },
+    {
+      "article_id": "newsqa_77e80b6efb6947bc",
+      "member_question_ids": [
+        "6b25cbff83ef403ba7c2ee3b03a1d8be",
+        "822d82601bda4b509b180096346c1885"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "6b25cbff83ef403ba7c2ee3b03a1d8be",
+      "semantic_target": "How many people were rescued from the Indonesian military transport plane crash?"
+    },
+    {
+      "article_id": "newsqa_1c5288c7e0c7cb7f",
+      "member_question_ids": [
+        "6be9520acc2e409594c65672107c545a",
+        "cb271a55b4e14b5fb0606944599515cc"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "6be9520acc2e409594c65672107c545a",
+      "semantic_target": "Who said he was very disappointed by the Ethiopian verdict against journalists Johan Persson and Martin Schibbye?"
+    },
+    {
+      "article_id": "newsqa_fe86c3422cc34b34",
+      "member_question_ids": [
+        "6e3f97b8799e442991ae2ec7b7090a71",
+        "dace90eb46944bc7aa77627525f618d9"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "6e3f97b8799e442991ae2ec7b7090a71",
+      "semantic_target": "How many people were injured in the clashes between pro-democracy activists and Egyptian security forces?"
+    },
+    {
+      "article_id": "newsqa_72f24641e6397ed8",
+      "member_question_ids": [
+        "6eb7f187d8aa4f319e63ad269404dab2",
+        "d0940d4e2f8b4c23817a178bf3f2ee85"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "6eb7f187d8aa4f319e63ad269404dab2",
+      "semantic_target": "From how many nations did the leaders attend the Latin American and Caribbean summit in Mexico?"
+    },
+    {
+      "article_id": "newsqa_b1893e80b00a4c2f",
+      "member_question_ids": [
+        "6fc267ea05794476a82917156e3e519e",
+        "b95f7ffb86c34a2e82ac7ea8ac2a843f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "6fc267ea05794476a82917156e3e519e",
+      "semantic_target": "What does the U.N. drug chief advocate regarding the drug trade in Afghanistan?"
+    },
+    {
+      "article_id": "newsqa_6a80df9ae60c922d",
+      "member_question_ids": [
+        "72d750ca2345477a80129e6b3e240072",
+        "77ef14762d78476ba0c20e11ea6184c1"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "72d750ca2345477a80129e6b3e240072",
+      "semantic_target": "When did Bruna Bianchi Carneiro Ribeiro die in childbirth?"
+    },
+    {
+      "article_id": "newsqa_fef3ea171bcb87eb",
+      "member_question_ids": [
+        "734ca4956e434fc8b6712a684fcb7bdc",
+        "8fc9240c389d407db9a7410d11f3352e"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "734ca4956e434fc8b6712a684fcb7bdc",
+      "semantic_target": "Who delayed the nationwide switch to digital television?"
+    },
+    {
+      "article_id": "newsqa_5ef685f4d31d2113",
+      "member_question_ids": [
+        "7a24d5cc2a8f44819ca35879d229e8bc",
+        "ad0e4b1a103d400f9ef4dd6827e215b9"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "7a24d5cc2a8f44819ca35879d229e8bc",
+      "semantic_target": "Where was the WGC-CA Championship tournament held?"
+    },
+    {
+      "article_id": "newsqa_fdc4bf9e8211eff4",
+      "member_question_ids": [
+        "7ae978d0f8154c7694f562ef5cf6b4ef",
+        "85c04b3d7724447880a73aad3a81da3b"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "7ae978d0f8154c7694f562ef5cf6b4ef",
+      "semantic_target": "What was the reason for FARC to target the Awa Indians?"
+    },
+    {
+      "article_id": "newsqa_3e112f0bbacbd50b",
+      "member_question_ids": [
+        "7c7150625e3f48dc92f4240336c4795f",
+        "d11eb1148eef497488293a76f1d2be07"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "7c7150625e3f48dc92f4240336c4795f",
+      "semantic_target": "Who was found dead at the home of the music producer on trial for murder?"
+    },
+    {
+      "article_id": "newsqa_b4a8232d618b4dd7",
+      "member_question_ids": [
+        "7d8839e3e6a14b33ae41ec27e47ed765",
+        "f2deb08987064f74bb987878d41a3346"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "7d8839e3e6a14b33ae41ec27e47ed765",
+      "semantic_target": "Which birthday would Anne Frank be celebrating this week?"
+    },
+    {
+      "article_id": "newsqa_9439e736107bb92f",
+      "member_question_ids": [
+        "7e4e50ab633a4bd79a08dcc39d7a6b00",
+        "b997384c17614f7ba1954363aa86dade"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "7e4e50ab633a4bd79a08dcc39d7a6b00",
+      "semantic_target": "Where did the shooting attack involving Abdulhakim Bledsoe occur?"
+    },
+    {
+      "article_id": "newsqa_92ce2fbdf1c6766c",
+      "member_question_ids": [
+        "831bd2a4a96f4496947a5656ac12135d",
+        "f1cd28d437e44ac586e3494371c55ff1"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "831bd2a4a96f4496947a5656ac12135d",
+      "semantic_target": "What did the Interior Ministry officials say regarding the helicopter crash in Baghdad?"
+    },
+    {
+      "article_id": "newsqa_10d93b738d2657b2",
+      "member_question_ids": [
+        "8914c97e8b7143239e4c0f5be45b7a7a",
+        "cc289ea875ee4805a12afd70d6c50f6b"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "8914c97e8b7143239e4c0f5be45b7a7a",
+      "semantic_target": "What number of detainees had medical escorts since 2003?"
+    },
+    {
+      "article_id": "newsqa_2a4c80978eebf106",
+      "member_question_ids": [
+        "891aa475e0f64276bbcec79f79a8d50e",
+        "f19f066e81ec40d7aae87630df542d27"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "891aa475e0f64276bbcec79f79a8d50e",
+      "semantic_target": "What was found near San Diego following the California wildfires?"
+    },
+    {
+      "article_id": "newsqa_c59f4b82f4e71ec1",
+      "member_question_ids": [
+        "89c493d17fad4483a54447872ff7fe6d",
+        "f4e04bf1629c41f38e15786299a33202"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "89c493d17fad4483a54447872ff7fe6d",
+      "semantic_target": "What do the treasure hunters hope to find?"
+    },
+    {
+      "article_id": "newsqa_dcdc1a7dff7beaa4",
+      "member_question_ids": [
+        "8a3561154a454ca597d3a9a636a95a93",
+        "c564493e2442402ebb6d4a5af51f7c25"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "8a3561154a454ca597d3a9a636a95a93",
+      "semantic_target": "What aspect of golf has provided great material for filmmakers?"
+    },
+    {
+      "article_id": "newsqa_a2545128aabee00a",
+      "member_question_ids": [
+        "8be75204345642ec87b18f1f7e8d3513",
+        "be4a1b1eb4d44d628dbaefa4ede886a3"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "8be75204345642ec87b18f1f7e8d3513",
+      "semantic_target": "Who holds the outright world sailing speed record described in the article?"
+    },
+    {
+      "article_id": "newsqa_a7b7e7555ee6888d",
+      "member_question_ids": [
+        "8da9a487491d4861815c860882b46f1b",
+        "b20e7a05673a4b3c8ee29beaba23f73a"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "8da9a487491d4861815c860882b46f1b",
+      "semantic_target": "Who did Bayern defeat on the first leg?"
+    },
+    {
+      "article_id": "newsqa_fe86c3422cc34b34",
+      "member_question_ids": [
+        "918d39163c934fb89811db623983a76c",
+        "ee7adf8b775344429dbd224b9e06c7d3"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "918d39163c934fb89811db623983a76c",
+      "semantic_target": "How many people died in the clashes between pro-democracy activists and Egyptian security forces?"
+    },
+    {
+      "article_id": "newsqa_57d01be97106f8c7",
+      "member_question_ids": [
+        "9206f18617d749b09fc00c5f949e4a54",
+        "dde94541f9794aa4a55a19e0b20cf54f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "9206f18617d749b09fc00c5f949e4a54",
+      "semantic_target": "Who was known as the blonde angel of death?"
+    },
+    {
+      "article_id": "newsqa_621efba87e6111fb",
+      "member_question_ids": [
+        "93ade19467b641139f41f9fe6e0eb251",
+        "db07c15f3b7a40c7b61fa05120bfede2"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "93ade19467b641139f41f9fe6e0eb251",
+      "semantic_target": "What did the FAA say about the status of the flight delay situation?"
+    },
+    {
+      "article_id": "newsqa_a9987d5410b1511e",
+      "member_question_ids": [
+        "93df3e4cd7ed4859a3e67bb63fded5f5",
+        "99320c1449e54556ba293ed05d7f040d"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "93df3e4cd7ed4859a3e67bb63fded5f5",
+      "semantic_target": "Which Catholic priest, known as 'Father Oprah', was removed from his duties?"
+    },
+    {
+      "article_id": "newsqa_6972bfc437c606c3",
+      "member_question_ids": [
+        "942bf4f0c7314363b7e4c3ec2b28128f",
+        "ab125bf5e094423eb2f4d733160ad567"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "942bf4f0c7314363b7e4c3ec2b28128f",
+      "semantic_target": "Where was the fighting between government soldiers and Taliban militants?"
+    },
+    {
+      "article_id": "newsqa_7b9f85310bdb49af",
+      "member_question_ids": [
+        "94d420e9c7754759a7391868d14e81fc",
+        "ab1542b2a7e64584ba41a72e10d3f1d4"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "94d420e9c7754759a7391868d14e81fc",
+      "semantic_target": "Who were involved in the five days of gunbattles in Kashmir?"
+    },
+    {
+      "article_id": "newsqa_b1893e80b00a4c2f",
+      "member_question_ids": [
+        "951d6908625f412daef5fc65020c52f0",
+        "e77d740409e349ecbebe4fc81e84d520"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "951d6908625f412daef5fc65020c52f0",
+      "semantic_target": "What do the drugs in Afghanistan fund?"
+    },
+    {
+      "article_id": "newsqa_0057e8f1242c5636",
+      "member_question_ids": [
+        "956f69c5b64e48238441d49ffa32e523",
+        "a2a1fb5d4f984d009cf64e937c5df55d",
+        "f66c93d5e36e45edbf7f8e1dda09156c"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "956f69c5b64e48238441d49ffa32e523",
+      "semantic_target": "When did Natalie Cole's kidney transplant surgery occur?"
+    },
+    {
+      "article_id": "newsqa_f2750e2ee0f22dcd",
+      "member_question_ids": [
+        "977a85dceaff4e9995034d133961a1ce",
+        "af5a0954d5ee4800bfc755fed87274db"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "977a85dceaff4e9995034d133961a1ce",
+      "semantic_target": "What do investigators think about Misty Cummings's cooperation in the Haleigh Cummings disappearance case?"
+    },
+    {
+      "article_id": "newsqa_021ed62006535de6",
+      "member_question_ids": [
+        "9a9e86c0ad0a4a2db791d4f5fd0a8b9b",
+        "a5ad768fcc80413387ef56a790b3940f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "9a9e86c0ad0a4a2db791d4f5fd0a8b9b",
+      "semantic_target": "How many additional troops did the Pentagon plan to send to Afghanistan by the end of the year?"
+    },
+    {
+      "article_id": "newsqa_b5f10cba27d68c6c",
+      "member_question_ids": [
+        "9b5c249c46644e04a2d28d98bac5f951",
+        "c0d3770ca41e4463958dca0c88ce3979",
+        "d847d59c18884a8eaddd5fc55d047799"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "9b5c249c46644e04a2d28d98bac5f951",
+      "semantic_target": "How many people were killed in the Monday terror attack in Peshawar?"
+    },
+    {
+      "article_id": "newsqa_febc7f8b7a378cdc",
+      "member_question_ids": [
+        "9bb1b01620ea4ed28be3d13447145272",
+        "fee6642b071a46e9b1a005d63b58a98c"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "9bb1b01620ea4ed28be3d13447145272",
+      "semantic_target": "What type of rhetoric did Mark Warner focus on in his speech?"
+    },
+    {
+      "article_id": "newsqa_92fd6eaaa327fc32",
+      "member_question_ids": [
+        "a5b5d4f85c274be49ad11c9d258a3a99",
+        "d2f3f9d62ed945aea125ef7fcd1b2382"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "a5b5d4f85c274be49ad11c9d258a3a99",
+      "semantic_target": "Who sought 15 years for Lillo Brancato Jr. ?"
+    },
+    {
+      "article_id": "newsqa_d973319d09baa363",
+      "member_question_ids": [
+        "aacdcc8d1b8345ce9f2a4199aac5f721",
+        "c53f2dd5200e4beb9e81348f91a8e824"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "aacdcc8d1b8345ce9f2a4199aac5f721",
+      "semantic_target": "Which clan is believed to have been behind the recent massacre in Italy where six people were murdered?"
+    },
+    {
+      "article_id": "newsqa_0c83af4569503adb",
+      "member_question_ids": [
+        "af0cc33542ac4440a243c4807d87fd37",
+        "d98750850d5249e09d7bfbb43313513f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "af0cc33542ac4440a243c4807d87fd37",
+      "semantic_target": "What should you carry if you are allergic to insects?"
+    },
+    {
+      "article_id": "newsqa_3e112f0bbacbd50b",
+      "member_question_ids": [
+        "af764b251ad54f0aada935fe01d05a7a",
+        "ed9bbda118d04a9c8eab9ed97ade146e"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "af764b251ad54f0aada935fe01d05a7a",
+      "semantic_target": "Where did the defense argue the woman found dead in the foyer shot herself?"
+    },
+    {
+      "article_id": "newsqa_9e88962146f43191",
+      "member_question_ids": [
+        "b189954307e7414b9d81ad99c7b730bf",
+        "f20bdc9681624087af1dda063b3a6945",
+        "f22c94617c404f388ea469654e9a580f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "b189954307e7414b9d81ad99c7b730bf",
+      "semantic_target": "What number of civilians did India estimate are trapped in Sri Lanka's war zone?"
+    },
+    {
+      "article_id": "newsqa_92ce2fbdf1c6766c",
+      "member_question_ids": [
+        "b7ccf71e49054da2a836cbd7dcca51ae",
+        "d809c82de0cc41a391a8476fbedc4638"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "b7ccf71e49054da2a836cbd7dcca51ae",
+      "semantic_target": "How many people were killed in the helicopter crash in northern Baghdad?"
+    },
+    {
+      "article_id": "newsqa_25a5c22cc9b7159e",
+      "member_question_ids": [
+        "b9ca82e2c48540c0b4c004b86f316109",
+        "c1740d78b92a4377bcd6b4846b5b42c2"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "b9ca82e2c48540c0b4c004b86f316109",
+      "semantic_target": "Which military unit is part of the initial surge plan to Afghanistan?"
+    },
+    {
+      "article_id": "newsqa_ed82a8d4afff04f8",
+      "member_question_ids": [
+        "bba8beff7e84467798bcc8877a8f8f24",
+        "c61125f708f444a08a74f67c940ed77a"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "bba8beff7e84467798bcc8877a8f8f24",
+      "semantic_target": "How many eggs did Henry, the tuatara at the Southland Museum, and his mate Mildred produce?"
+    },
+    {
+      "article_id": "newsqa_873617d2e2339534",
+      "member_question_ids": [
+        "bbe5fe704e1147bf8ad9fd90297f22ac",
+        "f1d31a7dd5fe48ec86396fe1c70594c8"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "bbe5fe704e1147bf8ad9fd90297f22ac",
+      "semantic_target": "What are the dimensions of the solar-powered boat PlanetSolar?"
+    },
+    {
+      "article_id": "newsqa_42a0b49b5ffcfbc4",
+      "member_question_ids": [
+        "bf9d67fa8b3849ceb410c4dfd7947e5f",
+        "c89d1c366c274f6e8d233be688759386",
+        "d5938c1e944d44f7ab3ace92abc7d452",
+        "e0ce4da6cbfe4f26b945f5555901e5c5"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "bf9d67fa8b3849ceb410c4dfd7947e5f",
+      "semantic_target": "How many civilians are trapped in the Sri Lankan conflict zone?"
+    },
+    {
+      "article_id": "newsqa_25a5c22cc9b7159e",
+      "member_question_ids": [
+        "c3648af18d4b400aaa4924a0eed0f5b4",
+        "ef04d080cbcb459b8803c4c04a7ab199"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "c3648af18d4b400aaa4924a0eed0f5b4",
+      "semantic_target": "Which Marine from the 3rd Platoon said he is ecstatic about the deployment?"
+    },
+    {
+      "article_id": "newsqa_bfc677dd63cad6a7",
+      "member_question_ids": [
+        "d23a30ecc5b8469c8e6324ff5d42409b",
+        "f380a5932d4b4a43969a84c3338edae0"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "d23a30ecc5b8469c8e6324ff5d42409b",
+      "semantic_target": "What position does Robert Kimmitt hold in the U.S. government?"
+    },
+    {
+      "article_id": "newsqa_f3c2d334bcc1c5d0",
+      "member_question_ids": [
+        "dc1bcf2ea7d34043b9337438ed4acbf4",
+        "ff45f51c967447bbafe8da76140a1a0f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "dc1bcf2ea7d34043b9337438ed4acbf4",
+      "semantic_target": "Where was the Mass preached by the Pope during his first trip?"
+    },
+    {
+      "article_id": "newsqa_4fe9657ccca5e9c1",
+      "member_question_ids": [
+        "e76d0d1755a446e398a114d49c9cd6cb",
+        "e846a76cf896416fa46846010b343285",
+        "ff89789e7aab4c31b15fed6597f67770"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "e76d0d1755a446e398a114d49c9cd6cb",
+      "semantic_target": "What were the 19th-century versions of bikinis made of?"
+    },
+    {
+      "article_id": "newsqa_ff008ecad2e53d48",
+      "member_question_ids": [
+        "eab1831fc59f4491acc17e1f38edeff2",
+        "fec7fec9315345d08442effe788cb11f"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "eab1831fc59f4491acc17e1f38edeff2",
+      "semantic_target": "Who, in the context of debate preparation, said he would make sure to make the cases aggressively?"
+    },
+    {
+      "article_id": "newsqa_443d6416eafb191d",
+      "member_question_ids": [
+        "f07750ea1251487eaf95f98457f8e5bf",
+        "f8860bc24541401bb994c72c67e5c7af"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "f07750ea1251487eaf95f98457f8e5bf",
+      "semantic_target": "Who lifted the ban on media coverage of the return of sailors killed in the attack on the USS Cole in 2000?"
+    },
+    {
+      "article_id": "newsqa_b424ae554bc7ef14",
+      "member_question_ids": [
+        "f2286074ceb04295a819efc7e503fe39",
+        "fe662df179fe47f1a9fa2c634c58c26a"
+      ],
+      "rationale": "Codex review determined that these within-article questions request the same answer-bearing fact; their reviewed answer and evidence variants are retained on the representative.",
+      "representative_question_id": "f2286074ceb04295a819efc7e503fe39",
+      "semantic_target": "Which former Alabama judge has denied the criminal allegations against him?"
+    }
+  ],
+  "review": {
+    "created_at": "2026-07-16T17:06:22.916611+00:00",
+    "method": "Performance-blind, within-article semantic review. Exact normalized wording and conservative embedding candidates were inspected; only questions with the same answer-bearing information need were clustered.",
+    "model": "sol-5.6",
+    "performance_blind": true,
+    "representative_policy": "lexicographically_smallest_source_question_id",
+    "tool": "codex-cli"
+  },
+  "schema_version": "1.0"
+}

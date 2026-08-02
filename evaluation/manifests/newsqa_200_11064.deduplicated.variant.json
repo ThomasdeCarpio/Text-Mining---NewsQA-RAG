@@ -1,0 +1,145 @@
+{
+  "artifacts": {
+    "bm25": {
+      "bytes": 43013055,
+      "path": "data/evaluation/newsqa_200_11064/final_deduplicated/bm25.pkl",
+      "sha256": "8af2f968a755b680f8279222a0c33692001532fcc616eee880ed7faf5b5669d5"
+    },
+    "chunks": {
+      "bytes": 44453661,
+      "path": "data/evaluation/newsqa_200_11064/final_deduplicated/chunks.jsonl",
+      "sha256": "9f9c3fd6b645b72c8e2e18764c461d77cccea334cd781dd8eb28950918c474a4"
+    },
+    "duplicate_questions": {
+      "bytes": 70066,
+      "path": "data/evaluation/newsqa_200_11064/final_deduplicated/duplicate_questions.jsonl",
+      "sha256": "20aa7096e4577c64a4048ca89a686746b0d61550d85e7f90442b71a16bed7d5c"
+    },
+    "excluded_questions": {
+      "bytes": 3463,
+      "path": "data/evaluation/newsqa_200_11064/final_deduplicated/excluded_questions.jsonl",
+      "sha256": "c6d5d26e53b9505503c28f9cfb0feb5f7506a89b12c14544a87ceba616a23042"
+    },
+    "integrity": {
+      "bytes": 679,
+      "path": "data/evaluation/newsqa_200_11064/final_deduplicated/integrity_report.json",
+      "sha256": "66717bffa8ff548129193bb4bcb0ed418b5c556b81d6dac16a4ef484db4168bf"
+    },
+    "question_clusters": {
+      "bytes": 809093,
+      "path": "data/evaluation/newsqa_200_11064/final_deduplicated/question_clusters.jsonl",
+      "sha256": "71fb5f13065da8eec898e0aa0bd246e2362cf3e871045609ce5d39a0271d832d"
+    },
+    "review_annotations": {
+      "bytes": 1418758,
+      "path": "data/evaluation/newsqa_200_11064/final_deduplicated/review_annotations.jsonl",
+      "sha256": "c4c42c48af7a2e32b445e1ff6b7cc4001347f0f63766a26a1151db0897eecb41"
+    },
+    "testset_clarified": {
+      "bytes": 863719,
+      "path": "data/evaluation/newsqa_200_11064/final_deduplicated/testset_clarified.jsonl",
+      "sha256": "f20233fee7e8a3d5afe7c1e62935a88c4552ead0716dd283863419ac63aa1bc5"
+    },
+    "testset_original": {
+      "bytes": 655977,
+      "path": "data/evaluation/newsqa_200_11064/final_deduplicated/testset_original.jsonl",
+      "sha256": "99c74d2011e815bb5224c1c2ea5b854e3f721897f1a8c94c1727f637dbb655a8"
+    },
+    "testset_resolved": {
+      "bytes": 1044731,
+      "path": "data/evaluation/newsqa_200_11064/final_deduplicated/testset_resolved.jsonl",
+      "sha256": "25471ffb1892210f669e59757537549efd509286f8cf046aafbe403020684b54"
+    },
+    "testset_reviewed_original": {
+      "bytes": 1010708,
+      "path": "data/evaluation/newsqa_200_11064/final_deduplicated/testset_reviewed_original.jsonl",
+      "sha256": "f84946decfc6aa2d80d735eb65b3cd0d99056e6a255907fe31ac0f726bc756d8"
+    }
+  },
+  "cluster_decisions": {
+    "path": "evaluation/question_dedup/newsqa_200_11064.semantic_clusters.json",
+    "review": {
+      "created_at": "2026-07-16T17:06:22.916611+00:00",
+      "method": "Performance-blind, within-article semantic review. Exact normalized wording and conservative embedding candidates were inspected; only questions with the same answer-bearing information need were clustered.",
+      "model": "sol-5.6",
+      "performance_blind": true,
+      "representative_policy": "lexicographically_smallest_source_question_id",
+      "tool": "codex-cli"
+    },
+    "schema_version": "1.0",
+    "sha256": "959c7d9cae3f56afcdbd29034c738e61113370cb8c23467ab43dcb3d9b136695"
+  },
+  "created_at": "2026-07-16T17:35:32.203908+00:00",
+  "database": {
+    "chunk_count": 19263,
+    "collection": "newsqa_val200_s42_7e16e8_66785e",
+    "indexed": true,
+    "path": "data/chroma_db"
+  },
+  "generator": {
+    "git_commit": "d7fa0da126dd18872fa7ee151bbb4a7c773912e6",
+    "python": "3.12.4",
+    "script": "scripts/deduplicate_evaluation_dataset.py"
+  },
+  "human_approval": {
+    "path": "evaluation/question_dedup/newsqa_200_11064.human_approval.json",
+    "review": {
+      "method": "Manual review of every proposed multi-question cluster.",
+      "notes": "Reviewer read duplicate_questions_readable.md and explicitly approved all Codex duplicate-cluster decisions in the project session.",
+      "reviewed_at": "2026-07-16T17:35:31.646825+00:00",
+      "reviewer_id": "thomas",
+      "status": "approved"
+    },
+    "schema_version": "1.0",
+    "sha256": "f2d2f0e42aac1f49a64e3da14c2f4bdb17cf97833a89df2da4324d55c3c4a20f"
+  },
+  "parent_manifest": {
+    "path": "evaluation/manifests/newsqa_200_11064.variant.json",
+    "sha256": "b4d8a817d0e5eff39ac80d14526b465eb072bf2fb18b7fdf346511d912ef12c2"
+  },
+  "pipeline": {
+    "chunking": {
+      "chunk_overlap": 64,
+      "chunk_size": 512,
+      "sentence_overlap": 2,
+      "sentences_per_chunk": 8,
+      "strategy": "recursive"
+    },
+    "config_path": "configs/config.yaml",
+    "config_sha256": "66785e0c9ecc3ad2ca2debc62a6dc018ff1dfab7442ef175605a91f519899a58",
+    "embedding": {
+      "dimensions": 384,
+      "model_name": "all-MiniLM-L6-v2",
+      "provider": "sentence-transformers"
+    }
+  },
+  "schema_version": "2.1",
+  "selection_manifest": {
+    "path": "evaluation/manifests/newsqa_200_11064.selection.json",
+    "selection_sha256": "7e16e853d4d14f835f92fced4de6bc0fb998768efb2e1dc95cbfb07ef8bb04f7",
+    "sha256": "0ae96fe0982a03b9872a6c79397f1f869b782e0f8204ec91ee0c956552e1b971"
+  },
+  "statistics": {
+    "chunks": 19263,
+    "corpus_articles": 11064,
+    "deduplicated_clarified_questions": 924,
+    "deduplicated_questions": 1152,
+    "deduplication_schema_version": "1.0",
+    "distractor_articles": 10864,
+    "duplicate_questions_removed": 184,
+    "human_review_status": "approved",
+    "human_reviewer_id": "thomas",
+    "invalid_exclusions": 4,
+    "known_distractor_normalized_duplicate_representations": 225,
+    "multi_question_clusters": 155,
+    "phase": "semantic_deduplicated",
+    "pre_dedup_scored_questions": 1336,
+    "schema_version": "2.1",
+    "semantic_clusters": 1152,
+    "singleton_clusters": 997,
+    "source_questions": 1340,
+    "source_review_annotations": 1340,
+    "status": "passed"
+  },
+  "status": "human_approved_semantic_deduplicated"
+}

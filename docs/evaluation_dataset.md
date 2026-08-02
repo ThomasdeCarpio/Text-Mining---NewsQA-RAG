@@ -235,6 +235,60 @@ clarified = approved or edited questions with a clarification
 No rechunking, embedding, or second database collection occurs during
 finalization.
 
+## 8. Build the semantic-deduplicated variant
+
+After finalization, export Codex's proposed clusters for human review:
+
+```bash
+.venv/bin/python scripts/export_duplicate_question_report.py
+```
+
+After reading every proposed cluster, explicitly record the decisions. The
+`--approve-all` command is appropriate only when the reviewer accepts every
+cluster in the report:
+
+```bash
+.venv/bin/python scripts/record_question_dedup_approval.py \
+  --reviewer-id REVIEWER_ID \
+  --approve-all
+```
+
+Then create the performance-blind, within-article deduplicated variant:
+
+```bash
+.venv/bin/python scripts/deduplicate_evaluation_dataset.py
+```
+
+Use `--overwrite` only when intentionally rebuilding an existing derived
+output. The command validates the finalized artifact hashes and the semantic
+decision file before writing:
+
+```text
+data/evaluation/newsqa_200_11064/final_deduplicated/
+evaluation/manifests/newsqa_200_11064.deduplicated.variant.json
+```
+
+The raw 1,340-question extraction and all 1,340 review annotations remain
+complete. Only the scored reviewed/resolved variants are reduced from 1,336 to
+1,152 unique within-article semantic targets. The 184 removed rows and the full
+cluster partition are preserved in `duplicate_questions.jsonl` and
+`question_clusters.jsonl`. Corpus, chunks, BM25, Chroma, and distractors are
+unchanged, so review work and retrieval infrastructure are reused.
+
+Codex proposals and human approval are separate immutable artifacts:
+
+```text
+evaluation/question_dedup/newsqa_200_11064.semantic_clusters.json
+evaluation/question_dedup/newsqa_200_11064.human_approval.json
+```
+
+The approval references the proposal and resolved testset hashes and contains
+one decision for every proposed multi-question cluster. The builder rejects
+missing, stale, incomplete, or rejected approval records. Candidate detection
+uses resolved wording, then applies the approved partition to both the
+reviewed-original and resolved scored variants so their question populations
+remain paired. The raw original extraction is not deduplicated.
+
 The complete file-by-file output contract, finalized counts, schemas,
 manifests, and benchmark commands are documented in
 [`final_evaluation_output.md`](final_evaluation_output.md).
