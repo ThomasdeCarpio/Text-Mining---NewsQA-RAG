@@ -11,6 +11,7 @@ sinh câu trả lời có trích dẫn và so sánh các cấu hình bằng expe
 | Test một retriever, reranker hoặc model mới | [Hướng dẫn experiment](docs/experiments.md) |
 | Hiểu MRR, NDCG, Recall và failure | [Metrics và kết quả](docs/evaluation.md) |
 | Tạo bộ câu hỏi/ground truth mới | [Tạo evaluation dataset](docs/evaluation_dataset.md) |
+| Chia sẻ/tải evaluation dataset private | [Hugging Face evaluation dataset](docs/huggingface_evaluation_dataset.md) |
 | Chạy thủ công một cấu hình | [Benchmark CLI](docs/benchmarking.md) |
 
 Điểm dễ nhầm nhất:

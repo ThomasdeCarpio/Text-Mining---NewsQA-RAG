@@ -1,0 +1,35 @@
+# Ablation Study Config: 256 token chunks with 32 overlap (recursive strategy)
+
+embedding:
+  provider: "sentence-transformers"
+  model_name: "all-MiniLM-L6-v2"
+  dimensions: 384
+
+chunking:
+  strategy: "recursive"
+  chunk_size: 256
+  chunk_overlap: 32
+
+database:
+  hnsw:
+    space: "cosine"
+    ef_construction: 200
+    max_neighbors: 16
+    ef_search: 50
+
+llm:
+  model: "gpt-4o-mini"
+  temperature: 0.0
+  max_tokens: 1024
+
+retrieval:
+  top_k: 10
+  reranker:
+    enabled: true
+    provider: "cross-encoder"
+    model: "ms-marco-MiniLM-L-6-v2"
+    top_n: 5
+  hybrid:
+    enabled: true
+    dense_weight: 0.7
+    sparse_weight: 0.3

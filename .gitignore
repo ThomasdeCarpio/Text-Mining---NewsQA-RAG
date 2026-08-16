@@ -39,3 +39,5 @@ database/*
 # Generated evaluation outputs (keep local; do not push)
 outputs/benchmarks/
 outputs/experiments/
+
+*node_modules/

@@ -26,6 +26,7 @@ tiktoken
 # Evaluation
 ragas
 datasets
+huggingface_hub>=1.20,<2
 
 # Utilities
 python-dotenv
