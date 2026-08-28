@@ -1,0 +1,45 @@
+schema_version: 1
+
+experiment:
+  id: ablation-2-retrieval
+  name: Retrieval Strategy Ablation
+  description: Compare BM25, Dense Chroma, and Hybrid RRF retrievers on NewsQA.
+
+output_dir: outputs/experiments
+seed: 42
+
+dataset:
+  article_field: article_key
+  development_articles: 50
+  indexes:
+    baseline:
+      config: configs/config.yaml
+      variant_manifest: evaluation/manifests/newsqa_200_11064.deduplicated.variant.json
+      testsets:
+        original: data/evaluation/newsqa_200_11064/final_deduplicated/testset_reviewed_original.jsonl
+        resolved: data/evaluation/newsqa_200_11064/final_deduplicated/testset_resolved.jsonl
+
+fixed:
+  index: baseline
+  partition: all
+  variant: original
+  reranker: noop
+  retrieval_only: true
+  top_k: 10
+  rerank_top_n: 5
+
+matrix:
+  retriever: [bm25, dense, hybrid]
+
+runtime:
+  max_attempts: 2
+  progress: true
+
+judge:
+  enabled: false
+
+summary:
+  metrics: [retrieval.hit_rate@5, retrieval.mrr@5, retrieval.ndcg@5, retrieval.recall@5]
+  paired_metric: retrieval.mrr@5
+  quality_metric: retrieval.mrr@5.mean
+  latency_metric: latency.total.p95_ms
