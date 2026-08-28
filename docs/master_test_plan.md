@@ -114,11 +114,14 @@ graph TD
 
 ---
 
-### Thí nghiệm 1: Kích thước Chunk & Chiến lược Chunking (Chunking Ablation)
-* **Câu hỏi nghiên cứu**: Kích thước chunk nào cân bằng tốt nhất giữa độ chính xác vector của embedding và tính toàn vẹn ngữ cảnh cho LLM?
+### Thí nghiệm 1: Kích thước Chunk & Độ Overlap (Chunking & Overlap Grid)
+* **Câu hỏi nghiên cứu**: Kích thước chunk và tỷ lệ chồng lấp (overlap) nào cân bằng tốt nhất giữa độ chính xác vector của embedding, tính toàn vẹn ngữ cảnh cho LLM và không bị cắt rời bằng chứng?
 * **Biến kiểm soát (Cố định)**: Embedding (`all-MiniLM-L6-v2`), Retrieval (`Hybrid`), Reranker (`noop`), 1.152 câu hỏi.
 * **Biến độc lập (Thay đổi)**:
-  1. Chunk size: `256` (overlap 32), `512` (overlap 64), `1024` (overlap 128).
+  1. Lưới Chunk size $\times$ Overlap:
+     - `chunk_256`: Overlaps `[0, 32, 64]` (0%, 12.5%, 25%).
+     - `chunk_512`: Overlaps `[0, 64, 128]` (0%, 12.5%, 25%).
+     - `chunk_1024`: Overlaps `[0, 128, 256]` (0%, 12.5%, 25%).
   2. Chiến lược: `recursive` vs `sentence`.
 * **Metric đo lường**: Hit Rate@5, MRR@5, NDCG@5, Tổng số chunk được tạo, Tỷ lệ chứa trọn vẹn bằng chứng (Evidence containment).
 * **Lệnh chạy**:
@@ -129,30 +132,30 @@ graph TD
 
 ---
 
-### Thí nghiệm 2: So sánh Phương pháp Truy xuất (Retrieval Ablation)
-* **Câu hỏi nghiên cứu**: BM25 hay Dense vector tốt hơn trên bài báo tin tức (vốn chứa nhiều tên riêng, số liệu), và Hybrid RRF cải thiện bao nhiêu %?
-* **Biến kiểm soát**: Chunking `512/64 recursive`, Top $K=10$, 1.152 câu hỏi.
+### Thí nghiệm 2: So sánh Phương pháp Truy xuất & Độ sâu Top-K (Retrieval & Cutoff Sensitivity)
+* **Câu hỏi nghiên cứu**: BM25 hay Dense vector tốt hơn trên bài báo tin tức (vốn chứa nhiều tên riêng, số liệu), Hybrid RRF cải thiện bao nhiêu %, và lấy bao nhiêu chunk ($K=5, 10, 20$) là điểm bão hòa Recall?
+* **Biến kiểm soát**: Chunking `512/64 recursive`, 1.152 câu hỏi.
 * **Biến độc lập**:
-  1. `sparse`: Chỉ dùng Okapi BM25.
-  2. `dense`: Chỉ dùng ChromaDB (`all-MiniLM-L6-v2`).
-  3. `hybrid`: Kết hợp Dense + BM25 bằng Reciprocal Rank Fusion (RRF).
-* **Metric đo lường**: Hit Rate@{1, 3, 5, 10}, MRR@10, NDCG@10, Độ trễ truy xuất P95.
+  1. Phương pháp: `sparse` (Okapi BM25) vs `dense` (ChromaDB `all-MiniLM-L6-v2`) vs `hybrid` (Reciprocal Rank Fusion - RRF).
+  2. Điểm cắt truy xuất ban đầu (Initial Top-$K$): $K \in \{5, 10, 20\}$.
+  3. Điểm cắt sau rerank (Post-Rerank Top-$N$): $N \in \{3, 5\}$.
+* **Metric đo lường**: Hit Rate@{1, 3, 5, 10}, Recall@{5, 10}, MRR@5, NDCG@5, Phân tích chi tiết thời gian truy xuất (Dense ms, BM25 ms, Total P95 Latency ms).
 * **Giả thuyết**: BM25 thắng ở câu hỏi có tên thực thể hiếm, Dense thắng ở câu hỏi diễn giải ngữ nghĩa, Hybrid đạt kết quả cao nhất (+5 đến 10% MRR).
 * **Lệnh chạy**:
   ```bash
-  python scripts/run_experiment.py configs/experiments/ablation_2_retrieval.yaml
+  python scripts/run_experiment.py configs/experiments/ablation_retrieval_deep.yaml
   ```
 
 ---
 
-### Thí nghiệm 3: Tác động của Reranker (Reranker Ablation)
-* **Câu hỏi nghiên cứu**: Cross-Encoder cải thiện độ chính xác xếp hạng bao nhiêu so với Bi-Encoder, và độ trễ tăng thêm có đáng kể không?
+### Thí nghiệm 3: Tác động của Reranker & Đánh đổi Thời gian (Reranker & Latency Profiling)
+* **Câu hỏi nghiên cứu**: Cross-Encoder cải thiện độ chính xác xếp hạng bao nhiêu so với Bi-Encoder, và độ trễ tăng thêm (ms) có đáng để triển khai trong thực tế?
 * **Biến kiểm soát**: Hybrid Retrieval Top 10, Chunking `512/64`.
 * **Biến độc lập**:
   1. `noop`: Cắt thẳng top 5 từ retrieval (không rerank).
-  2. `cross-encoder/ms-marco-MiniLM-L-6-v2` (model nhỏ, nhanh).
-  3. `BAAI/bge-reranker-large` (model lớn, độ chính xác cao).
-* **Metric đo lường**: MRR@5 sau rerank, NDCG@5 sau rerank, Độ trễ reranker (ms).
+  2. `cross-encoder/ms-marco-MiniLM-L-6-v2` (model 6-layer, suy luận nhanh ~10-20ms).
+  3. `BAAI/bge-reranker-large` (model 24-layer, dung lượng lớn, độ chính xác cao).
+* **Metric đo lường**: MRR@5 sau rerank, NDCG@5 sau rerank, Hit Rate@1, Thời gian Reranker suy luận (ms), P95 Latency toàn chuỗi.
 * **Lệnh chạy**:
   ```bash
   python scripts/run_experiment.py configs/experiments/ablation_3_reranking.yaml
