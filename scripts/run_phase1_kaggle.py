@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the complete resumable Phase 1 tournament in a Kaggle T4x2 session."""
+"""Run the complete resumable Phase 1 tournament on one or two CUDA GPUs."""
 
 from __future__ import annotations
 
@@ -44,8 +44,11 @@ def build_one(chunks, base_manifest, root, kind, identifier, device=None):
     return completed
 
 
-def index_build_schedule(fast=False):
+def index_build_schedule(fast=False, gpu_count=2):
     """Separate safe parallel jobs from high-host-memory model builds."""
+    if gpu_count not in {1, 2}:
+        raise ValueError("gpu_count must be 1 or 2")
+    second_device = 1 if gpu_count > 1 else 0
     if fast:
         return {
             "light_dense": [("all-MiniLM-L6-v2", 0)],
@@ -53,9 +56,9 @@ def index_build_schedule(fast=False):
             "heavy": [],
         }
     return {
-        "light_dense": [
+            "light_dense": [
             ("all-MiniLM-L6-v2", 0),
-            ("BAAI/bge-small-en-v1.5", 1),
+            ("BAAI/bge-small-en-v1.5", second_device),
         ],
         "cpu_sparse": [
             "bm25_okapi_simple",
@@ -66,29 +69,29 @@ def index_build_schedule(fast=False):
         # materialization can exhaust Kaggle's host RAM before CUDA inference.
         "heavy": [
             ("dense", "intfloat/e5-base-v2", 0),
-            ("dense", "BAAI/bge-large-en-v1.5", 1),
+            ("dense", "BAAI/bge-large-en-v1.5", second_device),
             ("sparse", "bge_m3_sparse", 0),
         ],
     }
 
 
-def parallel_build(chunks, base_manifest, root, fast=False):
+def parallel_build(chunks, base_manifest, root, fast=False, gpu_count=2):
     root.mkdir(parents=True, exist_ok=True)
-    schedule = index_build_schedule(fast)
+    schedule = index_build_schedule(fast, gpu_count)
     manifests = []
     cpu_workers = min(2, max(1, (os.cpu_count() or 4) - 2))
-    with (
-        ThreadPoolExecutor(1) as gpu0,
-        ThreadPoolExecutor(1) as gpu1,
-        ThreadPoolExecutor(cpu_workers) as cpu,
-    ):
+    gpu_pools = [ThreadPoolExecutor(1) for _ in range(gpu_count)]
+    with ThreadPoolExecutor(cpu_workers) as cpu:
         futures = []
         for model, device in schedule["light_dense"]:
-            pool = gpu0 if device == 0 else gpu1
-            futures.append(pool.submit(build_one, chunks, base_manifest, root, "dense", model, device))
+            futures.append(gpu_pools[device].submit(
+                build_one, chunks, base_manifest, root, "dense", model, device
+            ))
         for sparse_id in schedule["cpu_sparse"]:
             futures.append(cpu.submit(build_one, chunks, base_manifest, root, "sparse", sparse_id, None))
         manifests.extend(future.result() for future in futures)
+    for pool in gpu_pools:
+        pool.shutdown()
 
     for kind, identifier, device in schedule["heavy"]:
         manifests.append(build_one(chunks, base_manifest, root, kind, identifier, device))
@@ -107,7 +110,7 @@ def profiles_from_manifest(manifest):
     return profiles
 
 
-def run_stage(stage, profiles, specs_root, experiments_root, cache, reranker_model=None):
+def run_stage(stage, profiles, specs_root, experiments_root, cache, reranker_model=None, gpu_count=2):
     specs_root.mkdir(parents=True, exist_ok=True)
     jobs = []
     for position, (name, profile) in enumerate(profiles.items()):
@@ -121,11 +124,12 @@ def run_stage(stage, profiles, specs_root, experiments_root, cache, reranker_mod
         if reranker_model:
             args += ["--reranker-model", reranker_model]
         command(args)
-        jobs.append((spec, position % 2))
+        jobs.append((spec, position % gpu_count))
     # XLM-R large has a high host-memory peak while loading. Running two copies
     # concurrently can cause Kaggle to kill both collectors and orphan parents.
     serial_large_reranker = stage == "round2" or str(reranker_model).startswith("BAAI/bge-reranker")
-    with ThreadPoolExecutor(1 if serial_large_reranker else 2) as pool:
+    workers = 1 if serial_large_reranker else min(gpu_count, len(jobs))
+    with ThreadPoolExecutor(workers) as pool:
         futures = [pool.submit(command, [sys.executable, "scripts/run_experiment.py", spec], device=device) for spec, device in jobs]
         for future in futures:
             future.result()
@@ -178,6 +182,13 @@ def main() -> None:
     parser.add_argument("--revision", default="v1.0.0")
     parser.add_argument("--work-root", default="/kaggle/working/newsqa_phase1")
     parser.add_argument("--fast", action="store_true")
+    parser.add_argument(
+        "--gpu-count",
+        type=int,
+        choices=[1, 2],
+        default=2,
+        help="Number of CUDA devices available to the runner",
+    )
     parser.add_argument("--restore-checkpoint")
     parser.add_argument("--stop-after", choices=["round1", "round2", "round3", "final"], default="final")
     args = parser.parse_args()
@@ -211,9 +222,11 @@ def main() -> None:
     if round1_manifest_path.exists():
         round1_manifest = json.loads(round1_manifest_path.read_text(encoding="utf-8"))
     else:
-        round1_manifest = parallel_build(final / "chunks.jsonl", base_manifest, indexes / "round1", args.fast)
+        round1_manifest = parallel_build(
+            final / "chunks.jsonl", base_manifest, indexes / "round1", args.fast, args.gpu_count
+        )
     round1_profiles = attach_testsets(profiles_from_manifest(round1_manifest), original, resolved)
-    round1_cmp = run_stage("round1", round1_profiles, specs, experiments, cache)
+    round1_cmp = run_stage("round1", round1_profiles, specs, experiments, cache, gpu_count=args.gpu_count)
     round1_rows = load_comparison_rows(round1_cmp)
     write_rows_csv(round1_rows, results / "round1.csv")
     dense_winner = select_winner([row for row in round1_rows if str(row["index"]).startswith("dense_")])
@@ -240,7 +253,7 @@ def main() -> None:
                          "variant_manifest": str(hybrid_dir / f"variant_{hybrid_id}.json"),
                          "testset_original": str(original), "testset_resolved": str(resolved)},
     }
-    round2_cmp = run_stage("round2", round2_profiles, specs, experiments, cache)
+    round2_cmp = run_stage("round2", round2_profiles, specs, experiments, cache, gpu_count=args.gpu_count)
     round2_rows = load_comparison_rows(round2_cmp)
     write_rows_csv(round2_rows, results / "round2.csv")
     golden = select_winner(round2_rows)
@@ -270,7 +283,8 @@ def main() -> None:
         profile = build_golden_chunk_profile(
             variant_root / "final_deduplicated/chunks.jsonl",
             variant_root / "manifests/deduplicated.variant.json",
-            indexes / f"round3_{size}_{overlap}", golden_method, dense_model, sparse_id, position % 2,
+            indexes / f"round3_{size}_{overlap}", golden_method, dense_model, sparse_id,
+            position % args.gpu_count,
         )
         profile.update({
             "testset_original": str(variant_root / "final_deduplicated/testset_reviewed_original.jsonl"),
@@ -282,10 +296,15 @@ def main() -> None:
         dense_model in {"intfloat/e5-base-v2", "BAAI/bge-large-en-v1.5"}
         or sparse_id == "bge_m3_sparse"
     )
-    with ThreadPoolExecutor(1 if large_chunk_profile else min(2, len(variants))) as pool:
+    with ThreadPoolExecutor(
+        1 if large_chunk_profile else min(args.gpu_count, len(variants))
+    ) as pool:
         built_profiles = list(pool.map(build_round3_variant, enumerate(variants)))
     round3_profiles = dict(built_profiles)
-    round3_cmp = run_stage("round3", round3_profiles, specs, experiments, cache, best_cross["reranker_model"])
+    round3_cmp = run_stage(
+        "round3", round3_profiles, specs, experiments, cache,
+        best_cross["reranker_model"], args.gpu_count,
+    )
     round3_rows = load_comparison_rows(round3_cmp)
     write_rows_csv(round3_rows, results / "round3.csv")
     final_winner = select_winner(round3_rows)

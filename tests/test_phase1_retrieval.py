@@ -49,6 +49,12 @@ class Phase1RetrievalTests(unittest.TestCase):
         self.assertEqual(schedule["cpu_sparse"], ["bm25_okapi_simple"])
         self.assertEqual(schedule["heavy"], [])
 
+    def test_colab_index_schedule_never_assigns_second_gpu(self):
+        schedule = index_build_schedule(fast=False, gpu_count=1)
+        devices = [device for _, device in schedule["light_dense"]]
+        devices.extend(device for _, _, device in schedule["heavy"])
+        self.assertEqual(set(devices), {0})
+
     def test_asymmetric_embedding_preprocessing_and_normalization(self):
         model = Mock()
         model.encode.side_effect = lambda texts, **kwargs: Mock(tolist=lambda: [[1.0]] * len(texts))
