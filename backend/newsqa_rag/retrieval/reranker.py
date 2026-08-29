@@ -102,7 +102,13 @@ class BGESequenceClassificationReranker(BaseReranker):
 
             self._effective_device = self.device or ("cuda" if torch.cuda.is_available() else "cpu")
             self._tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            self._model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
+            load_options = {"low_cpu_mem_usage": True}
+            if str(self._effective_device).startswith("cuda"):
+                load_options["torch_dtype"] = torch.float16
+            self._model = AutoModelForSequenceClassification.from_pretrained(
+                self.model_name,
+                **load_options,
+            )
             self._model.to(self._effective_device)
             self._model.eval()
         return self._model, self._tokenizer

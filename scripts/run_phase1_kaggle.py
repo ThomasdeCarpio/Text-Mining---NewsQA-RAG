@@ -107,7 +107,10 @@ def run_stage(stage, profiles, specs_root, experiments_root, cache, reranker_mod
             args += ["--reranker-model", reranker_model]
         command(args)
         jobs.append((spec, position % 2))
-    with ThreadPoolExecutor(2) as pool:
+    # XLM-R large has a high host-memory peak while loading. Running two copies
+    # concurrently can cause Kaggle to kill both collectors and orphan parents.
+    serial_large_reranker = stage == "round2" or str(reranker_model).startswith("BAAI/bge-reranker")
+    with ThreadPoolExecutor(1 if serial_large_reranker else 2) as pool:
         futures = [pool.submit(command, [sys.executable, "scripts/run_experiment.py", spec], device=device) for spec, device in jobs]
         for future in futures:
             future.result()

@@ -79,6 +79,13 @@ class BenchmarkTraceTests(unittest.TestCase):
         self.assertIsInstance(reranker, BGESequenceClassificationReranker)
         self.assertEqual(reranker.batch_size, 8)
 
+    def test_bge_reranker_reports_native_backend(self):
+        reranker = BGESequenceClassificationReranker("BAAI/bge-reranker-large")
+        self.assertEqual(
+            reranker.get_info()["backend"],
+            "transformers-sequence-classification",
+        )
+
 
 class BenchmarkMetricTests(unittest.TestCase):
     def test_qa_uses_best_accepted_answer_and_ignores_citation_markers(self):
