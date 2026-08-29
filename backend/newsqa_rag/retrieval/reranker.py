@@ -35,22 +35,29 @@ class NoOpReranker(BaseReranker):
 class CrossEncoderReranker(BaseReranker):
     """Local cross-encoder reranker loaded lazily on first use."""
 
-    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
+    def __init__(
+        self,
+        model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2",
+        batch_size: int = 32,
+        device: str | None = None,
+    ):
         self.model_name = model_name
+        self.batch_size = batch_size
+        self.device = device
         self._model = None
 
     def _get_model(self):
         if self._model is None:
             from sentence_transformers import CrossEncoder
 
-            self._model = CrossEncoder(self.model_name)
+            self._model = CrossEncoder(self.model_name, device=self.device)
         return self._model
 
     def rerank(self, query: str, results: list[dict], top_n: int) -> list[dict]:
         if not results:
             return []
         pairs = [(query, result.get("text", "")) for result in results]
-        scores = self._get_model().predict(pairs)
+        scores = self._get_model().predict(pairs, batch_size=self.batch_size)
         rescored = []
         for result, reranker_score in zip(results, scores):
             item = dict(result)
@@ -62,7 +69,12 @@ class CrossEncoderReranker(BaseReranker):
         return rescored[:top_n]
 
     def get_info(self) -> Dict[str, Any]:
-        return {"type": "cross-encoder", "model": self.model_name}
+        return {
+            "type": "cross-encoder",
+            "model": self.model_name,
+            "batch_size": self.batch_size,
+            "device": self.device,
+        }
 
 
 def get_reranker(config: dict) -> BaseReranker:
@@ -79,7 +91,9 @@ def get_reranker(config: dict) -> BaseReranker:
         return CrossEncoderReranker(
             reranker_cfg.get(
                 "model", "cross-encoder/ms-marco-MiniLM-L-6-v2"
-            )
+            ),
+            batch_size=int(reranker_cfg.get("batch_size", 32)),
+            device=reranker_cfg.get("device"),
         )
     else:
         raise ValueError(

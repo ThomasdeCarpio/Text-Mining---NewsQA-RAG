@@ -43,6 +43,7 @@ def _latency_summary(values: list[float]) -> dict:
     return {
         "mean_ms": round(float(np.mean(values)), 1),
         "p50_ms": round(float(np.percentile(values, 50)), 1),
+        "p90_ms": round(float(np.percentile(values, 90)), 1),
         "p95_ms": round(float(np.percentile(values, 95)), 1),
         "max_ms": round(float(np.max(values)), 1),
         "n_samples": len(values),
@@ -75,6 +76,11 @@ def main() -> None:
         "retrieve_ms": [],
         "rerank_ms": [],
         "llm_ms": [],
+        "embed_ms": [],
+        "db_query_ms": [],
+        "dense_ms": [],
+        "sparse_ms": [],
+        "fusion_ms": [],
     }
 
     for question_id in expected_ids:
@@ -211,7 +217,7 @@ def main() -> None:
             "n_eval": len(expected_ids),
             "timestamp": utc_now(),
             "collection": manifest.get("paths", {}).get("collection"),
-            "embedding": {},
+            "embedding": manifest.get("inputs", {}).get("embedding", {}),
         },
         "coverage": {
             "expected": len(expected_ids),

@@ -20,7 +20,8 @@ def dense_search(store: ChromaStore, collection_name: str, query: str, top_k: in
     model_cold_start = getattr(ef, "_model", "n/a") is None
 
     t0 = time.perf_counter()
-    query_embedding = ef([query])[0]
+    encoder = getattr(ef, "embed_queries", ef)
+    query_embedding = encoder([query])[0]
     embed_ms = (time.perf_counter() - t0) * 1000
 
     t0 = time.perf_counter()

@@ -13,6 +13,8 @@ tiktoken
 chromadb
 rank_bm25
 sentence-transformers
+nltk
+FlagEmbedding
 
 # Data Processing & Web Scraping
 pandas

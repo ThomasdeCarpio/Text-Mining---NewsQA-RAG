@@ -111,6 +111,7 @@ def validate_experiment_spec(spec: dict) -> None:
 
     fixed = spec.get("fixed", {})
     matrix = spec.get("matrix", {})
+    explicit_runs = spec.get("runs")
     if not isinstance(fixed, dict) or not isinstance(matrix, dict):
         raise ExperimentSpecError("fixed and matrix must be mappings")
     unknown = (set(fixed) | set(matrix)) - _MATRIX_KEYS
@@ -122,6 +123,17 @@ def validate_experiment_spec(spec: dict) -> None:
     for key, values in matrix.items():
         if not isinstance(values, list) or not values:
             raise ExperimentSpecError(f"matrix.{key} must be a non-empty list")
+    if explicit_runs is not None:
+        if matrix:
+            raise ExperimentSpecError("runs and matrix are mutually exclusive")
+        if not isinstance(explicit_runs, list) or not explicit_runs:
+            raise ExperimentSpecError("runs must be a non-empty list")
+        for position, run in enumerate(explicit_runs):
+            if not isinstance(run, dict):
+                raise ExperimentSpecError(f"runs[{position}] must be a mapping")
+            unknown_run = set(run) - _MATRIX_KEYS
+            if unknown_run:
+                raise ExperimentSpecError(f"runs[{position}] has unsupported parameters: {sorted(unknown_run)}")
 
     development_articles = int(dataset.get("development_articles", 50))
     if development_articles < 1:
@@ -135,13 +147,18 @@ def expand_run_matrix(spec: dict) -> list[dict]:
     fixed = {**_DEFAULTS, **spec.get("fixed", {})}
     matrix = spec.get("matrix", {})
     keys = sorted(matrix)
-    combinations: Iterable[tuple[Any, ...]] = itertools.product(
-        *(matrix[key] for key in keys)
-    ) if keys else [()]
+    explicit_runs = spec.get("runs")
+    combinations: Iterable[dict[str, Any]]
+    if explicit_runs is not None:
+        combinations = explicit_runs
+    else:
+        combinations = [dict(zip(keys, values)) for values in (
+            itertools.product(*(matrix[key] for key in keys)) if keys else [()]
+        )]
     indexes = spec["dataset"]["indexes"]
     runs = []
     for values in combinations:
-        parameters = {**fixed, **dict(zip(keys, values))}
+        parameters = {**fixed, **values}
         index_name = parameters.get("index")
         if not index_name:
             if len(indexes) != 1:
@@ -173,7 +190,7 @@ def expand_run_matrix(spec: dict) -> list[dict]:
 def _validate_run(parameters: dict, judge: dict) -> None:
     if parameters["partition"] not in {"development", "final_test", "all"}:
         raise ExperimentSpecError("partition must be development, final_test or all")
-    if parameters["retriever"] not in {"dense", "bm25", "hybrid"}:
+    if parameters["retriever"] not in {"dense", "bm25", "sparse", "hybrid"}:
         raise ExperimentSpecError(f"unsupported retriever: {parameters['retriever']}")
     if parameters["reranker"] not in {"noop", "cross-encoder"}:
         raise ExperimentSpecError(f"unsupported reranker: {parameters['reranker']}")

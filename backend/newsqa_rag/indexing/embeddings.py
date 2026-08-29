@@ -83,6 +83,21 @@ SENTENCE_TRANSFORMER_MODEL_INFO = {
         "max_input_tokens": 256,
         "use_cases": "Lightweight general-purpose: semantic search, clustering. Fast inference, low memory.",
     },
+    "BAAI/bge-small-en-v1.5": {
+        "output_dimensions": 384,
+        "max_input_tokens": 512,
+        "use_cases": "SOTA lightweight retrieval model. Optimized for question-to-passage search.",
+    },
+    "intfloat/e5-base-v2": {
+        "output_dimensions": 768,
+        "max_input_tokens": 512,
+        "use_cases": "High-quality asymmetric passage retrieval model.",
+    },
+    "BAAI/bge-large-en-v1.5": {
+        "output_dimensions": 1024,
+        "max_input_tokens": 512,
+        "use_cases": "Top-tier MTEB retrieval performance with deep semantic representations.",
+    },
     "all-mpnet-base-v2": {
         "output_dimensions": 768,
         "max_input_tokens": 384,
@@ -113,10 +128,42 @@ class SentenceTransformerEmbeddingFunction(EmbeddingFunction):
             self._model = SentenceTransformer(self.model_name)
         return self._model
 
-    def __call__(self, input: Documents) -> Embeddings:
+    def _prepare_documents(self, texts: Documents) -> list[str]:
+        values = list(texts)
+        if self.model_name.startswith("intfloat/e5-"):
+            return [f"passage: {text}" for text in values]
+        return values
+
+    def _prepare_queries(self, texts: Documents) -> list[str]:
+        values = list(texts)
+        if self.model_name.startswith("intfloat/e5-"):
+            return [f"query: {text}" for text in values]
+        if self.model_name.startswith("BAAI/bge-") and "bge-m3" not in self.model_name.lower():
+            instruction = "Represent this sentence for searching relevant passages: "
+            return [f"{instruction}{text}" for text in values]
+        return values
+
+    def _encode(self, texts: list[str]) -> Embeddings:
         model = self._get_model()
-        embeddings = model.encode(input, convert_to_numpy=True)
+        embeddings = model.encode(
+            texts,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+        )
         return embeddings.tolist()
+
+    def embed_documents(self, input: Documents) -> Embeddings:
+        """Encode corpus passages with model-specific document preprocessing."""
+        return self._encode(self._prepare_documents(input))
+
+    def embed_queries(self, input: Documents) -> Embeddings:
+        """Encode search queries with model-specific retrieval instructions."""
+        return self._encode(self._prepare_queries(input))
+
+    def __call__(self, input: Documents) -> Embeddings:
+        # Chroma calls the embedding function for document ingestion. Dense
+        # retrieval calls embed_queries explicitly for asymmetric models.
+        return self.embed_documents(input)
 
     def get_info(self) -> Dict[str, Any]:
         known = SENTENCE_TRANSFORMER_MODEL_INFO.get(self.model_name)

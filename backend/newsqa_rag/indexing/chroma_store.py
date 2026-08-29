@@ -103,7 +103,8 @@ class ChromaStore:
     def upsert_chunks(
         self,
         collection_name: str,
-        chunks: list[dict]
+        chunks: list[dict],
+        embeddings: list[list[float]] | None = None,
     ) -> dict:
         """
         Upsert a list of chunk dicts into the collection.
@@ -127,11 +128,14 @@ class ChromaStore:
         batch_count = 0
         for i in range(0, len(chunks), CHROMA_BATCH_SIZE):
             batch = chunks[i:i + CHROMA_BATCH_SIZE]
-            col.upsert(
+            request = dict(
                 ids=[c["id"] for c in batch],
                 documents=[c["text"] for c in batch],
                 metadatas=[c["metadata"] for c in batch],
             )
+            if embeddings is not None:
+                request["embeddings"] = embeddings[i:i + CHROMA_BATCH_SIZE]
+            col.upsert(**request)
             batch_count += 1
 
         return {

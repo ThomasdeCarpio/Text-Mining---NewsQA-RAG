@@ -35,7 +35,11 @@ class RAGAgent:
         t_total = time.perf_counter()
 
         t0 = time.perf_counter()
-        retrieved = self.retriever.retrieve(question, self.top_k)
+        retrieval_breakdown = {}
+        if hasattr(self.retriever, "retrieve_with_timing"):
+            retrieved, retrieval_breakdown = self.retriever.retrieve_with_timing(question, self.top_k)
+        else:
+            retrieved = self.retriever.retrieve(question, self.top_k)
         retrieve_ms = (time.perf_counter() - t0) * 1000
 
         t0 = time.perf_counter()
@@ -49,6 +53,7 @@ class RAGAgent:
             "retrieved_ids": [result["id"] for result in reranked],
             "contexts": [result["text"] for result in reranked],
             "timing_ms": {
+                **retrieval_breakdown,
                 "retrieve_ms": round(retrieve_ms, 1),
                 "rerank_ms": round(rerank_ms, 1),
                 "retrieval_total_ms": round(

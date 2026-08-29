@@ -67,99 +67,89 @@ Sử dụng script [`scripts/judge_benchmark_predictions.py`](file:///Users/thom
 
 ---
 
+---
+
 ## 3. Chiến lược Đánh giá 2 Giai đoạn & Tối ưu Chi phí API
 
 ### 3.1. Quy trình Thực nghiệm 2 Giai đoạn (Two-Phase Protocol)
 Để đảm bảo tính khoa học cao nhất và tiết kiệm tài nguyên:
 
 ```text
-┌────────────────────────────────────────────────────────────┐
-│ Giai đoạn 1: Sàng lọc & Tối ưu Truy xuất (Retrieval Phase) │
-│ • Chạy offline 100% (Chi phí 0đ) trên 1.152 câu hỏi        │
-│ • Thử nghiệm toàn bộ tổ hợp Chunking, Retrieval, Reranking │
-│ • Tìm ra "Golden Retriever" (Cấu hình có MRR@5 cao nhất)   │
-└─────────────────────────────┬──────────────────────────────┘
-                              │
-                              ▼ (Cố định Golden Retriever)
-┌────────────────────────────────────────────────────────────┐
-│ Giai đoạn 2: Đánh giá End-to-End & Thử nghiệm Sinh nâng cao│
-│ • Cố định Golden Retriever từ Giai đoạn 1                  │
-│ • So sánh Baseline Prompting vs Novel Frameworks (Self-RAG)│
-│ • Đánh giá RAGAS Judge & Biểu đồ Pareto Frontier           │
-└────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│ Giai đoạn 1: Sàng lọc & Tối ưu Truy xuất (Giải Đấu 3 Vòng - 23 runs)    │
+│ • 100% Offline IR (Chi phí 0đ) trên 1.152 câu hỏi                      │
+│ • Vòng 1: Sàng lọc 4 Dense Models + 4 Sparse Models (8 runs)           │
+│ • Vòng 2: Ma trận Đối xứng 3 Retrievers x 3 Rerankers (9 runs)         │
+│   (No-op vs MiniLM-L6 vs BGE-Reranker-Large)                           │
+│ • Vòng 3: Kiểm chứng Golden Pipeline trên 3 Kích thước Chunk (6 runs)  │
+│ ──► Khóa "Golden Retriever" Tuyệt Đối (MRR@5 cao nhất)                 │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼ (Cố định Golden Retriever)
+┌────────────────────────────────────────────────────────────────────────┐
+│ Giai đoạn 2: Đánh giá End-to-End & Thử nghiệm Sinh nâng cao            │
+│ • Cố định Golden Retriever từ Giai đoạn 1                              │
+│ • So sánh Direct LLM vs Baseline RAG vs Novel Frameworks (Self-RAG)    │
+│ • Đánh giá RAGAS Judge & Biểu đồ Pareto Frontier                       │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 3.2. Tận dụng Gemini Free Tier để làm End-to-End hoàn toàn miễn phí (0đ)
-- **Google AI Studio (Gemini 2.0 Flash / 1.5 Flash)**:
-  - Cung cấp gói **Free** cực kỳ mạnh: **15 RPM (lượt/phút)**, **1.000.000 TPM (token/phút)**, và **1.500 requests/ngày**.
-  - Tốc độ cực nhanh và **hoàn toàn miễn phí 0đ**.
-- **OpenRouter Free Tier**:
-  - Hỗ trợ các model miễn phí như `google/gemini-2.0-flash-exp:free`, `meta-llama/llama-3.3-70b-instruct:free`.
+- **Google AI Studio (Gemini 3.1 Flash-Lite / 2.0 Flash / 1.5 Flash)**:
+  - Cung cấp gói **Free** cực kỳ mạnh: **15 RPM**, **1.000.000 TPM**, và **500 – 1.500 requests/ngày**.
+  - Tốc độ cực nhanh (~0.8s) và **hoàn toàn miễn phí 0đ**.
 - Hệ thống `model_gateway.py` trong project đã tích hợp sẵn và chỉ cần điền `GEMINI_API_KEY` hoặc `OPENAI_API_KEY` trong file `.env`.
 
 ---
 
-## 4. Chi tiết 7 Thí nghiệm & Ablation Study
+## 4. Chi tiết Kế hoạch Thực nghiệm Giai đoạn 1 (Master Retrieval Tournament)
 
-```mermaid
-graph TD
-    A["Tập Dữ Liệu Gốc (11.064 Bài Báo)"] --> B["Thí nghiệm 1: Kích thước & Chiến lược Chunking"]
-    B --> C["Thí nghiệm 2: Phương pháp Truy xuất (BM25 vs Dense vs Hybrid)"]
-    C --> D["Thí nghiệm 3: Tác động của Reranker"]
-    D --> E["Thí nghiệm 4: Độ sâu Ngữ cảnh (Top-N Chunks)"]
-    E --> F["Thí nghiệm 5: So sánh Mô hình LLM Generator"]
-    F --> G["Thí nghiệm 6: Tác động của Độ mơ hồ câu hỏi"]
-    G --> H["Thí nghiệm 7: Đánh giá Tổng thể Pareto Frontier"]
-```
-
----
-
-### Thí nghiệm 1: Kích thước Chunk & Độ Overlap (Chunking & Overlap Grid)
-* **Câu hỏi nghiên cứu**: Kích thước chunk và tỷ lệ chồng lấp (overlap) nào cân bằng tốt nhất giữa độ chính xác vector của embedding, tính toàn vẹn ngữ cảnh cho LLM và không bị cắt rời bằng chứng?
-* **Biến kiểm soát (Cố định)**: Embedding (`all-MiniLM-L6-v2`), Retrieval (`Hybrid`), Reranker (`noop`), 1.152 câu hỏi.
-* **Biến độc lập (Thay đổi)**:
-  1. Lưới Chunk size $\times$ Overlap:
-     - `chunk_256`: Overlaps `[0, 32, 64]` (0%, 12.5%, 25%).
-     - `chunk_512`: Overlaps `[0, 64, 128]` (0%, 12.5%, 25%).
-     - `chunk_1024`: Overlaps `[0, 128, 256]` (0%, 12.5%, 25%).
-  2. Chiến lược: `recursive` vs `sentence`.
-* **Metric đo lường**: Hit Rate@5, MRR@5, NDCG@5, Tổng số chunk được tạo, Tỷ lệ chứa trọn vẹn bằng chứng (Evidence containment).
-* **Lệnh chạy**:
-  ```bash
-  python scripts/build_ablation_datasets.py --revision v1.0.0 --chunk-sizes 256 512 1024
-  python scripts/run_experiment.py configs/experiments/ablation_1_chunking.yaml
-  ```
+### Vòng 1: Sàng lọc Mô hình Đơn lẻ (Model Screening - 8 runs)
+Chạy trên cấu hình Chunk chuẩn `512/64 recursive`:
+1. **Nhánh Dense (4 Embedding Models)**:
+   - `all-MiniLM-L6-v2` (384-d, 22M params - Baseline)
+   - `BAAI/bge-small-en-v1.5` (384-d, 33M params - MTEB Leader)
+   - `intfloat/e5-base-v2` (768-d, 110M params - Asymmetric)
+   - `BAAI/bge-large-en-v1.5` (1024-d, 335M params - Deep representation)
+   - $\rightarrow$ **Chọn ra `Best Dense Model`**.
+2. **Nhánh Sparse (4 Lexical/Sparse Methods)**:
+   - `BM25Okapi` (Standard whitespace matching)
+   - `BM25+` / `BM25L` (Document length normalization adjustment)
+   - `BM25 + Snowball Stemmer & Stopwords` (Morphological normalization)
+   - `SPLADE` / `BGE-M3 Sparse` (Learned sparse neural term expansion)
+   - $\rightarrow$ **Chọn ra `Best Sparse Model`**.
 
 ---
 
-### Thí nghiệm 2: So sánh Phương pháp Truy xuất & Độ sâu Top-K (Retrieval & Cutoff Sensitivity)
-* **Câu hỏi nghiên cứu**: BM25 hay Dense vector tốt hơn trên bài báo tin tức (vốn chứa nhiều tên riêng, số liệu), Hybrid RRF cải thiện bao nhiêu %, và lấy bao nhiêu chunk ($K=5, 10, 20$) là điểm bão hòa Recall?
-* **Biến kiểm soát**: Chunking `512/64 recursive`, 1.152 câu hỏi.
-* **Biến độc lập**:
-  1. Phương pháp: `sparse` (Okapi BM25) vs `dense` (ChromaDB `all-MiniLM-L6-v2`) vs `hybrid` (Reciprocal Rank Fusion - RRF).
-  2. Điểm cắt truy xuất ban đầu (Initial Top-$K$): $K \in \{5, 10, 20\}$.
-  3. Điểm cắt sau rerank (Post-Rerank Top-$N$): $N \in \{3, 5\}$.
-* **Metric đo lường**: Hit Rate@{1, 3, 5, 10}, Recall@{5, 10}, MRR@5, NDCG@5, Phân tích chi tiết thời gian truy xuất (Dense ms, BM25 ms, Total P95 Latency ms).
-* **Giả thuyết**: BM25 thắng ở câu hỏi có tên thực thể hiếm, Dense thắng ở câu hỏi diễn giải ngữ nghĩa, Hybrid đạt kết quả cao nhất (+5 đến 10% MRR).
-* **Lệnh chạy**:
-  ```bash
-  python scripts/run_experiment.py configs/experiments/ablation_retrieval_deep.yaml
-  ```
+### Vòng 2: Ma Trận Đối Xứng 3 Retrievers $\times$ 3 Rerankers (9 runs)
+So sánh tương tác giữa 3 phương pháp truy xuất và 3 cấp độ Reranker trên Chunk `512/64`:
+
+$$\begin{array}{|l|c|c|c|}
+\hline
+\textbf{Phương pháp Truy xuất} & \textbf{No-op (Không Rerank)} & \textbf{MiniLM-L-6 (22M)} & \textbf{BGE-Large (560M)} \\
+\hline
+\textbf{Best Dense} & \text{Run 1} & \text{Run 2} & \text{Run 3} \\
+\textbf{Best Sparse} & \text{Run 4} & \text{Run 5} & \text{Run 6} \\
+\textbf{Hybrid (RRF Fusion)} & \text{Run 7} & \text{Run 8} & \text{Run 9} \\
+\hline
+\end{array}$$
+
+* **Câu hỏi nghiên cứu**:
+  1. *Reranker mô hình lớn (BGE-Large 560M) cải thiện bao nhiêu % so với model nhẹ (MiniLM 22M)?*
+  2. *Sự đánh đổi về độ trễ (Latency trade-off) có xứng đáng trong thực tế không?*
+* $\rightarrow$ **Xác định QUÁN QUÂN TUYỆT ĐỐI (Golden Retrieval Pipeline)**.
 
 ---
 
-### Thí nghiệm 3: Tác động của Reranker & Đánh đổi Thời gian (Reranker & Latency Profiling)
-* **Câu hỏi nghiên cứu**: Cross-Encoder cải thiện độ chính xác xếp hạng bao nhiêu so với Bi-Encoder, và độ trễ tăng thêm (ms) có đáng để triển khai trong thực tế?
-* **Biến kiểm soát**: Hybrid Retrieval Top 10, Chunking `512/64`.
-* **Biến độc lập**:
-  1. `noop`: Cắt thẳng top 5 từ retrieval (không rerank).
-  2. `cross-encoder/ms-marco-MiniLM-L-6-v2` (model 6-layer, suy luận nhanh ~10-20ms).
-  3. `BAAI/bge-reranker-large` (model 24-layer, dung lượng lớn, độ chính xác cao).
-* **Metric đo lường**: MRR@5 sau rerank, NDCG@5 sau rerank, Hit Rate@1, Thời gian Reranker suy luận (ms), P95 Latency toàn chuỗi.
-* **Lệnh chạy**:
-  ```bash
-  python scripts/run_experiment.py configs/experiments/ablation_3_reranking.yaml
-  ```
+### Vòng 3: Kiểm Chứng Tính Bền Vững Trên Kích Thước Chunk (6 runs)
+Thử nghiệm Quán quân trên 3 kích thước đoạn cắt với tỷ lệ overlap chuẩn $12.5\%$:
+1. `chunk_256` (overlap 32) với `No-op` và `Cross-Encoder`
+2. `chunk_512` (overlap 64) với `No-op` và `Cross-Encoder`
+3. `chunk_1024` (overlap 128) với `No-op` và `Cross-Encoder`
+
+---
+
+## 5. Chi tiết Kế hoạch Thực nghiệm Giai đoạn 2 (Generation & Novel SOTA)
 
 ---
 

@@ -39,7 +39,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Collect a durable, resumable RAG inference trace."
     )
-    parser.add_argument("--retriever", choices=["dense", "bm25", "hybrid"], default="hybrid")
+    parser.add_argument("--retriever", choices=["dense", "bm25", "sparse", "hybrid"], default="hybrid")
     parser.add_argument("--reranker", choices=["noop", "cross-encoder"], default="noop")
     parser.add_argument(
         "--reranker-model",
@@ -67,6 +67,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-attempts", type=int, default=3)
     parser.add_argument("--retry-failed", action="store_true")
     parser.add_argument("--progress", action="store_true")
+    parser.add_argument("--warmup-queries", type=int, default=1)
     return parser.parse_args()
 
 
@@ -77,6 +78,11 @@ def _implementation_hash() -> str:
         PROJECT_ROOT / "backend/newsqa_rag/llm.py",
         PROJECT_ROOT / "backend/newsqa_rag/retrieval/retriever_factory.py",
         PROJECT_ROOT / "backend/newsqa_rag/retrieval/reranker.py",
+        PROJECT_ROOT / "backend/newsqa_rag/retrieval/hybrid.py",
+        PROJECT_ROOT / "backend/newsqa_rag/retrieval/dense.py",
+        PROJECT_ROOT / "backend/newsqa_rag/indexing/embeddings.py",
+        PROJECT_ROOT / "backend/newsqa_rag/indexing/bm25_index.py",
+        PROJECT_ROOT / "backend/newsqa_rag/indexing/learned_sparse_index.py",
     ]
     return stable_hash({str(path.relative_to(PROJECT_ROOT)): sha256_file(path) for path in paths})
 
@@ -103,6 +109,8 @@ def main() -> None:
         raise SystemExit("--max-attempts must be at least 1")
     if args.n_eval is not None and args.n_eval < 1:
         raise SystemExit("--n-eval must be at least 1")
+    if args.warmup_queries < 0:
+        raise SystemExit("--warmup-queries cannot be negative")
 
     config_path = PROJECT_ROOT / args.config
     with config_path.open(encoding="utf-8") as handle:
@@ -175,7 +183,11 @@ def main() -> None:
         "top_k": top_k,
         "rerank_top_n": top_n,
         "retrieval_only": args.retrieval_only,
+        "embedding": original_config.get("embedding", {}),
+        "sparse": config.get("retrieval", {}).get("sparse", {}),
+        "hybrid": config.get("retrieval", {}).get("hybrid", {}),
         "seed": args.seed,
+        "warmup_queries": args.warmup_queries,
     }
     fingerprint = stable_hash(fingerprint_payload)
 
@@ -220,7 +232,7 @@ def main() -> None:
     embedding_function = get_embedding_function(original_config)
     store = ChromaStore(args.db_path, embedding_function)
     chunks = None
-    if args.retriever in {"bm25", "hybrid"}:
+    if args.retriever in {"bm25", "sparse", "hybrid"}:
         chunks = load_chunks(args.chunks_path)
     retriever = get_retriever(
         args.retriever,
@@ -233,6 +245,8 @@ def main() -> None:
     reranker = get_reranker(config)
     llm = None if args.retrieval_only else get_llm(config)
     agent = RAGAgent(retriever, reranker, llm, top_k=top_k, rerank_top_n=top_n)
+    for entry in entries[:args.warmup_queries]:
+        agent.retrieve_and_rerank(entry["question"])
 
     iterable = entries
     if args.progress:

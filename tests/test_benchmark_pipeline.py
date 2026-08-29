@@ -31,7 +31,7 @@ class _LLM:
 
 
 class _CrossEncoderModel:
-    def predict(self, pairs):
+    def predict(self, pairs, batch_size=None):
         return [0.1, 0.9]
 
 
@@ -137,4 +137,3 @@ class BenchmarkCacheTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

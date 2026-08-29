@@ -1,3 +1,5 @@
+import time
+
 from newsqa_rag.retrieval import BaseRetriever
 from newsqa_rag.indexing.bm25_index import BM25Index
 
@@ -34,6 +36,26 @@ class BM25Retriever(BaseRetriever):
         return results
 
 
+class SparseIndexRetriever(BaseRetriever):
+    """Adapter for sparse indexes exposing ``query(query_text, top_k)``."""
+
+    def __init__(self, sparse_index, chunk_lookup: dict[str, dict]):
+        self._index = sparse_index
+        self._lookup = chunk_lookup
+
+    def retrieve(self, query: str, top_k: int) -> list[dict]:
+        results = []
+        for row in self._index.query(query, top_k):
+            chunk = self._lookup.get(row["id"], {})
+            results.append({
+                "id": row["id"],
+                "text": chunk.get("text", ""),
+                "metadata": chunk.get("metadata", {}),
+                "score": row["score"],
+            })
+        return results
+
+
 class HybridRetriever(BaseRetriever):
     """
     Hybrid retriever combining dense and BM25 via Reciprocal Rank Fusion (RRF).
@@ -47,23 +69,37 @@ class HybridRetriever(BaseRetriever):
     def __init__(
         self,
         dense: BaseRetriever,
-        bm25: BM25Retriever,
+        sparse: BaseRetriever | None = None,
         dense_weight: float = 0.7,
         sparse_weight: float = 0.3,
         rrf_k: int = 60,
     ):
         self.dense = dense
-        self.bm25 = bm25
+        self.sparse = sparse
+        if self.sparse is None:
+            raise ValueError("HybridRetriever requires a sparse retriever")
+        if dense_weight < 0 or sparse_weight < 0 or dense_weight + sparse_weight <= 0:
+            raise ValueError("Hybrid weights must be non-negative with a positive sum")
+        if rrf_k < 1:
+            raise ValueError("rrf_k must be positive")
         self.dense_weight = dense_weight
         self.sparse_weight = sparse_weight
         self.rrf_k = rrf_k
 
     def retrieve(self, query: str, top_k: int) -> list[dict]:
+        return self.retrieve_with_timing(query, top_k)[0]
+
+    def retrieve_with_timing(self, query: str, top_k: int) -> tuple[list[dict], dict]:
         # Fetch more candidates from each retriever before merging
         fetch_k = min(top_k * 3, top_k + 30)
 
+        started = time.perf_counter()
         dense_results = self.dense.retrieve(query, fetch_k)
-        bm25_results = self.bm25.retrieve(query, fetch_k)
+        dense_ms = (time.perf_counter() - started) * 1000
+        started = time.perf_counter()
+        sparse_results = self.sparse.retrieve(query, fetch_k)
+        sparse_ms = (time.perf_counter() - started) * 1000
+        started = time.perf_counter()
 
         rrf_scores: dict[str, float] = {}
         id_to_data: dict[str, dict] = {}
@@ -74,7 +110,7 @@ class HybridRetriever(BaseRetriever):
             )
             id_to_data[r["id"]] = r
 
-        for rank, r in enumerate(bm25_results):
+        for rank, r in enumerate(sparse_results):
             rrf_scores[r["id"]] = rrf_scores.get(r["id"], 0.0) + self.sparse_weight * (
                 1.0 / (self.rrf_k + rank + 1)
             )
@@ -89,4 +125,8 @@ class HybridRetriever(BaseRetriever):
             entry["score"] = round(rrf_scores[chunk_id], 6)
             results.append(entry)
 
-        return results
+        return results, {
+            "dense_ms": round(dense_ms, 1),
+            "sparse_ms": round(sparse_ms, 1),
+            "fusion_ms": round((time.perf_counter() - started) * 1000, 1),
+        }
