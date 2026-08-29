@@ -118,14 +118,15 @@ SENTENCE_TRANSFORMER_MODEL_INFO = {
 
 class SentenceTransformerEmbeddingFunction(EmbeddingFunction):
 
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2", device: str | None = None):
         self.model_name = model_name
+        self.device = device
         self._model = None
 
     def _get_model(self):
         if self._model is None:
             from sentence_transformers import SentenceTransformer
-            self._model = SentenceTransformer(self.model_name)
+            self._model = SentenceTransformer(self.model_name, device=self.device)
         return self._model
 
     def _prepare_documents(self, texts: Documents) -> list[str]:
@@ -189,11 +190,11 @@ class SentenceTransformerEmbeddingFunction(EmbeddingFunction):
         return "sentence-transformer-ef"
 
     def get_config(self) -> Dict[str, Any]:
-        return {"model_name": self.model_name}
+        return {"model_name": self.model_name, "device": self.device}
 
     @staticmethod
     def build_from_config(config: Dict[str, Any]) -> "SentenceTransformerEmbeddingFunction":
-        return SentenceTransformerEmbeddingFunction(model_name=config["model_name"])
+        return SentenceTransformerEmbeddingFunction(model_name=config["model_name"], device=config.get("device"))
 
 
 def get_embedding_function(config: dict) -> EmbeddingFunction:
@@ -212,6 +213,7 @@ def get_embedding_function(config: dict) -> EmbeddingFunction:
     elif provider == "sentence-transformers":
         return SentenceTransformerEmbeddingFunction(
             model_name=emb_config["model_name"],
+            device=emb_config.get("device"),
         )
     else:
         raise ValueError(f"Unknown embedding provider: '{provider}'. Use 'openai' or 'sentence-transformers'.")

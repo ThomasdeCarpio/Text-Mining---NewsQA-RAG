@@ -585,6 +585,10 @@ def _collect_command(
     if parameters.get("reranker_model"):
         command.extend(["--reranker-model", str(parameters["reranker_model"])])
     runtime = spec.get("runtime", {})
+    if runtime.get("shared_retrieval_cache"):
+        command.extend(["--shared-retrieval-cache", str(runtime["shared_retrieval_cache"])])
+    if runtime.get("warmup_queries") is not None:
+        command.extend(["--warmup-queries", str(runtime["warmup_queries"])])
     if runtime.get("n_eval"):
         command.extend(["--n-eval", str(runtime["n_eval"])])
     if runtime.get("retry_failed"):

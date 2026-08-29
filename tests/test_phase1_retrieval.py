@@ -8,6 +8,7 @@ from newsqa_rag.indexing.bm25_index import BM25Index
 from newsqa_rag.indexing.embeddings import SentenceTransformerEmbeddingFunction
 from newsqa_rag.indexing.learned_sparse_index import LearnedSparseIndex
 from newsqa_rag.retrieval.hybrid import HybridRetriever, SparseIndexRetriever
+from newsqa_rag.evaluation.phase1 import select_winner
 
 
 class _Encoder:
@@ -80,6 +81,15 @@ class Phase1RetrievalTests(unittest.TestCase):
         }
         runs = expand_run_matrix(spec)
         self.assertEqual([row["parameters"]["retriever"] for row in runs], ["dense", "sparse"])
+
+    def test_winner_uses_original_complete_rows_and_tie_breaks(self):
+        rows = [
+            {"run_id": "resolved", "variant": "resolved", "coverage.success_rate": 1.0, "retrieval.mrr@5.mean": 0.9},
+            {"run_id": "incomplete", "variant": "original", "coverage.success_rate": 0.9, "retrieval.mrr@5.mean": 0.8},
+            {"run_id": "a", "variant": "original", "coverage.success_rate": 1.0, "retrieval.mrr@5.mean": 0.5, "retrieval.ndcg@5.mean": 0.6, "retrieval.hit_rate@5.mean": 0.7, "latency.total.p50_ms": 20},
+            {"run_id": "b", "variant": "original", "coverage.success_rate": 1.0, "retrieval.mrr@5.mean": 0.5, "retrieval.ndcg@5.mean": 0.7, "retrieval.hit_rate@5.mean": 0.6, "latency.total.p50_ms": 10},
+        ]
+        self.assertEqual(select_winner(rows)["run_id"], "b")
 
 
 if __name__ == "__main__":

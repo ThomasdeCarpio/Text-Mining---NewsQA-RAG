@@ -30,10 +30,8 @@ class RAGAgent:
 
     _CITATION_PATTERN = re.compile(r"\[(\d+)]")
 
-    def retrieve_and_rerank(self, question: str) -> dict:
-        """Retrieve and rerank once so the trace can be checkpointed."""
-        t_total = time.perf_counter()
-
+    def retrieve(self, question: str) -> dict:
+        """Retrieve candidates without reranking so the result can be shared."""
         t0 = time.perf_counter()
         retrieval_breakdown = {}
         if hasattr(self.retriever, "retrieve_with_timing"):
@@ -41,26 +39,34 @@ class RAGAgent:
         else:
             retrieved = self.retriever.retrieve(question, self.top_k)
         retrieve_ms = (time.perf_counter() - t0) * 1000
+        return {
+            "question": question,
+            "retrieved_chunks": retrieved,
+            "timing_ms": {**retrieval_breakdown, "retrieve_ms": round(retrieve_ms, 1)},
+        }
 
+    def rerank_trace(self, retrieval_trace: dict) -> dict:
+        """Apply the configured reranker to a cached retrieval trace."""
+        question = retrieval_trace["question"]
+        retrieved = retrieval_trace["retrieved_chunks"]
         t0 = time.perf_counter()
         reranked = self.reranker.rerank(question, retrieved, self.rerank_top_n)
         rerank_ms = (time.perf_counter() - t0) * 1000
 
+        timing = dict(retrieval_trace.get("timing_ms", {}))
+        timing["rerank_ms"] = round(rerank_ms, 1)
+        timing["retrieval_total_ms"] = round(timing.get("retrieve_ms", 0.0) + rerank_ms, 1)
         return {
-            "question": question,
-            "retrieved_chunks": retrieved,
+            **retrieval_trace,
             "reranked_chunks": reranked,
             "retrieved_ids": [result["id"] for result in reranked],
             "contexts": [result["text"] for result in reranked],
-            "timing_ms": {
-                **retrieval_breakdown,
-                "retrieve_ms": round(retrieve_ms, 1),
-                "rerank_ms": round(rerank_ms, 1),
-                "retrieval_total_ms": round(
-                    (time.perf_counter() - t_total) * 1000, 1
-                ),
-            },
+            "timing_ms": timing,
         }
+
+    def retrieve_and_rerank(self, question: str) -> dict:
+        """Retrieve and rerank once so the trace can be checkpointed."""
+        return self.rerank_trace(self.retrieve(question))
 
     def generate_from_trace(self, trace: dict) -> dict:
         """Generate from an existing retrieval trace and parse cited chunks."""

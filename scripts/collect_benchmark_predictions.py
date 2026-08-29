@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -68,6 +69,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--retry-failed", action="store_true")
     parser.add_argument("--progress", action="store_true")
     parser.add_argument("--warmup-queries", type=int, default=1)
+    parser.add_argument("--shared-retrieval-cache", default=None)
     return parser.parse_args()
 
 
@@ -101,6 +103,25 @@ def _common_record(entry: dict, fingerprint: str) -> dict:
         "accepted_answers": entry.get("accepted_answers") or [entry["ground_truth"]],
         "relevant_chunk_ids": entry["relevant_chunk_ids"],
     }
+
+
+def _shared_cache_path(root: str | Path, payload: dict) -> Path:
+    digest = stable_hash(payload)
+    return Path(root) / digest[:2] / f"{digest}.json"
+
+
+def _read_shared_trace(path: Path) -> dict | None:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+
+
+def _write_shared_trace(path: Path, trace: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps(trace, ensure_ascii=False, sort_keys=True), encoding="utf-8")
+    os.replace(temporary, path)
 
 
 def main() -> None:
@@ -265,14 +286,25 @@ def main() -> None:
 
             trace_record = retrieval_cache.get(question_id)
             if trace_record is None:
-                trace, error, retrieval_attempts = run_with_retries(
-                    lambda: agent.retrieve_and_rerank(entry["question"]),
+                shared_path = None
+                shared_trace = None
+                if args.shared_retrieval_cache:
+                    shared_path = _shared_cache_path(args.shared_retrieval_cache, {
+                        "variant_manifest_sha256": sha256_file(args.variant_manifest),
+                        "config_sha256": sha256_file(config_path),
+                        "retriever": args.retriever,
+                        "top_k": top_k,
+                        "question": entry["question"],
+                    })
+                    shared_trace = _read_shared_trace(shared_path)
+                retrieval_trace, error, retrieval_attempts = run_with_retries(
+                    lambda: shared_trace or agent.retrieve(entry["question"]),
                     stage="retrieval",
                     question_id=question_id,
                     attempts_path=attempts_path,
                     max_attempts=args.max_attempts,
                 )
-                if trace is None:
+                if retrieval_trace is None:
                     record = {
                         **_common_record(entry, fingerprint),
                         "status": "exhausted",
@@ -284,6 +316,9 @@ def main() -> None:
                     append_jsonl(predictions_path, record)
                     predictions[question_id] = record
                     continue
+                if shared_path and shared_trace is None:
+                    _write_shared_trace(shared_path, retrieval_trace)
+                trace = agent.rerank_trace(retrieval_trace)
                 trace_record = {
                     **_common_record(entry, fingerprint),
                     "status": "success",

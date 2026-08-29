@@ -527,6 +527,7 @@ def build_baseline(args: argparse.Namespace) -> None:
     context = _build_context(args, evaluation_articles, distractor_articles)
     config = context["config"]
     collection_name = context["collection_name"]
+    skip_vector_index = bool(getattr(args, "skip_vector_index", False))
 
     print(
         f"Chunking the {len(evaluation_articles) + len(distractor_articles):,}-article "
@@ -545,26 +546,27 @@ def build_baseline(args: argparse.Namespace) -> None:
     indexed_count = 0
     if not args.skip_index:
         from newsqa_rag.indexing.bm25_index import BM25Index
-        from newsqa_rag.indexing.chroma_store import ChromaStore
-        from newsqa_rag.indexing.embeddings import get_embedding_function
+        if not skip_vector_index:
+            from newsqa_rag.indexing.chroma_store import ChromaStore
+            from newsqa_rag.indexing.embeddings import get_embedding_function
 
-        store = ChromaStore(args.db_path, get_embedding_function(config))
-        stats = store.get_collection_stats(collection_name)
-        if stats["exists"]:
-            if not args.overwrite:
-                raise DatasetBuildError(
-                    f"Collection {collection_name!r} already exists; pass --overwrite to replace it"
-                )
-            store.delete_collection(collection_name)
-        store.get_or_create_collection(
-            collection_name, hnsw_config=config.get("database", {}).get("hnsw")
-        )
-        store.upsert_chunks(collection_name, chunks)
-        indexed_count = store.get_collection_stats(collection_name)["count"]
-        if indexed_count != len(chunks):
-            raise DatasetBuildError(
-                f"Chroma count mismatch: expected {len(chunks)}, got {indexed_count}"
+            store = ChromaStore(args.db_path, get_embedding_function(config))
+            stats = store.get_collection_stats(collection_name)
+            if stats["exists"]:
+                if not args.overwrite:
+                    raise DatasetBuildError(
+                        f"Collection {collection_name!r} already exists; pass --overwrite to replace it"
+                    )
+                store.delete_collection(collection_name)
+            store.get_or_create_collection(
+                collection_name, hnsw_config=config.get("database", {}).get("hnsw")
             )
+            store.upsert_chunks(collection_name, chunks)
+            indexed_count = store.get_collection_stats(collection_name)["count"]
+            if indexed_count != len(chunks):
+                raise DatasetBuildError(
+                    f"Chroma count mismatch: expected {len(chunks)}, got {indexed_count}"
+                )
         bm25 = BM25Index()
         bm25.build(chunks)
         bm25.save(paths["bm25"])
@@ -580,7 +582,7 @@ def build_baseline(args: argparse.Namespace) -> None:
         "distractor_articles": len(distractor_articles),
         "original_questions": len(original_rows),
         "chunks": len(chunks),
-        "indexed_chunks": indexed_count if not args.skip_index else None,
+        "indexed_chunks": indexed_count if not (args.skip_index or skip_vector_index) else None,
         "review": {"state": "pending", "ready": False},
     }
     _write_json(paths["integrity"], integrity)
@@ -604,7 +606,7 @@ def build_baseline(args: argparse.Namespace) -> None:
         "database": {
             "path": portable_relpath(args.db_path, PROJECT_ROOT),
             "collection": context["collection_name"],
-            "indexed": not args.skip_index,
+            "indexed": not (args.skip_index or skip_vector_index),
             "chunk_count": len(chunks),
         },
         "statistics": integrity,
@@ -869,6 +871,11 @@ def build_parser() -> argparse.ArgumentParser:
     baseline.add_argument("--collection", default=None)
     baseline.add_argument("--overwrite", action="store_true")
     baseline.add_argument("--skip-index", action="store_true", help="Build files without Chroma/BM25")
+    baseline.add_argument(
+        "--skip-vector-index",
+        action="store_true",
+        help="Skip Chroma but retain BM25 for downstream reviewed deduplication",
+    )
     baseline.set_defaults(func=build_baseline)
 
     finish = subparsers.add_parser(

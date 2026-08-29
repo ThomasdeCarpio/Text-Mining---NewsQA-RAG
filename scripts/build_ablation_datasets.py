@@ -64,6 +64,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--skip-index", action="store_true", help="Skip building Chroma/BM25 indexes")
+    parser.add_argument(
+        "--skip-vector-index",
+        action="store_true",
+        help="Skip baseline Chroma but retain BM25 so the reviewed deduplicated set can be rebuilt",
+    )
     return parser
 
 
@@ -131,6 +136,8 @@ def build_ablation_datasets(args: argparse.Namespace) -> dict:
                     cmd.append("--overwrite")
                 if args.skip_index:
                     cmd.extend(["--skip-index", "--no-deduplicate"])
+                elif args.skip_vector_index:
+                    cmd.append("--skip-vector-index")
 
                 env = os.environ.copy()
                 env["PYTHONPATH"] = os.pathsep.join(

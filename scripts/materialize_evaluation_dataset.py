@@ -45,6 +45,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--local-bundle", help="Use an exported bundle without network access")
     parser.add_argument("--skip-index", action="store_true")
+    parser.add_argument(
+        "--skip-vector-index",
+        action="store_true",
+        help="Skip the baseline Chroma build but retain the BM25 artifact required by deduplication",
+    )
     parser.add_argument("--deduplicate", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--overwrite", action="store_true")
     return parser
@@ -193,6 +198,8 @@ def materialize(args: argparse.Namespace) -> dict:
     ]
     if args.skip_index:
         baseline_command.append("--skip-index")
+    elif args.skip_vector_index:
+        baseline_command.append("--skip-vector-index")
     if args.overwrite:
         baseline_command.append("--overwrite")
     _run(baseline_command)

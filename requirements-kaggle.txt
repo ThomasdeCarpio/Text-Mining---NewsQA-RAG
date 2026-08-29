@@ -1,0 +1,20 @@
+# Kaggle already provides CUDA-enabled torch; do not reinstall it.
+-e .
+chromadb
+rank_bm25
+sentence-transformers
+FlagEmbedding
+nltk
+numpy
+pandas
+pyarrow
+matplotlib
+seaborn
+pyyaml
+python-dotenv
+tqdm
+huggingface_hub>=1.20,<2
+datasets
+langchain-text-splitters
+tiktoken
+openai

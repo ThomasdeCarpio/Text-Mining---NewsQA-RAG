@@ -93,6 +93,7 @@ def parse_args() -> argparse.ArgumentParser:
         help="Batch size for Chroma embedding ingestion.",
     )
     parser.add_argument("--overwrite", action="store_true", help="Replace existing model indexes.")
+    parser.add_argument("--device", default=None, help="Torch device for dense or BGE-M3 encoding.")
     return parser.parse_args()
 
 
@@ -129,6 +130,7 @@ def build_dense_index(
     base_config: dict,
     batch_size: int = 512,
     overwrite: bool = False,
+    device: str | None = None,
 ) -> dict:
     slug = model_name.replace("/", "_").replace("-", "_").lower()
     db_path = output_dir / f"chroma_{slug}"
@@ -141,6 +143,8 @@ def build_dense_index(
     cfg["embedding"]["model_name"] = model_name
     spec = next(item for item in DENSE_MODELS if item["name"] == model_name)
     cfg["embedding"]["dimensions"] = spec["dims"]
+    if device:
+        cfg["embedding"]["device"] = device
 
     config_path = output_dir / f"config_dense_{slug}.yaml"
     with config_path.open("w", encoding="utf-8") as f:
@@ -189,6 +193,7 @@ def build_sparse_index(
     sparse_spec: dict,
     output_dir: Path,
     base_config: dict,
+    device: str | None = None,
 ) -> dict:
     sparse_id = sparse_spec["id"]
     method = sparse_spec.get("method", "bm25")
@@ -212,7 +217,7 @@ def build_sparse_index(
     start_time = time.perf_counter()
 
     if method == "bge-m3":
-        sparse_index = LearnedSparseIndex(model_name=sparse_spec["model_name"])
+        sparse_index = LearnedSparseIndex(model_name=sparse_spec["model_name"], device=device)
         sparse_index.build(chunks)
         sparse_index.save(str(index_path))
     else:
@@ -273,6 +278,7 @@ def main() -> None:
                 base_config,
                 batch_size=args.batch_size,
                 overwrite=args.overwrite,
+                device=args.device,
             )
             manifest["dense_indexes"][spec["name"]] = res
             profile = output_dir / f"variant_dense_{res['slug']}.json"
@@ -285,7 +291,7 @@ def main() -> None:
     if not args.skip_sparse:
         sparse_to_build = [s for s in SPARSE_CONFIGS if s["id"] in args.sparse_ids]
         for spec in sparse_to_build:
-            res = build_sparse_index(chunks, spec, output_dir, base_config)
+            res = build_sparse_index(chunks, spec, output_dir, base_config, device=args.device)
             manifest["sparse_indexes"][spec["id"]] = res
             profile = output_dir / f"variant_sparse_{spec['id']}.json"
             write_profile_manifest(base_manifest, profile, res["config_path"], sparse_path=res["index_path"])
