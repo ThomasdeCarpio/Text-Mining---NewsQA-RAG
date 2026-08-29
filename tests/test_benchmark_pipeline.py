@@ -17,7 +17,12 @@ from newsqa_rag.evaluation.benchmark_io import (
     run_with_retries,
 )
 from newsqa_rag.evaluation.metrics import evaluate_citations, evaluate_qa, recall_at_k
-from newsqa_rag.retrieval.reranker import CrossEncoderReranker, NoOpReranker
+from newsqa_rag.retrieval.reranker import (
+    BGESequenceClassificationReranker,
+    CrossEncoderReranker,
+    NoOpReranker,
+    get_reranker,
+)
 
 
 class _Retriever:
@@ -59,6 +64,20 @@ class BenchmarkTraceTests(unittest.TestCase):
         self.assertEqual([item["id"] for item in reranked], ["b", "a"])
         self.assertEqual(reranked[0]["retrieval_score"], 0.1)
         self.assertEqual(reranked[0]["reranker_score"], 0.9)
+
+    def test_bge_reranker_uses_native_transformers_backend(self):
+        reranker = get_reranker({
+            "retrieval": {
+                "reranker": {
+                    "type": "cross-encoder",
+                    "model": "BAAI/bge-reranker-large",
+                    "batch_size": 32,
+                }
+            }
+        })
+
+        self.assertIsInstance(reranker, BGESequenceClassificationReranker)
+        self.assertEqual(reranker.batch_size, 8)
 
 
 class BenchmarkMetricTests(unittest.TestCase):
