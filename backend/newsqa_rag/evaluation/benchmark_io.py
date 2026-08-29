@@ -48,7 +48,10 @@ def apply_manifest_preflight(
         )
 
     database = manifest.get("database", {})
-    if not database.get("indexed", False):
+    retriever = str(getattr(args, "retriever", "dense"))
+    requires_dense = retriever in {"dense", "hybrid"}
+    requires_sparse = retriever in {"bm25", "sparse", "hybrid"}
+    if requires_dense and not database.get("indexed", False):
         raise SystemExit("ERROR: variant manifest records that the retrieval database was not built")
     expected_collection = database.get("collection")
     if args.collection and args.collection != expected_collection:
@@ -58,12 +61,13 @@ def apply_manifest_preflight(
     args.collection = expected_collection
     args.manifest_chunk_count = database.get("chunk_count")
 
-    manifest_db_path = _manifest_artifact_path(
-        args.variant_manifest, {"path": database.get("path")}, root
-    )
-    if args.db_path and os.path.abspath(args.db_path) != os.path.abspath(manifest_db_path):
-        raise SystemExit("ERROR: --db-path does not match the variant manifest")
-    args.db_path = args.db_path or manifest_db_path
+    if requires_dense:
+        manifest_db_path = _manifest_artifact_path(
+            args.variant_manifest, {"path": database.get("path")}, root
+        )
+        if args.db_path and os.path.abspath(args.db_path) != os.path.abspath(manifest_db_path):
+            raise SystemExit("ERROR: --db-path does not match the variant manifest")
+        args.db_path = args.db_path or manifest_db_path
 
     artifacts = manifest.get("artifacts", {})
     accepted_hashes = {
@@ -87,6 +91,8 @@ def apply_manifest_preflight(
             raise SystemExit("ERROR: --chunks-path hash does not match the variant manifest")
         args.chunks_path = args.chunks_path or manifest_chunks
     bm25_record = artifacts.get("bm25")
+    if requires_sparse and not bm25_record:
+        raise SystemExit("ERROR: variant manifest is missing the required sparse index artifact")
     if bm25_record and not args.bm25_path:
         args.bm25_path = _manifest_artifact_path(args.variant_manifest, bm25_record, root)
     print(f"Manifest preflight passed: {args.variant_manifest}")

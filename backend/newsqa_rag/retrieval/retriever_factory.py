@@ -11,8 +11,8 @@ from newsqa_rag.indexing.learned_sparse_index import LearnedSparseIndex
 def get_retriever(
     retriever_type: str,
     config: dict,
-    store: ChromaStore,
-    collection_name: str,
+    store: ChromaStore | None,
+    collection_name: str | None,
     chunks: list[dict] | None = None,
     bm25_path: str | None = None,
 ) -> BaseRetriever:
@@ -33,6 +33,8 @@ def get_retriever(
         A BaseRetriever instance.
     """
     if retriever_type == "dense":
+        if store is None or collection_name is None:
+            raise ValueError("Dense retrieval requires a Chroma store and collection")
         return DenseRetriever(store, collection_name)
 
     if retriever_type in ("bm25", "sparse", "hybrid"):
@@ -43,6 +45,8 @@ def get_retriever(
             return sparse_retriever
 
         # hybrid
+        if store is None or collection_name is None:
+            raise ValueError("Hybrid retrieval requires a Chroma store and collection")
         dense_retriever = DenseRetriever(store, collection_name)
         hybrid_cfg = config.get("retrieval", {}).get("hybrid", {})
         return HybridRetriever(

@@ -225,7 +225,7 @@ def main() -> None:
         "paths": {
             "testset": str(Path(args.testset)),
             "variant_manifest": str(Path(args.variant_manifest)),
-            "database": str(Path(args.db_path)),
+            "database": str(Path(args.db_path)) if args.db_path else None,
             "collection": args.collection,
             "chunks": args.chunks_path,
             "bm25": args.bm25_path,
@@ -250,8 +250,10 @@ def main() -> None:
         load_jsonl(predictions_path, recover_final_line=True)
     )
 
-    embedding_function = get_embedding_function(original_config)
-    store = ChromaStore(args.db_path, embedding_function)
+    store = None
+    if args.retriever in {"dense", "hybrid"}:
+        embedding_function = get_embedding_function(original_config)
+        store = ChromaStore(args.db_path, embedding_function)
     chunks = None
     if args.retriever in {"bm25", "sparse", "hybrid"}:
         chunks = load_chunks(args.chunks_path)

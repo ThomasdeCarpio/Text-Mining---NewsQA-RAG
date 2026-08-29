@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import json
 from pathlib import Path
+from types import SimpleNamespace
 
 from newsqa_rag.agents.rag_agent import RAGAgent
 from newsqa_rag.evaluation.benchmark_io import (
+    apply_manifest_preflight,
     append_jsonl,
     latest_by_question,
     load_jsonl,
@@ -87,6 +90,39 @@ class BenchmarkMetricTests(unittest.TestCase):
 
 
 class BenchmarkCacheTests(unittest.TestCase):
+    def test_sparse_preflight_requires_sparse_artifact_not_chroma(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            testset = root / "testset.jsonl"
+            chunks = root / "chunks.jsonl"
+            sparse = root / "bm25.pkl"
+            config = {"retrieval": {"sparse": {"method": "bm25"}}}
+            testset.write_text('{}\n', encoding="utf-8")
+            chunks.write_text('{}\n', encoding="utf-8")
+            sparse.write_bytes(b"index")
+            from newsqa_rag.evaluation.testset import sha256_file
+            from newsqa_rag.evaluation.benchmark_io import stable_hash
+
+            manifest = root / "variant.json"
+            manifest.write_text(json.dumps({
+                "pipeline": {"config_sha256": stable_hash(config)},
+                "database": {"indexed": False, "path": "unused", "collection": "unused"},
+                "artifacts": {
+                    "testset_original": {"path": str(testset), "sha256": sha256_file(testset)},
+                    "chunks": {"path": str(chunks), "sha256": sha256_file(chunks)},
+                    "bm25": {"path": str(sparse), "sha256": sha256_file(sparse)},
+                },
+            }), encoding="utf-8")
+            args = SimpleNamespace(
+                retriever="sparse", variant_manifest=str(manifest), testset=str(testset),
+                collection=None, db_path=None, chunks_path=None, bm25_path=None,
+            )
+
+            apply_manifest_preflight(args, config, project_root=root)
+
+            self.assertIsNone(args.db_path)
+            self.assertEqual(args.bm25_path, str(sparse))
+
     def test_retry_records_attempts_and_reuses_transient_failure(self):
         with tempfile.TemporaryDirectory() as directory:
             attempts = Path(directory) / "attempts.jsonl"
