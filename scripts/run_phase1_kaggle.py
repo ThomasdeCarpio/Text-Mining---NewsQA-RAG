@@ -18,15 +18,6 @@ sys.path.insert(0, str(PROJECT_ROOT / "backend"))
 
 from newsqa_rag.evaluation.phase1 import load_comparison_rows, select_winner, write_rows_csv
 
-DENSE = {
-    "all-MiniLM-L6-v2": "all_minilm_l6_v2",
-    "BAAI/bge-small-en-v1.5": "baai_bge_small_en_v1.5",
-    "intfloat/e5-base-v2": "intfloat_e5_base_v2",
-    "BAAI/bge-large-en-v1.5": "baai_bge_large_en_v1.5",
-}
-SPARSE = ["bm25_okapi_simple", "bm25_plus_simple", "bm25_okapi_stemmed", "bge_m3_sparse"]
-
-
 def command(args: list[str | Path], *, device: int | None = None) -> None:
     env = os.environ.copy()
     env.update({"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "TOKENIZERS_PARALLELISM": "false"})
@@ -53,31 +44,55 @@ def build_one(chunks, base_manifest, root, kind, identifier, device=None):
     return completed
 
 
+def index_build_schedule(fast=False):
+    """Separate safe parallel jobs from high-host-memory model builds."""
+    if fast:
+        return {
+            "light_dense": [("all-MiniLM-L6-v2", 0)],
+            "cpu_sparse": ["bm25_okapi_simple"],
+            "heavy": [],
+        }
+    return {
+        "light_dense": [
+            ("all-MiniLM-L6-v2", 0),
+            ("BAAI/bge-small-en-v1.5", 1),
+        ],
+        "cpu_sparse": [
+            "bm25_okapi_simple",
+            "bm25_plus_simple",
+            "bm25_okapi_stemmed",
+        ],
+        # Run these in isolated subprocesses, one at a time. Concurrent model
+        # materialization can exhaust Kaggle's host RAM before CUDA inference.
+        "heavy": [
+            ("dense", "intfloat/e5-base-v2", 0),
+            ("dense", "BAAI/bge-large-en-v1.5", 1),
+            ("sparse", "bge_m3_sparse", 0),
+        ],
+    }
+
+
 def parallel_build(chunks, base_manifest, root, fast=False):
     root.mkdir(parents=True, exist_ok=True)
-    dense = ["all-MiniLM-L6-v2"] if fast else list(DENSE)
-    sparse = ["bm25_okapi_simple"] if fast else SPARSE
-    futures = []
-    gpu0, gpu1 = ThreadPoolExecutor(1), ThreadPoolExecutor(1)
-    cpu = ThreadPoolExecutor(min(2, max(1, (os.cpu_count() or 4) - 2)))
-    gpu_assignment = {
-        "all-MiniLM-L6-v2": 0,
-        "BAAI/bge-small-en-v1.5": 1,
-        "intfloat/e5-base-v2": 1,
-        "BAAI/bge-large-en-v1.5": 0,
-    }
-    for model in dense:
-        device = gpu_assignment[model]
-        pool = gpu0 if device == 0 else gpu1
-        futures.append(pool.submit(build_one, chunks, base_manifest, root, "dense", model, device))
-    for sparse_id in sparse:
-        if sparse_id == "bge_m3_sparse":
-            futures.append(gpu1.submit(build_one, chunks, base_manifest, root, "sparse", sparse_id, 1))
-        else:
+    schedule = index_build_schedule(fast)
+    manifests = []
+    cpu_workers = min(2, max(1, (os.cpu_count() or 4) - 2))
+    with (
+        ThreadPoolExecutor(1) as gpu0,
+        ThreadPoolExecutor(1) as gpu1,
+        ThreadPoolExecutor(cpu_workers) as cpu,
+    ):
+        futures = []
+        for model, device in schedule["light_dense"]:
+            pool = gpu0 if device == 0 else gpu1
+            futures.append(pool.submit(build_one, chunks, base_manifest, root, "dense", model, device))
+        for sparse_id in schedule["cpu_sparse"]:
             futures.append(cpu.submit(build_one, chunks, base_manifest, root, "sparse", sparse_id, None))
-    manifests = [future.result() for future in futures]
-    for pool in (gpu0, gpu1, cpu):
-        pool.shutdown()
+        manifests.extend(future.result() for future in futures)
+
+    for kind, identifier, device in schedule["heavy"]:
+        manifests.append(build_one(chunks, base_manifest, root, kind, identifier, device))
+
     merged = root / "index_manifest.json"
     command([sys.executable, "scripts/merge_phase1_index_manifests.py", *manifests, "--output", merged])
     return json.loads(merged.read_text(encoding="utf-8"))
@@ -263,7 +278,11 @@ def main() -> None:
         })
         return f"chunk_{size}_{overlap}", profile
 
-    with ThreadPoolExecutor(min(2, len(variants))) as pool:
+    large_chunk_profile = (
+        dense_model in {"intfloat/e5-base-v2", "BAAI/bge-large-en-v1.5"}
+        or sparse_id == "bge_m3_sparse"
+    )
+    with ThreadPoolExecutor(1 if large_chunk_profile else min(2, len(variants))) as pool:
         built_profiles = list(pool.map(build_round3_variant, enumerate(variants)))
     round3_profiles = dict(built_profiles)
     round3_cmp = run_stage("round3", round3_profiles, specs, experiments, cache, best_cross["reranker_model"])

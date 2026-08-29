@@ -9,6 +9,7 @@ from newsqa_rag.indexing.embeddings import SentenceTransformerEmbeddingFunction
 from newsqa_rag.indexing.learned_sparse_index import LearnedSparseIndex
 from newsqa_rag.retrieval.hybrid import HybridRetriever, SparseIndexRetriever
 from newsqa_rag.evaluation.phase1 import select_winner
+from scripts.run_phase1_kaggle import index_build_schedule
 
 
 class _Encoder:
@@ -28,6 +29,26 @@ class _Retriever:
 
 
 class Phase1RetrievalTests(unittest.TestCase):
+    def test_kaggle_index_schedule_serializes_large_models(self):
+        schedule = index_build_schedule(fast=False)
+        light_names = {name for name, _ in schedule["light_dense"]}
+        heavy_names = {name for _, name, _ in schedule["heavy"]}
+
+        self.assertEqual(
+            light_names,
+            {"all-MiniLM-L6-v2", "BAAI/bge-small-en-v1.5"},
+        )
+        self.assertEqual(
+            heavy_names,
+            {"intfloat/e5-base-v2", "BAAI/bge-large-en-v1.5", "bge_m3_sparse"},
+        )
+
+    def test_fast_kaggle_index_schedule_uses_only_smoke_profiles(self):
+        schedule = index_build_schedule(fast=True)
+        self.assertEqual(schedule["light_dense"], [("all-MiniLM-L6-v2", 0)])
+        self.assertEqual(schedule["cpu_sparse"], ["bm25_okapi_simple"])
+        self.assertEqual(schedule["heavy"], [])
+
     def test_asymmetric_embedding_preprocessing_and_normalization(self):
         model = Mock()
         model.encode.side_effect = lambda texts, **kwargs: Mock(tolist=lambda: [[1.0]] * len(texts))
