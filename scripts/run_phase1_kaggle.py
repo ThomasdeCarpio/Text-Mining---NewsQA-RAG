@@ -7,6 +7,7 @@ import argparse
 import atexit
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -115,6 +116,13 @@ def profiles_from_manifest(manifest):
     return profiles
 
 
+def phase1_experiment_id(stage: str, profile_name: str) -> str:
+    """Return a schema-safe ID while retaining the profile label elsewhere."""
+
+    raw = f"phase1-{stage}-{profile_name}".lower()
+    return re.sub(r"[^a-z0-9_-]+", "_", raw).strip("_-")
+
+
 def run_stage(
     stage, profiles, specs_root, experiments_root, cache,
     reranker_model=None, gpu_count=2, n_eval=None,
@@ -123,9 +131,10 @@ def run_stage(
     jobs = []
     for position, (name, profile) in enumerate(profiles.items()):
         spec = specs_root / f"{stage}_{name}.yaml"
+        experiment_id = phase1_experiment_id(stage, name)
         args = [sys.executable, "scripts/create_phase1_experiment_spec.py", "--stage", stage,
                 "--testset", profile["testset_original"], "--resolved-testset", profile["testset_resolved"],
-                "--output", spec, "--experiment-id", f"phase1-{stage}-{name}",
+                "--output", spec, "--experiment-id", experiment_id,
                 "--runs-output-dir", experiments_root,
                 "--shared-retrieval-cache", cache, "--profile",
                 f"{name},{profile['retriever']},{profile['config_path']},{profile['variant_manifest']}"]
@@ -145,7 +154,7 @@ def run_stage(
             future.result()
     comparisons = []
     for name in profiles:
-        directory = experiments_root / f"phase1-{stage}-{name}"
+        directory = experiments_root / phase1_experiment_id(stage, name)
         command([sys.executable, "scripts/summarize_experiments.py", directory])
         comparisons.append(directory / "comparison.json")
     return comparisons

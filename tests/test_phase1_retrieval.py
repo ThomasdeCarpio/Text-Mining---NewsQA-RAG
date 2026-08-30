@@ -9,7 +9,7 @@ from newsqa_rag.indexing.embeddings import SentenceTransformerEmbeddingFunction
 from newsqa_rag.indexing.learned_sparse_index import LearnedSparseIndex
 from newsqa_rag.retrieval.hybrid import HybridRetriever, SparseIndexRetriever
 from newsqa_rag.evaluation.phase1 import select_winner
-from scripts.run_phase1_kaggle import index_build_schedule
+from scripts.run_phase1_kaggle import index_build_schedule, phase1_experiment_id
 
 
 class _Encoder:
@@ -54,6 +54,12 @@ class Phase1RetrievalTests(unittest.TestCase):
         devices = [device for _, device in schedule["light_dense"]]
         devices.extend(device for _, _, device in schedule["heavy"])
         self.assertEqual(set(devices), {0})
+
+    def test_experiment_id_normalizes_model_version_punctuation(self):
+        self.assertEqual(
+            phase1_experiment_id("round1", "dense_baai_bge_large_en_v1.5"),
+            "phase1-round1-dense_baai_bge_large_en_v1_5",
+        )
 
     def test_asymmetric_embedding_preprocessing_and_normalization(self):
         model = Mock()
