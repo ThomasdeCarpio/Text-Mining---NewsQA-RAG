@@ -20,7 +20,12 @@ from newsqa_rag.evaluation.phase1 import load_comparison_rows, select_winner, wr
 
 def command(args: list[str | Path], *, device: int | None = None) -> None:
     env = os.environ.copy()
-    env.update({"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "TOKENIZERS_PARALLELISM": "false"})
+    env.update({
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "TOKENIZERS_PARALLELISM": "false",
+        "PYTHONUNBUFFERED": "1",
+    })
     if device is not None:
         env["CUDA_VISIBLE_DEVICES"] = str(device)
     print("$", " ".join(map(str, args)), flush=True)
@@ -110,7 +115,10 @@ def profiles_from_manifest(manifest):
     return profiles
 
 
-def run_stage(stage, profiles, specs_root, experiments_root, cache, reranker_model=None, gpu_count=2):
+def run_stage(
+    stage, profiles, specs_root, experiments_root, cache,
+    reranker_model=None, gpu_count=2, n_eval=None,
+):
     specs_root.mkdir(parents=True, exist_ok=True)
     jobs = []
     for position, (name, profile) in enumerate(profiles.items()):
@@ -123,6 +131,8 @@ def run_stage(stage, profiles, specs_root, experiments_root, cache, reranker_mod
                 f"{name},{profile['retriever']},{profile['config_path']},{profile['variant_manifest']}"]
         if reranker_model:
             args += ["--reranker-model", reranker_model]
+        if n_eval:
+            args += ["--n-eval", str(n_eval)]
         command(args)
         jobs.append((spec, position % gpu_count))
     # XLM-R large has a high host-memory peak while loading. Running two copies
@@ -183,6 +193,12 @@ def main() -> None:
     parser.add_argument("--work-root", default="/kaggle/working/newsqa_phase1")
     parser.add_argument("--fast", action="store_true")
     parser.add_argument(
+        "--smoke-questions",
+        type=int,
+        default=None,
+        help="Evaluate only this many questions per method and variant",
+    )
+    parser.add_argument(
         "--gpu-count",
         type=int,
         choices=[1, 2],
@@ -190,8 +206,11 @@ def main() -> None:
         help="Number of CUDA devices available to the runner",
     )
     parser.add_argument("--restore-checkpoint")
+    parser.add_argument("--checkpoint-path", default=None)
     parser.add_argument("--stop-after", choices=["round1", "round2", "round3", "final"], default="final")
     args = parser.parse_args()
+    if args.smoke_questions is not None and args.smoke_questions < 1:
+        parser.error("--smoke-questions must be positive")
     work = Path(args.work_root).resolve()
     data = work / "data"
     indexes = work / "indexes"
@@ -200,7 +219,8 @@ def main() -> None:
     results = work / "results"
     experiments = work / "experiments"
     work.mkdir(parents=True, exist_ok=True)
-    checkpoint_base = work.parent / "phase1_checkpoint"
+    checkpoint_file = Path(args.checkpoint_path).resolve() if args.checkpoint_path else work.parent / "phase1_checkpoint.tar"
+    checkpoint_base = checkpoint_file.with_suffix("")
     def save_checkpoint():
         if work.exists():
             shutil.make_archive(str(checkpoint_base), "tar", work, base_dir=".")
@@ -226,7 +246,10 @@ def main() -> None:
             final / "chunks.jsonl", base_manifest, indexes / "round1", args.fast, args.gpu_count
         )
     round1_profiles = attach_testsets(profiles_from_manifest(round1_manifest), original, resolved)
-    round1_cmp = run_stage("round1", round1_profiles, specs, experiments, cache, gpu_count=args.gpu_count)
+    round1_cmp = run_stage(
+        "round1", round1_profiles, specs, experiments, cache,
+        gpu_count=args.gpu_count, n_eval=args.smoke_questions,
+    )
     round1_rows = load_comparison_rows(round1_cmp)
     write_rows_csv(round1_rows, results / "round1.csv")
     dense_winner = select_winner([row for row in round1_rows if str(row["index"]).startswith("dense_")])
@@ -253,7 +276,10 @@ def main() -> None:
                          "variant_manifest": str(hybrid_dir / f"variant_{hybrid_id}.json"),
                          "testset_original": str(original), "testset_resolved": str(resolved)},
     }
-    round2_cmp = run_stage("round2", round2_profiles, specs, experiments, cache, gpu_count=args.gpu_count)
+    round2_cmp = run_stage(
+        "round2", round2_profiles, specs, experiments, cache,
+        gpu_count=args.gpu_count, n_eval=args.smoke_questions,
+    )
     round2_rows = load_comparison_rows(round2_cmp)
     write_rows_csv(round2_rows, results / "round2.csv")
     golden = select_winner(round2_rows)
@@ -303,7 +329,7 @@ def main() -> None:
     round3_profiles = dict(built_profiles)
     round3_cmp = run_stage(
         "round3", round3_profiles, specs, experiments, cache,
-        best_cross["reranker_model"], args.gpu_count,
+        best_cross["reranker_model"], args.gpu_count, args.smoke_questions,
     )
     round3_rows = load_comparison_rows(round3_cmp)
     write_rows_csv(round3_rows, results / "round3.csv")
@@ -325,6 +351,8 @@ def main() -> None:
                   "--final-reranker", final_winner["reranker"]]
     if final_winner.get("reranker_model"):
         final_args += ["--reranker-model", final_winner["reranker_model"]]
+    if args.smoke_questions:
+        final_args += ["--n-eval", str(args.smoke_questions)]
     command(final_args)
     command([sys.executable, "scripts/run_experiment.py", final_spec], device=0)
     final_dir = experiments / "phase1-final-locked"
@@ -334,7 +362,7 @@ def main() -> None:
     command([sys.executable, "scripts/export_phase1_results.py", "--experiments-root", experiments,
              "--output-dir", results])
     print(json.dumps({"status": "complete", "results": str(results),
-                      "checkpoint": str(checkpoint_base) + ".tar"}, indent=2))
+                      "checkpoint": str(checkpoint_file)}, indent=2))
 
 
 if __name__ == "__main__":

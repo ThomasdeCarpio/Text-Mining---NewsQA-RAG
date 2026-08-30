@@ -30,6 +30,7 @@ def main() -> None:
     parser.add_argument("--shared-retrieval-cache")
     parser.add_argument("--reranker-model", default="cross-encoder/ms-marco-MiniLM-L-6-v2")
     parser.add_argument("--final-reranker", choices=["noop", "cross-encoder"], default="cross-encoder")
+    parser.add_argument("--n-eval", type=int, default=None, help="Limit questions per run for smoke tests")
     args = parser.parse_args()
 
     profiles = dict(args.profile)
@@ -93,7 +94,12 @@ def main() -> None:
         "dataset": {"article_field": "article_key", "development_articles": 50, "indexes": indexes},
         "fixed": {**common, "partition": "final_test" if args.stage == "final" else "development"},
         "runs": runs,
-        "runtime": {"max_attempts": 2, "progress": True, "shared_retrieval_cache": args.shared_retrieval_cache},
+        "runtime": {
+            "max_attempts": 2,
+            "progress": True,
+            "shared_retrieval_cache": args.shared_retrieval_cache,
+            **({"n_eval": args.n_eval} if args.n_eval else {}),
+        },
         "judge": {"enabled": False},
         "summary": {
             "metrics": ["retrieval.hit_rate@1", "retrieval.hit_rate@5", "retrieval.mrr@5", "retrieval.ndcg@5", "retrieval.recall@5"],
