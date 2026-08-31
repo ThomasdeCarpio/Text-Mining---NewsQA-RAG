@@ -45,6 +45,7 @@ Baseline trả lời ba câu hỏi nghiên cứu:
 | Dataset variant | `resolved`, deduplicated | Giảm nhiễu do câu hỏi thiếu chủ thể; phù hợp use case hỏi tin tức độc lập |
 | Partition | Development, seed `42` | Cho phép tiếp tục phát triển mà không làm rò rỉ final-test |
 | Corpus | 11.064 bài báo | Mô phỏng truy xuất trong corpus có nhiều distractor |
+| Retrieval artifact | Private HF tag `phase2-bge-m3-512-64-v1` | Khóa chunks, resolved testset và BGE-M3 postings; kiểm tra checksum trước run |
 | Chunking | Recursive, size `512`, overlap `64` | Điểm cân bằng tốt nhất về coverage, ranking và latency trong Round 3 |
 | Retriever | BGE-M3 learned sparse | Phương pháp retrieval được chọn từ Phase 1 |
 | Initial retrieval | `top_k=20` | Cung cấp đủ candidate cho reranker |
@@ -359,8 +360,8 @@ hoặc chỉ báo cáo nhóm câu thành công mà không công bố coverage.
 | `report.json` | Báo cáo tổng hợp machine-readable |
 | `report_summary.txt` | Bản tóm tắt dễ đọc |
 | `comparison.csv` | Mean, article macro, CI 95%, latency và estimated cost |
-| `phase2_resume_checkpoint.zip` | Artifact nhỏ để resume trên Kaggle session mới |
-| `phase2_e2e_baseline_results.zip` | Bundle kết quả cuối để tải và chia sẻ |
+| `phase2_smoke_resume_checkpoint.zip` / `phase2_full_resume_checkpoint.zip` | Artifact nhỏ để resume đúng run mode trên session mới |
+| `phase2_e2e_baseline_smoke_results.zip` / `phase2_e2e_baseline_full_results.zip` | Bundle kết quả theo run mode để tải và chia sẻ |
 
 ### 8.2. Kết quả dùng trong báo cáo
 
@@ -376,7 +377,10 @@ hoặc chỉ báo cáo nhóm câu thành công mà không công bố coverage.
 
 ## 9. Công Cụ Thực Thi
 
-- Notebook: `notebooks/Tests/09_phase_2_e2e_baseline_kaggle.ipynb`
+- Kaggle notebook: `notebooks/Tests/09_phase_2_e2e_baseline_kaggle.ipynb`
+- Colab notebook: `notebooks/Tests/11_phase_2_e2e_baseline_colab.ipynb`
+- One-time artifact builder: `notebooks/Tests/10_build_phase_2_locked_index_colab.ipynb`
+- Private artifact publisher: `scripts/publish_phase2_index_artifact.py`
 - Hướng dẫn chạy ngắn: `docs/Detailed Test Plans/phase_2_execution_guide.md`
 - Generation collector: `scripts/collect_benchmark_predictions.py`
 - Deterministic scorer: `scripts/score_benchmark_predictions.py`

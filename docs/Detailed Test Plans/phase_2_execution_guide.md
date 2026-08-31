@@ -19,15 +19,25 @@ Baseline chạy trên tập `resolved` của development partition; final-test t
 | RAGAS judge | `gemini-3.7-flash`, default medium thinking |
 | Judge runtime | batch 5, 1 worker, tối đa 5 attempts |
 
-Notebook thực thi: `notebooks/Tests/09_phase_2_e2e_baseline_kaggle.ipynb`.
-Kaggle cần ba secret:
+Notebook thực thi:
 
-- `HF_TOKEN`: đọc private evaluation dataset;
+- Kaggle: `notebooks/Tests/09_phase_2_e2e_baseline_kaggle.ipynb`;
+- Google Colab: `notebooks/Tests/11_phase_2_e2e_baseline_colab.ipynb`.
+
+Cả hai môi trường cần ba secret:
+
+- `HF_TOKEN`: đọc private locked artifact;
 - `GEMINI_API_KEY_1`: free-project key chỉ dùng cho 281 generation requests;
 - `GEMINI_API_KEY`: paid-project key chỉ dùng cho RAGAS judging.
 
 Generation requests được giãn tối thiểu `4,2` giây để phù hợp giới hạn 15 RPM.
 Hai Gemini key chỉ được inject vào đúng subprocess và không nằm trong checkpoint.
+
+Retrieval artifact được pin tại private Hugging Face repository
+`ThomasAnderson2009/newsqa-rag-evaluation-artifacts`, revision
+`phase2-bge-m3-512-64-v1`. Notebook kiểm tra checksum, corpus 19.263 chunks,
+resolved testset 1.152 câu và cấu hình BGE-M3 trước khi chạy. Artifact không hợp
+lệ làm run dừng; notebook không fallback sang rebuild từ raw NewsQA.
 
 ## Smoke run bắt buộc
 
@@ -53,8 +63,8 @@ prediction/judge của nhau.
 
 1. Đọc và xác minh kết quả Phase 1; khóa `512/64 + BGE-M3 sparse + MiniLM` theo
    protocol amendment được ghi trong `phase_2_baseline_test_plan.md`.
-2. Tải raw evaluation release riêng tư từ Hugging Face, rebuild chunk corpus và
-   tạo đúng một BGE-M3 index.
+2. Tải locked artifact từ Hugging Face theo immutable tag, kiểm tra checksum và
+   rebase manifest paths cho môi trường đang chạy.
 3. Chạy retrieval, reranking và Gemini generation. `predictions.jsonl` và
    `attempts.jsonl` cho phép dừng/chạy tiếp mà không gọi lại câu đã thành công;
    generation dùng riêng free key và pacing `4,2` giây.
@@ -63,6 +73,10 @@ prediction/judge của nhau.
    thành công bằng cùng judge fingerprint.
 6. Gộp score RAGAS theo từng câu, tính mean, article macro và bootstrap CI 95%,
    rồi xuất báo cáo và ZIP kết quả.
+
+Kaggle giữ checkpoint trong working output. Colab sao lưu checkpoint và result
+bundle vào `MyDrive/newsqa_phase2/`; cả hai đều resume theo run fingerprint và
+không gọi lại generation/judgment đã thành công.
 
 ## Metrics báo cáo
 
