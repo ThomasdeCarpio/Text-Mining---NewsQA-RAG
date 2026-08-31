@@ -23,6 +23,7 @@ from newsqa_rag.retrieval.reranker import (
     NoOpReranker,
     get_reranker,
 )
+from scripts.collect_benchmark_predictions import MinimumIntervalLimiter
 
 
 class _Retriever:
@@ -116,6 +117,21 @@ class BenchmarkMetricTests(unittest.TestCase):
 
 
 class BenchmarkCacheTests(unittest.TestCase):
+    def test_generation_limiter_spaces_request_starts(self):
+        clock_values = iter([0.0, 1.0, 4.2])
+        sleeps = []
+        limiter = MinimumIntervalLimiter(
+            4.2,
+            clock=lambda: next(clock_values),
+            sleep=sleeps.append,
+        )
+
+        limiter.wait()
+        limiter.wait()
+
+        self.assertEqual(sleeps, [3.2])
+        self.assertEqual(limiter.last_started_at, 4.2)
+
     def test_sparse_preflight_requires_sparse_artifact_not_chroma(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

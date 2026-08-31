@@ -18,3 +18,6 @@ datasets
 langchain-text-splitters
 tiktoken
 openai
+ragas
+langchain-openai
+langchain-community

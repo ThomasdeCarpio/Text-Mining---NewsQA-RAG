@@ -2,6 +2,7 @@ import hashlib
 import math
 import re
 from collections import Counter
+from functools import lru_cache
 from typing import Optional
 
 import numpy as np
@@ -273,6 +274,21 @@ def _ragas_shim() -> None:
         _llms.VertexAI = type("VertexAI", (), {})
 
 
+def _gemini_judge_options(llm_model: str, api_key: str) -> dict:
+    """Build Gemini ChatOpenAI options without unsupported 3.7 controls."""
+
+    options = {
+        "model": llm_model,
+        "api_key": api_key,
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "max_retries": 2,
+    }
+    if not llm_model.lower().startswith("gemini-3.7"):
+        options["temperature"] = 0
+    return options
+
+
+@lru_cache(maxsize=8)
 def _ragas_judge(llm_model: str, provider: str = "auto"):
     """
     Build the RAGAS judge LLM from environment configuration.
@@ -299,11 +315,7 @@ def _ragas_judge(llm_model: str, provider: str = "auto"):
         from langchain_openai import ChatOpenAI
 
         chat = ChatOpenAI(
-            model=llm_model,
-            api_key=os.environ["GEMINI_API_KEY"],
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-            temperature=0,
-            max_retries=2,
+            **_gemini_judge_options(llm_model, os.environ["GEMINI_API_KEY"])
         )
     elif provider == "deepseek" or (
         provider == "auto" and bool(os.getenv("DEEPSEEK_API_KEY"))
@@ -320,7 +332,17 @@ def _ragas_judge(llm_model: str, provider: str = "auto"):
 
         chat = ChatOpenAI(model=llm_model, temperature=0)
 
-    emb = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    try:
+        import torch
+
+        embedding_device = "cuda" if torch.cuda.is_available() else "cpu"
+    except ImportError:
+        embedding_device = "cpu"
+    emb = HuggingFaceEmbeddings(
+        model_name="all-MiniLM-L6-v2",
+        model_kwargs={"device": embedding_device},
+        encode_kwargs={"batch_size": 64},
+    )
     return LangchainLLMWrapper(chat), LangchainEmbeddingsWrapper(emb)
 
 

@@ -50,6 +50,18 @@ def _latency_summary(values: list[float]) -> dict:
     }
 
 
+def _merge_judge_scores(score_rows: list[dict], judge_records: dict[str, dict]) -> int:
+    """Attach successful per-question RAGAS scores to deterministic score rows."""
+
+    merged = 0
+    for row in score_rows:
+        judge = judge_records.get(row["question_id"])
+        if judge and judge.get("status") == "success" and judge.get("scores"):
+            row["ragas"] = dict(judge["scores"])
+            merged += 1
+    return merged
+
+
 def main() -> None:
     args = parse_args()
     run_dir = Path(args.run_dir)
@@ -245,6 +257,7 @@ def main() -> None:
         report["citations"] = evaluate_citations(citation_samples)
 
     judge_records = latest_by_question(load_jsonl(run_dir / "judge_results.jsonl"))
+    _merge_judge_scores(score_rows, judge_records)
     judge_success = [
         record for record in judge_records.values() if record.get("status") == "success"
     ]

@@ -204,6 +204,8 @@ def build_sparse_index(
     cfg = yaml.safe_load(yaml.dump(base_config))
     cfg.setdefault("retrieval", {}).setdefault("sparse", {})
     cfg["retrieval"]["sparse"].update({"method": method})
+    if device:
+        cfg["retrieval"]["sparse"]["device"] = device
     if variant:
         cfg["retrieval"]["sparse"].update({"variant": variant, "tokenizer_mode": tokenizer_mode})
     else:

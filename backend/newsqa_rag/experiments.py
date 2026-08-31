@@ -589,6 +589,13 @@ def _collect_command(
         command.extend(["--shared-retrieval-cache", str(runtime["shared_retrieval_cache"])])
     if runtime.get("warmup_queries") is not None:
         command.extend(["--warmup-queries", str(runtime["warmup_queries"])])
+    if runtime.get("generation_min_interval_seconds") is not None:
+        command.extend(
+            [
+                "--generation-min-interval-seconds",
+                str(runtime["generation_min_interval_seconds"]),
+            ]
+        )
     if runtime.get("n_eval"):
         command.extend(["--n-eval", str(runtime["n_eval"])])
     if runtime.get("retry_failed"):

@@ -8,6 +8,7 @@ import copy
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 import yaml
@@ -31,9 +32,28 @@ from newsqa_rag.indexing.chroma_store import ChromaStore
 from newsqa_rag.indexing.embeddings import get_embedding_function
 from newsqa_rag.ingestion.chunker import load_chunks
 from newsqa_rag.llm import OpenAILLM, get_llm
-from newsqa_rag.model_gateway import DEEPSEEK_BASE_URL, load_generation_client_settings
+from newsqa_rag.model_gateway import load_generation_client_settings
 from newsqa_rag.retrieval.reranker import get_reranker
 from newsqa_rag.retrieval.retriever_factory import get_retriever
+
+
+class MinimumIntervalLimiter:
+    """Separate consecutive operation starts by at least a fixed interval."""
+
+    def __init__(self, interval_seconds: float, *, clock=time.monotonic, sleep=time.sleep):
+        self.interval_seconds = interval_seconds
+        self.clock = clock
+        self.sleep = sleep
+        self.last_started_at: float | None = None
+
+    def wait(self) -> None:
+        now = self.clock()
+        if self.last_started_at is not None:
+            remaining = self.interval_seconds - (now - self.last_started_at)
+            if remaining > 0:
+                self.sleep(remaining)
+                now = self.clock()
+        self.last_started_at = now
 
 
 def parse_args() -> argparse.Namespace:
@@ -69,6 +89,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--retry-failed", action="store_true")
     parser.add_argument("--progress", action="store_true")
     parser.add_argument("--warmup-queries", type=int, default=1)
+    parser.add_argument(
+        "--generation-min-interval-seconds",
+        type=float,
+        default=0.0,
+        help="Minimum interval between generation request starts, including retries.",
+    )
     parser.add_argument("--shared-retrieval-cache", default=None)
     return parser.parse_args()
 
@@ -132,6 +158,8 @@ def main() -> None:
         raise SystemExit("--n-eval must be at least 1")
     if args.warmup_queries < 0:
         raise SystemExit("--warmup-queries cannot be negative")
+    if args.generation_min_interval_seconds < 0:
+        raise SystemExit("--generation-min-interval-seconds cannot be negative")
 
     config_path = PROJECT_ROOT / args.config
     with config_path.open(encoding="utf-8") as handle:
@@ -184,9 +212,7 @@ def main() -> None:
         generator_model = config.get("llm", {}).get("model", "gpt-4o-mini")
         settings = load_generation_client_settings(generator_model)
         generator_model = settings.model
-        generator_provider = (
-            "deepseek" if settings.base_url == DEEPSEEK_BASE_URL else "openai-compatible"
-        )
+        generator_provider = settings.provider
 
     selected_ids = [entry["question_id"] for entry in entries]
     fingerprint_payload = {
@@ -209,6 +235,7 @@ def main() -> None:
         "hybrid": config.get("retrieval", {}).get("hybrid", {}),
         "seed": args.seed,
         "warmup_queries": args.warmup_queries,
+        "generation_min_interval_seconds": args.generation_min_interval_seconds,
     }
     fingerprint = stable_hash(fingerprint_payload)
 
@@ -268,6 +295,9 @@ def main() -> None:
     reranker = get_reranker(config)
     llm = None if args.retrieval_only else get_llm(config)
     agent = RAGAgent(retriever, reranker, llm, top_k=top_k, rerank_top_n=top_n)
+    generation_limiter = MinimumIntervalLimiter(
+        args.generation_min_interval_seconds
+    )
     for entry in entries[:args.warmup_queries]:
         agent.retrieve_and_rerank(entry["question"])
 
@@ -344,8 +374,12 @@ def main() -> None:
                 generation_attempts = 0
                 error = None
             else:
+                def generate_from_trace():
+                    generation_limiter.wait()
+                    return agent.generate_from_trace(trace)
+
                 result, error, generation_attempts = run_with_retries(
-                    lambda: agent.generate_from_trace(trace),
+                    generate_from_trace,
                     stage="generation",
                     question_id=question_id,
                     attempts_path=attempts_path,
