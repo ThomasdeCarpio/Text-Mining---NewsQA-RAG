@@ -25,7 +25,9 @@ def get_api_key() -> str:
 
 def check_model_rest(api_key: str, model_name: str) -> dict:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
-    generation_config = {"maxOutputTokens": 10}
+    generation_config = {
+        "maxOutputTokens": 2048 if model_name.lower().startswith("gemini-3.7") else 32
+    }
     if not model_name.lower().startswith("gemini-3.7"):
         generation_config["temperature"] = 0.0
     payload = {
@@ -90,7 +92,7 @@ def check_openai_compat(api_key: str, model_name: str) -> dict:
     payload = {
         "model": model_name,
         "messages": [{"role": "user", "content": "Respond with: 'OpenAI-compat OK'"}],
-        "max_tokens": 10,
+        "max_tokens": 2048 if model_name.lower().startswith("gemini-3.7") else 32,
     }
     if not model_name.lower().startswith("gemini-3.7"):
         payload["temperature"] = 0.0
