@@ -9,6 +9,7 @@ from typing import Any, Mapping
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 
 
 @dataclass(frozen=True)
@@ -32,11 +33,13 @@ class GenerationClientSettings:
         api_key: API key sent to the selected OpenAI-compatible provider.
         base_url: API base URL for the selected provider.
         model: Effective model name sent to the provider.
+        provider: Stable provider identifier recorded in benchmark provenance.
     """
 
     api_key: str | None
     base_url: str | None
     model: str
+    provider: str
 
 
 def load_openai_client_settings(
@@ -82,15 +85,17 @@ def load_generation_client_settings(
     model: str,
     environ: Mapping[str, str] | None = None,
 ) -> GenerationClientSettings:
-    """Resolve generation settings for DeepSeek or the shared model gateway.
+    """Resolve generation settings from the requested model name.
 
     Args:
         model: Model requested by the caller.
         environ: Optional environment mapping used instead of ``os.environ``.
 
     Returns:
-        DeepSeek settings when ``DEEPSEEK_API_KEY`` is set; otherwise settings
-        derived from ``OPENAI_API_KEY`` and ``OPENAI_BASE_URL``.
+        Gemini and DeepSeek models use their provider-specific credentials.
+        Other models use ``OPENAI_API_KEY`` and ``OPENAI_BASE_URL``. Model-name
+        routing prevents an unrelated provider key from silently changing the
+        requested benchmark model.
     """
 
     if environ is None:
@@ -99,20 +104,33 @@ def load_generation_client_settings(
         load_dotenv(PROJECT_ROOT / ".env", override=False)
 
     source = environ if environ is not None else os.environ
-    deepseek_api_key = source.get("DEEPSEEK_API_KEY", "").strip()
-    if deepseek_api_key:
-        effective_model = model if model.startswith("deepseek") else "deepseek-chat"
+    normalized_model = model.strip()
+    if normalized_model.lower().startswith("gemini"):
         return GenerationClientSettings(
-            api_key=deepseek_api_key,
+            api_key=(
+                source.get("GEMINI_API_KEY", "").strip()
+                or source.get("GOOGLE_API_KEY", "").strip()
+                or None
+            ),
+            base_url=GEMINI_BASE_URL,
+            model=normalized_model,
+            provider="gemini",
+        )
+
+    if normalized_model.lower().startswith("deepseek"):
+        return GenerationClientSettings(
+            api_key=source.get("DEEPSEEK_API_KEY", "").strip() or None,
             base_url=DEEPSEEK_BASE_URL,
-            model=effective_model,
+            model=normalized_model,
+            provider="deepseek",
         )
 
     openai_settings = load_openai_client_settings(source)
     return GenerationClientSettings(
         api_key=openai_settings.api_key,
         base_url=openai_settings.base_url,
-        model=model,
+        model=normalized_model,
+        provider="openai-compatible",
     )
 
 

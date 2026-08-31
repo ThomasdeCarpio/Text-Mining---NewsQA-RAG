@@ -65,8 +65,8 @@ class ModelGatewaySettingsTests(unittest.TestCase):
         self.assertEqual(_gateway_root("https://api.xah.io/v1"), "https://api.xah.io")
         self.assertEqual(_gateway_root("https://example.com/proxy"), "https://example.com/proxy")
 
-    def test_deepseek_key_overrides_generation_provider_only(self):
-        """Select DeepSeek generation without changing generic embedding settings."""
+    def test_model_name_selects_provider_without_key_precedence(self):
+        """Do not let an unrelated provider key silently replace the model."""
 
         settings = load_generation_client_settings(
             "gpt-4o-mini",
@@ -77,9 +77,42 @@ class ModelGatewaySettingsTests(unittest.TestCase):
             },
         )
 
+        self.assertEqual(settings.api_key, "gateway-secret")
+        self.assertEqual(settings.base_url, "https://api.xah.io/v1")
+        self.assertEqual(settings.model, "gpt-4o-mini")
+        self.assertEqual(settings.provider, "openai-compatible")
+
+    def test_gemini_model_uses_gemini_credentials(self):
+        """Route the Phase 2 generator explicitly to Google AI Studio."""
+
+        settings = load_generation_client_settings(
+            "gemini-3.1-flash-lite",
+            {
+                "GEMINI_API_KEY": "gemini-secret",
+                "DEEPSEEK_API_KEY": "deepseek-secret",
+                "OPENAI_API_KEY": "openai-secret",
+            },
+        )
+
+        self.assertEqual(settings.api_key, "gemini-secret")
+        self.assertEqual(
+            settings.base_url,
+            "https://generativelanguage.googleapis.com/v1beta/openai/",
+        )
+        self.assertEqual(settings.model, "gemini-3.1-flash-lite")
+        self.assertEqual(settings.provider, "gemini")
+
+    def test_deepseek_model_requires_deepseek_credentials(self):
+        """Route only explicitly requested DeepSeek models to DeepSeek."""
+
+        settings = load_generation_client_settings(
+            "deepseek-chat",
+            {"DEEPSEEK_API_KEY": "deepseek-secret"},
+        )
+
         self.assertEqual(settings.api_key, "deepseek-secret")
         self.assertEqual(settings.base_url, "https://api.deepseek.com")
-        self.assertEqual(settings.model, "deepseek-chat")
+        self.assertEqual(settings.provider, "deepseek")
 
 
 class ModelClientIntegrationTests(unittest.TestCase):
@@ -145,6 +178,24 @@ class ModelClientIntegrationTests(unittest.TestCase):
             model="reasoning-model",
             messages=[{"role": "user", "content": "question"}],
             temperature=0.0,
+        )
+
+    @patch("newsqa_rag.llm.create_generation_client")
+    def test_gemini_37_omits_deprecated_sampling_parameter(self, client_factory):
+        """Use Gemini 3.7 defaults instead of sending removed sampling controls."""
+
+        client = Mock()
+        client.chat.completions.create.return_value = SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content="answer"))]
+        )
+        client_factory.return_value = (client, "gemini-3.7-flash")
+        llm = OpenAILLM(model="gemini-3.7-flash", temperature=0.0, max_tokens=512)
+
+        self.assertEqual(llm.generate_messages([{"role": "user", "content": "question"}]), "answer")
+        client.chat.completions.create.assert_called_once_with(
+            model="gemini-3.7-flash",
+            messages=[{"role": "user", "content": "question"}],
+            max_tokens=512,
         )
 
     @patch("newsqa_rag.indexing.embeddings.create_openai_client")

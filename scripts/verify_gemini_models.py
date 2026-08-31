@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verification script for Gemini API access, Generator (2.0-flash) and Judge (1.5-pro) models, and rate limits."""
+"""Verify access to the locked Phase 2 Gemini generator and judge models."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 
 def get_api_key() -> str:
-    key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or os.getenv("OPENAI_API_KEY")
+    key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     if not key:
         print("❌ ERROR: No API key found in .env. Please set GEMINI_API_KEY or GOOGLE_API_KEY.", file=sys.stderr)
         sys.exit(1)
@@ -25,6 +25,9 @@ def get_api_key() -> str:
 
 def check_model_rest(api_key: str, model_name: str) -> dict:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+    generation_config = {"maxOutputTokens": 10}
+    if not model_name.lower().startswith("gemini-3.7"):
+        generation_config["temperature"] = 0.0
     payload = {
         "contents": [
             {
@@ -33,10 +36,7 @@ def check_model_rest(api_key: str, model_name: str) -> dict:
                 ]
             }
         ],
-        "generationConfig": {
-            "temperature": 0.0,
-            "maxOutputTokens": 10
-        }
+        "generationConfig": generation_config,
     }
     start = time.perf_counter()
     try:
@@ -91,8 +91,9 @@ def check_openai_compat(api_key: str, model_name: str) -> dict:
         "model": model_name,
         "messages": [{"role": "user", "content": "Respond with: 'OpenAI-compat OK'"}],
         "max_tokens": 10,
-        "temperature": 0.0
     }
+    if not model_name.lower().startswith("gemini-3.7"):
+        payload["temperature"] = 0.0
     start = time.perf_counter()
     try:
         response = httpx.post(url, json=payload, headers=headers, timeout=45.0)
@@ -155,12 +156,8 @@ def main():
         print("⚠️ Could not fetch model list directly, testing target models individually.")
 
     targets = [
-        ("gemini-3.5-flash", "Generator: Gemini 3.5 Flash"),
-        ("gemini-3.5-flash-lite", "Generator: Gemini 3.5 Flash Lite"),
-        ("gemini-3.1-flash-lite", "Generator: Gemini 3.1 Flash Lite"),
-        ("gemini-flash-lite-latest", "Generator: Gemini Flash Lite Latest"),
-        ("gemini-3.6-flash", "Generator: Gemini 3.6 Flash"),
-        ("gemini-3.7-flash", "Generator: Gemini 3.7 Flash"),
+        ("gemini-3.1-flash-lite", "Generator"),
+        ("gemini-3.7-flash", "RAGAS judge"),
     ]
 
     print("\n------------------------------------------------------------------")
@@ -178,7 +175,7 @@ def main():
     print("  TESTING OPENAI-COMPATIBLE ENDPOINT (/v1beta/openai/)")
     print("------------------------------------------------------------------")
 
-    for model_name, role in targets[:2]:
+    for model_name, role in targets:
         result = check_openai_compat(api_key, model_name)
         if result["status"] == "PASS":
             print(f"✅ [{role}] {model_name:20} -> PASS (Response: '{result['response']}', Latency: {result['latency_ms']} ms)")
@@ -186,15 +183,11 @@ def main():
             print(f"❌ [{role}] {model_name:20} -> {result['status']} ({result.get('error')})")
 
     print("\n==================================================================")
-    print("  GOOGLE AI STUDIO (FREE TIER) QUOTAS & LIMITS SUMMARY")
+    print("  PHASE 2 MODEL LOCK")
     print("==================================================================")
-    print("📊 Quota limits for your Gemini API Free Tier:")
-    print("  • Gemini 2.0 Flash : 15 RPM  | 1,000,000 TPM | 1,500 RPD (Requests/Day)")
-    print("  • Gemini 1.5 Flash : 15 RPM  | 1,000,000 TPM | 1,500 RPD")
-    print("  • Gemini 1.5 Pro   :  2 RPM  |    32,000 TPM |    50 RPD")
-    print("\n💡 Recommendation for Experiments:")
-    print("  - Use 'gemini-2.0-flash' for all RAG generation (1,500 requests/day is plenty for 1,152 questions).")
-    print("  - Use 'gemini-1.5-pro' or 'gemini-2.0-flash' for RAGAS Judge on top selected runs.")
+    print("  Generator : gemini-3.1-flash-lite")
+    print("  RAGAS judge: gemini-3.7-flash")
+    print("  Read current project quota from Google AI Studio before a full run.")
     print("==================================================================")
 
 

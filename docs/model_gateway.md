@@ -14,9 +14,22 @@ CHAT_MODEL="gpt-5.4"
 otherwise falls back to direct chat. `rag` requests RAG but still falls back if
 the local index cannot initialize.
 
-`DEEPSEEK_API_KEY` switches benchmark generation to the direct DeepSeek client.
-Credentials are read only from the environment and are not serialized into
-configs, Chroma metadata, or benchmark reports.
+Benchmark generation selects its provider from the requested model name:
+
+- `gemini-*` uses `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) through Google's
+  OpenAI-compatible endpoint;
+- `deepseek-*` uses `DEEPSEEK_API_KEY` through the direct DeepSeek endpoint;
+- other model names use `OPENAI_API_KEY` and optional `OPENAI_BASE_URL`.
+
+An unrelated provider key never overrides the requested model. Credentials are
+read only from the environment and are not serialized into configs, Chroma
+metadata, or benchmark reports.
+
+Phase 2 verifies the locked Gemini models with:
+
+```bash
+python scripts/verify_gemini_models.py
+```
 
 To use remote embeddings, update `embedding.provider`, `model_name`, and exact
 `dimensions` in `configs/config.yaml`, then rebuild the collection.

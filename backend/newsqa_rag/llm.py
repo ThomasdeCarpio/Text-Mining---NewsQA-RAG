@@ -82,8 +82,11 @@ class OpenAILLM:
         request: dict[str, Any] = {
             "model": self._effective_model,
             "messages": list(messages),
-            "temperature": self.temperature,
         }
+        # Gemini 3.7 removed legacy sampling controls from its OpenAI-compatible
+        # contract. Let that model use its documented defaults.
+        if not self._effective_model.lower().startswith("gemini-3.7"):
+            request["temperature"] = self.temperature
         if self.max_tokens is not None:
             request["max_tokens"] = self.max_tokens
 
