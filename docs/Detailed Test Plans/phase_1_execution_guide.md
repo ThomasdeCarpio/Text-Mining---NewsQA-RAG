@@ -14,7 +14,7 @@ Lần đầu cần tải bốn embedding models, BGE-M3 và hai rerankers từ H
 
 ## Chạy tournament
 
-Mở `notebooks/06_phase_1_retrieval_tournament.ipynb` và chạy theo thứ tự:
+Mở `notebooks/Tests/06_phase_1_retrieval_tournament.ipynb` và chạy theo thứ tự:
 
 1. Round 1 chạy 4 dense và 4 sparse profiles trên 50 development articles.
 2. Tổng hợp kết quả, chọn Best Dense và Best Sparse theo MRR@5; tie-break lần lượt bằng NDCG@5, Hit@5 và P50.

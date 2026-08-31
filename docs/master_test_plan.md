@@ -153,6 +153,20 @@ Thử nghiệm Quán quân trên 3 kích thước đoạn cắt với tỷ lệ 
 
 ---
 
+### Phase 2A: Khóa baseline end-to-end
+
+Trước các ablation bên dưới, chạy đúng một baseline RAG trên tập `resolved`
+development: retrieval BGE-M3, MiniLM reranker, top 5 context,
+`gemini-3.1-flash-lite` generator và `gemini-3.7-flash` RAGAS judge. Bước này
+không so sánh direct LLM; direct LLM và các model khác là thí nghiệm tiếp theo
+sau khi baseline đã được ghi nhận. Xem
+[`phase_2_baseline_test_plan.md`](Detailed%20Test%20Plans/phase_2_baseline_test_plan.md)
+cho protocol đầy đủ và
+[`phase_2_execution_guide.md`](Detailed%20Test%20Plans/phase_2_execution_guide.md)
+cho hướng dẫn chạy ngắn.
+
+---
+
 ### Thí nghiệm 4: Độ sâu Ngữ cảnh cung cấp cho LLM (Context Depth Ablation)
 * **Câu hỏi nghiên cứu**: Đưa bao nhiêu chunk vào prompt ($N=1, 3, 5, 8, 10$) sẽ cho kết quả trả lời tốt nhất mà không gây nhiễu (distraction) cho LLM?
 * **Biến kiểm soát**: Cấu hình Retrieval + Reranker tốt nhất, Generator `gemini-2.0-flash`.
