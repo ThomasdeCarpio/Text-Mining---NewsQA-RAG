@@ -281,7 +281,8 @@ def _gemini_judge_options(llm_model: str, api_key: str) -> dict:
         "model": llm_model,
         "api_key": api_key,
         "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
-        "max_retries": 2,
+        "timeout": 300.0,
+        "max_retries": 3,
     }
     if not llm_model.lower().startswith("gemini-3.7"):
         options["temperature"] = 0
@@ -444,7 +445,12 @@ def evaluate_ragas_rows(
         metrics=selected,
         llm=judge,
         embeddings=embeddings,
-        run_config=RunConfig(max_workers=max_workers, max_retries=2, seed=42),
+        run_config=RunConfig(
+            timeout=300,
+            max_workers=max_workers,
+            max_retries=3,
+            seed=42,
+        ),
         show_progress=False,
     )
 
