@@ -28,17 +28,32 @@ Charts (300 DPI, saved to `docs/figures/eda/`): `fig1_truncation`,
 
 **1. The articles are cut off, and it is the benchmark's fault, not ours.**
 30% of the corpus stops between 640 and 680 words and then falls off a cliff —
-only 64 articles exceed 700. Of the articles we could pair with their original
-CNN page, **50% are an exact prefix of it**, losing a median of 540 characters
-(12% of the article); 30% lose 1,000–3,000 characters. Our copy is
-byte-identical to the published Hugging Face dataset, so the damage was
-inherited. *(Section 3, 4)*
+only 64 articles exceed 700. Taking the 9,468 articles we could pair with their
+original CNN page as the denominator throughout:
 
-**2. But it barely affects scoring.** NewsQA answers sit at the **18th
-percentile** of article length — near the top, exactly where truncation does not
-reach. Only 34 questions have their answer in the last 10% of the article. On
-the 200 evaluation articles, 38 lose more than 200 characters. **Do not
-re-crawl; the defect is real and mostly harmless.** *(Section 3)*
+| | share of paired articles |
+|---|---|
+| our text is an exact prefix of the original | 50.1% |
+| …but the missing part is only page furniture | 9.6% |
+| **…genuinely missing article text** | **40.5%** |
+| losing 1,000–3,000 characters | 12.3% |
+| losing more than 3,000 | 3.7% |
+
+Where real text is missing, the median loss is **540 characters, 12% of the
+article**. Our copy is byte-identical to the published Hugging Face dataset, so
+the damage was inherited. *(Sections 3, 4)*
+
+**2. But it barely affects scoring — and it is fixable without crawling.**
+NewsQA answers sit at the **18th percentile** of article length, near the top,
+exactly where truncation does not reach. Only 34 questions have their answer in
+the last 10% of the article, and of the 200 evaluation articles just 38 lose
+more than 200 characters.
+
+This is the answer if the dataset choice is challenged: the original CNN pages
+are **already in the repository** (`data/cnn_downloads.tgz`, 92,579 pages), our
+text is an exact prefix of them, so restoring an article means appending — no
+crawl, and every existing answer position stays valid. We measured the defect,
+priced the fix, and judged it not worth spending the study on. *(Sections 3, 4)*
 
 **3. The original questions contain 34 impossible pairs.** *"what does faa say"*
 appears three times pointing at three different articles. No retriever can
@@ -49,6 +64,9 @@ hard. Repairing the questions removes the class entirely (**34 → 0**). *(Secti
 `resolved` the ceiling. Repair more than doubles rare-term anchors (0.33 → 0.89)
 — and those are exactly what **word-matching retrieval feeds on**, so a
 sparse-vs-dense verdict measured only on `resolved` is tilted toward sparse.
+Repair also has a cost worth a footnote: it collapsed 47 groups of distinct
+questions into word-for-word duplicates, so **1,287 of the 1,336 questions are
+actually distinct** — 49 are asked twice, double-weighting those articles.
 *(Section 6)*
 
 **5. The reranker is justified by the data, not just the tournament.** Rare
@@ -67,12 +85,30 @@ by less than that are not meaningfully different.** *(Section 7)*
 **@7 does not exist**: the scorer emits k ∈ {1, 3, 5, 10}. Report @3/@5/@10.
 *(Sections 1, 9)*
 
-**8. Two real bugs were found and fixed on the way.** `NewsCleaner` was
-downloading every image on every page over HTTP during text extraction —
-1,942 ms/page, and a hard network dependency for a local operation; now 41 ms
-with byte-identical output. And the benchmark notebook had the **generator
-grading its own answers** (`JUDGE_MODEL = GENERATOR_MODEL`, `ALLOW_SAME_JUDGE =
-True`) three cells below text saying not to. *(Sections 4b, 9)*
+**8. Three bugs were found on the way — one of them in this analysis.**
+
+- **The measurement was wrong first.** An early version of the truncation
+  analysis used a hand-rolled HTML parser whose selector matched *nothing* in
+  these pages, so it silently fell back to "take every paragraph" and counted
+  CNN's sign-up form as missing article text. 675 articles came out missing
+  byte-for-byte the same 1,736 characters. Identical gaps repeated hundreds of
+  times are impossible for real truncation — that is what exposed it. Roughly
+  **half its verdicts were wrong**, and it was only caught by plotting the
+  distribution and then *reading the articles*. Every number it produced was
+  recomputed with the project's own cleaner. *(Section 4b)*
+- **`NewsCleaner` was downloading every image on every page over HTTP** during
+  text extraction — 1,942 ms/page and a hard network dependency for a local
+  operation. Now 41 ms, with byte-identical output. *(Section 4)*
+- **The benchmark notebook had the generator grading its own answers**
+  (`JUDGE_MODEL = GENERATOR_MODEL`, `ALLOW_SAME_JUDGE = True`) three cells below
+  the text saying not to. *(Section 9)*
+
+The practical lesson, and the reason the cleaner is now frozen: **perfecting an
+extractor costs more than it returns.** newspaper3k still injects promo boxes
+into ~24% of article bodies, and a rule we nearly wrote to strip `"All About"`
+tags would have deleted real prose (*"it's all about the arms"*). Better to
+tolerate the residue — dense retrieval barely notices it — than to keep chasing
+it.
 
 > **One thing to fix before benchmarking both systems.** The delivered app
 > defaults to the `newsqa_cnn` collection — **323 chunks** — while every
@@ -83,7 +119,7 @@ True`) three cells below text saying not to. *(Sections 4b, 9)*
 
 Stated plainly so nobody over-reads them: **4,745 truncated is a lower bound**,
 because 2,030 articles diverge mid-text (the cleaner injects promo boxes, so we
-cannot tell) and some never paired. "Intact" means *the archived page is no
+cannot tell) and roughly 1,221 never paired with any page at all. "Intact" means *the archived page is no
 longer than ours* — it does not prove the archived page is complete. And the
 6.5% ambiguity figure is a proxy — shared rare terms plus answer text present,
 not verified reading.
@@ -505,6 +541,41 @@ exact substring check, with no similarity threshold anywhere. The calibration is
 what justifies that: every pair shares a long exact run, so approximate matching
 would add cost and no recall. Fuzzy matching would only help the residual few
 per cent where the cleaner injected text *inside* the shared run.
+
+### 4d. Recovering the articles that pairing missed
+
+Head-anchored pairing (section 4) compares the first 60 characters, so it
+cannot match an article whose page starts differently — a promo box before the
+lead, a dropped dateline. `10_pair_rescue.py` anchors on a 100-character window
+taken from the middle instead, calibrated as in 4c.
+
+| | articles | share |
+|---|---|---|
+| paired by head-anchor (section 4) | 9,468 | 85.6% |
+| paired by mid-anchor, exact containment | 8,489 | 76.7% |
+| **found ONLY by mid-anchor** (page starts differently) | **375** | 3.4% |
+| **combined coverage** | **~9,843** | **~89.0%** |
+
+**The mid-anchor is not simply better.** It pairs fewer articles overall,
+because it demands the benchmark text appear as an exact contiguous substring,
+while head-anchoring only demands a matching start. The two fail on opposite
+problems, so the value is the union, not the replacement: coverage rises from
+85.6% to about 89%, and the unknown bucket falls from 1,596 to roughly 1,221.
+
+Of the 375 it uniquely found, the page carries a median of **206 characters
+before our article begins** (max 583) — the promo boxes and datelines that
+defeat head-anchoring. Among the rescued articles, 4,609 are truncated with a
+median loss of 702 characters.
+
+**Where exact matching runs out.** 3,573 candidate pages were rejected because
+the anchor window matched but the full article text was not contained exactly.
+That is the cleaner's mid-body injection again: one `"Don't Miss…"` block inside
+the article splits the run, and exact containment fails even though a reader
+would pair the two instantly. This is the case where **approximate matching
+would genuinely help** — token-shingle containment above a measured threshold,
+rather than exact substring. It is not implemented, because it would refine the
+undecidable bucket rather than change any conclusion, and the same logic that
+froze the cleaner applies: the returns fall off faster than the cost.
 
 ### What is still not known
 
