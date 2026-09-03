@@ -2,6 +2,9 @@
 
 Tài liệu đang dùng:
 
+- `eda_report.md`: EDA của evaluation dataset - dữ liệu bị truncate ra sao,
+  original vs resolved, và những gì kết quả retrieval được phép kết luận.
+  Chạy lại bằng `notebooks/06_dataset_eda.ipynb` hoặc `scripts/eda/*.py`;
 - `experiments.md`: test feature mới và dùng Evaluation Desk;
 - `evaluation.md`: metric và cấu trúc kết quả;
 - `evaluation_dataset.md`: chỉ dùng khi đổi corpus/ground truth;

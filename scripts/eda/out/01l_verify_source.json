@@ -1,0 +1,13 @@
+{
+  "hf_unique_contexts": 11475,
+  "hf_max_chars": 4595,
+  "staged_max_chars": 4595,
+  "verdicts": {
+    "newsqa_8db4b769ce5b0df1": "identical",
+    "newsqa_15c64f1bceed8c8f": "identical",
+    "newsqa_49d1fc683839f0a5": "identical",
+    "newsqa_116a1e6e64da286c": "identical",
+    "newsqa_4ba9b96b1a3b1a57": "identical",
+    "newsqa_8fdcd8874101869e": "identical"
+  }
+}

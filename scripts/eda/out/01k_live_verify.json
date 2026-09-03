@@ -1,0 +1,35 @@
+{
+  "checked": 3,
+  "results": [
+    {
+      "url": "http://www.cnn.com/2011/11/08/world/meast/iran-nuclear/index.html",
+      "article_id": "newsqa_15c64f1bceed8c8f",
+      "benchmark_chars": 4212,
+      "local_crawl_chars": 6681,
+      "live_chars": 7075,
+      "bench_tail_on_live": false,
+      "missing_text_on_live": true,
+      "verdict": "inconclusive - live page differs from both local copies"
+    },
+    {
+      "url": "http://www.cnn.com/2011/10/21/world/meast/egypt-taxi-author/index.html",
+      "article_id": "newsqa_49d1fc683839f0a5",
+      "benchmark_chars": 3731,
+      "local_crawl_chars": 4521,
+      "live_chars": 4944,
+      "bench_tail_on_live": false,
+      "missing_text_on_live": false,
+      "verdict": "inconclusive - live page differs from both local copies"
+    },
+    {
+      "url": "http://www.cnn.com/2011/10/23/world/africa/libya-gadhafi-autopsy/index.html",
+      "article_id": "newsqa_8db4b769ce5b0df1",
+      "benchmark_chars": 4084,
+      "local_crawl_chars": 4723,
+      "live_chars": 5147,
+      "bench_tail_on_live": true,
+      "missing_text_on_live": true,
+      "verdict": "TRUNCATION CONFIRMED by a third source"
+    }
+  ]
+}

@@ -1,0 +1,242 @@
+{
+  "corpus": 11064,
+  "html_files": 24469,
+  "parsed": 24469,
+  "matched": 9885,
+  "restorable": 3221,
+  "furniture_only": 679,
+  "real_content": 1927,
+  "content_by_role": {
+    "distractor": 1894,
+    "evaluation": 33
+  },
+  "minutes": 1.1,
+  "detail": [
+    {
+      "article_id": "newsqa_9c70c69fa65b48ce",
+      "role": "distractor",
+      "html": "0e5b33b1b1c785437b431393ccfbc1bf0bf769e8.html",
+      "benchmark_chars": 3759,
+      "html_chars": 11296,
+      "gain": 7537,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_c4613406ebdbdce7",
+      "role": "distractor",
+      "html": "23f24292b366f81b1e4277d51e56f52644cc5b61.html",
+      "benchmark_chars": 4420,
+      "html_chars": 11016,
+      "gain": 6596,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_a0152ec87b4a01f8",
+      "role": "distractor",
+      "html": "276a8e832e1948472da6524e0e513cca14b9afce.html",
+      "benchmark_chars": 3748,
+      "html_chars": 10285,
+      "gain": 6537,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_f7c656f16c30a046",
+      "role": "distractor",
+      "html": "aa88962e14a4b6218da615ed96254c695d46e182.html",
+      "benchmark_chars": 3672,
+      "html_chars": 10044,
+      "gain": 6372,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_275e7418f10850fa",
+      "role": "distractor",
+      "html": "a70424015a14f1adb0483bb006556e77411be371.html",
+      "benchmark_chars": 4215,
+      "html_chars": 10559,
+      "gain": 6344,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_5ba048d669fbe029",
+      "role": "distractor",
+      "html": "a994137548230227d2d5bebe79782d9f7e728d2d.html",
+      "benchmark_chars": 4014,
+      "html_chars": 10298,
+      "gain": 6284,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_5593d825c27de3fc",
+      "role": "distractor",
+      "html": "815eec4729339dc3d8813e1a0a805d8a3c934532.html",
+      "benchmark_chars": 3946,
+      "html_chars": 10221,
+      "gain": 6275,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_e4262362a5eef312",
+      "role": "distractor",
+      "html": "4c90f974532ce6d3ff6f4f110394148df1147441.html",
+      "benchmark_chars": 3819,
+      "html_chars": 10000,
+      "gain": 6181,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_603cb846f986caf0",
+      "role": "distractor",
+      "html": "f2702feddad1dcaca1de453bf0b7c026f2b43eb5.html",
+      "benchmark_chars": 3810,
+      "html_chars": 9924,
+      "gain": 6114,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_69c4f55281cd2c80",
+      "role": "distractor",
+      "html": "e14c83e7db6e463da0a776d0c80c8c197de58772.html",
+      "benchmark_chars": 4079,
+      "html_chars": 10186,
+      "gain": 6107,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_0da545970bf35cab",
+      "role": "distractor",
+      "html": "d3491d04a32a3587d52ee32ef3dda9852f57a14e.html",
+      "benchmark_chars": 3937,
+      "html_chars": 10003,
+      "gain": 6066,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_7faecc3646ef712a",
+      "role": "distractor",
+      "html": "8403bab64569b5ea605aee4557f84a27465b3cf5.html",
+      "benchmark_chars": 3916,
+      "html_chars": 9981,
+      "gain": 6065,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_df5e0d378241831f",
+      "role": "distractor",
+      "html": "b95239b85ed1c88d0d39035d1e7f948efe1e024d.html",
+      "benchmark_chars": 3905,
+      "html_chars": 9938,
+      "gain": 6033,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_de7630cc8e691ae6",
+      "role": "distractor",
+      "html": "7e7d7f8f293e4750bc9a403cf8b46cda25fe616a.html",
+      "benchmark_chars": 4028,
+      "html_chars": 10056,
+      "gain": 6028,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_a5f042ea081fd743",
+      "role": "distractor",
+      "html": "e2730a7ce323f158d4ee672bb52f1214244fbad7.html",
+      "benchmark_chars": 3926,
+      "html_chars": 9947,
+      "gain": 6021,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_fe6dc6f9b7f9e659",
+      "role": "distractor",
+      "html": "9862b8aab2db9c82fd1012792783a90ec79f7269.html",
+      "benchmark_chars": 3828,
+      "html_chars": 9838,
+      "gain": 6010,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_fbd1ea36dd70c39d",
+      "role": "distractor",
+      "html": "d4dfbc7415e89e7e9df3710934c638cb2c7d4bb5.html",
+      "benchmark_chars": 3806,
+      "html_chars": 9786,
+      "gain": 5980,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_ee011b0178382e31",
+      "role": "distractor",
+      "html": "5bda86b0620b9e9e760b605bdc01d21a990650aa.html",
+      "benchmark_chars": 3827,
+      "html_chars": 9750,
+      "gain": 5923,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_687e4db610f66e64",
+      "role": "distractor",
+      "html": "db77c33da54ad40298d75740cc23f841e3c450c9.html",
+      "benchmark_chars": 4241,
+      "html_chars": 10164,
+      "gain": 5923,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_60775e65e14b6bc6",
+      "role": "distractor",
+      "html": "0534697013f80aeaebd88c82c051ad370d7c7c2e.html",
+      "benchmark_chars": 4093,
+      "html_chars": 9996,
+      "gain": 5903,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_ec4a3d53a2e25edb",
+      "role": "distractor",
+      "html": "ab50a080112b6bbcaa3166a05c1e369bb3289ccb.html",
+      "benchmark_chars": 3937,
+      "html_chars": 9795,
+      "gain": 5858,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_b29aca4699d0ebc7",
+      "role": "distractor",
+      "html": "e29e772470903931c9cc53e0c19fd11e11efeb33.html",
+      "benchmark_chars": 3737,
+      "html_chars": 9572,
+      "gain": 5835,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_faf55b7e2492584f",
+      "role": "distractor",
+      "html": "ab532a5ce5df9786eddd67ce1fa4f4eeeb629979.html",
+      "benchmark_chars": 4019,
+      "html_chars": 9838,
+      "gain": 5819,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_741a867750807fd5",
+      "role": "distractor",
+      "html": "5c761544e3f9130dbc7f5d2018babeaf8cd7a3f5.html",
+      "benchmark_chars": 3931,
+      "html_chars": 9634,
+      "gain": 5703,
+      "is_prefix": true
+    },
+    {
+      "article_id": "newsqa_0febef05f666d17b",
+      "role": "distractor",
+      "html": "98f6b33ff279a7ba3b0e214f121196a6c39ac184.html",
+      "benchmark_chars": 4271,
+      "html_chars": 9960,
+      "gain": 5689,
+      "is_prefix": true
+    }
+  ],
+  "detail_note": "truncated to the 25 largest gains; rerun 01p_full_coverage.py for the full list"
+}
