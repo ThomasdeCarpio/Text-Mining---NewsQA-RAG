@@ -1,0 +1,19 @@
+benchmark articles      : 11,064
+anchor window           : 100 chars, every offset in 200..900
+
+building the window index...
+  7,487,256 windows from 11,064 articles
+
+STAGE 1 - cheap scan for pages containing any window
+  25,000 pages, 12,368 hits
+  50,000 pages, 12,972 hits
+  75,000 pages, 13,438 hits
+  scanned 92,579 pages in 30s
+  candidate pages: 13,631  covering 10,591 distinct articles
+
+STAGE 2 - NewsCleaner on the hits, then a strict re-check
+  1,000/13,631 cleaned, 661 rescued
+  3,000/13,631 cleaned, 1,862 rescued
+  4,000/13,631 cleaned, 2,513 rescued
+  5,000/13,631 cleaned, 3,176 rescued
+  6,000/13,631 cleaned, 3,818 rescued

@@ -20,7 +20,73 @@ python scripts/eda/07_figures.py        # draws every chart below
 
 Charts (300 DPI, saved to `docs/figures/eda/`): `fig1_truncation`,
 `fig2_evidence_position`, `fig3_question_repair`, `fig4_retrieval_difficulty`,
-`fig5_restoration`, `fig6_truncation_gap`.
+`fig5_restoration`, `fig6_truncation_gap`, `fig7_window_calibration`.
+
+---
+
+## TL;DR — the eight things that matter
+
+**1. The articles are cut off, and it is the benchmark's fault, not ours.**
+30% of the corpus stops between 640 and 680 words and then falls off a cliff —
+only 64 articles exceed 700. Of the articles we could pair with their original
+CNN page, **50% are an exact prefix of it**, losing a median of 540 characters
+(12% of the article); 30% lose 1,000–3,000 characters. Our copy is
+byte-identical to the published Hugging Face dataset, so the damage was
+inherited. *(Section 3, 4)*
+
+**2. But it barely affects scoring.** NewsQA answers sit at the **18th
+percentile** of article length — near the top, exactly where truncation does not
+reach. Only 34 questions have their answer in the last 10% of the article. On
+the 200 evaluation articles, 38 lose more than 200 characters. **Do not
+re-crawl; the defect is real and mostly harmless.** *(Section 3)*
+
+**3. The original questions contain 34 impossible pairs.** *"what does faa say"*
+appears three times pointing at three different articles. No retriever can
+separate identical text into different answers — these are unscoreable, not
+hard. Repairing the questions removes the class entirely (**34 → 0**). *(Section 6)*
+
+**4. So report a range, never one number.** `original` is the floor,
+`resolved` the ceiling. Repair more than doubles rare-term anchors (0.33 → 0.89)
+— and those are exactly what **word-matching retrieval feeds on**, so a
+sparse-vs-dense verdict measured only on `resolved` is tilted toward sparse.
+*(Section 6)*
+
+**5. The reranker is justified by the data, not just the tournament.** Rare
+terms narrow 19,263 chunks to a median of **20** competitors, and only 31% of
+questions get to 10 or fewer. First-stage retrieval gets close and cannot
+finish. Separately, **37% of questions contain no rare term at all** — that is
+where dense retrieval has to carry the load. *(Section 7)*
+
+**6. Every score carries a 6.5–23% built-in error.** That share of questions has
+a *distractor* article that plausibly answers them — the same news event covered
+twice. Our scoring calls those retrievals wrong. **Two configurations differing
+by less than that are not meaningfully different.** *(Section 7)*
+
+**7. Two experiments are not worth running.** Chunking strategy has no headroom
+(**1.74 chunks per article** — chunk retrieval ≈ article retrieval here). And
+**@7 does not exist**: the scorer emits k ∈ {1, 3, 5, 10}. Report @3/@5/@10.
+*(Sections 1, 9)*
+
+**8. Two real bugs were found and fixed on the way.** `NewsCleaner` was
+downloading every image on every page over HTTP during text extraction —
+1,942 ms/page, and a hard network dependency for a local operation; now 41 ms
+with byte-identical output. And the benchmark notebook had the **generator
+grading its own answers** (`JUDGE_MODEL = GENERATOR_MODEL`, `ALLOW_SAME_JUDGE =
+True`) three cells below text saying not to. *(Sections 4b, 9)*
+
+> **One thing to fix before benchmarking both systems.** The delivered app
+> defaults to the `newsqa_cnn` collection — **323 chunks** — while every
+> benchmark number comes from **19,263**. Until that is resolved, the two sets
+> of numbers are not comparable.
+
+### Where the numbers are soft
+
+Stated plainly so nobody over-reads them: **4,745 truncated is a lower bound**,
+because 2,030 articles diverge mid-text (the cleaner injects promo boxes, so we
+cannot tell) and some never paired. "Intact" means *the archived page is no
+longer than ours* — it does not prove the archived page is complete. And the
+6.5% ambiguity figure is a proxy — shared rare terms plus answer text present,
+not verified reading.
 
 ---
 
@@ -406,6 +472,39 @@ claimed**, not less. The bug inflated individual gaps while hiding cases.
 *Caveat: the reproduction is not a byte-exact replay of the deleted script
 (it omits HTML-entity unescaping), so the table shows the character of the
 failure rather than an exact re-run.*
+
+### 4c. How the pairing itself was calibrated
+
+Pairing an article to its page needs an anchor. The obvious one — compare the
+first N characters — breaks whenever the two texts start differently, which is
+common: the cleaner keeps a promo box or drops a dateline. The alternative is to
+anchor on a run of text taken from further in.
+
+Both the window length and the search stride were **measured rather than
+guessed** (`11_window_calibration.py`), against the 98 articles for which we
+have both a benchmark version and a cleaned page.
+
+![Window calibration](figures/eda/fig7_window_calibration.png)
+
+| window | article offsets indexed | recall |
+|---|---|---|
+| 200 | every 25th | **63%** |
+| 200 | every offset, 300–800 | 87% |
+| 100 | every offset, 300–800 | 95% |
+| **100** | **every offset, 200–900** | **98%** |
+
+The first attempt failed on **stride, not window length**. A page window at
+offset `p` equals the article window at `a = p − delta`, so indexing article
+offsets only every 25 characters requires `delta` to be a multiple of 25 — which
+it usually is not. Only 2% of pairs have no exact shared run of 200 characters,
+so the window was never the constraint. The median pair shares an exact run of
+**888 characters**.
+
+This is **exact matching, not fuzzy** — an exact hash lookup followed by an
+exact substring check, with no similarity threshold anywhere. The calibration is
+what justifies that: every pair shares a long exact run, so approximate matching
+would add cost and no recall. Fuzzy matching would only help the residual few
+per cent where the cleaner injected text *inside* the shared run.
 
 ### What is still not known
 

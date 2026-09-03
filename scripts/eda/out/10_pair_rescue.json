@@ -1,0 +1,29 @@
+{
+  "unpaired_before": 11064,
+  "rescued": 5089,
+  "rescued_truncated": 2570,
+  "rescued_intact": 1938,
+  "matched_with_different_start": 33,
+  "gap_chars": {
+    "n": 2570,
+    "mean": 1081.3,
+    "median": 568,
+    "p75": 1715,
+    "p90": 2942,
+    "max": 6710
+  },
+  "leading_chars": {
+    "n": 33,
+    "mean": 230.8,
+    "median": 210,
+    "p75": 315,
+    "p90": 360,
+    "max": 519
+  },
+  "window": 200,
+  "offset": 300,
+  "by_role": {
+    "evaluation": 48,
+    "distractor": 2522
+  }
+}
