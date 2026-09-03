@@ -1,0 +1,30 @@
+PASS 1 - classify every page with the BROKEN extractor
+  scanned 92,579 pages in 33s
+  articles classified by the broken extractor: 9,469
+  its verdicts: diverged=8,353, furniture=564, truncated=521, intact=31
+
+  repeated identical gaps - the fingerprint of boilerplate:
+    gap=    24 chars     303 articles
+    gap=    25 chars     270 articles
+    gap= 1,736 chars     102 articles
+    gap=   118 chars      76 articles
+    gap= 1,746 chars      73 articles
+
+PASS 2 - re-extract 281 of those pages with NewsCleaner
+  cleaned 281 pages in 31s
+
+==========================================================================
+DID THE VERDICT CHANGE?   broken extractor  ->  correct cleaner
+==========================================================================
+  was             diverged   furniture      intact   truncated     total
+  intact                 4           0          27           0        31
+  truncated             32          25          69         124       250
+
+  verdict unchanged: 151 of 281  (53.7%)
+
+  truncated->intact - what the correct cleaner sees:
+    newsqa_364b8412fa34aa8  benchmark=1,138 chars   broken claimed +110   cleaner says +0
+    newsqa_ca19701f75c38c5  benchmark=1,978 chars   broken claimed +110   cleaner says +0
+    newsqa_d1551b647826238  benchmark=801 chars   broken claimed +110   cleaner says +0
+
+Saved -> out/09_extractor_check.json

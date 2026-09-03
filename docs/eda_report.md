@@ -14,12 +14,13 @@ in order with explanations. To reproduce:
 python scripts/eda/01_profile.py        # basic counts, cleanliness, consistency
 python scripts/eda/05_reason_codes.py   # what was wrong with the questions
 python scripts/eda/06_near_duplicates.py
+python scripts/eda/08_truncation_gap.py # ~14 min: how much text is missing
 python scripts/eda/07_figures.py        # draws every chart below
 ```
 
 Charts (300 DPI, saved to `docs/figures/eda/`): `fig1_truncation`,
 `fig2_evidence_position`, `fig3_question_repair`, `fig4_retrieval_difficulty`,
-`fig5_restoration`.
+`fig5_restoration`, `fig6_truncation_gap`.
 
 ---
 
@@ -219,8 +220,18 @@ original, and **50 are an exact prefix** — the benchmark version is
 character-for-character the beginning of the real article, then just stops. A
 prefix relationship *is* being cut off; there is nothing to interpret.
 
-**4. A third source agrees** (`01k_live_verify.py`). Fetching the original CNN
-URLs live gives the same result.
+**4. Reading the articles.** The strongest check is the least technical. Two
+articles, benchmark version against the cleaned original (full text in section 4):
+
+> ours ends *"…they're walking and walking and walking — **but**"*
+> the original continues *"**I do think that people have no excuse for bad hair.**"*
+
+A short article in the same sample is byte-identical and ends on a full stop.
+
+*A fifth line of evidence — live re-fetching of the CNN URLs — was withdrawn.
+It came from `01k_live_verify.py`, which used the same faulty extraction
+described in section 4, so it could not be relied on and the script was
+deleted.*
 
 ### How much is affected?
 
@@ -254,21 +265,83 @@ NewsQA answers live near the top of the article.
 
 ---
 
-## 4. We can restore the missing text without re-crawling
+## 4. How much text is missing, and can we restore it?
 
-`data/cnn_downloads/cnn/downloads/` contains **24,469 archived CNN web pages** —
-the same pages the benchmark was built from, already sitting in this repository.
-`01p_full_coverage.py` parsed all of them in 1.1 minutes and matched them to our
-articles:
+`data/cnn_downloads.tgz` holds **92,579 archived CNN web pages** — the same
+pages the benchmark was built from, already in this repository.
+`08_truncation_gap.py` pairs each benchmark article with its original page and
+measures the gap.
+
+> **Note — this section was recomputed after an extraction bug.** The first
+> version used a hand-rolled parser that selected `p.cnn_storypgraphtxt`, a
+> class that appears in **none** of these pages, and so fell through to "take
+> every `<p>`" — sweeping in CNN's sign-up form, weather widget and topic tags
+> as if they were article text. Because those are fixed-length template blocks,
+> hundreds of articles appeared to be missing byte-for-byte identical amounts
+> (1,736 characters × 675 articles). That script is deleted. The numbers below
+> come from `NewsCleaner`, the newspaper3k-based extractor the project already
+> uses to build `data/processed/`. Section 4b measures what the bug cost.
 
 | | |
 |---|---|
-| benchmark articles matched to their original page | **9,885 / 11,064 (89.3%)** |
-| where the original is our text plus more | 3,221 |
-| …but the extra is only page furniture (≤40 chars) | 679 |
-| **…real missing content (≥200 chars)** | **1,927** |
-| of those, distractor articles | 1,894 |
-| of those, evaluation articles | **33** (about 195 questions) |
+| archived pages scanned | 92,579 |
+| benchmark articles paired with their original page | **9,468 / 11,064 (85.6%)** |
+| intact — the original is no longer than ours | 2,693 (28.4%) |
+| **truncated — ours is an exact prefix of the original** | **4,745 (50.1%)** |
+| diverged — differs mid-text, not countable as truncation | 2,030 (21.4%) |
+| …of the truncated, page furniture only (≤40 chars) | 908 |
+| **…of the truncated, real content missing** | **3,837** |
+
+**How much is lost**, counting only real content:
+
+| | characters | share of the article |
+|---|---|---|
+| median | **540** | **12%** |
+| mean | 1,069 | 17.2% |
+| p90 | 2,886 | 42% |
+| max | 7,537 | 66% |
+
+| severity | articles | share |
+|---|---|---|
+| about a sentence (41–200 chars) | 1,552 | 40.4% |
+| a few paragraphs (200–1k) | 775 | 20.2% |
+| **a large section (1k–3k)** | **1,164** | **30.3%** |
+| **most of the story (3k+)** | **346** | **9.0%** |
+
+Total across the corpus: **4.1 million characters**.
+
+**On the evaluation set specifically** — the 200 articles that hold answers, of
+which 187 paired: **38 lose more than 200 characters** (median 1,128) and **21
+lose more than 1,000** (median 1,827). The blast radius on scoring stays small.
+
+### Verified by reading, not just by metric
+
+Two articles, benchmark version against the cleaned original:
+
+> **`00a39c13…` — truncated.** Benchmark 3,496 chars, original 5,906.
+> Ours ends: *"…they're walking and walking and walking — **but**"*
+> The original continues: *"**I do think that people have no excuse for bad
+> hair.** Because you know what? There's a hat…"* — then two more interview
+> exchanges. It stops mid-sentence and loses real journalism.
+
+> **`00a2aef1e18d…` — complete.** Benchmark 1,656 chars, original 1,656.
+> Ends: *"…deep in debt after paying the school a large amount of money to board
+> his son."* A full stop, and byte-identical.
+
+Length predicts it, which ties this back to the word cap in section 3:
+
+| benchmark length | articles | cut | rate | median loss |
+|---|---|---|---|---|
+| under 400 words | 35 | 7 | 20% | 45 chars |
+| 400–600 words | 21 | 4 | 19% | 70 chars |
+| **600–640 words** | 10 | 6 | **60%** | **1,383 chars** |
+| **640+ (at the cap)** | 32 | 23 | **72%** | **1,116 chars** |
+
+Short articles end properly; articles at the 640–680 word ceiling are cut, and
+lose over a thousand characters when they are. The 20% "cut" rate in the short
+rows is an artefact: newspaper3k leaves CNN's trailing `"All About <topic>"` tag,
+worth 45–70 characters. That is why gaps of 40 characters or less are counted as
+furniture, not truncation.
 
 ![Restoration reach](figures/eda/fig5_restoration.png)
 
@@ -278,14 +351,73 @@ so **all the existing answer positions stay valid** and no ground truth has to
 be re-labelled.
 
 This is the answer to *"did you fix the defect, or did you just try to
-re-crawl?"* — the material is already in the repo, restoring costs about a
-minute of CPU, and it touches only **33 of the 200 evaluation articles**.
+re-crawl?"* — the material is already in the repo, and restoring costs minutes
+of CPU rather than a crawl.
 
-**Recommended approach** (scoped, not yet built): restore the 1,894
-distractors — that only makes the search *harder*, so it cannot flatter our
-score — and treat the 33 evaluation articles as a separate, clearly-flagged
-comparison. Lengthening an article that holds an answer risks adding *more*
-answer text that the official labels don't know about (see section 7).
+**Recommended approach** (scoped, not yet built): restore the distractors —
+that only makes the search *harder*, so it cannot flatter our score — and treat
+the 38 affected evaluation articles as a separate, clearly-flagged comparison.
+Lengthening an article that holds an answer risks adding *more* answer text
+that the official labels don't know about (see section 7).
+
+> **Restoration cannot be run blind.** The cleaner is not clean. In 24 of 98
+> checked articles it injects CNN promo boxes *into the middle of the body* —
+> *"…Taiwan's Health Ministry said Monday. **Impact Your World See how you can
+> make a difference in children's lives** And a second child in Hong Kong…"*,
+> or *"**Don't Miss** Obama threatens dissenting Democrats"*. It also leaves a
+> trailing `"All About <topic>"` tag. Restored text must have those stripped
+> first, by the same rules `scripts/clean_corpus.py` applies to the benchmark
+> corpus. One thing the cleaner never does is *lose* article text: in 98 checks
+> there were zero cases where its output was shorter than ours.
+
+### 4b. What the extraction bug cost
+
+`09_extractor_check.py` reproduces the deleted extractor deliberately, runs both
+it and `NewsCleaner` over the same pages, and compares verdicts. On a stratified
+sample of 281 articles:
+
+| the broken extractor said | → intact | → furniture | → truncated | → diverged |
+|---|---|---|---|---|
+| **truncated** (250) | **69** | 25 | **124** | 32 |
+| **intact** (31) | 27 | 0 | 0 | 4 |
+
+**Verdict unchanged: 151 of 281 (53.7%).** Barely half of what it called
+truncated actually was — **69 of 250 were not truncated at all**. Its
+signature is visible in the raw gaps: three separate articles were each reported
+as missing exactly 110 characters, and the cleaner says all three are missing
+nothing.
+
+Aggregate effect of the fix:
+
+| | broken | **correct** |
+|---|---:|---:|
+| articles paired | 9,846 | **9,468** |
+| intact | 164 | **2,693** |
+| truncated | 4,229 | **4,745** |
+| diverged (not countable) | 5,453 | **2,030** |
+| real content missing | 3,231 | **3,837** |
+
+Both large moves have the same cause: the broken extractor *added* boilerplate
+to every page, so almost nothing could come out shorter than the benchmark
+(intact 164 → 2,693) and most pages differed mid-text (diverged 55% → 21%).
+Note the direction — **truncation is slightly more common than the broken run
+claimed**, not less. The bug inflated individual gaps while hiding cases.
+
+*Caveat: the reproduction is not a byte-exact replay of the deleted script
+(it omits HTML-entity unescaping), so the table shows the character of the
+failure rather than an exact re-run.*
+
+### What is still not known
+
+- **"Intact" is not "verified complete".** It means the archived page is no
+  longer than ours. The archived page could itself be a partial capture; that
+  was never checked.
+- **1,596 articles (14.4%) never paired with any page.** Their status is
+  unknown, not intact.
+- **2,030 articles (21.4%) diverge mid-text.** Because the cleaner injects promo
+  boxes, we cannot tell whether text is missing or the cleaner added something.
+  They are excluded from the truncation count, which makes **4,745 a lower
+  bound**.
 
 ---
 
@@ -675,9 +807,14 @@ the middle of the study.
 ## 10. Still open
 
 - **A second benchmark on restored text** — planned in section 4, not built.
-  Restore the 1,894 distractors, re-chunk, re-map the correct chunk IDs, check
-  the 33 evaluation articles for newly-introduced unlabelled answers, then run
-  the same locked configuration on both corpora and report the pair.
+  Restore the distractors (stripping the promo boxes the cleaner injects),
+  re-chunk, re-map the correct chunk IDs, check the 38 affected evaluation
+  articles for newly-introduced unlabelled answers, then run the same locked
+  configuration on both corpora and report the pair.
+- **Whether the archived pages are themselves complete.** Every truncation
+  number is relative to them; nobody has checked them against a third source.
+- **The 1,596 articles that never paired**, and the 2,030 that diverge mid-text.
+  Both are unknown rather than intact, which is why 4,745 is a lower bound.
 - **Human validation** of a sample of the 46 strong unlabelled-answer cases, to
   turn the 6.5% indicator into a measured rate.
 - **The Phase 1 result files** (`round1/2/3.csv`) are missing from the

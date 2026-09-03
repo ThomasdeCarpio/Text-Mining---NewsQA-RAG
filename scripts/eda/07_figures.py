@@ -326,8 +326,8 @@ def fig_truncation_gap() -> None:
                     textcoords="offset points", fontsize=9, color=ORANGE,
                     fontweight="bold")
     style(middle, "Characters missing (real content only)",
-          "characters (capped at 3,000)", "articles")
-    middle.text(0.97, 0.82,
+          "characters (capped at 3,000; 346 articles exceed it)", "articles")
+    middle.text(0.97, 0.72,
                 f"mean {gap['real_gap_chars']['mean']:,.0f}\n"
                 f"p90 {gap['real_gap_chars']['p90']:,}\n"
                 f"max {gap['real_gap_chars']['max']:,}\n\n"

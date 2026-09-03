@@ -1,0 +1,362 @@
+[
+ {
+  "article_id": "newsqa_9c70c69fa65b48ce",
+  "role": "distractor",
+  "ours": 3759,
+  "theirs": 11296,
+  "gap": 7537,
+  "is_prefix": true,
+  "page": "0e5b33b1b1c785437b431393ccfbc1bf0bf769e8.html"
+ },
+ {
+  "article_id": "newsqa_42bf83a979d32e56",
+  "role": "distractor",
+  "ours": 4313,
+  "theirs": 11253,
+  "gap": 6940,
+  "is_prefix": true,
+  "page": "933a9c1525a250e11e74311dedd9821596f831bf.html"
+ },
+ {
+  "article_id": "newsqa_4ce8947f835a13b7",
+  "role": "distractor",
+  "ours": 4071,
+  "theirs": 10781,
+  "gap": 6710,
+  "is_prefix": true,
+  "page": "25645a2944b1ef1743d8b7582f6ede70aed84753.html"
+ },
+ {
+  "article_id": "newsqa_c4613406ebdbdce7",
+  "role": "distractor",
+  "ours": 4420,
+  "theirs": 11016,
+  "gap": 6596,
+  "is_prefix": true,
+  "page": "23f24292b366f81b1e4277d51e56f52644cc5b61.html"
+ },
+ {
+  "article_id": "newsqa_a0152ec87b4a01f8",
+  "role": "distractor",
+  "ours": 3748,
+  "theirs": 10276,
+  "gap": 6528,
+  "is_prefix": true,
+  "page": "276a8e832e1948472da6524e0e513cca14b9afce.html"
+ },
+ {
+  "article_id": "newsqa_ee9fd8539f942d90",
+  "role": "distractor",
+  "ours": 3830,
+  "theirs": 10316,
+  "gap": 6486,
+  "is_prefix": true,
+  "page": "35d5faf70a35e01e81d5cd4e0406dbe5cb1be10a.html"
+ },
+ {
+  "article_id": "newsqa_f7c656f16c30a046",
+  "role": "distractor",
+  "ours": 3672,
+  "theirs": 10044,
+  "gap": 6372,
+  "is_prefix": true,
+  "page": "aa88962e14a4b6218da615ed96254c695d46e182.html"
+ },
+ {
+  "article_id": "newsqa_275e7418f10850fa",
+  "role": "distractor",
+  "ours": 4215,
+  "theirs": 10559,
+  "gap": 6344,
+  "is_prefix": true,
+  "page": "a70424015a14f1adb0483bb006556e77411be371.html"
+ },
+ {
+  "article_id": "newsqa_dc067f154aca18d5",
+  "role": "distractor",
+  "ours": 3967,
+  "theirs": 10279,
+  "gap": 6312,
+  "is_prefix": true,
+  "page": "2b2c8b817d4747dbb6f914a459fe3703736c420f.html"
+ },
+ {
+  "article_id": "newsqa_5593d825c27de3fc",
+  "role": "distractor",
+  "ours": 3946,
+  "theirs": 10221,
+  "gap": 6275,
+  "is_prefix": true,
+  "page": "815eec4729339dc3d8813e1a0a805d8a3c934532.html"
+ },
+ {
+  "article_id": "newsqa_e4262362a5eef312",
+  "role": "distractor",
+  "ours": 3819,
+  "theirs": 10000,
+  "gap": 6181,
+  "is_prefix": true,
+  "page": "4c90f974532ce6d3ff6f4f110394148df1147441.html"
+ },
+ {
+  "article_id": "newsqa_2e1f00da09dd7125",
+  "role": "distractor",
+  "ours": 3928,
+  "theirs": 10101,
+  "gap": 6173,
+  "is_prefix": true,
+  "page": "0b6d5cf34240aea1a6c8c6ff09ff5c91d0de6cfb.html"
+ },
+ {
+  "article_id": "newsqa_60f86d4735bfe5ec",
+  "role": "distractor",
+  "ours": 3846,
+  "theirs": 9992,
+  "gap": 6146,
+  "is_prefix": true,
+  "page": "5806102cf9e813e48ced3314cea2a80e1bd614c7.html"
+ },
+ {
+  "article_id": "newsqa_0da545970bf35cab",
+  "role": "distractor",
+  "ours": 3937,
+  "theirs": 10003,
+  "gap": 6066,
+  "is_prefix": true,
+  "page": "d3491d04a32a3587d52ee32ef3dda9852f57a14e.html"
+ },
+ {
+  "article_id": "newsqa_7faecc3646ef712a",
+  "role": "distractor",
+  "ours": 3916,
+  "theirs": 9981,
+  "gap": 6065,
+  "is_prefix": true,
+  "page": "8403bab64569b5ea605aee4557f84a27465b3cf5.html"
+ },
+ {
+  "article_id": "newsqa_67672a11e52e9751",
+  "role": "distractor",
+  "ours": 3822,
+  "theirs": 9865,
+  "gap": 6043,
+  "is_prefix": true,
+  "page": "54c0e752966996569cfd4a89926f6f43717032dd.html"
+ },
+ {
+  "article_id": "newsqa_df5e0d378241831f",
+  "role": "distractor",
+  "ours": 3905,
+  "theirs": 9938,
+  "gap": 6033,
+  "is_prefix": true,
+  "page": "b95239b85ed1c88d0d39035d1e7f948efe1e024d.html"
+ },
+ {
+  "article_id": "newsqa_160e207ad57195e7",
+  "role": "distractor",
+  "ours": 3807,
+  "theirs": 9832,
+  "gap": 6025,
+  "is_prefix": true,
+  "page": "f3c1f061d06f13d358c64be34e16ec490e5a9135.html"
+ },
+ {
+  "article_id": "newsqa_a5f042ea081fd743",
+  "role": "distractor",
+  "ours": 3926,
+  "theirs": 9947,
+  "gap": 6021,
+  "is_prefix": true,
+  "page": "e2730a7ce323f158d4ee672bb52f1214244fbad7.html"
+ },
+ {
+  "article_id": "newsqa_80f55b0294efa6d2",
+  "role": "distractor",
+  "ours": 4052,
+  "theirs": 10062,
+  "gap": 6010,
+  "is_prefix": true,
+  "page": "3087ea5447f9306d8c0e631101d9a9d2765435e1.html"
+ },
+ {
+  "article_id": "newsqa_fe6dc6f9b7f9e659",
+  "role": "distractor",
+  "ours": 3828,
+  "theirs": 9838,
+  "gap": 6010,
+  "is_prefix": true,
+  "page": "9862b8aab2db9c82fd1012792783a90ec79f7269.html"
+ },
+ {
+  "article_id": "newsqa_fbd1ea36dd70c39d",
+  "role": "distractor",
+  "ours": 3806,
+  "theirs": 9786,
+  "gap": 5980,
+  "is_prefix": true,
+  "page": "d4dfbc7415e89e7e9df3710934c638cb2c7d4bb5.html"
+ },
+ {
+  "article_id": "newsqa_ee011b0178382e31",
+  "role": "distractor",
+  "ours": 3827,
+  "theirs": 9750,
+  "gap": 5923,
+  "is_prefix": true,
+  "page": "5bda86b0620b9e9e760b605bdc01d21a990650aa.html"
+ },
+ {
+  "article_id": "newsqa_687e4db610f66e64",
+  "role": "distractor",
+  "ours": 4241,
+  "theirs": 10164,
+  "gap": 5923,
+  "is_prefix": true,
+  "page": "db77c33da54ad40298d75740cc23f841e3c450c9.html"
+ },
+ {
+  "article_id": "newsqa_60775e65e14b6bc6",
+  "role": "distractor",
+  "ours": 4093,
+  "theirs": 9996,
+  "gap": 5903,
+  "is_prefix": true,
+  "page": "0534697013f80aeaebd88c82c051ad370d7c7c2e.html"
+ },
+ {
+  "article_id": "newsqa_bf2dade5b9b23be4",
+  "role": "distractor",
+  "ours": 3924,
+  "theirs": 9824,
+  "gap": 5900,
+  "is_prefix": true,
+  "page": "f873214b61f5870d03af8785c616fba82f28e810.html"
+ },
+ {
+  "article_id": "newsqa_b29aca4699d0ebc7",
+  "role": "distractor",
+  "ours": 3737,
+  "theirs": 9572,
+  "gap": 5835,
+  "is_prefix": true,
+  "page": "e29e772470903931c9cc53e0c19fd11e11efeb33.html"
+ },
+ {
+  "article_id": "newsqa_faf55b7e2492584f",
+  "role": "distractor",
+  "ours": 4019,
+  "theirs": 9838,
+  "gap": 5819,
+  "is_prefix": true,
+  "page": "ab532a5ce5df9786eddd67ce1fa4f4eeeb629979.html"
+ },
+ {
+  "article_id": "newsqa_467f0271d57f72fa",
+  "role": "distractor",
+  "ours": 3921,
+  "theirs": 9711,
+  "gap": 5790,
+  "is_prefix": true,
+  "page": "4579c95c002d50879235bfa10af344b56aa38964.html"
+ },
+ {
+  "article_id": "newsqa_9cf7d55d03a4ea11",
+  "role": "distractor",
+  "ours": 3710,
+  "theirs": 9435,
+  "gap": 5725,
+  "is_prefix": true,
+  "page": "b8904dc43c7a7f4c2d99b53d6a6128424047efff.html"
+ },
+ {
+  "article_id": "newsqa_741a867750807fd5",
+  "role": "distractor",
+  "ours": 3931,
+  "theirs": 9633,
+  "gap": 5702,
+  "is_prefix": true,
+  "page": "5c761544e3f9130dbc7f5d2018babeaf8cd7a3f5.html"
+ },
+ {
+  "article_id": "newsqa_0febef05f666d17b",
+  "role": "distractor",
+  "ours": 4271,
+  "theirs": 9957,
+  "gap": 5686,
+  "is_prefix": true,
+  "page": "98f6b33ff279a7ba3b0e214f121196a6c39ac184.html"
+ },
+ {
+  "article_id": "newsqa_38a812ade8f2dee9",
+  "role": "distractor",
+  "ours": 3833,
+  "theirs": 9512,
+  "gap": 5679,
+  "is_prefix": true,
+  "page": "5b61e407e01856f861a9967908e592f8cabc0ed2.html"
+ },
+ {
+  "article_id": "newsqa_f7d9feb8e0e96dc0",
+  "role": "distractor",
+  "ours": 3907,
+  "theirs": 9578,
+  "gap": 5671,
+  "is_prefix": true,
+  "page": "23f84ace3ba30513e386f420db78a163c9483fac.html"
+ },
+ {
+  "article_id": "newsqa_804db38b49ed4d57",
+  "role": "distractor",
+  "ours": 4197,
+  "theirs": 9842,
+  "gap": 5645,
+  "is_prefix": true,
+  "page": "23f6534b080425f53a09bb1973c7941c44a31dbf.html"
+ },
+ {
+  "article_id": "newsqa_0194ad3c1ce37939",
+  "role": "distractor",
+  "ours": 3660,
+  "theirs": 9297,
+  "gap": 5637,
+  "is_prefix": true,
+  "page": "8e4f05c96355f9b3089ee176ec5ddbbb28ce3f32.html"
+ },
+ {
+  "article_id": "newsqa_c554f151039eafeb",
+  "role": "distractor",
+  "ours": 3845,
+  "theirs": 9435,
+  "gap": 5590,
+  "is_prefix": true,
+  "page": "a9ffab56869db5866de2d0ffe739ba624e55ce63.html"
+ },
+ {
+  "article_id": "newsqa_5bffb85db4bb3c28",
+  "role": "distractor",
+  "ours": 3679,
+  "theirs": 9248,
+  "gap": 5569,
+  "is_prefix": true,
+  "page": "94d6a496404c16cafed244b60fdda2c14b552244.html"
+ },
+ {
+  "article_id": "newsqa_4a30709d126d1650",
+  "role": "distractor",
+  "ours": 4056,
+  "theirs": 9559,
+  "gap": 5503,
+  "is_prefix": true,
+  "page": "9ce5ebdae002aaa551e4bc5dd1e278991f20a2e6.html"
+ },
+ {
+  "article_id": "newsqa_d8d1f96ee4f38b31",
+  "role": "distractor",
+  "ours": 3728,
+  "theirs": 9227,
+  "gap": 5499,
+  "is_prefix": true,
+  "page": "55a6aabd120f0b18297f7efe22452f9b3aca0d8d.html"
+ }
+]
