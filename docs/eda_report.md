@@ -13,7 +13,11 @@ runs them in order. Reproduce with:
 python scripts/eda/01_profile.py        # inventory, profile, cleanliness, integrity
 python scripts/eda/05_reason_codes.py   # what was wrong with the questions
 python scripts/eda/06_near_duplicates.py
+python scripts/eda/07_figures.py        # renders every figure below into docs/figures/eda/
 ```
+
+Figures (300 DPI, `docs/figures/eda/`): `fig1_truncation`, `fig2_evidence_position`,
+`fig3_question_repair`, `fig4_retrieval_difficulty`, `fig5_restoration`.
 
 ---
 
@@ -99,24 +103,36 @@ changing any answer.
 This is the largest single finding and the one most likely to be challenged, so
 the evidence is laid out in the order it was established.
 
+![Truncation evidence](figures/eda/fig1_truncation.png)
+
 **What was rejected first.** The initial argument — "the maximum sits just under
-4,600 characters, therefore truncation" — is not valid. There is no pile-up at
-the ceiling; each length near the maximum occurs exactly once.
+4,600 characters, therefore truncation" — is not valid *as stated*. In
+characters there is no pile-up at the ceiling: each length near the 4,595
+maximum occurs exactly once (left panel).
 
-**What actually holds.** Three independent lines of evidence:
+**What actually holds.** Four independent lines of evidence:
 
-1. **Sentence-ending gradient** (`01d_truncation.py`). The share of articles
+1. **A word cap** (middle panel). The character view hides the cap, because
+   articles differ in average word length. Measured in **words** the ceiling is
+   unmistakable: **30% of the corpus (3,323 articles) ends between 640 and 680
+   words**, then the distribution falls off a cliff — 579 articles reach 680
+   words or more, and only **64 exceed 700**. A natural length distribution does not
+   spike at one width and stop. This is the strongest single piece of evidence
+   and it corrects the earlier "no pile-up" claim: there is one, it is just not
+   visible on the character axis.
+
+2. **Sentence-ending gradient** (`01d_truncation.py`, right panel). The share of articles
    ending on sentence punctuation falls with length: **88.4%** for the shortest
    quartile, 59.9% in the middle, **14.7%** for the longest quartile, 7.3%
    within 200 chars of the maximum. Short articles end in a full stop; long ones
    end mid-sentence. Length-dependent mid-sentence endings are truncation.
 
-2. **Exact-prefix pairs** (`01e_truncation_proof.py`). Of 94 benchmark articles
+3. **Exact-prefix pairs** (`01e_truncation_proof.py`). Of 94 benchmark articles
    paired with their archived HTML source, 67 are shorter than the archived
    page, and **50 are an exact character-for-character prefix** of it (at zero
    tolerance). A prefix relationship is truncation by definition.
 
-3. **Live and archived confirmation** (`01k_live_verify.py`). Fetching the
+4. **Live and archived confirmation** (`01k_live_verify.py`). Fetching the
    original CNN URLs reproduces the same result against a third source.
 
 **Scope.** 4,548 of 11,064 articles (41%) end on a lowercase word or comma.
@@ -127,6 +143,8 @@ length threshold at **77.4% precision / 60.0% recall**
 (`01n_threshold_validity.py`). **40% of genuinely truncated articles are shorter
 than 3,800 characters**, so a length cut-off cannot be used to declare the rest
 intact.
+
+![Evidence position](figures/eda/fig2_evidence_position.png)
 
 **Impact on scoring is small** (`01m_truncation_impact.py`). Evidence sits at
 the **18th percentile** of article length on median — NewsQA answers cluster
@@ -156,6 +174,8 @@ prefix:
 | **real content recoverable (≥200 chars)** | **1,927** |
 | …of which distractors | 1,894 |
 | …of which evaluation articles | **33** (≈195 questions) |
+
+![Restoration reach](figures/eda/fig5_restoration.png)
 
 Because the benchmark text is an exact **prefix** of the archived text, restored
 articles can be built by appending, and existing evidence-span offsets stay
@@ -192,12 +212,50 @@ The review recorded a reason code per question (`05_reason_codes.py`, n=1,340):
 | missing_time | 19 | 1.4% |
 | others (4 codes) | 13 | 1.0% |
 
+![Question defects and repair](figures/eda/fig3_question_repair.png)
+
 957 questions carry exactly one code, 174 carry two or more, 209 carry none.
 
 **Every code names a checkable property of the question text** — a missing
 subject, an unresolved pronoun, a dangling reference — not a judgement about
 difficulty. That is what makes resolution auditable rather than a matter of
 taste.
+
+### How can an answer be "wrong"? (`wrong_answer`, 35 questions)
+
+This code is the one that most looks like reviewer opinion, so it is worth
+spelling out what the 35 cases actually are. All 35 retain
+`source_ground_truth`, the original evidence span, and a written rationale, so
+each can be re-checked against the article in under a minute.
+
+Of the 31 whose answer text changed:
+
+| change | count | what it means |
+|---|---|---|
+| replaced by disjoint text | 22 | a genuine correction |
+| trimmed (new answer inside the old) | 7 | span-boundary tightening |
+| expanded (old answer inside the new) | 2 | span-boundary tightening |
+
+The 22 replacements fall into three checkable kinds, none of which needs a
+judgement call:
+
+- **The span is not an answer at all.** *"How many driverless pods were being
+  tested?"* → NewsQA answer `'are'`. A crowdsourced span landed on a verb.
+- **The answer type contradicts the question word.** *"When were the first
+  impeachment charges brought?"* → `'vote-tampering.'` (a charge, not a date).
+  *"What country were the passengers from?"* → `'Chinese nationals.'` (a
+  nationality, not a country).
+- **The stated fact is the wrong one.** *"How many Canadian troops?"* →
+  `'35,000.'`, which is the NATO-allies total; the article gives *"more than
+  2,800 Canadian troops"*.
+
+**The caveat to state.** 20 of the 31 revised answers are verbatim text from
+their own article; **11 are not** — they are normalisations like `'China'` for
+`'Chinese nationals'`. For extractive scoring that matters: an answer that is no
+longer a literal span cannot be located by span extraction. Those 11 should be
+checked before any span-level metric is reported. The 7 trims and 2 expansions
+are not error corrections at all and are better described as boundary
+adjustments; counting them under `wrong_answer` slightly overstates the code.
 
 Review process: the model proposed 979 `non_standalone`, the human decided 1,078
 `human_non_standalone`, **262 proposals (19.6%) were overturned or amended**,
@@ -206,7 +264,36 @@ human did not rubber-stamp the model.
 
 ### Did the repairs actually add retrieval signal?
 
-Rare terms added to the question (IDF ≥ 6.0), by defect class:
+**What "rare term" means here.** A word's inverse document frequency over the
+19,263 chunks: `IDF = log(19,263 / (1 + chunks containing it))`. The threshold
+used throughout this report is **IDF ≥ 6.0 — a word appearing in at most ~46 of
+19,263 chunks (0.24%)**.
+
+| word | chunks containing it | IDF | rare? |
+|---|---|---|---|
+| `the` | 19,207 | 0.00 | no |
+| `said` | 14,592 | 0.28 | no |
+| `police` | 2,871 | 1.90 | no |
+| `hurricane` | 230 | 4.42 | no |
+| `gabon` | 13 | 7.23 | **yes** |
+| `wozniak` | 8 | 7.67 | **yes** |
+| `cocodrie` | 1 | 9.17 | **yes** |
+
+In practice a rare term is a **named locator** — a person, place, organisation
+or technical term that occurs in a handful of articles. It is the thing that
+lets a lexical retriever jump straight to the right chunk instead of ranking by
+topic. Examples from the resolved set, rare terms in bold:
+
+> Which crimes was **Theoneste Bagosora** convicted of by the Rwanda tribunal?
+> In how many states were cases of the **Listeria monocytogenes** outbreak reported?
+> How many militants attacked military **checkposts** in the **Mohmand** agency?
+
+The threshold is a parameter, not a law: 6.0 was chosen so "rare" means roughly
+*"in under a quarter of one percent of the corpus"*. Every measurement below
+uses the same value, so comparisons between variants are internally consistent
+even if the absolute cut-off is arbitrary.
+
+Rare terms added to the question, by defect class:
 
 | reason code | n | +words | +rare terms | ≥1 rare added |
 |---|---|---|---|---|
@@ -281,6 +368,8 @@ alone.
 ## 7. How hard is retrieval here, and is the ground truth closed?
 
 `04_distractor_collision.py`, on the resolved set.
+
+![Retrieval difficulty](figures/eda/fig4_retrieval_difficulty.png)
 
 **Competition.** Rare terms cut the candidate pool from 19,263 chunks to a
 median of **20** non-gold competitors (p90 = 49, max = 171). Only **30.7%** of

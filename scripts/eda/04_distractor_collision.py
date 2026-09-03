@@ -197,6 +197,7 @@ def main() -> None:
         "competitors_median": comp[m // 2],
         "competitors_p90": comp[int(.90 * m)],
         "narrowed_to_10": tight / m,
+        "competitor_counts": comp,
         "checked": checked,
         "nongold_has_answer": hits_any,
         "distractor_has_answer": hits_distractor,
