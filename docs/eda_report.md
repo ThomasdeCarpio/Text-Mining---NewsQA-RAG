@@ -512,8 +512,33 @@ From `04_distractor_collision.py`, measured on the `resolved` set.
 
 ### How much competition is there?
 
-Starting from 19,263 chunks, we counted how many *wrong* chunks share at least
-one rare term with the question:
+**What we measured, step by step.** Take each rare term in the question, look up
+every chunk containing it, pool those together, and remove the correct chunk.
+What remains is the set of wrong chunks a word-matching retriever still has to
+choose between — the **competitors**. On a real question:
+
+```
+Q: What made landfall near Cocodrie, Louisiana?
+
+  every chunk in the corpus                          19,263
+  question words:      cocodrie, landfall, louisiana, made
+  of those, RARE:      cocodrie, landfall
+
+    chunks containing 'cocodrie'          1
+    chunks containing 'landfall'         46      (pooled: 46)
+
+  chunks sharing at least one rare term                  46
+  minus the 1 correct chunk  ->  COMPETITORS             45
+```
+
+> **Important: BM25 does not actually do this.** A real word-matching retriever
+> scores *every* chunk and returns a ranked list; it never discards anything.
+> What this measures is **how much distinguishing power the rare words carry** —
+> an optimistic best case. Real retrieval does worse, because a chunk with no
+> rare-term match can still outrank the correct one on common-word overlap.
+> Treat the numbers below as a ceiling on what word matching can do.
+
+Across all questions:
 
 | | |
 |---|---|
@@ -523,11 +548,11 @@ one rare term with the question:
 | questions narrowed to 10 competitors or fewer | only **30.7%** |
 | **questions with no rare term at all** | **493 (37%)** |
 
-> **What this justifies.** Rare terms take the field from 19,263 chunks down to
-> about 20 — an enormous reduction, but 20 is still not 1. **The fast first pass
-> gets close and cannot finish the job.** That is a measured, data-level
-> argument for using a reranker, and it holds independently of whatever our
-> tournament results said.
+> **What this justifies.** Even in the optimistic case above, rare terms narrow
+> the field from 19,263 chunks to about 20 — an enormous reduction, but 20 is
+> still not 1. **The fast first pass gets close and cannot finish the job.**
+> That is a measured, data-level argument for using a reranker, and it holds
+> independently of whatever our tournament results said.
 >
 > The 37% with no rare term at all is the other side: for those questions,
 > word-matching has nothing sharp to grab, which is where dense retrieval should

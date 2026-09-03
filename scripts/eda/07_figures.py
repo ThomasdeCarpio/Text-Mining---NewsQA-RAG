@@ -294,6 +294,68 @@ def fig_restoration() -> None:
     save(fig, "fig5_restoration.png")
 
 
+def fig_truncation_gap() -> None:
+    """How much text is missing, across every article we could pair up."""
+    gap = cached("08_truncation_gap")
+
+    fig, (left, middle, right) = plt.subplots(1, 3, figsize=(15, 4))
+
+    # What happened to each paired article. Only one bucket is truncation.
+    buckets = [
+        ("intact\n(page no longer\nthan ours)", gap["intact"], GRID),
+        ("TRUNCATED\n(ours is an exact\nprefix)", gap["truncated"], ORANGE),
+        ("diverged\n(differs mid-text,\nnot countable)", gap["diverged"], MUTED),
+    ]
+    bars = left.bar(range(3), [v for _, v, _ in buckets],
+                    color=[c for _, _, c in buckets], width=0.6)
+    for bar, (_, value, _) in zip(bars, buckets):
+        left.text(bar.get_x() + bar.get_width() / 2, value + gap["matched"] * 0.015,
+                  f"{value:,}\n{value/gap['matched']:.1%}", ha="center",
+                  fontsize=8, color=INK, fontweight="bold")
+    left.set_xticks(range(3))
+    left.set_xticklabels([n for n, _, _ in buckets], fontsize=8)
+    left.set_ylim(0, max(v for _, v, _ in buckets) * 1.28)
+    style(left, "Every article paired with its original page", "",
+          f"articles (n={gap['matched']:,} matched)")
+
+    # The distribution, not the average - the average hides the shape.
+    gaps = gap["gaps_truncated"]
+    capped = [min(g, 3000) for g in gaps]
+    middle.hist(capped, bins=60, color=BLUE)
+    median = gap["gap_chars"]["median"]
+    middle.axvline(median, color=ORANGE, linewidth=1.8)
+    middle.annotate(f"median {median:,}", xy=(median, 0), xytext=(8, 92),
+                    textcoords="offset points", fontsize=9, color=ORANGE,
+                    fontweight="bold")
+    middle.axvspan(0, 40, color=MUTED, alpha=0.25)
+    middle.annotate(f"{gap['furniture_only']:,} are page\nfurniture only",
+                    xy=(40, 0), xytext=(120, 200), fontsize=8, color=MUTED,
+                    arrowprops=dict(arrowstyle="->", color=MUTED, linewidth=0.9))
+    style(middle, "Characters missing per truncated article",
+          "characters (capped at 3,000)", "articles")
+    middle.text(0.97, 0.86, f"mean {gap['gap_chars']['mean']:,.0f}\n"
+                            f"p90 {gap['gap_chars']['p90']:,}\n"
+                            f"max {gap['gap_chars']['max']:,}",
+                transform=middle.transAxes, ha="right", fontsize=8, color=MUTED)
+
+    # Characters are hard to feel. Share of the article is not.
+    percent = gap["gaps_percent"]
+    right.hist(percent, bins=50, color=BLUE)
+    pmedian = gap["gap_percent"]["median"]
+    right.axvline(pmedian, color=ORANGE, linewidth=1.8)
+    right.annotate(f"median {pmedian}%", xy=(pmedian, 0), xytext=(8, 92),
+                   textcoords="offset points", fontsize=9, color=ORANGE,
+                   fontweight="bold")
+    style(right, "Share of the article that is missing",
+          "% of the original article", "articles")
+
+    fig.suptitle("How much text is actually missing, measured against the original pages",
+                 fontsize=12, fontweight="bold", color=INK, x=0.055, ha="left",
+                 y=1.02)
+    fig.tight_layout()
+    save(fig, "fig6_truncation_gap.png")
+
+
 def main() -> None:
     print("Rendering EDA figures from cached results...")
     fig_truncation()
