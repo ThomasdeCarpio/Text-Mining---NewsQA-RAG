@@ -263,32 +263,30 @@ def fig_retrieval_difficulty() -> None:
 
 
 def fig_restoration() -> None:
-    """How much of the truncated text the archived HTML can give back."""
-    coverage = cached("01p_full_coverage")
+    """How far the archived pages reach, from the corrected pairing."""
+    gap = cached("08_truncation_gap")
     stages = [
-        ("archived CNN pages", coverage["html_files"]),
-        ("benchmark articles", coverage["corpus"]),
-        ("matched to their HTML", coverage["matched"]),
-        ("prefix-extended", coverage["restorable"]),
-        ("real content (>=200 chars)", coverage["real_content"]),
-        ("...evaluation articles", coverage["content_by_role"].get("evaluation", 0)),
+        ("archived pages scanned", gap["pages_scanned"]),
+        ("benchmark articles", gap["corpus"]),
+        ("paired with a cleaned page", gap["matched"]),
+        ("text missing off the end", gap["truncated"]),
+        ("real content missing (>40 chars)", gap["real_content"]),
     ]
     fig, ax = plt.subplots(figsize=(9, 4))
     names = [n for n, _ in stages][::-1]
     values = [v for _, v in stages][::-1]
     bars = ax.barh(names, values, color=BLUE, height=0.62)
     bars[0].set_color(ORANGE)
+    top = max(values)
     for bar, value in zip(bars, values):
-        ax.text(value + coverage["html_files"] * 0.012,
-                bar.get_y() + bar.get_height() / 2, f"{value:,}",
-                va="center", fontsize=9, color=INK)
-    ax.set_xlim(0, coverage["html_files"] * 1.12)
-    style(ax, "Restoration reach - no crawling required",
-          "articles", "")
+        ax.text(value + top * 0.012, bar.get_y() + bar.get_height() / 2,
+                f"{value:,}", va="center", fontsize=9, color=INK)
+    ax.set_xlim(0, top * 1.12)
+    style(ax, "Restoration reach - no crawling required", "articles / pages", "")
     ax.grid(axis="y", visible=False)
-    ax.text(0.98, 0.12,
-            "the blast radius on the evaluation set\n"
-            f"is {coverage['content_by_role'].get('evaluation', 0)} articles",
+    ax.text(0.97, 0.12,
+            "extraction: the project's own NewsCleaner\n"
+            "(newspaper3k), not a hand-rolled parser",
             transform=ax.transAxes, ha="right", fontsize=8, color=MUTED)
     fig.tight_layout()
     save(fig, "fig5_restoration.png")
@@ -319,29 +317,30 @@ def fig_truncation_gap() -> None:
           f"articles (n={gap['matched']:,} matched)")
 
     # The distribution, not the average - the average hides the shape.
-    gaps = gap["gaps_truncated"]
+    gaps = gap["gaps_real"]
     capped = [min(g, 3000) for g in gaps]
     middle.hist(capped, bins=60, color=BLUE)
-    median = gap["gap_chars"]["median"]
+    median = gap["real_gap_chars"]["median"]
     middle.axvline(median, color=ORANGE, linewidth=1.8)
     middle.annotate(f"median {median:,}", xy=(median, 0), xytext=(8, 92),
                     textcoords="offset points", fontsize=9, color=ORANGE,
                     fontweight="bold")
-    middle.axvspan(0, 40, color=MUTED, alpha=0.25)
-    middle.annotate(f"{gap['furniture_only']:,} are page\nfurniture only",
-                    xy=(40, 0), xytext=(120, 200), fontsize=8, color=MUTED,
-                    arrowprops=dict(arrowstyle="->", color=MUTED, linewidth=0.9))
-    style(middle, "Characters missing per truncated article",
+    style(middle, "Characters missing (real content only)",
           "characters (capped at 3,000)", "articles")
-    middle.text(0.97, 0.86, f"mean {gap['gap_chars']['mean']:,.0f}\n"
-                            f"p90 {gap['gap_chars']['p90']:,}\n"
-                            f"max {gap['gap_chars']['max']:,}",
+    middle.text(0.97, 0.82,
+                f"mean {gap['real_gap_chars']['mean']:,.0f}\n"
+                f"p90 {gap['real_gap_chars']['p90']:,}\n"
+                f"max {gap['real_gap_chars']['max']:,}\n\n"
+                f"{gap['furniture_only']:,} furniture-only\ngaps excluded",
                 transform=middle.transAxes, ha="right", fontsize=8, color=MUTED)
 
     # Characters are hard to feel. Share of the article is not.
-    percent = gap["gaps_percent"]
+    # gaps_truncated and gaps_percent are parallel, so the same >40 filter
+    # that defines "real content" applies to both.
+    percent = [p for g, p in zip(gap["gaps_truncated"], gap["gaps_percent"])
+               if g > 40]
     right.hist(percent, bins=50, color=BLUE)
-    pmedian = gap["gap_percent"]["median"]
+    pmedian = gap["real_gap_percent"]["median"]
     right.axvline(pmedian, color=ORANGE, linewidth=1.8)
     right.annotate(f"median {pmedian}%", xy=(pmedian, 0), xytext=(8, 92),
                    textcoords="offset points", fontsize=9, color=ORANGE,
@@ -363,6 +362,7 @@ def main() -> None:
     fig_question_repair()
     fig_retrieval_difficulty()
     fig_restoration()
+    fig_truncation_gap()
     print(f"\nDone -> {FIGURES.relative_to(C.PROJECT)}")
 
 
