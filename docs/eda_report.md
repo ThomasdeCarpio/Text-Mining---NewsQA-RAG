@@ -461,6 +461,40 @@ appears in the original character-for-character with more text after it. Where
 the page differs from ours in the middle rather than the end, the pair is
 recorded as undecidable rather than counted either way.
 
+### Should we chunk the complete text instead?
+
+The obvious next thought is to restore every article and index that instead.
+It is worth writing down why we do not, before the benchmark rather than after.
+
+**A uniformly complete corpus is not available.** About 11% of articles never
+paired with an original page, so restoration produces a *mixed* corpus - some
+articles complete, some still truncated, with nothing downstream able to tell
+them apart. For a controlled comparison that is worse than a corpus that is
+uniformly truncated in a way we have measured.
+
+**Restoring an evaluation article adds unlabelled answers.** More text in an
+article that holds an answer means more chances it contains answer strings the
+gold labels do not know about, on top of the 6.5-23% floor already present. That
+inflates false negatives and makes scores look worse for no real reason.
+
+**Distractors are the safe half.** They hold no answers, so no gold chunk moves
+and no answer position needs re-verifying, and a longer distractor only makes
+retrieval *harder* - it cannot flatter a score. That is the right direction to
+err in.
+
+**It is not a small job.** Append the restored text, re-chunk (expect roughly
+22,000-25,000 chunks against today's 19,263), rebuild BM25, rebuild the vector
+collection, re-map every gold chunk ID, and re-verify every answer position -
+then re-run anything already benchmarked.
+
+**Decision: benchmark the corpus as published.** Truncation is real but
+front-loaded evidence makes it mostly harmless, and only 38 of the 200
+evaluation articles lose more than 200 characters. If the restored corpus is
+wanted, run it afterwards as a robustness check - same locked configuration,
+both corpora, report the pair. That is a stronger result than either alone, and
+it answers "did you just ignore the defect?" directly: no, we measured it both
+ways.
+
 ### What is still not known
 
 - **"Intact" is not "verified complete".** It means the archived page is no
