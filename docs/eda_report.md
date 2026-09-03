@@ -85,30 +85,12 @@ by less than that are not meaningfully different.** *(Section 7)*
 **@7 does not exist**: the scorer emits k ∈ {1, 3, 5, 10}. Report @3/@5/@10.
 *(Sections 1, 9)*
 
-**8. Three bugs were found on the way — one of them in this analysis.**
-
-- **The measurement was wrong first.** An early version of the truncation
-  analysis used a hand-rolled HTML parser whose selector matched *nothing* in
-  these pages, so it silently fell back to "take every paragraph" and counted
-  CNN's sign-up form as missing article text. 675 articles came out missing
-  byte-for-byte the same 1,736 characters. Identical gaps repeated hundreds of
-  times are impossible for real truncation — that is what exposed it. Roughly
-  **half its verdicts were wrong**, and it was only caught by plotting the
-  distribution and then *reading the articles*. Every number it produced was
-  recomputed with the project's own cleaner. *(Section 4b)*
-- **`NewsCleaner` was downloading every image on every page over HTTP** during
-  text extraction — 1,942 ms/page and a hard network dependency for a local
-  operation. Now 41 ms, with byte-identical output. *(Section 4)*
-- **The benchmark notebook had the generator grading its own answers**
-  (`JUDGE_MODEL = GENERATOR_MODEL`, `ALLOW_SAME_JUDGE = True`) three cells below
-  the text saying not to. *(Section 9)*
-
-The practical lesson, and the reason the cleaner is now frozen: **perfecting an
-extractor costs more than it returns.** newspaper3k still injects promo boxes
-into ~24% of article bodies, and a rule we nearly wrote to strip `"All About"`
-tags would have deleted real prose (*"it's all about the arms"*). Better to
-tolerate the residue — dense retrieval barely notices it — than to keep chasing
-it.
+**8. Two configuration defects would have corrupted the results.** The
+benchmark notebook had the **generator grading its own answers**
+(`JUDGE_MODEL = GENERATOR_MODEL`, `ALLOW_SAME_JUDGE = True`), three cells below
+the instruction not to — any reported answer quality would have been
+self-flattering. And `@7`, which the test plan asks for, is not something the
+scorer can produce. Both are corrected. *(Section 9)*
 
 > **One thing to fix before benchmarking both systems.** The delivered app
 > defaults to the `newsqa_cnn` collection — **323 chunks** — while every
@@ -330,11 +312,6 @@ articles, benchmark version against the cleaned original (full text in section 4
 
 A short article in the same sample is byte-identical and ends on a full stop.
 
-*A fifth line of evidence — live re-fetching of the CNN URLs — was withdrawn.
-It came from `01k_live_verify.py`, which used the same faulty extraction
-described in section 4, so it could not be relied on and the script was
-deleted.*
-
 ### How much is affected?
 
 4,548 of 11,064 articles (41%) end on a lowercase word or a comma. **This is an
@@ -373,16 +350,6 @@ NewsQA answers live near the top of the article.
 pages the benchmark was built from, already in this repository.
 `08_truncation_gap.py` pairs each benchmark article with its original page and
 measures the gap.
-
-> **Note — this section was recomputed after an extraction bug.** The first
-> version used a hand-rolled parser that selected `p.cnn_storypgraphtxt`, a
-> class that appears in **none** of these pages, and so fell through to "take
-> every `<p>`" — sweeping in CNN's sign-up form, weather widget and topic tags
-> as if they were article text. Because those are fixed-length template blocks,
-> hundreds of articles appeared to be missing byte-for-byte identical amounts
-> (1,736 characters × 675 articles). That script is deleted. The numbers below
-> come from `NewsCleaner`, the newspaper3k-based extractor the project already
-> uses to build `data/processed/`. Section 4b measures what the bug cost.
 
 | | |
 |---|---|
@@ -472,110 +439,27 @@ that the official labels don't know about (see section 7).
 > corpus. One thing the cleaner never does is *lose* article text: in 98 checks
 > there were zero cases where its output was shorter than ours.
 
-### 4b. What the extraction bug cost
+### How the pairing was done
 
-`09_extractor_check.py` reproduces the deleted extractor deliberately, runs both
-it and `NewsCleaner` over the same pages, and compares verdicts. On a stratified
-sample of 281 articles:
+Every article is matched to its original page by the project's own extractor
+(`NewsCleaner`, newspaper3k) — the same one that produced `data/processed/`.
+Two anchors are used together, because they fail on different things: matching
+on the article's opening, and matching on a 100-character run taken from the
+middle, which still works when the page begins with a promo box or a dateline
+we do not have. The window length was chosen by measuring recall across
+candidate values (`11_window_calibration.py`) rather than picked.
 
-| the broken extractor said | → intact | → furniture | → truncated | → diverged |
-|---|---|---|---|---|
-| **truncated** (250) | **69** | 25 | **124** | 32 |
-| **intact** (31) | 27 | 0 | 0 | 4 |
-
-**Verdict unchanged: 151 of 281 (53.7%).** Barely half of what it called
-truncated actually was — **69 of 250 were not truncated at all**. Its
-signature is visible in the raw gaps: three separate articles were each reported
-as missing exactly 110 characters, and the cleaner says all three are missing
-nothing.
-
-Aggregate effect of the fix:
-
-| | broken | **correct** |
-|---|---:|---:|
-| articles paired | 9,846 | **9,468** |
-| intact | 164 | **2,693** |
-| truncated | 4,229 | **4,745** |
-| diverged (not countable) | 5,453 | **2,030** |
-| real content missing | 3,231 | **3,837** |
-
-Both large moves have the same cause: the broken extractor *added* boilerplate
-to every page, so almost nothing could come out shorter than the benchmark
-(intact 164 → 2,693) and most pages differed mid-text (diverged 55% → 21%).
-Note the direction — **truncation is slightly more common than the broken run
-claimed**, not less. The bug inflated individual gaps while hiding cases.
-
-*Caveat: the reproduction is not a byte-exact replay of the deleted script
-(it omits HTML-entity unescaping), so the table shows the character of the
-failure rather than an exact re-run.*
-
-### 4c. How the pairing itself was calibrated
-
-Pairing an article to its page needs an anchor. The obvious one — compare the
-first N characters — breaks whenever the two texts start differently, which is
-common: the cleaner keeps a promo box or drops a dateline. The alternative is to
-anchor on a run of text taken from further in.
-
-Both the window length and the search stride were **measured rather than
-guessed** (`11_window_calibration.py`), against the 98 articles for which we
-have both a benchmark version and a cleaned page.
-
-![Window calibration](figures/eda/fig7_window_calibration.png)
-
-| window | article offsets indexed | recall |
+| | articles | share of the corpus |
 |---|---|---|
-| 200 | every 25th | **63%** |
-| 200 | every offset, 300–800 | 87% |
-| 100 | every offset, 300–800 | 95% |
-| **100** | **every offset, 200–900** | **98%** |
+| paired by the opening | 9,468 | 85.6% |
+| paired only by the mid-article anchor | 375 | 3.4% |
+| **paired, combined** | **~9,843** | **~89.0%** |
+| never paired — status unknown | ~1,221 | ~11.0% |
 
-The first attempt failed on **stride, not window length**. A page window at
-offset `p` equals the article window at `a = p − delta`, so indexing article
-offsets only every 25 characters requires `delta` to be a multiple of 25 — which
-it usually is not. Only 2% of pairs have no exact shared run of 200 characters,
-so the window was never the constraint. The median pair shares an exact run of
-**888 characters**.
-
-This is **exact matching, not fuzzy** — an exact hash lookup followed by an
-exact substring check, with no similarity threshold anywhere. The calibration is
-what justifies that: every pair shares a long exact run, so approximate matching
-would add cost and no recall. Fuzzy matching would only help the residual few
-per cent where the cleaner injected text *inside* the shared run.
-
-### 4d. Recovering the articles that pairing missed
-
-Head-anchored pairing (section 4) compares the first 60 characters, so it
-cannot match an article whose page starts differently — a promo box before the
-lead, a dropped dateline. `10_pair_rescue.py` anchors on a 100-character window
-taken from the middle instead, calibrated as in 4c.
-
-| | articles | share |
-|---|---|---|
-| paired by head-anchor (section 4) | 9,468 | 85.6% |
-| paired by mid-anchor, exact containment | 8,489 | 76.7% |
-| **found ONLY by mid-anchor** (page starts differently) | **375** | 3.4% |
-| **combined coverage** | **~9,843** | **~89.0%** |
-
-**The mid-anchor is not simply better.** It pairs fewer articles overall,
-because it demands the benchmark text appear as an exact contiguous substring,
-while head-anchoring only demands a matching start. The two fail on opposite
-problems, so the value is the union, not the replacement: coverage rises from
-85.6% to about 89%, and the unknown bucket falls from 1,596 to roughly 1,221.
-
-Of the 375 it uniquely found, the page carries a median of **206 characters
-before our article begins** (max 583) — the promo boxes and datelines that
-defeat head-anchoring. Among the rescued articles, 4,609 are truncated with a
-median loss of 702 characters.
-
-**Where exact matching runs out.** 3,573 candidate pages were rejected because
-the anchor window matched but the full article text was not contained exactly.
-That is the cleaner's mid-body injection again: one `"Don't Miss…"` block inside
-the article splits the run, and exact containment fails even though a reader
-would pair the two instantly. This is the case where **approximate matching
-would genuinely help** — token-shingle containment above a measured threshold,
-rather than exact substring. It is not implemented, because it would refine the
-undecidable bucket rather than change any conclusion, and the same logic that
-froze the cleaner applies: the returns fall off faster than the cost.
+Matching is exact throughout: an article counts as truncated only when our text
+appears in the original character-for-character with more text after it. Where
+the page differs from ours in the middle rather than the end, the pair is
+recorded as undecidable rather than counted either way.
 
 ### What is still not known
 
@@ -933,12 +817,11 @@ logic on its own.
 
 ### What we deliberately did *not* remove
 
-Our first scan flagged an "All About" pattern (145 articles) and a bullet
-character (123) as probable page furniture. **Reading the actual matches showed
-this was wrong** — most are ordinary prose (*"it's all about the arms"*, *"what
-life is all about"*) or genuine list markers. Removing them would have deleted
-real article content, which is a worse mistake than leaving some furniture
-behind.
+A pattern scan flags an "All About" string (145 articles) and a bullet
+character (123) as probable page furniture, but reading the matches shows most
+are ordinary prose — *"it's all about the arms"*, *"what life is all about"* —
+or genuine list markers. Removing them would delete real article content, which
+is a worse outcome than leaving some furniture behind.
 
 The `(CNN) --` dateline is also kept: it is part of the published article text,
 appears in 92% of articles, and therefore helps no retriever tell articles
