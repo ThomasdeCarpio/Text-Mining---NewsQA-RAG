@@ -28,19 +28,18 @@ Charts (300 DPI, saved to `docs/figures/eda/`): `fig1_truncation`,
 
 **1. The articles are cut off, and it is the benchmark's fault, not ours.**
 30% of the corpus stops between 640 and 680 words and then falls off a cliff —
-only 64 articles exceed 700. Taking the 9,468 articles we could pair with their
-original CNN page as the denominator throughout:
+only 64 articles exceed 700. Running both pairing anchors together in a single
+pass reaches 10,608 of the 11,064 articles (95.9%) and settles every one:
 
-| | share of paired articles |
-|---|---|
-| our text is an exact prefix of the original | 50.1% |
-| …but the missing part is only page furniture | 9.6% |
-| **…genuinely missing article text** | **40.5%** |
-| losing 1,000–3,000 characters | 12.3% |
-| losing more than 3,000 | 3.7% |
+| | articles | share of the corpus |
+|---|---|---|
+| **genuinely missing article text** | **4,603** | **41.6%** |
+| already complete — the page held nothing more | 3,913 | 35.4% |
+| differs mid-text — undecidable either way | 2,092 | 18.9% |
+| no archived page found | 456 | 4.1% |
 
-Where real text is missing, the median loss is **540 characters, 12% of the
-article**. Our copy is byte-identical to the published Hugging Face dataset, so
+Where real text is missing, the median loss is **691 characters**; a quarter of
+those articles lose more than 1,843, and a tenth more than 3,056. Our copy is byte-identical to the published Hugging Face dataset, so
 the damage was inherited. *(Sections 3, 4)*
 
 **2. But it barely affects scoring — and it is fixable without crawling.**
@@ -99,9 +98,9 @@ scorer can produce. Both are corrected. *(Section 9)*
 
 ### Where the numbers are soft
 
-Stated plainly so nobody over-reads them: **4,745 truncated is a lower bound**,
-because 2,030 articles diverge mid-text (the cleaner injects promo boxes, so we
-cannot tell) and roughly 1,221 never paired with any page at all. "Intact" means *the archived page is no
+Stated plainly so nobody over-reads them: **4,603 truncated is a lower bound**,
+because 2,092 articles diverge mid-text (the cleaner injects promo boxes, so we
+cannot tell) and 456 never paired with any page at all. "Intact" means *the archived page is no
 longer than ours* — it does not prove the archived page is complete. And the
 6.5% ambiguity figure is a proxy — shared rare terms plus answer text present,
 not verified reading.
@@ -354,34 +353,42 @@ measures the gap.
 | | |
 |---|---|
 | archived pages scanned | 92,579 |
-| benchmark articles paired with their original page | **9,468 / 11,064 (85.6%)** |
-| intact — the original is no longer than ours | 2,693 (28.4%) |
-| **truncated — ours is an exact prefix of the original** | **4,745 (50.1%)** |
-| diverged — differs mid-text, not countable as truncation | 2,030 (21.4%) |
-| …of the truncated, page furniture only (≤40 chars) | 908 |
-| **…of the truncated, real content missing** | **3,837** |
+| benchmark articles paired with their original page | **10,608 / 11,064 (95.9%)** |
+| …of those, the article matched the page character-for-character | 8,516 (77.0%) |
+| **truncated — the page holds more text after ours** | **4,603 (41.6%)** |
+| already complete — the page holds nothing more (≤40 chars) | 3,913 (35.4%) |
+| diverged — differs mid-text, not countable as truncation | 2,092 (18.9%) |
+| never paired — status unknown | 456 (4.1%) |
+
+An earlier version of this section reported 3,837 truncated from 9,468 paired
+articles. That run used one anchor and required our text to start at the very
+beginning of the page; the numbers above come from running both anchors in one
+pass, which pairs 1,140 more articles. Those extra articles account for the
+whole difference: +766 truncated, +312 already complete, +62 diverged.
 
 **How much is lost**, counting only real content:
 
 | | characters | share of the article |
 |---|---|---|
-| median | **540** | **12%** |
-| mean | 1,069 | 17.2% |
-| p90 | 2,886 | 42% |
-| max | 7,537 | 66% |
+| median | **694** | |
+| mean | 1,168 | |
+| p75 | 1,849 | |
+| p90 | 3,072 | |
+| max | 7,689 | |
 
 | severity | articles | share |
 |---|---|---|
-| about a sentence (41–200 chars) | 1,552 | 40.4% |
-| a few paragraphs (200–1k) | 775 | 20.2% |
-| **a large section (1k–3k)** | **1,164** | **30.3%** |
-| **most of the story (3k+)** | **346** | **9.0%** |
+| about a sentence (41–200 chars) | 1,654 | 35.9% |
+| a few paragraphs (200–1k) | 949 | 20.6% |
+| **a large section (1k–3k)** | **1,472** | **32.0%** |
+| **most of the story (3k+)** | **488** | **10.6%** |
 
-Total across the corpus: **4.1 million characters**.
+Total across the corpus: **5.38 million characters**.
 
-**On the evaluation set specifically** — the 200 articles that hold answers, of
-which 187 paired: **38 lose more than 200 characters** (median 1,128) and **21
-lose more than 1,000** (median 1,827). The blast radius on scoring stays small.
+**On the evaluation set specifically** — the 200 articles that hold answers:
+**80 were truncated**, of which **42 lose more than 200 characters** (median
+1,269) and **25 lose more than 1,000** (median 2,055). The blast radius on
+scoring stays small.
 
 ### Verified by reading, not just by metric
 
@@ -451,10 +458,10 @@ candidate values (`11_window_calibration.py`) rather than picked.
 
 | | articles | share of the corpus |
 |---|---|---|
-| paired by the opening | 9,468 | 85.6% |
+| paired by the opening alone | 9,468 | 85.6% |
 | paired only by the mid-article anchor | 375 | 3.4% |
-| **paired, combined** | **~9,843** | **~89.0%** |
-| never paired — status unknown | ~1,221 | ~11.0% |
+| **paired, both anchors in one pass** | **10,608** | **95.9%** |
+| never paired — status unknown | 456 | 4.1% |
 
 Matching is exact throughout: an article counts as truncated only when our text
 appears in the original character-for-character with more text after it. Where
@@ -500,11 +507,11 @@ ways.
 - **"Intact" is not "verified complete".** It means the archived page is no
   longer than ours. The archived page could itself be a partial capture; that
   was never checked.
-- **1,596 articles (14.4%) never paired with any page.** Their status is
+- **456 articles (4.1%) never paired with any page.** Their status is
   unknown, not intact.
-- **2,030 articles (21.4%) diverge mid-text.** Because the cleaner injects promo
+- **2,092 articles (18.9%) diverge mid-text.** Because the cleaner injects promo
   boxes, we cannot tell whether text is missing or the cleaner added something.
-  They are excluded from the truncation count, which makes **4,745 a lower
+  They are excluded from the truncation count, which makes **4,603 a lower
   bound**.
 
 ---
@@ -900,8 +907,8 @@ the middle of the study.
   configuration on both corpora and report the pair.
 - **Whether the archived pages are themselves complete.** Every truncation
   number is relative to them; nobody has checked them against a third source.
-- **The 1,596 articles that never paired**, and the 2,030 that diverge mid-text.
-  Both are unknown rather than intact, which is why 4,745 is a lower bound.
+- **The 456 articles that never paired**, and the 2,092 that diverge mid-text.
+  Both are unknown rather than intact, which is why 4,603 is a lower bound.
 - **Human validation** of a sample of the 46 strong unlabelled-answer cases, to
   turn the 6.5% indicator into a measured rate.
 - **The Phase 1 result files** (`round1/2/3.csv`) are missing from the
