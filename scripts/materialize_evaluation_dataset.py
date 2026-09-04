@@ -100,8 +100,8 @@ def _download(args: argparse.Namespace) -> tuple[Path, str]:
         return bundle, f"local:{verify_canonical_bundle(bundle)['dataset_sha256']}"
     if not args.repo_id:
         raise DatasetBuildError("--repo-id or NEWSQA_EVAL_REPO_ID is required")
-    if not args.token:
-        raise DatasetBuildError("HF_TOKEN with dataset read permission is required")
+    # No token check: a public dataset revision needs none, and the Hub returns a
+    # clear 401 for a private one. Requiring it up front blocked public repos.
     if args.revision in {"main", "master"}:
         raise DatasetBuildError("Pin --revision to an immutable version tag or commit SHA")
 

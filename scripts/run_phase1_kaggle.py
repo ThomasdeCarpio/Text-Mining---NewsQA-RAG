@@ -236,8 +236,10 @@ def main() -> None:
     atexit.register(save_checkpoint)
     if args.restore_checkpoint:
         shutil.unpack_archive(args.restore_checkpoint, work)
+    # A public dataset revision needs no token. Only demand one when the caller
+    # actually points at a private repository.
     if os.environ.get("HF_TOKEN") is None:
-        raise SystemExit("HF_TOKEN must be configured through Kaggle Secrets")
+        print("No HF_TOKEN set; reading the dataset anonymously (public repo only).")
 
     output_root = data / "newsqa_200_11064"
     command([sys.executable, "scripts/materialize_evaluation_dataset.py", "--repo-id", args.repo_id,
