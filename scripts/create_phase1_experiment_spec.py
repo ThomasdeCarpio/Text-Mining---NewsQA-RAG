@@ -49,7 +49,10 @@ def main() -> None:
     common = {
         "retrieval_only": True,
         "top_k": 10 if args.stage == "round1" else 20,
-        "rerank_top_n": 5,
+        # Scoring only reports cut-offs up to rerank_top_n, so @7 needs at least
+        # 7 survivors. Widening this costs no extra GPU: the cross-encoder
+        # already scores all top_k candidates and only then truncates.
+        "rerank_top_n": 7,
     }
     runs = []
     if args.stage == "round1":
@@ -102,7 +105,16 @@ def main() -> None:
         },
         "judge": {"enabled": False},
         "summary": {
-            "metrics": ["retrieval.hit_rate@1", "retrieval.hit_rate@5", "retrieval.mrr@5", "retrieval.ndcg@5", "retrieval.recall@5"],
+            "metrics": [
+                "retrieval.hit_rate@1",
+                "retrieval.hit_rate@3", "retrieval.mrr@3", "retrieval.ndcg@3",
+                "retrieval.hit_rate@5", "retrieval.mrr@5", "retrieval.ndcg@5",
+                "retrieval.recall@5",
+                "retrieval.hit_rate@7", "retrieval.mrr@7", "retrieval.ndcg@7",
+                "retrieval.recall@7",
+            ],
+            # Winner selection stays on @5 so this run stays comparable with the
+            # earlier tournament; @3 and @7 are reported alongside, not ranked on.
             "paired_metric": "retrieval.mrr@5",
             "quality_metric": "retrieval.mrr@5.mean",
             "latency_metric": "latency.total.p50_ms",

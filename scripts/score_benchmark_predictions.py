@@ -145,8 +145,8 @@ def main() -> None:
 
         top_k = int(manifest.get("inputs", {}).get("top_k", 10))
         top_n = int(manifest.get("inputs", {}).get("rerank_top_n", 5))
-        initial_k_values = [value for value in (1, 3, 5, 10) if value <= top_k]
-        reranked_k_values = [value for value in (1, 3, 5, 10) if value <= top_n]
+        initial_k_values = [value for value in (1, 3, 5, 7, 10) if value <= top_k]
+        reranked_k_values = [value for value in (1, 3, 5, 7, 10) if value <= top_n]
         row = {
             "question_id": question_id,
             "source_question_id": record.get("source_question_id", question_id),
@@ -177,8 +177,8 @@ def main() -> None:
 
     top_k = int(manifest.get("inputs", {}).get("top_k", 10))
     top_n = int(manifest.get("inputs", {}).get("rerank_top_n", 5))
-    initial_k_values = [value for value in (1, 3, 5, 10) if value <= top_k]
-    reranked_k_values = [value for value in (1, 3, 5, 10) if value <= top_n]
+    initial_k_values = [value for value in (1, 3, 5, 7, 10) if value <= top_k]
+    reranked_k_values = [value for value in (1, 3, 5, 7, 10) if value <= top_n]
     initial_metrics = evaluate_retrieval(initial_samples, initial_k_values)
     reranked_metrics = evaluate_retrieval(reranked_samples, reranked_k_values)
     delta_metrics = {}
