@@ -19,6 +19,7 @@ data/
 *.csv
 *.sqlite3
 *.parquet
+*results/
 
 # IDEs
 .vscode/
