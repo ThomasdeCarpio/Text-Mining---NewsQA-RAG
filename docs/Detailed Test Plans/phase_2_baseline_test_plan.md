@@ -35,9 +35,9 @@ Phase 2A chỉ đo **một cấu hình đã khóa**. Mọi lựa chọn prompt v
 | Raw revision | `b81c8db6847a23272665946c0c43c72e9a212fd9` |
 | Locked artifact repo | `ThomasAnderson2009/newsqa-rag-phase2-locked-v2` |
 | Target revision | tag `locked-bge-m3-512-64-deduplicated-v2` |
-| Artifact commit | Điền sau khi publish; phải pin commit, không dùng `main` |
+| Artifact commit | `bb73e682f472933c212f2c6a3f9575c652b280fd` |
 | Artifact ZIP | `artifacts/locked-bge-m3-512-64-deduplicated-v2/locked-bge-m3-512-64-deduplicated-v2.zip` |
-| ZIP SHA-256 | Điền từ kết quả build/publish trước khi chạy baseline |
+| ZIP SHA-256 | `fc5d67b7acf6e8be0205ce00b8069b3b6c8dcce853f8671f2feb3887b2707a24` |
 | Corpus | 11.064 bài báo; 22.766 chunks |
 | Primary evaluation set | 200 bài báo; 1.152 semantic-deduplicated `resolved` questions |
 | Supplementary set | 1.336 full `resolved` questions, chỉ dùng sensitivity analysis |
