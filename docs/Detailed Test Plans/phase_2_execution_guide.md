@@ -11,48 +11,50 @@ Baseline chạy trên tập `resolved` của development partition; final-test t
 | Thành phần | Cấu hình |
 |---|---|
 | Corpus | 11.064 bài báo |
-| Câu hỏi | Resolved, deduplicated, development (50 bài, dự kiến 281 câu) |
+| Câu hỏi | Resolved, deduplicated, development (50 bài, 281 câu) |
 | Chunking | Recursive `512/64`, khóa từ Round 3 |
 | Retrieval | BGE-M3 sparse, `top_k=20` |
-| Reranker | `cross-encoder/ms-marco-MiniLM-L-6-v2`, top 5 |
+| Reranker | `BAAI/bge-reranker-large`, top 5, batch 8 |
 | Generator | `gemini-3.1-flash-lite`, tối đa 512 output tokens |
-| RAGAS judge | `gemini-3.7-flash`, default medium thinking |
-| Judge runtime | batch 5, 1 worker, tối đa 5 attempts |
+| RAGAS judge | `accounts/fireworks/models/glm-5p3-flash` qua Fireworks |
+| Judge runtime | timeout 300 giây, 1 worker, 3 SDK retries |
 
 Notebook thực thi:
 
 - Kaggle: `notebooks/Tests/09_phase_2_e2e_baseline_kaggle.ipynb`;
 - Google Colab: `notebooks/Tests/11_phase_2_e2e_baseline_colab.ipynb`.
 
-Cả hai môi trường cần ba secret:
+Cả hai môi trường cần hai secret:
 
-- `HF_TOKEN`: đọc private locked artifact;
 - `GEMINI_API_KEY_1`: free-project key chỉ dùng cho 281 generation requests;
-- `GEMINI_API_KEY`: paid-project key chỉ dùng cho RAGAS judging.
+- `FIREWORKS_API_KEY`: key dùng cho RAGAS judging.
+
+Artifact là public nên `HF_TOKEN` không bắt buộc. Có thể khai báo token read-only
+để tăng độ ổn định khi tải, nhưng token không được ghi vào output.
 
 Generation requests được giãn tối thiểu `4,2` giây để phù hợp giới hạn 15 RPM.
-Hai Gemini key chỉ được inject vào đúng subprocess và không nằm trong checkpoint.
+Hai provider key chỉ được inject vào đúng subprocess và không nằm trong checkpoint.
 
-Retrieval artifact cũ (`phase2-bge-m3-512-64-v1`, corpus 19.263 chunks,
-resolved testset 1.152 câu) được dựng trên `v1.0.0` và **đã lỗi thời**: corpus
-v2.0.0 có văn bản dài hơn nên số chunk khác đi.
-
-Artifact thay thế do `notebooks/public/14_export_locked_index_kaggle.ipynb`
-dựng từ corpus v2.0.0 với đúng cấu hình đã khóa. Số chunk và checksum của nó
-được notebook in ra ở lần chạy đầu (`EXPECTED_CHUNKS`, `EXPECTED_CHUNKS_SHA256`)
-và phải được ghi lại vào đây trước khi chạy Giai đoạn 2. Notebook vẫn kiểm tra
-checksum trước khi chạy; artifact không hợp lệ làm run dừng, không fallback
-sang rebuild từ raw NewsQA.
+Artifact chính thức là public dataset repo
+`ThomasAnderson2009/newsqa-rag-phase2-locked-v2`, tag
+`locked-bge-m3-512-64-deduplicated-v2`, commit
+`bb73e682f472933c212f2c6a3f9575c652b280fd`. File ZIP tại
+`artifacts/locked-bge-m3-512-64-deduplicated-v2/locked-bge-m3-512-64-deduplicated-v2.zip`
+có SHA-256
+`fc5d67b7acf6e8be0205ce00b8069b3b6c8dcce853f8671f2feb3887b2707a24`.
+Bundle chứa 22.766 chunks và 1.152 câu resolved đã semantic-deduplicate.
+Notebook kiểm tra checksum và manifest trước khi chạy; artifact không hợp lệ
+làm run dừng, không fallback sang rebuild từ raw NewsQA.
 
 ## Smoke run bắt buộc
 
 Notebook mặc định `RUN_MODE='smoke'`. Chế độ này chạy toàn bộ pipeline trên đúng
 5 câu được chọn ổn định bằng seed `42`:
 
-1. BGE-M3 retrieval và MiniLM reranking;
+1. BGE-M3 retrieval và BGE-large reranking;
 2. 5 Gemini 3.1 Flash-Lite generations bằng free key;
 3. deterministic QA/citation scoring;
-4. đủ 5 RAGAS metrics bằng Gemini 3.7 paid key;
+4. đủ 5 RAGAS metrics bằng GLM-5.3-Flash qua Fireworks;
 5. summary, failure diagnostics và raw per-question traces.
 
 Tải file `phase2_e2e_baseline_smoke_results.zip` để kiểm tra trước. Bundle gồm
@@ -66,8 +68,9 @@ prediction/judge của nhau.
 
 ## Quy trình
 
-1. Đọc và xác minh kết quả Phase 1; khóa `512/64 + BGE-M3 sparse + MiniLM` theo
-   protocol amendment được ghi trong `phase_2_baseline_test_plan.md`.
+1. Đọc và xác minh kết quả Phase 1; khóa
+   `512/64 + BGE-M3 sparse + BGE-large` theo
+   `phase_2_baseline_test_plan.md`.
 2. Tải locked artifact từ Hugging Face theo immutable tag, kiểm tra checksum và
    rebase manifest paths cho môi trường đang chạy.
 3. Chạy retrieval, reranking và Gemini generation. `predictions.jsonl` và
@@ -100,6 +103,6 @@ không gọi lại generation/judgment đã thành công.
 - RAGAS coverage tối thiểu 95% số generation thành công.
 - Mỗi score RAGAS có thể truy ngược đến `question_id`, model và judge fingerprint.
 - Không lưu API key trong notebook output hoặc artifact.
-- Free generator key và paid judge key phải khác nhau; nên thuộc hai Google
-  projects khác nhau nếu cần quota tách biệt.
+- Generator và judge phải dùng đúng provider/key đã khai báo; không fallback
+  ngầm sang model hoặc provider khác.
 - Không sử dụng final-test trước khi khóa các quyết định Phase 2 tiếp theo.

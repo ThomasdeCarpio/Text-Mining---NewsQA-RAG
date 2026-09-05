@@ -34,7 +34,7 @@ Phase 2A chỉ đo **một cấu hình đã khóa**. Mọi lựa chọn prompt v
 | Raw dataset | `MatchaMacchiato/newsqa_200_11064_v2.0.0` |
 | Raw revision | `b81c8db6847a23272665946c0c43c72e9a212fd9` |
 | Locked artifact repo | `ThomasAnderson2009/newsqa-rag-phase2-locked-v2` |
-| Target revision | tag `locked-bge-m3-512-64-deduplicated-v2` |
+| Artifact revision | tag `locked-bge-m3-512-64-deduplicated-v2` |
 | Artifact commit | `bb73e682f472933c212f2c6a3f9575c652b280fd` |
 | Artifact ZIP | `artifacts/locked-bge-m3-512-64-deduplicated-v2/locked-bge-m3-512-64-deduplicated-v2.zip` |
 | ZIP SHA-256 | `fc5d67b7acf6e8be0205ce00b8069b3b6c8dcce853f8671f2feb3887b2707a24` |
@@ -49,10 +49,10 @@ representative giữ hợp nhất `accepted_answers`, evidence spans và relevan
 chunk IDs. Phase 2 tải artifact đã khóa, không rebuild index trong mỗi run.
 
 Artifact `locked-bge-m3-512-64-v2` cũ chứa full set 1.336 câu nên không phải
-input chính thức của Phase 2. Bản deduplicated mới phải tái sử dụng đúng 22.766
-chunks và index hiện tại, remap/kiểm tra toàn bộ `relevant_chunk_ids`, rồi cập
-nhật manifest và checksum trước khi publish. Không dùng deduplicated testset
-v1 gắn với corpus 19.263 chunks.
+input chính thức của Phase 2. Artifact deduplicated đã được build và kiểm tra:
+toàn bộ `relevant_chunk_ids` tồn tại, BGE-M3 postings và Chroma đều có 22.766
+chunk IDs, và các file index khớp byte-for-byte với parent manifest. Không dùng
+deduplicated testset v1 gắn với corpus 19.263 chunks.
 
 ### 2.2. Partition
 
@@ -202,10 +202,11 @@ resume phải bỏ qua record đã thành công.
 ## 8. Điều kiện triển khai trước khi chạy
 
 Code đánh giá đã có nhánh Fireworks, timeout 300 giây, retry và giới hạn output
-tối thiểu cho GLM. Tuy nhiên, notebook Phase 2 hiện tại vẫn chứa cấu hình cũ:
+tối thiểu cho GLM. Tuy nhiên, notebook Phase 2 hiện tại vẫn cần được đồng bộ:
 
-- tải locked artifact chứa full set thay vì target deduplicated artifact;
-- dùng `gemini-3.7-flash` và `GEMINI_API_KEY` cho judge;
+- tải tag `locked-bge-m3-512-64-deduplicated-v2` và kiểm tra đúng SHA-256;
+- dùng `accounts/fireworks/models/glm-5p3-flash` qua Fireworks và
+  `FIREWORKS_API_KEY` cho judge;
 - mô tả artifact và expected coverage cũ.
 
 Phải cập nhật notebook Kaggle/Colab theo hợp đồng trong tài liệu này trước smoke

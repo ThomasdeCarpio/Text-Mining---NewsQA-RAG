@@ -26,11 +26,15 @@ tách biệt và model/provider hỗ trợ training.
 
 | Thành phần | Giá trị |
 |---|---|
-| Artifact | `ThomasAnderson2009/newsqa-rag-phase2-locked-v2` |
-| Revision | `locked-bge-m3-512-64-deduplicated-v2` |
+| Artifact repo | `ThomasAnderson2009/newsqa-rag-phase2-locked-v2` |
+| Artifact revision | `locked-bge-m3-512-64-deduplicated-v2` |
+| Artifact commit | `bb73e682f472933c212f2c6a3f9575c652b280fd` |
+| Artifact ZIP | `artifacts/locked-bge-m3-512-64-deduplicated-v2/locked-bge-m3-512-64-deduplicated-v2.zip` |
+| ZIP SHA-256 | `fc5d67b7acf6e8be0205ce00b8069b3b6c8dcce853f8671f2feb3887b2707a24` |
 | Primary set | 1.152 semantic-deduplicated resolved questions |
 | Development | 50 bài, 281 câu resolved, seed `42` |
 | Held-out | 150 bài, 871 câu resolved |
+| Supplementary set | 1.336 full resolved questions; không dùng chọn winner |
 | Retrieval | BGE-M3 learned sparse, `top_k=20` |
 | Reranking | `BAAI/bge-reranker-large`, top 5 |
 | Generator | `gemini-3.1-flash-lite`, `temperature=0` |
@@ -42,6 +46,10 @@ tách biệt và model/provider hỗ trợ training.
 Retrieval chạy một lần. Mỗi biến thể generation nhận cùng ranked contexts và
 cùng question IDs. Khi thử context depth, chỉ cắt danh sách top 5 đã cache;
 không retrieve/rerank lại.
+
+Mọi tuning score và quy tắc chọn winner dùng primary deduplicated set. Full set
+chỉ được chạy với cấu hình đã khóa để phân tích độ nhạy với alternate wording;
+kết quả đó phải được báo cáo riêng và không thay đổi winner.
 
 ## 3. Câu hỏi nghiên cứu
 
