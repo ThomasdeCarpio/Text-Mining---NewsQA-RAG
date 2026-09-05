@@ -117,8 +117,16 @@ Dưới đây là định nghĩa chi tiết tất cả các chỉ số đo lư�
 ## 5. Tập Dữ Liệu Thực Nghiệm (Evaluation Dataset)
 
 * **Kho bài báo (Corpus)**: `11.064` bài báo CNN (200 bài validation gốc + 10.864 bài train distractor để tạo môi trường tìm kiếm thực tế).
-* **Tập câu hỏi đánh giá**: `1.152` câu hỏi NewsQA đã khử trùng lặp ngữ nghĩa (*Semantic Deduplication*).
-* **Nguồn lưu trữ canonical**: Hugging Face private repository (`ThomasAnderson2009/newsqa-rag-evaluation`, tag `v1.0.0`).
+* **Tổng câu hỏi**: `1.340` câu, trong đó `1.336` câu có bản resolved.
+* **Tập câu hỏi thực chạy ở Giai đoạn 1**: `281` câu resolved thuộc `50` bài
+  development (seed `42`). Giải đấu **không** chạy trên toàn bộ tập câu hỏi;
+  partition chia theo bài báo nên 150 bài final-test được giữ nguyên chưa đụng tới.
+* **Nguồn lưu trữ canonical**: Hugging Face **public** dataset [`MatchaMacchiato/newsqa_200_11064_v2.0.0`](https://huggingface.co/datasets/MatchaMacchiato/newsqa_200_11064_v2.0.0),
+  ghim tại commit `b81c8db6847a23272665946c0c43c72e9a212fd9` (chưa có tag `v2.0.0`).
+* **Khác biệt so với `v1.0.0`**: văn bản bài báo đã được phục hồi từ trang CNN
+  lưu trữ theo cách *append-only* — `4.603` bài được nối thêm `5.351.580` ký tự,
+  nên mọi offset ký tự của evidence giữ nguyên. Điểm số của `v1.0.0` và `v2.0.0`
+  **không so sánh trực tiếp được** với nhau.
 
 ---
 

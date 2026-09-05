@@ -4,7 +4,15 @@ Hugging Face Dataset repository là nơi lưu **canonical source data**. Chroma,
 BM25, chunks và `relevant_chunk_ids` được build lại ở mỗi máy theo config đã
 chọn; chúng không được upload như ground truth.
 
-Dataset hiện tại được thiết kế cho private repository vì quyền tái phân phối
+> **Trạng thái hiện tại.** Dataset đã được publish **công khai** tại
+> [`MatchaMacchiato/newsqa_200_11064_v2.0.0`](https://huggingface.co/datasets/MatchaMacchiato/newsqa_200_11064_v2.0.0),
+> ghim tại commit `b81c8db6847a23272665946c0c43c72e9a212fd9`. Các notebook trong
+> `notebooks/public/` tải nó ẩn danh, không cần token.
+>
+> Phần còn lại của tài liệu này là quy trình publish tổng quát; tên organization
+> và số version bên dưới chỉ là ví dụ.
+
+Quy trình ban đầu được thiết kế cho private repository vì quyền tái phân phối
 phần NewsQA-derived text chưa được xác minh để công khai.
 
 ## 1. Chuẩn bị tài khoản và token

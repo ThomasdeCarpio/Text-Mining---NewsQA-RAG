@@ -33,11 +33,16 @@ Cả hai môi trường cần ba secret:
 Generation requests được giãn tối thiểu `4,2` giây để phù hợp giới hạn 15 RPM.
 Hai Gemini key chỉ được inject vào đúng subprocess và không nằm trong checkpoint.
 
-Retrieval artifact được pin tại private Hugging Face repository
-`ThomasAnderson2009/newsqa-rag-evaluation-artifacts`, revision
-`phase2-bge-m3-512-64-v1`. Notebook kiểm tra checksum, corpus 19.263 chunks,
-resolved testset 1.152 câu và cấu hình BGE-M3 trước khi chạy. Artifact không hợp
-lệ làm run dừng; notebook không fallback sang rebuild từ raw NewsQA.
+Retrieval artifact cũ (`phase2-bge-m3-512-64-v1`, corpus 19.263 chunks,
+resolved testset 1.152 câu) được dựng trên `v1.0.0` và **đã lỗi thời**: corpus
+v2.0.0 có văn bản dài hơn nên số chunk khác đi.
+
+Artifact thay thế do `notebooks/public/14_export_locked_index_kaggle.ipynb`
+dựng từ corpus v2.0.0 với đúng cấu hình đã khóa. Số chunk và checksum của nó
+được notebook in ra ở lần chạy đầu (`EXPECTED_CHUNKS`, `EXPECTED_CHUNKS_SHA256`)
+và phải được ghi lại vào đây trước khi chạy Giai đoạn 2. Notebook vẫn kiểm tra
+checksum trước khi chạy; artifact không hợp lệ làm run dừng, không fallback
+sang rebuild từ raw NewsQA.
 
 ## Smoke run bắt buộc
 

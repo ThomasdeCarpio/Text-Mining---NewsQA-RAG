@@ -6,7 +6,9 @@ Tài liệu này là bản kế hoạch tổng thể cho toàn bộ các thực 
 
 ## 1. Cấu hình Baseline (Chuẩn cơ sở)
 
-Cấu hình Baseline là hệ thống RAG cơ bản hiện tại, hoạt động ổn định và làm mốc so sánh cho tất cả các cải tiến.
+Cấu hình Baseline là điểm xuất phát trước Giai đoạn 1, giữ lại làm mốc so
+sánh cho mọi cải tiến. Đây **không** còn là cấu hình đang chạy: Giai đoạn 1
+đã khóa lại một cấu hình khác (xem mục 1.1).
 
 | Thành phần | Cấu hình Baseline |
 | :--- | :--- |
@@ -18,7 +20,24 @@ Cấu hình Baseline là hệ thống RAG cơ bản hiện tại, hoạt động
 | **Retrieval Stage** | Hybrid Search (Dense 70% + BM25 30%, lấy top $K=10$) |
 | **Reranker** | Cross-Encoder (`ms-marco-MiniLM-L-6-v2`, lọc ra top $N=5$) |
 | **LLM Generator** | `gemini-2.0-flash` (hoặc `gpt-4o-mini`, nhiệt độ $0.0$, max tokens $1024$) |
-| **Tập đánh giá** | `newsqa_200_11064` (1.152 câu hỏi đã khử trùng lặp ngữ nghĩa) |
+| **Tập đánh giá** | `newsqa_200_11064` v2.0.0 — 1.340 câu hỏi, 1.336 câu resolved |
+
+### 1.1. Cấu hình đã khóa sau Giai đoạn 1
+
+Kết quả giải đấu 3 vòng (`notebooks/13_phase_1_tournament_report.ipynb`) đã
+thay thế phần truy xuất của baseline. Đây là cấu hình `configs/config.yaml`
+đang dùng:
+
+| Thành phần | Cấu hình đã khóa | Thay đổi so với Baseline |
+| :--- | :--- | :--- |
+| **Retriever** | BGE-M3 learned-sparse (`BAAI/bge-m3`) | thay Hybrid 70/30 |
+| **Chunking** | Recursive `512/64` | giữ nguyên |
+| **Top K** | 20 ứng viên | tăng từ 10 |
+| **Reranker** | `BAAI/bge-reranker-large`, top $N=5$ | thay `ms-marco-MiniLM-L-6-v2` |
+| **Hybrid** | tắt | Hybrid thua Sparse thuần ở Vòng 2 |
+
+Đo trên 281 câu resolved của 50 bài development: `Hit@5 0,957` · `MRR@5
+0,880` · `NDCG@5 0,898` · `P50 513 ms`.
 
 ---
 
@@ -77,7 +96,7 @@ Sử dụng script [`scripts/judge_benchmark_predictions.py`](file:///Users/thom
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
 │ Giai đoạn 1: Sàng lọc & Tối ưu Truy xuất (Giải Đấu 3 Vòng - 23 runs)    │
-│ • 100% Offline IR (Chi phí 0đ) trên 1.152 câu hỏi                      │
+│ • 100% Offline IR (Chi phí 0đ) trên 281 câu development                │
 │ • Vòng 1: Sàng lọc 4 Dense Models + 4 Sparse Models (8 runs)           │
 │ • Vòng 2: Ma trận Đối xứng 3 Retrievers x 3 Rerankers (9 runs)         │
 │   (No-op vs MiniLM-L6 vs BGE-Reranker-Large)                           │

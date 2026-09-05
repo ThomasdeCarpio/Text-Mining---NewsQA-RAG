@@ -120,11 +120,12 @@ kết quả generation baseline.
 
 | Thuộc tính | Giá trị |
 |---|---:|
-| Nguồn canonical | Hugging Face private dataset `ThomasAnderson2009/newsqa-rag-evaluation` |
-| Revision | `v1.0.0` |
-| Tổng corpus | 11.064 bài báo |
+| Nguồn canonical | Hugging Face **public** dataset `MatchaMacchiato/newsqa_200_11064_v2.0.0` |
+| Revision | commit `b81c8db6847a23272665946c0c43c72e9a212fd9` (chưa có tag) |
+| Tổng corpus | 11.064 bài báo (văn bản đã phục hồi, append-only) |
 | Evaluation articles | 200 bài |
-| Tổng câu hỏi sau semantic deduplication | 1.152 câu |
+| Tổng câu hỏi resolved | 1.336 câu |
+| Sau semantic deduplication | 1.152 câu ở `v1.0.0`; chưa đo lại trên `v2.0.0` |
 | Development articles | 50 bài |
 | Development questions dự kiến | 281 câu resolved |
 | Held-out articles | 150 bài còn lại |
