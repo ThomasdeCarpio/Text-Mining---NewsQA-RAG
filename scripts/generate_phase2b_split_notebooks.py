@@ -11,7 +11,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SOURCE = PROJECT_ROOT / "notebooks/Tests/13_phase_2_generation_tuning_kaggle.ipynb"
 OUTPUT = SOURCE.parent
 
-REPO_COMMIT = "SET_TO_COMMIT_CONTAINING_PHASE2B_SPLIT_NOTEBOOKS"
+REPO_COMMIT = "973e1a7758de1defeda7f88d0cb60e34f57eb51f"
 
 VARIANTS = [
     ("13a_phase_2b_0_preparation_kaggle.ipynb", "prepare", "kaggle", {}),
