@@ -94,8 +94,10 @@ Pilot trước với `50` mẫu. Sau khi duyệt quy trình, khóa benchmark ch�
 | Nhóm | Số mẫu mục tiêu | Nhãn |
 |---|---:|---|
 | Answerable controls | 200 | `answerable` |
-| Retrieval-miss contexts | 100 | `insufficient_evidence` trong context được cung cấp |
-| Corpus-unanswerable | 100 | `insufficient_evidence` trong toàn corpus |
+| Natural retrieval miss | 50 | Gold có trong corpus nhưng locked retriever không lấy được |
+| Controlled context ablation | 50 | Loại toàn bộ gold/overlap chunk khỏi context |
+| Removed article | 50 | Loại toàn bộ source article bằng corpus overlay |
+| External unanswerable | 50 | Câu hỏi từ NewsQA article ngoài corpus |
 | Counterfactual | 50 | `insufficient_evidence` |
 | Partial/weak evidence | 50 | `insufficient_evidence` |
 
@@ -111,14 +113,26 @@ accuracy tổng như performance ngoài production.
 - gold article và gold chunk tồn tại;
 - giữ nguyên answer, evidence spans và provenance.
 
-**Retrieval-miss contexts**
+**Natural retrieval miss**
+
+- chỉ chọn miss quan sát được từ retrieval trace của pipeline đã khóa;
+- gold evidence vẫn tồn tại trong corpus nhưng không xuất hiện trong top-k;
+- không dùng case này để giả lập corpus-unanswerable.
+
+**Controlled context ablation**
 
 - bắt đầu từ câu answerable;
 - loại toàn bộ `relevant_chunk_ids` khỏi context đưa cho generator;
 - giữ các top-ranked non-gold chunks để mô phỏng retrieval thất bại thực tế;
 - đây chỉ là generator test, không đưa vào điểm retrieval end-to-end.
 
-**Corpus-unanswerable**
+**Removed article**
+
+- không xóa vật lý corpus/index Phase 2;
+- lưu `excluded_article_ids` và toàn bộ `excluded_chunk_ids` dưới dạng overlay;
+- lúc chạy phải áp dụng filter trước khi chọn top-k cuối cùng.
+
+**External unanswerable**
 
 - lấy câu từ bài báo không được index trong corpus thực nghiệm;
 - xác minh target article và các bản duplicate/near-duplicate không có trong
@@ -139,6 +153,10 @@ accuracy tổng như performance ngoài production.
 - không được chứa answer span hoặc một paraphrase đủ để suy ra đáp án;
 - human-review phải xác nhận rằng abstention là lựa chọn duy nhất có thể bảo vệ.
 
+Vì chunk overlap là `64`, “xóa một chunk” không đủ đảm bảo mất bằng chứng. Mọi
+chunk chứa/giao evidence span và chunk lân cận chứa answer hoặc paraphrase đủ
+để suy ra answer đều phải được loại và ghi trong overlay.
+
 ### 4.3. Chống leakage và duplicate
 
 - partition theo **base article/base question**, không theo biến thể;
@@ -157,12 +175,22 @@ accuracy tổng như performance ngoài production.
   "case_type": "corpus_unanswerable",
   "question": "...",
   "answerability_label": "insufficient_evidence",
-  "scope": "corpus",
+  "scope": "full_corpus",
   "source_article_id": "...",
-  "relevant_chunk_ids": [],
+  "source_gold_chunk_ids": [],
+  "gold_relevant_chunk_ids": [],
+  "provided_context_chunk_ids": [],
+  "excluded_chunk_ids": [],
+  "excluded_article_ids": [],
   "construction": {},
   "human_review": {
-    "decision": "approve",
+    "decision": "approved",
+    "reviewer_id": "...",
+    "scope_verified": true,
+    "notes": "..."
+  },
+  "secondary_review": {
+    "decision": "approved",
     "reviewer_id": "...",
     "notes": "..."
   }
@@ -296,10 +324,14 @@ trước final run.
 
 ```text
 evaluation/abstention/
-  manifest.json
-  cases.jsonl
-  review_queue.jsonl
-  human_approval.json
+  pilot/
+    manifest.json
+    review_queue.jsonl
+    corpus_overlays.jsonl
+    validation_report.json
+    final/{manifest.json,cases.jsonl,human_approval.json}
+  full/
+    ...
 
 scripts/
   prepare_abstention_dataset.py
@@ -318,6 +350,36 @@ notebooks/Tests/
 Prediction collection phải dùng fingerprint, append-only JSONL, retry có giới
 hạn và resume theo `case_id`, giống benchmark hiện tại. Không gọi lại generator
 hoặc judge cho record đã thành công với cùng fingerprint.
+
+### 9.1. Lệnh chuẩn bị pilot
+
+```bash
+.venv/bin/python scripts/prepare_abstention_dataset.py prepare \
+  --mode pilot \
+  --locked-root results/datasets/phase2/data/locked-bge-m3-512-64-deduplicated-v2 \
+  --retrievals results/phase2/baseline/retrievals.jsonl \
+  --authored-cases evaluation/abstention/authored_cases.jsonl \
+  --output-dir evaluation/abstention/pilot
+```
+
+`authored_cases.jsonl` chứa đề xuất counterfactual và external-unanswerable.
+Script tự động tạo controls, natural misses và corpus/context overlays; thiếu
+nhóm nào được ghi rõ trong `manifest.deficits`, không được tự bù bằng mẫu yếu.
+
+Sau human review, đổi `human_review.decision` thành `approved`, điền reviewer và
+notes, rồi finalize:
+
+```bash
+.venv/bin/python scripts/prepare_abstention_dataset.py finalize \
+  --mode pilot \
+  --review-queue evaluation/abstention/pilot/review_queue.jsonl \
+  --chunks results/datasets/phase2/data/locked-bge-m3-512-64-deduplicated-v2/chunks.jsonl \
+  --source-manifest evaluation/abstention/pilot/manifest.json \
+  --output-dir evaluation/abstention/pilot/final
+```
+
+Finalization thất bại nếu chưa approve, sai target count, có gold leakage, xóa
+article không đầy đủ hoặc biến thể cùng base question bị chia khác partition.
 
 ---
 
@@ -347,4 +409,3 @@ hoặc judge cho record đã thành công với cùng fingerprint.
 - có confidence interval và kết quả theo từng loại negative;
 - run có thể dừng/chạy tiếp và tái lập từ manifest;
 - báo cáo thể hiện đồng thời false-answer rate và chi phí từ chối sai.
-

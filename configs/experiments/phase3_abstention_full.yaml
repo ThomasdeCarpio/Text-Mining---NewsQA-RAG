@@ -1,0 +1,16 @@
+schema_version: 1
+experiment:
+  id: phase3-abstention-full
+dataset:
+  mode: full
+  cases: evaluation/abstention/full/final/cases.jsonl
+  source_artifact: locked-bge-m3-512-64-deduplicated-v2
+  seed: 42
+execution:
+  n_eval: 500
+  max_attempts: 3
+  resumable: true
+output_contract:
+  answerability: [answerable, insufficient_evidence]
+  abstention_answer: null
+  abstention_citations: []

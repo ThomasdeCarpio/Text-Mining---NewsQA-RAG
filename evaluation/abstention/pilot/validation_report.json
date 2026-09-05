@@ -1,0 +1,12 @@
+{
+  "cases": 35,
+  "counts_by_type": {
+    "answerable_control": 20,
+    "controlled_context_ablation": 5,
+    "partial_weak_evidence": 5,
+    "removed_article": 5
+  },
+  "errors": [],
+  "schema_version": 1,
+  "status": "passed"
+}
