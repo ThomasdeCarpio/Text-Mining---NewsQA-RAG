@@ -45,18 +45,18 @@ Baseline trả lời ba câu hỏi nghiên cứu:
 | Dataset variant | `resolved`, deduplicated | Giảm nhiễu do câu hỏi thiếu chủ thể; phù hợp use case hỏi tin tức độc lập |
 | Partition | Development, seed `42` | Cho phép tiếp tục phát triển mà không làm rò rỉ final-test |
 | Corpus | 11.064 bài báo | Mô phỏng truy xuất trong corpus có nhiều distractor |
-| Retrieval artifact | Private HF tag `phase2-bge-m3-512-64-v1` | Khóa chunks, resolved testset và BGE-M3 postings; kiểm tra checksum trước run |
+| Retrieval artifact | Bundle của `notebooks/public/14_export_locked_index_kaggle.ipynb` (corpus v2.0.0) | Khóa chunks, resolved testset và BGE-M3 postings; kiểm tra checksum trước run. Tag cũ `phase2-bge-m3-512-64-v1` dựng trên v1.0.0, đã lỗi thời |
 | Chunking | Recursive, size `512`, overlap `64` | Điểm cân bằng tốt nhất về coverage, ranking và latency trong Round 3 |
 | Retriever | BGE-M3 learned sparse | Phương pháp retrieval được chọn từ Phase 1 |
 | Initial retrieval | `top_k=20` | Cung cấp đủ candidate cho reranker |
-| Reranker | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Điểm cân bằng chất lượng - latency tốt hơn reranker lớn |
+| Reranker | `BAAI/bge-reranker-large`, `top_n=5` | Cấu hình Giai đoạn 1 khóa lại: +0,041 MRR@5 so với MiniLM. Đổi lại MiniLM chỉ khi 2B chứng minh answer F1 không khác biệt (xem `phase_2_generation_tuning_plan.md` §5.5) |
 | Context đưa vào LLM | Top 5 chunks | Giữ cố định retrieval evidence budget |
 | Generator | `gemini-3.1-flash-lite` | Model sinh baseline |
 | Generator credential | Free-project `GEMINI_API_KEY_1`, interval `4,2` giây | 281 requests nằm trong daily quota và không vượt 15 RPM |
 | Output limit | 512 tokens | Đủ cho câu trả lời NewsQA ngắn và citation, tránh output dư thừa |
 | Generation prompt | Prompt RAG citation hiện tại của `RAGAgent` | Đo đúng implementation đang dùng trong ứng dụng |
-| RAGAS judge | `gemini-3.7-flash` | Judge khác generator, giảm self-evaluation bias |
-| Judge credential | Paid-project `GEMINI_API_KEY` | RAGAS có thể tạo nhiều LLM calls cho mỗi question |
+| RAGAS judge | `GLM 5.3 Flash` | Judge khác **nhà cung cấp** với generator, không chỉ khác kích thước cùng họ. Cần sửa định tuyến trước khi chạy: `phase_2_generation_tuning_plan.md` §3 |
+| Judge credential | Key Z.ai/Zhipu riêng | RAGAS có thể tạo nhiều LLM calls cho mỗi question; không dùng chung credential với generator |
 | Judge execution | Batch 5, 1 worker, tối đa 5 attempts | Giảm lỗi quota và giữ run ổn định |
 
 ### 2.2. Bằng chứng từ kết quả Phase 1
@@ -205,11 +205,15 @@ Môi trường, package versions, Git commit và GPU phải được lưu cùng 
 ### Bước 1: Preflight
 
 1. Pin Git commit, Hugging Face revision và seed.
-2. Kiểm tra Kaggle secrets `HF_TOKEN`, `GEMINI_API_KEY_1` và
-   `GEMINI_API_KEY`. `GEMINI_API_KEY_1` phải là free generator key;
-   `GEMINI_API_KEY` là paid judge key. Hai key không được giống nhau.
-3. Gọi thử cả `gemini-3.1-flash-lite` và `gemini-3.7-flash` qua direct REST và
-   OpenAI-compatible endpoint.
+2. Kiểm tra Kaggle secrets `HF_TOKEN`, `GEMINI_API_KEY_1` (free generator key)
+   và key Z.ai/Zhipu cho judge. Hai credential không được giống nhau và không
+   được thuộc cùng một nhà cung cấp.
+3. Gọi thử `gemini-3.1-flash-lite` qua OpenAI-compatible endpoint, và gọi thử
+   GLM 5.3 Flash để **xác minh chuỗi model ID thật** trước khi ghi vào manifest.
+   Preflight phải in ra `base_url` mà judge sẽ dùng: nhánh fallback của
+   `_ragas_judge()` không truyền `base_url`, và `provider="auto"` sẽ âm thầm
+   chọn DeepSeek nếu `DEEPSEEK_API_KEY` còn trong môi trường. Xem
+   `phase_2_generation_tuning_plan.md` §3.
 4. Kiểm tra GPU, dung lượng đĩa, dependency và model access trước khi build index.
 
 ### Bước 2: Khóa retrieval
