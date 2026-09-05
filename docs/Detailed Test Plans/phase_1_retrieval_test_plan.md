@@ -118,9 +118,17 @@ Dưới đây là định nghĩa chi tiết tất cả các chỉ số đo lư�
 
 * **Kho bài báo (Corpus)**: `11.064` bài báo CNN (200 bài validation gốc + 10.864 bài train distractor để tạo môi trường tìm kiếm thực tế).
 * **Tổng câu hỏi**: `1.340` câu, trong đó `1.336` câu có bản resolved.
-* **Tập câu hỏi thực chạy ở Giai đoạn 1**: `281` câu resolved thuộc `50` bài
-  development (seed `42`). Giải đấu **không** chạy trên toàn bộ tập câu hỏi;
-  partition chia theo bài báo nên 150 bài final-test được giữ nguyên chưa đụng tới.
+* **Tập tinh chỉnh (tuning set)**: `281` câu resolved thuộc `50` bài development
+  (seed `42`). **Toàn bộ** quyết định của Giai đoạn 1 — chọn retriever, chọn
+  reranker, chọn kích thước chunk — đều được đưa ra khi nhìn vào tập này. Vì 23
+  cấu hình cùng được so trên đúng 281 câu đó rồi giữ lại cấu hình tốt nhất, điểm
+  của cấu hình thắng bị **lệch cao**: một phần khoảng cách thắng là do khớp với
+  chính mẫu câu hỏi này.
+* **Tập kiểm định giữ kín (held-out validation)**: `150` bài còn lại và toàn bộ
+  câu hỏi của chúng. Chưa từng được chạy. Đây là bài kiểm tra **robustness**:
+  chạy đúng một lần, sau khi cấu hình đã chốt hoàn toàn, và **không** được dùng
+  để chọn bất cứ thứ gì — tập giữ kín hết là tập giữ kín ngay khi có một lựa
+  chọn nào được đưa ra dựa trên nó.
 * **Nguồn lưu trữ canonical**: Hugging Face **public** dataset [`MatchaMacchiato/newsqa_200_11064_v2.0.0`](https://huggingface.co/datasets/MatchaMacchiato/newsqa_200_11064_v2.0.0),
   ghim tại commit `b81c8db6847a23272665946c0c43c72e9a212fd9` (chưa có tag `v2.0.0`).
 * **Khác biệt so với `v1.0.0`**: văn bản bài báo đã được phục hồi từ trang CNN
