@@ -6,7 +6,7 @@ import { RetrievalResultCard } from "../components/RetrievalResultCard";
 export function RetrievalPage() {
   const [algorithms, setAlgorithms] = useState<AlgorithmOption[]>([]);
   const [stats, setStats] = useState<CollectionStats | null>(null);
-  const [algorithm, setAlgorithm] = useState("dense");
+  const [algorithm, setAlgorithm] = useState("locked");
   const [query, setQuery] = useState("");
   const [topK, setTopK] = useState(10);
   const [results, setResults] = useState<RetrievalResult[]>([]);

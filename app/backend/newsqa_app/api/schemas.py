@@ -58,8 +58,8 @@ class CollectionStats(BaseModel):
 
 class RetrievalSearchRequest(BaseModel):
     query: str
-    algorithm: str = "dense"
-    top_k: int = 10
+    algorithm: str = "locked"
+    top_k: int = 5
 
 
 class RetrievalResultSchema(BaseModel):

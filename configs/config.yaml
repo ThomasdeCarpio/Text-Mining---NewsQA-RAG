@@ -5,15 +5,25 @@
 # retrieval, and evaluation. Scripts read this file via --config flag.
 
 # --- Embedding Model ---
+# Serves the legacy dense/Chroma route only. The locked retrieval path below
+# uses BGE-M3 learned-sparse vectors and never touches this section.
+# Phase 1 measured all-MiniLM-L6-v2 as the weakest of four dense embedders
+# (MRR@5 0.482 vs 0.630 for intfloat/e5-base-v2 on resolved questions). It is
+# kept only because the existing Chroma collection was built with it and a
+# swap silently breaks it on a dimension mismatch. Rebuild the collection
+# before changing these three lines together.
 embedding:
   provider: "sentence-transformers"     # "openai" | "sentence-transformers"
   model_name: "all-MiniLM-L6-v2"       # OpenAI: "text-embedding-3-small", "text-embedding-3-large"
                                         # ST: "all-MiniLM-L6-v2", "all-mpnet-base-v2"
   dimensions: 384                       # Must match model output dim
 
-# --- Chunking ---
+# --- Chunking (LOCKED) ---
+# Round 3 swept 256/32, 512/64 and 1024/128 and 512/64 won on both question
+# variants (MRR@5 0.880 vs 0.875 and 0.822). Shorter splits the evidence span
+# across chunks; longer dilutes it. Changing these invalidates every built index.
 chunking:
-  strategy: "recursive"       # "recursive" | "semantic" | "sentence"
+  strategy: "recursive"       # "recursive" | "hierarchical" | "semantic" | "sentence"
   chunk_size: 512             # Target chunk size in tokens
   chunk_overlap: 64           # Overlap between consecutive chunks
   # Sentence strategy only:
@@ -34,18 +44,37 @@ llm:
   temperature: 0.0
   max_tokens: 1024
 
-# --- Retrieval ---
+# --- Retrieval (LOCKED by the Phase 1 tournament) ---
+# Full evidence and the rejected alternatives: notebooks/13_phase_1_tournament_report.ipynb
+# Measured on 281 resolved questions from the 50 seeded development articles:
+#   hit_rate@5 0.957   MRR@5 0.880   nDCG@5 0.898   p50 513 ms
 retrieval:
-  top_k: 10                  # Number of results to retrieve
+  retriever: "sparse"        # "dense" | "sparse" | "bm25" | "hybrid"
+                             # Sparse beat the best dense embedder 0.806 vs 0.630
+                             # MRR@5 before reranking and stayed ahead after.
+  top_k: 20                  # Candidates handed to the reranker
+  sparse:
+    method: "bge-m3"          # "bm25" | "bge-m3"
+    model: "BAAI/bge-m3"
+    device: null              # null -> CUDA when present, else CPU
   reranker:
     enabled: true
-    provider: "cohere"        # "cohere" | "cross-encoder"
-    model: "rerank-v3.5"
-    top_n: 5                  # Number of results after reranking
+    type: "cross-encoder"     # "noop" | "cross-encoder" -- the key get_reranker reads.
+                              # This was "provider: cohere", which get_reranker
+                              # ignores, so the app was silently running noop.
+    model: "BAAI/bge-reranker-large"
+    top_n: 5                  # Results kept after reranking
+    batch_size: 8             # bge-reranker-large is a large model; keep this small
   hybrid:
-    enabled: true
-    dense_weight: 0.7         # Weight for dense retrieval (0-1)
-    sparse_weight: 0.3        # Weight for BM25 (0-1, must sum to 1 with dense)
+    enabled: false            # Fusing the weak dense ranking in LOST to sparse
+    dense_weight: 0.7         # alone in round 2 (0.799 vs 0.880 MRR@5).
+    sparse_weight: 0.3
+
+# --- Locked retrieval artifacts ---
+# Built once by notebooks/14_export_locked_index_kaggle.ipynb and unpacked here.
+# Override with the RAG_LOCKED_INDEX_DIR environment variable.
+artifacts:
+  locked_index_dir: "data/locked_index"
 
 # --- Evaluation (Ragas) ---
 evaluation:

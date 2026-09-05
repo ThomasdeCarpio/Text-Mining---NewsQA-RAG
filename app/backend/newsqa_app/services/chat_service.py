@@ -13,8 +13,8 @@ import yaml
 
 from newsqa_rag.llm import ChatMessageInput, OpenAILLM
 from newsqa_rag.model_gateway import PROJECT_ROOT
-from newsqa_rag.services.session_store import SessionStore, get_session_store
-from newsqa_rag.services.types import AgentEvent, ChatMessage, Citation
+from newsqa_app.services.session_store import SessionStore, get_session_store
+from newsqa_app.services.types import AgentEvent, ChatMessage, Citation
 
 logger = logging.getLogger(__name__)
 
@@ -178,7 +178,7 @@ def _rag_is_candidate(mode: ChatMode) -> bool:
     if mode == "rag":
         return True
 
-    from newsqa_rag.services import retrieval_service
+    from newsqa_app.services import retrieval_service
 
     return retrieval_service.is_available()
 
@@ -209,12 +209,22 @@ def _get_rag_agent(settings: ChatSettings):
     try:
         from newsqa_rag.agents.rag_agent import RAGAgent
         from newsqa_rag.retrieval.reranker import get_reranker
-        from newsqa_rag.services import retrieval_service
+        from newsqa_app.services import retrieval_service
 
         with _RAG_CONFIG_PATH.open(encoding="utf-8") as config_file:
             config = yaml.safe_load(config_file) or {}
 
-        retriever = retrieval_service.get_dense_retriever()
+        # The Phase 1 tournament locked in BGE-M3 sparse retrieval. Fall back
+        # to the legacy Chroma route only when its artifacts are not exported.
+        if retrieval_service.locked_is_available():
+            retriever = retrieval_service.get_locked_retriever()
+            # Retrieve the full candidate pool, not rag_top_k, or the reranker
+            # has nothing to reorder and the locked configuration is not what
+            # actually runs. rag_top_k then controls how many survive to the LLM.
+            top_k = max(settings.rag_top_k, int(config.get("retrieval", {}).get("top_k", 20)))
+        else:
+            retriever = retrieval_service.get_dense_retriever()
+            top_k = settings.rag_top_k
         rerank_top_n = min(
             settings.rag_top_k,
             int(
@@ -227,7 +237,7 @@ def _get_rag_agent(settings: ChatSettings):
             retriever=retriever,
             reranker=get_reranker(config),
             llm=_create_llm(settings),
-            top_k=settings.rag_top_k,
+            top_k=top_k,
             rerank_top_n=rerank_top_n,
         )
         _rag_agent_key = cache_key
@@ -252,11 +262,12 @@ def _run_rag_pipeline(question: str, settings: ChatSettings) -> dict:
     """
 
     try:
-        from newsqa_rag.services import retrieval_service
+        from newsqa_app.services import retrieval_service
 
-        stats = retrieval_service.get_collection_stats()
-        if not stats.get("exists") or int(stats.get("count", 0)) <= 0:
-            raise RAGUnavailableError("The local news collection is empty or missing.")
+        if not retrieval_service.locked_is_available():
+            stats = retrieval_service.get_collection_stats()
+            if not stats.get("exists") or int(stats.get("count", 0)) <= 0:
+                raise RAGUnavailableError("The local news collection is empty or missing.")
 
         result = _get_rag_agent(settings).run(question)
     except RAGUnavailableError:
