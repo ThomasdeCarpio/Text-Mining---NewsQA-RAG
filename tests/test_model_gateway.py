@@ -181,6 +181,30 @@ class ModelClientIntegrationTests(unittest.TestCase):
         )
 
     @patch("newsqa_rag.llm.create_generation_client")
+    def test_llm_passes_configured_reasoning_effort(self, client_factory):
+        """Lock Gemini Flash-Lite to its minimum supported reasoning level."""
+
+        client = Mock()
+        client.chat.completions.create.return_value = SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content="answer"))]
+        )
+        client_factory.return_value = (client, "gemini-3.1-flash-lite")
+        llm = OpenAILLM(
+            model="gemini-3.1-flash-lite",
+            max_tokens=512,
+            reasoning_effort="minimal",
+        )
+
+        self.assertEqual(llm.generate_messages([{"role": "user", "content": "question"}]), "answer")
+        client.chat.completions.create.assert_called_once_with(
+            model="gemini-3.1-flash-lite",
+            messages=[{"role": "user", "content": "question"}],
+            temperature=0.0,
+            max_tokens=512,
+            reasoning_effort="minimal",
+        )
+
+    @patch("newsqa_rag.llm.create_generation_client")
     def test_gemini_37_omits_deprecated_sampling_parameter(self, client_factory):
         """Use Gemini 3.7 defaults instead of sending removed sampling controls."""
 

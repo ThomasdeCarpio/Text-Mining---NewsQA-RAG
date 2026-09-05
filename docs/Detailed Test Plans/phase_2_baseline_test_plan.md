@@ -81,12 +81,13 @@ deduplication; 871 câu còn lại thuộc held-out. Mỗi run phải lưu danh 
 | Reranker | `BAAI/bge-reranker-large`, batch size `8` |
 | Context | 5 chunks đầu sau rerank |
 | Generator | `gemini-3.1-flash-lite` |
-| Generation | `temperature=0`, `max_tokens=512` |
+| Generation | `temperature=0`, `max_tokens=512`, `reasoning_effort=minimal` |
 | Generation key | `GEMINI_API_KEY_1` |
 | Judge | `accounts/fireworks/models/glm-5p3-flash` |
 | Judge provider | Fireworks AI, OpenAI-compatible endpoint |
 | Judge key | `FIREWORKS_API_KEY` |
-| Judge runtime | timeout `300s`, 1 worker, 3 SDK retries |
+| Judge candidates | A: `reasoning_effort=none`, 512 tokens; B: `reasoning_effort=high`, 2.048 tokens |
+| Judge runtime | timeout `300s`, batch 1, 1 worker, 3 SDK retries |
 | Random seed | `42` |
 
 Generator và judge dùng hai model, provider và credential khác nhau. Secret
@@ -161,6 +162,9 @@ trong top 5; không chọn lại sau khi xem điểm.
    `max_tokens>=512`, HTTP thành công và `message.content` khác rỗng.
 3. **Khóa partition:** tạo và lưu `partitions.json`; xác nhận 281/871 câu.
 4. **Smoke:** chạy 5 câu qua toàn bộ pipeline, deterministic scorer và RAGAS.
+   Chấm cùng output bằng hai judge candidates, so sánh metric coverage, latency,
+   token/cost, score và MAE so với manual correctness/faithfulness; khóa một
+   mode trước development run.
 5. **Retrieval trace:** chạy 281 câu một lần; lưu top 20, reranked top 5, gold
    mapping và latency. Phase 2B tái sử dụng trace này.
 6. **Generation:** sinh 281 answer. Giữ khoảng cách request phù hợp quota của

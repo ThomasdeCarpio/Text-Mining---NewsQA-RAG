@@ -10,6 +10,7 @@ import os
 import random
 import re
 import sys
+import time
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -45,6 +46,22 @@ def parse_args() -> argparse.Namespace:
         required=True,
     )
     parser.add_argument("--judge-model", required=True)
+    parser.add_argument(
+        "--reasoning-effort",
+        choices=["none", "minimal", "low", "medium", "high", "max"],
+        default=None,
+    )
+    parser.add_argument("--judge-max-tokens", type=int, default=512)
+    parser.add_argument(
+        "--results-file",
+        default="judge_results.jsonl",
+        help="Run-relative JSONL filename, allowing isolated judge ablations.",
+    )
+    parser.add_argument(
+        "--require-complete-metrics",
+        action="store_true",
+        help="Retry a batch unless every requested metric is present for every row.",
+    )
     parser.add_argument("--metrics", nargs="+", choices=DEFAULT_METRICS, default=DEFAULT_METRICS)
     parser.add_argument("--batch-size", type=int, default=10)
     parser.add_argument("--max-workers", type=int, default=4)
@@ -74,10 +91,17 @@ def main() -> None:
     if not args.enable_langsmith_tracing:
         os.environ["LANGCHAIN_TRACING_V2"] = "false"
         os.environ["LANGSMITH_TRACING"] = "false"
-    if args.batch_size < 1 or args.max_workers < 1 or args.max_attempts < 1:
+    if (
+        args.batch_size < 1
+        or args.max_workers < 1
+        or args.max_attempts < 1
+        or args.judge_max_tokens < 1
+    ):
         raise SystemExit(
-            "--batch-size, --max-workers, and --max-attempts must be at least 1"
+            "Batch size, workers, attempts, and judge max tokens must be at least 1"
         )
+    if Path(args.results_file).name != args.results_file or not args.results_file.endswith(".jsonl"):
+        raise SystemExit("--results-file must be a run-relative .jsonl filename")
     run_dir = Path(args.run_dir)
     manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
     if manifest.get("inputs", {}).get("retrieval_only"):
@@ -111,11 +135,13 @@ def main() -> None:
             "run_fingerprint": manifest.get("run_fingerprint"),
             "judge_provider": args.judge_provider,
             "judge_model": args.judge_model,
+            "reasoning_effort": args.reasoning_effort,
+            "judge_max_tokens": args.judge_max_tokens,
             "metrics": args.metrics,
             "ragas_version": importlib.metadata.version("ragas"),
         }
     )
-    results_path = run_dir / "judge_results.jsonl"
+    results_path = run_dir / args.results_file
     existing_records = load_jsonl(results_path, recover_final_line=True)
     for record in existing_records:
         if record.get("judge_fingerprint") != judge_fingerprint:
@@ -142,20 +168,35 @@ def main() -> None:
     attempts_path = run_dir / "attempts.jsonl"
     for batch_index, batch in enumerate(iterable, 1):
         batch_id = stable_hash([record["question_id"] for record in batch])[:16]
-        scores, error, attempt_count = run_with_retries(
-            lambda: evaluate_ragas_rows(
+        def evaluate_batch():
+            rows, usage = evaluate_ragas_rows(
                 [_judge_sample(record) for record in batch],
                 metrics=args.metrics,
                 llm_model=args.judge_model,
                 provider=args.judge_provider,
                 max_workers=args.max_workers,
-            ),
+                reasoning_effort=args.reasoning_effort,
+                max_tokens=args.judge_max_tokens,
+                return_metadata=True,
+            )
+            missing = [
+                sorted(set(args.metrics) - set(row))
+                for row in rows
+            ]
+            if args.require_complete_metrics and any(missing):
+                raise RuntimeError(f"RAGAS returned incomplete metrics: {missing}")
+            return rows, usage
+
+        started_at = time.perf_counter()
+        payload, error, attempt_count = run_with_retries(
+            evaluate_batch,
             stage="judge",
-            question_id=f"batch:{batch_id}",
+            question_id=f"judge:{judge_fingerprint[:8]}:batch:{batch_id}",
             attempts_path=attempts_path,
             max_attempts=args.max_attempts,
         )
-        if scores is None:
+        elapsed_ms = round((time.perf_counter() - started_at) * 1000, 1)
+        if payload is None:
             for record in batch:
                 append_jsonl(
                     results_path,
@@ -169,21 +210,27 @@ def main() -> None:
                     },
                 )
             continue
+        scores, usage = payload
         if len(scores) != len(batch):
             raise RuntimeError("RAGAS returned a different number of rows than it received")
-        if any(not row_scores for row_scores in scores):
-            raise RuntimeError("RAGAS returned an empty score row")
         for record, row_scores in zip(batch, scores):
+            missing_metrics = sorted(set(args.metrics) - set(row_scores))
             append_jsonl(
                 results_path,
                 {
                     "question_id": record["question_id"],
-                    "status": "success",
+                    "status": "success" if not missing_metrics else "partial",
                     "judge_fingerprint": judge_fingerprint,
                     "judge_provider": args.judge_provider,
                     "judge_model": args.judge_model,
+                    "reasoning_effort": args.reasoning_effort,
+                    "judge_max_tokens": args.judge_max_tokens,
                     "metrics": args.metrics,
                     "scores": row_scores,
+                    "missing_metrics": missing_metrics,
+                    "batch_id": batch_id,
+                    "batch_elapsed_ms": elapsed_ms,
+                    "batch_usage": usage,
                     "attempt_count": attempt_count,
                     "finished_at": utc_now(),
                 },
@@ -193,7 +240,8 @@ def main() -> None:
 
     final_records = latest_by_question(load_jsonl(results_path))
     judged = sum(record.get("status") == "success" for record in final_records.values())
-    print(f"Judge results: {results_path} ({judged} successful)")
+    partial = sum(record.get("status") == "partial" for record in final_records.values())
+    print(f"Judge results: {results_path} ({judged} complete, {partial} partial)")
     print("Run score_benchmark_predictions.py again to merge judge scores into report.json")
 
 

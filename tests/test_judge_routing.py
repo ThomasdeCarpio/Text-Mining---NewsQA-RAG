@@ -100,6 +100,27 @@ class JudgeCliTests(unittest.TestCase):
         }
         self.assertIn("fireworks", choices)
 
+    def test_reasoning_ablation_arguments_are_exposed(self):
+        from unittest.mock import patch
+
+        from scripts.judge_benchmark_predictions import parse_args
+
+        argv = [
+            "judge_benchmark_predictions.py",
+            "--run-dir", "run",
+            "--judge-provider", "fireworks",
+            "--judge-model", "accounts/fireworks/models/glm-5p3-flash",
+            "--reasoning-effort", "none",
+            "--judge-max-tokens", "512",
+            "--results-file", "judge_results_none.jsonl",
+        ]
+        with patch("sys.argv", argv):
+            args = parse_args()
+
+        self.assertEqual(args.reasoning_effort, "none")
+        self.assertEqual(args.judge_max_tokens, 512)
+        self.assertEqual(args.results_file, "judge_results_none.jsonl")
+
 
 if __name__ == "__main__":
     unittest.main()

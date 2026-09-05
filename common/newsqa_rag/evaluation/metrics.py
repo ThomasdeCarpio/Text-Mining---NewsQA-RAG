@@ -326,8 +326,13 @@ def _gemini_judge_options(llm_model: str, api_key: str) -> dict:
     return options
 
 
-@lru_cache(maxsize=8)
-def _ragas_judge(llm_model: str, provider: str = "auto"):
+@lru_cache(maxsize=16)
+def _ragas_judge(
+    llm_model: str,
+    provider: str = "auto",
+    reasoning_effort: str | None = None,
+    max_tokens: int = JUDGE_MIN_MAX_TOKENS,
+):
     """
     Build the RAGAS judge LLM from environment configuration.
 
@@ -366,7 +371,8 @@ def _ragas_judge(llm_model: str, provider: str = "auto"):
             temperature=0,
             timeout=300.0,
             max_retries=3,
-            max_tokens=JUDGE_MIN_MAX_TOKENS,
+            max_tokens=max_tokens,
+            reasoning_effort=reasoning_effort,
         )
     elif resolved == "deepseek":
         if not os.getenv("DEEPSEEK_API_KEY"):
@@ -443,7 +449,10 @@ def evaluate_ragas_rows(
     llm_model: str = "deepseek-chat",
     provider: str = "auto",
     max_workers: int = 4,
-) -> list[dict]:
+    reasoning_effort: str | None = None,
+    max_tokens: int = JUDGE_MIN_MAX_TOKENS,
+    return_metadata: bool = False,
+) -> list[dict] | tuple[list[dict], dict]:
     """Run RAGAS and return one score dictionary per input sample."""
     import os
 
@@ -472,7 +481,12 @@ def evaluate_ragas_rows(
         metrics = list(metric_map.keys())
 
     selected = [metric_map[m] for m in metrics if m in metric_map]
-    judge, embeddings = _ragas_judge(llm_model, provider=provider)
+    judge, embeddings = _ragas_judge(
+        llm_model,
+        provider=provider,
+        reasoning_effort=reasoning_effort,
+        max_tokens=max_tokens,
+    )
 
     # Keep judge requests at one candidate for providers that do not implement
     # RAGAS's default three-candidate answer-relevancy request consistently.
@@ -492,19 +506,22 @@ def evaluate_ragas_rows(
         for s in samples
     ])
 
-    result = evaluate(
-        dataset=dataset,
-        metrics=selected,
-        llm=judge,
-        embeddings=embeddings,
-        run_config=RunConfig(
-            timeout=300,
-            max_workers=max_workers,
-            max_retries=3,
-            seed=42,
-        ),
-        show_progress=False,
-    )
+    from langchain_community.callbacks.manager import get_openai_callback
+
+    with get_openai_callback() as callback:
+        result = evaluate(
+            dataset=dataset,
+            metrics=selected,
+            llm=judge,
+            embeddings=embeddings,
+            run_config=RunConfig(
+                timeout=300,
+                max_workers=max_workers,
+                max_retries=3,
+                seed=42,
+            ),
+            show_progress=False,
+        )
 
     df = result.to_pandas()
     rows = []
@@ -520,7 +537,15 @@ def evaluate_ragas_rows(
             if not math.isnan(value):
                 scores[metric] = round(value, 4)
         rows.append(scores)
-    return rows
+    if not return_metadata:
+        return rows
+    usage = {
+        "input_tokens": int(callback.prompt_tokens or 0),
+        "output_tokens": int(callback.completion_tokens or 0),
+        "total_tokens": int(callback.total_tokens or 0),
+        "successful_requests": int(callback.successful_requests or 0),
+    }
+    return rows, usage
 
 
 # ---------------------------------------------------------------------------

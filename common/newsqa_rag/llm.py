@@ -37,10 +37,12 @@ class OpenAILLM:
         model: str = "gpt-4o-mini",
         temperature: float = 0.0,
         max_tokens: int | None = 1024,
+        reasoning_effort: str | None = None,
     ):
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self.reasoning_effort = reasoning_effort
         self._client = None
         self._effective_model = model
         self.last_usage: dict[str, int] = {}
@@ -89,6 +91,8 @@ class OpenAILLM:
             request["temperature"] = self.temperature
         if self.max_tokens is not None:
             request["max_tokens"] = self.max_tokens
+        if self.reasoning_effort is not None:
+            request["reasoning_effort"] = self.reasoning_effort
 
         response = client.chat.completions.create(**request)
         usage = getattr(response, "usage", None)
@@ -132,4 +136,5 @@ def get_llm(config: dict) -> OpenAILLM:
         model=llm_cfg.get("model", "gpt-4o-mini"),
         temperature=llm_cfg.get("temperature", 0.0),
         max_tokens=llm_cfg.get("max_tokens", 1024),
+        reasoning_effort=llm_cfg.get("reasoning_effort"),
     )

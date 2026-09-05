@@ -226,6 +226,7 @@ def main() -> None:
         "reranker_model": args.reranker_model if args.reranker == "cross-encoder" else None,
         "generator_provider": generator_provider,
         "generator_model": generator_model,
+        "generator_reasoning_effort": config.get("llm", {}).get("reasoning_effort"),
         "rag_prompt": OpenAILLM.DEFAULT_SYSTEM_PROMPT,
         "top_k": top_k,
         "rerank_top_n": top_n,

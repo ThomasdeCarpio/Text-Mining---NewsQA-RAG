@@ -15,9 +15,11 @@ Baseline chạy trên tập `resolved` của development partition; final-test t
 | Chunking | Recursive `512/64`, khóa từ Round 3 |
 | Retrieval | BGE-M3 sparse, `top_k=20` |
 | Reranker | `BAAI/bge-reranker-large`, top 5, batch 8 |
-| Generator | `gemini-3.1-flash-lite`, tối đa 512 output tokens |
+| Generator | `gemini-3.1-flash-lite`, `reasoning_effort=minimal`, tối đa 512 output tokens |
 | RAGAS judge | `accounts/fireworks/models/glm-5p3-flash` qua Fireworks |
-| Judge runtime | timeout 300 giây, 1 worker, 3 SDK retries |
+| Judge smoke A | `reasoning_effort=none`, tối đa 512 output tokens |
+| Judge smoke B | `reasoning_effort=high`, tối đa 2.048 output tokens |
+| Judge runtime | timeout 300 giây, batch 1, 1 worker, 3 SDK retries |
 
 Notebook thực thi:
 
@@ -54,8 +56,19 @@ Notebook mặc định `RUN_MODE='smoke'`. Chế độ này chạy toàn bộ pi
 1. BGE-M3 retrieval và BGE-large reranking;
 2. 5 Gemini 3.1 Flash-Lite generations bằng free key;
 3. deterministic QA/citation scoring;
-4. đủ 5 RAGAS metrics bằng GLM-5.3-Flash qua Fireworks;
-5. summary, failure diagnostics và raw per-question traces.
+4. chấm hai lần bằng hai reasoning mode của GLM-5.3-Flash;
+5. xuất metric coverage, latency, token/cost, score và bảng manual review;
+6. chỉ promote judge mode có đủ metric sau khi manual review.
+
+Điền `manual_correctness` và `manual_faithfulness` trong
+`judge_reasoning_manual_review_template.csv` bằng điểm từ 0 đến 1, upload lại
+file, rồi đặt `MANUAL_REVIEW_CSV` tới file đã điền. Notebook tính MAE của hai
+judge mode so với review và yêu cầu chọn `SELECTED_JUDGE_MODE` trước khi chạy
+281 câu.
+
+Lần chạy smoke đầu tiên chủ động dừng sau khi tạo
+`phase2_judge_reasoning_review.zip`; đây là checkpoint review, không phải lỗi
+API. Bundle chứa hai file judge JSONL, bảng so sánh và review template.
 
 Tải file `phase2_e2e_baseline_smoke_results.zip` để kiểm tra trước. Bundle gồm
 `predictions.jsonl`, `retrievals.jsonl`, `attempts.jsonl`,
