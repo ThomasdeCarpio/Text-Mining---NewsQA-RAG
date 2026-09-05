@@ -37,9 +37,9 @@ tách biệt và model/provider hỗ trợ training.
 | Supplementary set | 1.336 full resolved questions; không dùng chọn winner |
 | Retrieval | BGE-M3 learned sparse, `top_k=20` |
 | Reranking | `BAAI/bge-reranker-large`, top 5 |
-| Generator | `gemini-3.1-flash-lite`, `temperature=0` |
+| Generator | `gemini-3.1-flash-lite`, `temperature=0`, `reasoning_effort=minimal` |
 | Generator key | `GEMINI_API_KEY_1` |
-| Judge | `accounts/fireworks/models/glm-5p3-flash` |
+| Judge | `accounts/fireworks/models/glm-5p3-flash`, `reasoning_effort=low`, tối đa 2.048 output tokens |
 | Judge key | `FIREWORKS_API_KEY` |
 | Seed | `42` |
 

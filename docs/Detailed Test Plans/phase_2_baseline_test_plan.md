@@ -86,7 +86,7 @@ deduplication; 871 câu còn lại thuộc held-out. Mỗi run phải lưu danh 
 | Judge | `accounts/fireworks/models/glm-5p3-flash` |
 | Judge provider | Fireworks AI, OpenAI-compatible endpoint |
 | Judge key | `FIREWORKS_API_KEY` |
-| Judge candidates | A: `reasoning_effort=low`; B: `reasoning_effort=high`; cùng giới hạn 2.048 tokens |
+| Judge reasoning | `reasoning_effort=low`, giới hạn 2.048 output tokens |
 | Judge runtime | timeout `300s`, batch 1, 1 worker, 3 SDK retries |
 | Random seed | `42` |
 
@@ -161,10 +161,10 @@ trong top 5; không chọn lại sau khi xem điểm.
 2. **Preflight model:** gọi thử Gemini và GLM. GLM phải dùng Fireworks endpoint,
    `max_tokens>=512`, HTTP thành công và `message.content` khác rỗng.
 3. **Khóa partition:** tạo và lưu `partitions.json`; xác nhận 281/871 câu.
-4. **Smoke:** chạy 5 câu qua toàn bộ pipeline, deterministic scorer và RAGAS.
-   Chấm cùng output bằng hai judge candidates, so sánh metric coverage, latency,
-   token/cost, score và MAE so với manual correctness/faithfulness; khóa một
-   mode trước development run.
+4. **Smoke:** chạy 5 câu qua toàn bộ pipeline, deterministic scorer và RAGAS
+   bằng judge đã khóa. Low/high ablation trước đó là bằng chứng lựa chọn `low`:
+   cả hai đủ coverage, nhưng `low` tiết kiệm output token và có phán đoán Answer
+   Correctness hợp lý hơn ở trường hợp khác biệt.
 5. **Retrieval trace:** chạy 281 câu một lần; lưu top 20, reranked top 5, gold
    mapping và latency. Phase 2B tái sử dụng trace này.
 6. **Generation:** sinh 281 answer. Giữ khoảng cách request phù hợp quota của
@@ -172,8 +172,8 @@ trong top 5; không chọn lại sau khi xem điểm.
    + model fingerprint.
 7. **Deterministic scoring:** tính retrieval, EM/F1, citation và coverage trước
    khi gọi judge.
-8. **RAGAS pilot:** chạy 25 câu với 1 worker. Chỉ tiếp tục nếu không có schema
-   error, output rỗng hoặc lỗi hàng loạt.
+8. **RAGAS pilot:** chạy 25 câu với GLM-5.3-Flash `reasoning_effort=low` và 1
+   worker. Chỉ tiếp tục nếu không có schema error, output rỗng hoặc lỗi hàng loạt.
 9. **Full judge:** chấm 281 câu generation thành công, cho phép resume và không
    chấm lại record đã thành công.
 10. **Báo cáo:** tổng hợp overall, article macro, retrieval strata, CI, latency,
@@ -205,14 +205,12 @@ resume phải bỏ qua record đã thành công.
 
 ## 8. Điều kiện triển khai trước khi chạy
 
-Code đánh giá đã có nhánh Fireworks, timeout 300 giây, retry và giới hạn output
-tối thiểu cho GLM. Tuy nhiên, notebook Phase 2 hiện tại vẫn cần được đồng bộ:
+Code đánh giá và notebook Kaggle/Colab đã được đồng bộ với hợp đồng Phase 2:
 
 - tải tag `locked-bge-m3-512-64-deduplicated-v2` và kiểm tra đúng SHA-256;
-- dùng `accounts/fireworks/models/glm-5p3-flash` qua Fireworks và
-  `FIREWORKS_API_KEY` cho judge;
-- mô tả artifact và expected coverage cũ.
+- dùng Gemini 3.1 Flash-Lite `minimal` qua `GEMINI_API_KEY_1` cho generation;
+- dùng `accounts/fireworks/models/glm-5p3-flash` `low` qua Fireworks và
+  `FIREWORKS_API_KEY` cho judge.
 
-Phải cập nhật notebook Kaggle/Colab theo hợp đồng trong tài liệu này trước smoke
-run. Preflight phải thất bại rõ ràng nếu partition count, artifact hash, model,
+Preflight phải thất bại rõ ràng nếu partition count, artifact hash, model,
 provider hoặc endpoint không khớp; không được tự động fallback sang provider khác.

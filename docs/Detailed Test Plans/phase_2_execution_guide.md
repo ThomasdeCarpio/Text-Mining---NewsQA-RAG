@@ -17,8 +17,7 @@ Baseline chạy trên tập `resolved` của development partition; final-test t
 | Reranker | `BAAI/bge-reranker-large`, top 5, batch 8 |
 | Generator | `gemini-3.1-flash-lite`, `reasoning_effort=minimal`, tối đa 512 output tokens |
 | RAGAS judge | `accounts/fireworks/models/glm-5p3-flash` qua Fireworks |
-| Judge smoke A | `reasoning_effort=low`, tối đa 2.048 output tokens |
-| Judge smoke B | `reasoning_effort=high`, tối đa 2.048 output tokens |
+| Judge reasoning | `reasoning_effort=low`, tối đa 2.048 output tokens |
 | Judge runtime | timeout 300 giây, batch 1, 1 worker, 3 SDK retries |
 
 Notebook thực thi:
@@ -56,19 +55,14 @@ Notebook mặc định `RUN_MODE='smoke'`. Chế độ này chạy toàn bộ pi
 1. BGE-M3 retrieval và BGE-large reranking;
 2. 5 Gemini 3.1 Flash-Lite generations bằng free key;
 3. deterministic QA/citation scoring;
-4. chấm hai lần bằng hai reasoning mode của GLM-5.3-Flash;
-5. xuất metric coverage, latency, token/cost, score và bảng manual review;
-6. chỉ promote judge mode có đủ metric sau khi manual review.
+4. chấm bằng GLM-5.3-Flash với `reasoning_effort=low`;
+5. xuất metric coverage, latency, token/cost và score;
+6. kiểm tra đủ metric trước khi chuyển sang full mode.
 
-Điền `manual_correctness` và `manual_faithfulness` trong
-`judge_reasoning_manual_review_template.csv` bằng điểm từ 0 đến 1, upload lại
-file, rồi đặt `MANUAL_REVIEW_CSV` tới file đã điền. Notebook tính MAE của hai
-judge mode so với review và yêu cầu chọn `SELECTED_JUDGE_MODE` trước khi chạy
-281 câu.
-
-Lần chạy smoke đầu tiên chủ động dừng sau khi tạo
-`phase2_judge_reasoning_review.zip`; đây là checkpoint review, không phải lỗi
-API. Bundle chứa hai file judge JSONL, bảng so sánh và review template.
+Judge đã được khóa sau smoke ablation trên cùng 5 câu: `low` và `high` đều có
+đủ coverage, nhưng `low` dùng ít output token hơn và cho Answer Correctness hợp
+lý hơn ở trường hợp khác biệt. File ablation được giữ làm bằng chứng lựa chọn,
+không còn là runtime gate của notebook.
 
 Tải file `phase2_e2e_baseline_smoke_results.zip` để kiểm tra trước. Bundle gồm
 `predictions.jsonl`, `retrievals.jsonl`, `attempts.jsonl`,
@@ -90,8 +84,8 @@ prediction/judge của nhau.
    `attempts.jsonl` cho phép dừng/chạy tiếp mà không gọi lại câu đã thành công;
    generation dùng riêng free key và pacing `4,2` giây.
 4. Tính EM, token F1, citation metrics, retrieval metrics, latency và token usage.
-5. Chạy RAGAS pilot 25 câu. Sau khi kiểm tra pilot, chạy tiếp toàn bộ câu generation
-   thành công bằng cùng judge fingerprint.
+5. Chạy RAGAS pilot 25 câu bằng GLM-5.3-Flash `low`. Sau khi kiểm tra pilot,
+   chạy tiếp toàn bộ câu generation thành công bằng cùng judge fingerprint.
 6. Gộp score RAGAS theo từng câu, tính mean, article macro và bootstrap CI 95%,
    rồi xuất báo cáo và ZIP kết quả.
 
