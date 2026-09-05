@@ -22,8 +22,13 @@ def load_comparison_rows(paths: list[str | Path]) -> list[dict]:
     return rows
 
 
-def select_winner(rows: list[dict], *, variant: str = "original") -> dict:
-    """Select a complete original-question winner with deterministic tie-breaks."""
+def select_winner(rows: list[dict], *, variant: str = "resolved") -> dict:
+    """Select a complete winner with deterministic tie-breaks.
+
+    Resolved questions are the default because they are the deployment-realistic
+    set: users ask standalone questions with no article already open. Pass
+    variant="original" only to report the conservative paired figure.
+    """
     candidates = [
         row for row in rows
         if row.get("variant") == variant and row.get("coverage.success_rate", 1.0) == 1.0
