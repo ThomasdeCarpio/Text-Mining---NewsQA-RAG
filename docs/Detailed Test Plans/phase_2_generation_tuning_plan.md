@@ -1,306 +1,222 @@
-# Kế Hoạch Chi Tiết — Giai Đoạn 2B: Đo và Tinh Chỉnh Chất Lượng Sinh
+# Kế Hoạch Chi Tiết - Giai Đoạn 2B: Tối Ưu Generation
 
-Tài liệu này trả lời hai câu hỏi:
+## 1. Mục tiêu và phạm vi
 
-1. **Cần dựng những gì để đo baseline sinh câu trả lời?** — generator
-   `gemini-3.1-flash-lite`, judge RAGAS chạy trên `GLM 5.3 Flash`.
-2. **Còn tinh chỉnh được gì?** — danh sách các núm vặn còn tự do, xếp theo
-   tỉ lệ giá trị/chi phí, kèm giả thuyết và quy tắc quyết định cho từng núm.
+Phase 2B tối ưu **prompt và cấu hình sinh**, không huấn luyện lại trọng số của
+Gemini. Vì vậy tên học thuật đúng là *prompt/configuration tuning*, không phải
+supervised fine-tuning.
 
-Quy trình baseline chi tiết (bước preflight → smoke → full → score → judge)
-nằm ở [`phase_2_baseline_test_plan.md`](phase_2_baseline_test_plan.md); tài
-liệu này chỉ ghi phần **khác đi** và phần **chưa từng có**.
+Mục tiêu là tìm cấu hình generation có Answer Correctness cao hơn baseline mà
+không làm giảm grounding và citation. Mọi thí nghiệm tái sử dụng hợp đồng dataset,
+partition, retrieval và metrics trong
+[`phase_2_baseline_test_plan.md`](phase_2_baseline_test_plan.md).
 
-> **Tất cả đo đạc trong tài liệu này chạy trên tập tinh chỉnh** — 281 câu
-> resolved của 50 bài development. 150 bài held-out không được đụng tới cho
-> tới khi mọi lựa chọn dưới đây đã chốt. Xem
-> [`phase_1_retrieval_test_plan.md`](phase_1_retrieval_test_plan.md) §5.
+Ngoài phạm vi:
 
----
+- thay embedding, retriever, reranker hoặc chunking;
+- query rewriting và Agentic RAG;
+- huấn luyện trọng số model;
+- dùng held-out để sửa prompt hay chọn tham số;
+- trộn bài toán abstention/open-domain vào benchmark NewsQA answerable.
 
-## 1. Trần Chất Lượng: Sinh Không Thể Vượt Retrieval
+Nếu sau này fine-tune trọng số, cần một phase riêng với train/validation/test
+tách biệt và model/provider hỗ trợ training.
 
-Trước khi đo generation phải biết mức trần. Với cấu hình đã khóa, đo trên
-tập tinh chỉnh:
+## 2. Hợp đồng cố định
 
-| Đại lượng | Giá trị | Ý nghĩa cho generation |
-|---|---:|---|
-| `Hit@5` sau rerank | `0,9573` | **95,7%** số câu có bằng chứng vàng nằm trong 5 context đưa cho LLM |
-| `Recall@5` | `0,9555` | phần bằng chứng thực sự lọt vào 5 context |
-| `Hit@1` | `0,8221` | 82,2% câu có bằng chứng ngay ở context đầu |
-| `Hit@10` trước rerank | `0,9395` | trần của `top_k=20` — reranker đã vượt mức này |
+| Thành phần | Giá trị |
+|---|---|
+| Artifact | `ThomasAnderson2009/newsqa-rag-phase2-locked-v2` |
+| Revision | `locked-bge-m3-512-64-deduplicated-v2` |
+| Primary set | 1.152 semantic-deduplicated resolved questions |
+| Development | 50 bài, 281 câu resolved, seed `42` |
+| Held-out | 150 bài, 871 câu resolved |
+| Retrieval | BGE-M3 learned sparse, `top_k=20` |
+| Reranking | `BAAI/bge-reranker-large`, top 5 |
+| Generator | `gemini-3.1-flash-lite`, `temperature=0` |
+| Generator key | `GEMINI_API_KEY_1` |
+| Judge | `accounts/fireworks/models/glm-5p3-flash` |
+| Judge key | `FIREWORKS_API_KEY` |
+| Seed | `42` |
 
-**Hệ quả trực tiếp**: khoảng **4,3%** số câu (~12 câu) **không thể** trả lời
-đúng từ context. Đó là sàn lỗi của generation, không phải lỗi của LLM. Mọi
-báo cáo answer accuracy phải tách hai nhóm:
+Retrieval chạy một lần. Mỗi biến thể generation nhận cùng ranked contexts và
+cùng question IDs. Khi thử context depth, chỉ cắt danh sách top 5 đã cache;
+không retrieve/rerank lại.
 
-- **Answerable-from-context** (~269 câu): đo năng lực sinh thực sự.
-- **Evidence-missing** (~12 câu): ở đây hành vi **đúng** là từ chối trả lời,
-  không phải bịa. Đo bằng abstention rate, không đo bằng EM/F1.
+## 3. Câu hỏi nghiên cứu
 
-Gộp hai nhóm rồi báo một con số F1 duy nhất sẽ thưởng cho model biết đoán mò.
+1. Prompt grounding rõ ràng có tăng faithfulness mà không giảm correctness?
+2. Định dạng answer ngắn có phù hợp gold span của NewsQA hơn prompt hiện tại?
+3. Citation contract chặt hơn có tăng citation F1?
+4. Đưa 1, 3 hay 5 context vào generator cho trade-off tốt nhất giữa quality,
+   latency và token cost?
 
----
+Mỗi câu hỏi chỉ thay đổi một nhóm biến trong một vòng. Generator model,
+temperature và retrieval được giữ cố định để có thể quy kết khác biệt.
 
-## 2. Biến Khóa Cho Baseline 2B
+## 4. Ma trận thí nghiệm đăng ký trước
 
-Bảng này **thay thế** §2.1 của `phase_2_baseline_test_plan.md` ở ba dòng đã
-thay đổi sau Giai đoạn 1 và sau khi đổi judge.
+### 4.1. Vòng P - Prompt
 
-| Thành phần | Giá trị khóa | Thay đổi so với bản cũ |
+Dùng `context_depth=5`, `max_tokens=512` cho bốn prompt:
+
+| ID | Prompt contract | Giả thuyết |
 |---|---|---|
-| Retrieval artifact | Bundle từ `notebooks/public/14_export_locked_index_kaggle.ipynb` (corpus v2.0.0) | **thay** tag `phase2-bge-m3-512-64-v1` dựng trên v1.0.0 |
-| Reranker | `BAAI/bge-reranker-large`, `top_n=5` | **thay** `ms-marco-MiniLM-L-6-v2` |
-| Generator | `gemini-3.1-flash-lite`, `temperature=0`, `max_tokens=512` | giữ nguyên |
-| RAGAS judge | **`accounts/fireworks/models/glm-5p3-flash`** | **thay** `gemini-3.7-flash` |
-| Judge endpoint | Fireworks AI, `https://api.fireworks.ai/inference/v1` (OpenAI-compatible) | — |
-| Judge credential | `FIREWORKS_API_KEY` riêng, **không** dùng chung key generator | — |
-| Judge output budget | `max_tokens` **tối thiểu 512**, không cắt thấp hơn | GLM 5.3 Flash là reasoning model — xem §3.1 |
-| Retriever / chunking / `top_k` | BGE-M3 sparse · recursive `512/64` · `20` | giữ nguyên |
+| `P0` | Prompt citation hiện tại của `RAGAgent` | Baseline |
+| `P1` | Chỉ dùng context; không được suy diễn ngoài bằng chứng | Tăng faithfulness |
+| `P2` | Trả lời trực tiếp, ngắn gọn theo NewsQA; sau đó citation | Tăng EM/F1 và relevancy |
+| `P3` | Kết hợp P1/P2; citation `[i]` bắt buộc cho mỗi khẳng định chính | Cân bằng quality và grounding |
 
-Đổi judge sang GLM còn **cải thiện** thiết kế: judge và generator giờ khác
-hẳn nhà cung cấp, không chỉ khác kích thước trong cùng họ Gemini. Rủi ro
-self-evaluation bias giảm thật, không phải giảm trên danh nghĩa.
+Prompt có thể nói "không đủ thông tin trong context" để tránh bịa đặt, nhưng
+NewsQA không có gold unanswerable. Do đó không dùng abstention rate làm metric
+chọn winner trong Phase 2. Khả năng abstain được đánh giá riêng ở Phase 3.
 
----
+Không đưa few-shot vào vòng chính: ví dụ làm tăng token, có nguy cơ data leakage
+và tạo thêm một biến gây nhiễu. Few-shot chỉ là ablation sau nếu tất cả zero-shot
+prompt không ổn định định dạng.
 
-## 3. Việc Phải Làm Trước Khi Chạy: Định Tuyến GLM
+### 4.2. Vòng C - Context depth
 
-> **Đã xác minh bằng call thật (2026-09-05).** Cả hai credential đều hoạt động.
-> GLM 5.3 Flash được phục vụ bởi **Fireworks AI**, không phải Z.ai/Zhipu.
-> Model ID chính xác, lấy từ `/models` của Fireworks:
-> `accounts/fireworks/models/glm-5p3-flash`.
+Lấy hai prompt tốt nhất từ Vòng P và thử:
 
-### 3.1. GLM 5.3 Flash là reasoning model — cạm bẫy đầu tiên
-
-Quan sát trực tiếp:
-
-| `max_tokens` | `finish_reason` | completion tokens | `content` trả về |
-|---:|---|---:|---|
-| 8 | `length` | 8 | **rỗng** |
-| 64 | `length` | 64 | **rỗng** (274 ký tự `reasoning_content`) |
-| 512 | `stop` | 279 | `{"verdict": 1}` (1.269 ký tự `reasoning_content`) |
-
-Model sinh `reasoning_content` **trước** rồi mới sinh `content` nhìn thấy được.
-Nếu `max_tokens` bị cắt thấp, judge trả về chuỗi rỗng kèm `finish_reason=length`
-— và RAGAS sẽ ghi nhận đó là parse error hoặc điểm 0, **không** báo lỗi
-credential. Đây là kiểu hỏng âm thầm, giống hệt lỗi định tuyến ở §3.2.
-
-Hệ quả bắt buộc:
-
-1. `max_tokens` cho judge **tối thiểu 512**; không tái sử dụng giới hạn 512 của
-   generator như thể hai bên giống nhau.
-2. Preflight phải khẳng định `content` **khác rỗng**, không chỉ khẳng định HTTP
-   200. Một call 200 với content rỗng vẫn là judge hỏng.
-3. Chi phí token của judge cao hơn hẳn model thường: ~279 completion token cho
-   một câu trả lời JSON tầm thường, phần lớn là reasoning.
-
-Code đã có tiền lệ xử lý đúng việc này — `_gemini_judge_options()` bỏ
-`temperature` riêng cho `gemini-3.7` vì lý do tương tự. Nhánh GLM cần sự cẩn
-thận tương đương.
-
-### 3.2. Hai lỗi định tuyến trong code
-
-**Đây là blocker, không phải tùy chọn.** Judge GLM chưa chạy được với code
-hiện tại. Hai lỗi trong `common/newsqa_rag/evaluation/metrics.py`:
-
-1. **Nhánh fallback không nhận `base_url`.** `_ragas_judge()` có nhánh riêng
-   cho `gemini` và `deepseek`; mọi model khác rơi vào:
-
-   ```python
-   chat = ChatOpenAI(model=llm_model, temperature=0)
-   ```
-
-   Không truyền `base_url`, nên request đi tới `api.openai.com` chứ không tới
-   endpoint Fireworks. Judge sẽ lỗi xác thực, hoặc tệ hơn là gọi nhầm một model
-   OpenAI nếu `OPENAI_API_KEY` tình cờ hợp lệ — và `.env.example` hiện đặt
-   `OPENAI_BASE_URL` trỏ tới XAH, nên khả năng gọi nhầm là có thật.
-
-2. **`provider="auto"` ưu tiên DeepSeek.** Nhánh chọn provider là
-   `provider == "deepseek" or (provider == "auto" and bool(os.getenv("DEEPSEEK_API_KEY")))`.
-   Nếu `.env` còn `DEEPSEEK_API_KEY`, judge GLM sẽ **âm thầm** chạy bằng
-   DeepSeek và vẫn ghi `judge_model` là GLM vào manifest. Đây là lỗi làm hỏng
-   provenance mà không báo lỗi.
-
-**Cách sửa tối thiểu**: thêm nhánh `fireworks` dùng `FIREWORKS_API_KEY` +
-`FIREWORKS_BASE_URL`, đặt `max_tokens>=512`, và bắt `provider` phải khớp tường
-minh với `--judge-model` thay vì đoán theo biến môi trường nào đang tồn tại.
-Giữ credential judge tách khỏi `OPENAI_API_KEY`/`OPENAI_BASE_URL` để model chat
-của ứng dụng không thể vô tình thay judge. Preflight phải in ra `base_url` thật.
-
-### 3.3. Ngân sách token — cần xác nhận trước khi chạy
-
-Key Gemini được ghi nhận giới hạn `160k`. **Đơn vị chưa rõ và phải xác nhận**,
-vì hai cách hiểu cho kết quả trái ngược:
-
-- Nếu `160k` là **số request**: 281 request generation thừa sức nằm trong hạn.
-- Nếu `160k` là **số token**: một lần chạy đầy đủ sẽ **vượt hạn**. Ước tính
-  thô: 281 câu × (5 context × ~512 token + prompt + câu hỏi) ≈ **~790k token
-  input**, chưa tính output. Vượt gấp ~5 lần.
-
-Phải chốt đơn vị **trước** bước 4 của §6. Nếu là token, các lựa chọn theo thứ
-tự ưu tiên: giảm `top_n` xuống 3 (§5.2 vốn đã định quét), cắt bớt độ dài
-context, hoặc chia run thành nhiều đợt theo hạn ngạch. Không âm thầm giảm số
-câu hỏi — 281 câu là tập tinh chỉnh đã cố định, đổi nó là đổi phép đo.
-
----
-
-## 4. Metric Cho Baseline Sinh
-
-Ba tầng, chạy đúng thứ tự này — tầng rẻ chặn lỗi trước khi tiêu tiền tầng đắt.
-
-### 4.1. Deterministic (chi phí 0đ)
-
-| Metric | Vì sao cần |
+| Biến | Giá trị |
 |---|---|
-| Exact Match, token-F1 | so với `answer` vàng; chuẩn NewsQA |
-| Abstention rate | tách theo nhóm answerable / evidence-missing ở §1 |
-| Answer length | phát hiện model lan man hoặc cụt |
-| Citation precision / recall / F1 | câu có trích dẫn đúng chunk chứa bằng chứng không |
-| Hallucinated-citation rate | trích dẫn index không tồn tại trong context |
+| `context_depth` | `1`, `3`, `5` |
+| Thứ tự context | Giữ nguyên thứ tự BGE-large reranking |
+| Retrieval pool | Giữ `top_k=20` |
+| Max output | Giữ `512` |
 
-### 4.2. RAGAS (LLM-as-a-Judge, GLM 5.3 Flash)
+Đây là ma trận tối đa 6 cấu hình. Record trùng với baseline được tái sử dụng,
+không gọi Gemini hoặc GLM lại.
 
-`faithfulness`, `answer_relevancy`, `context_precision`, `context_recall`,
-`answer_correctness`. `answer_relevancy` cần embedding — chạy local bằng
-`all-MiniLM-L6-v2`, không tốn API.
+### 4.3. Biến không quét
 
-RAGAS **không phải** ground truth. Báo cáo phải kèm judge model, judge
-fingerprint, phiên bản RAGAS, coverage và CI 95%.
+- `temperature=0` để đảm bảo tái lập.
+- `max_tokens=512` giữ cố định. Chỉ mở ablation `{128, 256, 512}` nếu baseline
+  ghi nhận output bị cắt hoặc chi phí output bất thường.
+- Không so sánh generator model trong cùng prompt experiment. Nếu cần, khóa
+  prompt/context winner trước rồi tạo một model-ablation riêng.
+- Không thử `top_n>5` vì locked trace và artifact chỉ khóa 5 context sau rerank.
 
-### 4.3. Vận hành
+## 5. Thiết kế mẫu và thứ tự chạy
 
-Latency tách tầng (retrieve / rerank / generate), token in-out, số attempt,
-tỉ lệ request lỗi.
+### 5.1. Các tập development
 
----
+| Tập | Số câu | Cách dùng |
+|---|---:|---|
+| Smoke | 5 | Kiểm tra mỗi prompt/config mới |
+| Screening | 100 | Quét P và C |
+| Judge calibration | 25 | RAGAS sớm cho mỗi cấu hình screening |
+| Full development | 281 | Xác nhận hai finalist |
+| Held-out final | 871 | Đánh giá winner đúng một lần |
 
-## 5. Danh Sách Tinh Chỉnh, Xếp Theo Giá Trị Trên Chi Phí
+Tập 100 và 25 được tạo một lần với seed `42`, phân tầng theo article, question
+type và `gold_in_top5`. ID được commit/lưu trong experiment manifest. Không đổi
+mẫu sau khi xem kết quả.
 
-Mỗi mục ghi: giả thuyết → biến thể → chi phí → metric quyết định.
+### 5.2. Trình tự
 
-### 5.1. Prompt (đòn bẩy lớn nhất, chi phí thấp nhất)
+1. Hoàn tất và đóng băng baseline P0 trên 281 câu.
+2. Smoke 5 câu cho P1-P3; loại lỗi schema, citation và output rỗng.
+3. Chạy P0-P3 trên cùng 100 câu; deterministic score trên 100 và RAGAS trên
+   cùng 25 câu.
+4. Chọn hai prompt theo quy tắc ở Mục 7.
+5. Chạy context depth `{1,3,5}` với hai prompt trên cùng 100/25 câu.
+6. Chọn hai cấu hình finalist; chạy mỗi finalist trên toàn bộ 281 câu và chấm
+   đầy đủ deterministic + RAGAS.
+7. Khóa winner, prompt text, context depth, model fingerprint và giá API.
+8. Chạy winner trên 871 câu held-out đúng một lần.
+9. Công bố kết quả held-out mà không tiếp tục sửa cấu hình.
 
-Prompt hiện tại là prompt citation mặc định của `RAGAgent` — chưa từng được
-tinh chỉnh lần nào. Với 281 câu × `gemini-3.1-flash-lite`, mỗi biến thể là
-một lần chạy generation rẻ; đây là núm nên vặn trước.
+## 6. Metrics và phân tích
 
-| Biến thể | Giả thuyết |
+Dùng đầy đủ metrics của baseline. Vai trò trong tuning:
+
+| Vai trò | Metrics |
 |---|---|
-| Cấm suy diễn ngoài context | giảm hallucination, tăng `faithfulness` |
-| Cho phép nói "không đủ thông tin" | sửa đúng ~12 câu evidence-missing ở §1 |
-| Ép định dạng câu trả lời ngắn | NewsQA answer là span ngắn; văn dài làm tụt EM/F1 |
-| Ép định dạng citation `[i]` chặt | tăng citation precision, giảm citation ảo |
-| Few-shot 2–3 ví dụ | ổn định định dạng, đổi lại tốn token đầu vào |
+| Primary quality | RAGAS Answer Correctness |
+| Grounding guardrail | Faithfulness |
+| Citation guardrail | Citation F1 và Citation Validity |
+| Supporting quality | EM, token F1, Answer Relevancy |
+| Context diagnosis | Context Precision, Context Recall |
+| Efficiency | Input/output tokens, cost, generation P50/P95 latency |
 
-**Quyết định**: giữ biến thể có `answer_correctness` cao nhất mà không làm
-tụt `faithfulness`. Thay đổi prompt phải ghi vào manifest — prompt là một
-biến thực nghiệm, không phải chi tiết cài đặt.
+Mỗi so sánh dùng paired per-question difference. Báo cáo:
 
-### 5.2. Số context đưa vào LLM (`rerank_top_n`)
+- mean difference và 95% article-cluster bootstrap CI;
+- question-level micro và article-level macro;
+- overall, `gold_in_top5` và `gold_not_in_top5`;
+- success/score coverage và failure count;
+- cost và latency trên cùng môi trường.
 
-Đang khóa `5`. Đây là đánh đổi hai chiều rõ ràng và **đã có sẵn số retrieval**
-để dự đoán:
+Không diễn giải CI chồng lấp là hai phương pháp tương đương. Nếu cần tuyên bố
+equivalence, phải đăng ký equivalence margin và dùng equivalence test riêng.
 
-| `top_n` | `Hit@n` | Kỳ vọng |
-|---:|---:|---|
-| 3 | `0,9324` | ít nhiễu, ít token, mất 2,5% coverage |
-| 5 | `0,9573` | mốc hiện tại |
-| 7 | *cần notebook 12* | thêm coverage, thêm nhiễu và token |
+## 7. Quy tắc chọn winner
 
-Coverage tăng dần nhưng **không** đảm bảo answer tốt hơn: context thừa làm
-loãng sự chú ý của model. Đây chính là lý do phải đo end-to-end chứ không suy
-ra từ `Hit@n`. Chi phí: 3 lần chạy generation.
+Quy tắc được khóa trước khi xem kết quả tuning:
 
-### 5.3. Hierarchical chunking — trick riêng cho generation
+1. Một cấu hình chỉ hợp lệ nếu so với P0:
+   - Faithfulness không giảm quá `0,02`;
+   - Citation F1 không giảm quá `0,01`;
+   - Citation Validity không giảm quá `0,01`;
+   - generation và RAGAS coverage đạt ngưỡng của baseline plan.
+2. Trong các cấu hình hợp lệ, chọn Answer Correctness cao nhất.
+3. Nếu chênh Answer Correctness nhỏ hơn `0,01`, chọn token cost thấp hơn.
+4. Nếu chi phí chênh dưới 5%, chọn generation P95 latency thấp hơn.
+5. Nếu vẫn đồng hạng, chọn cấu hình đơn giản hơn: ít context hơn, prompt ngắn
+   hơn và ít ràng buộc định dạng hơn.
 
-Notebook 12 đang chờ chạy. Giá trị thật của hierarchical **nằm ở tầng sinh**,
-không phải tầng truy xuất: khớp bằng **child** nhỏ cho chính xác, rồi đưa
-**parent** lớn cho LLM đọc để không cắt cụt ngữ cảnh. `parent_id` đã có sẵn
-trong metadata chunk.
+Ngưỡng là practical guardrail, không phải khẳng định ý nghĩa thống kê. CI và
+effect size vẫn phải được báo cáo.
 
-Đây là biến thể có khả năng cải thiện cao nhất trong nhóm "kiến trúc", vì nó
-tấn công đúng điểm yếu của chunking cố định: ranh giới cắt rơi vào giữa câu
-trả lời.
+## 8. Kiểm soát tính học thuật
 
-### 5.4. Query rewriting — phần thưởng lớn nhất đang bỏ trống
+- Preregister prompt IDs, exact prompt text, subset IDs, metrics và selection
+  rule trước full development run.
+- Không sửa gold answer, evidence hoặc resolved question trong Phase 2.
+- Không chọn câu hỏi dựa trên output của generator/judge.
+- Dùng cùng cached retrieval trace cho mọi cấu hình.
+- Cache key bao gồm dataset revision, question, exact prompt, ordered contexts,
+  generator model và decoding config.
+- Lưu raw answer và raw judge output để audit LLM-as-a-Judge.
+- Judge khác provider với generator; ghi endpoint và model fingerprint.
+- Primary score luôn tính trên 1.152 semantic targets. Full set 1.336 câu chỉ
+  dùng cho sensitivity analysis của winner sau khi đã khóa cấu hình; không đưa
+  các câu trùng trở lại objective dùng để chọn prompt.
+- Nếu RAGAS disagreement quan trọng, human-review một mẫu lỗi có phân tầng;
+  không sửa điểm từng câu tùy ý.
+- Không dùng held-out cho prompt debugging, threshold tuning hay retry có chọn
+  lọc theo điểm.
+- Audit thủ công mù cấu hình trên 30 cặp output development của P0 và winner.
+  Hai reviewer chấm correctness, grounding và citation; báo cáo tỷ lệ đồng thuận
+  và cách giải quyết bất đồng để kiểm tra độ tin cậy của LLM judge.
+- Chạy lặp lại 25 câu cố định cho P0 và winner để ước lượng độ ổn định của API,
+  ngay cả khi `temperature=0`; không dùng lần lặp tốt hơn để thay kết quả chính.
 
-Chênh lệch giữa câu hỏi `original` và `resolved` là **0,4164 MRR@5** trung
-bình trên 8 retriever. Đó là khoảng cách lớn nhất đo được trong toàn bộ
-Giai đoạn 1, lớn hơn mọi khác biệt giữa các model.
+## 9. Yêu cầu hệ thống và provenance
 
-Người dùng thật gõ câu hỏi ở dạng gần `original`. Pipeline hiện **chưa có**
-bước viết lại câu hỏi. Một bước rewriting rẻ (một call LLM giải quyết đại
-từ/mỏ neo trước khi truy xuất) là ứng viên có kỳ vọng lợi ích cao nhất trong
-cả danh sách.
+Experiment interface cần cho phép khai báo và fingerprint:
 
-Đo bằng: chạy retrieval trên câu `original` **đã qua rewriting**, so với
-`original` thô (sàn) và `resolved` thủ công (trần).
+- `prompt_id` và exact `system_prompt`;
+- `context_depth`;
+- `temperature` và `max_tokens`;
+- fixed question-ID file;
+- shared retrieval cache;
+- generator/judge provider và model;
+- retry, timeout và minimum request interval.
 
-### 5.5. Reranker — có nên đổi lại MiniLM
+Mỗi run phải resume được. Successful record không được ghi trùng; failed record
+giữ stage, error type, attempt count và timestamp. Kết quả mỗi vòng gồm
+per-question JSONL, summary CSV/JSON, manifest, environment và chi phí.
 
-Đã khóa `bge-reranker-large` vì độ chính xác truy xuất. Nhưng ở tầng
-end-to-end, câu hỏi khác đi: khi generator chỉ đọc 5 context, chênh lệch
-`0,041 MRR@5` giữa hai reranker có biến mất không?
+## 10. Điều kiện hoàn thành Phase 2
 
-| Reranker | MRR@5 | P50 |
-|---|---:|---:|
-| `bge-reranker-large` | `0,8797` | `513 ms` |
-| `ms-marco-MiniLM-L-6-v2` | `0,8387` | `189 ms` |
-
-Nếu answer F1 **không** khác biệt có ý nghĩa thống kê, MiniLM tiết kiệm
-~324 ms mỗi query. Chỉ đổi khi có bằng chứng; mặc định giữ bản đã khóa.
-
-### 5.6. `top_k` — núm chưa từng được quét
-
-`20` là giá trị kế thừa từ cấu hình Vòng 2, **chưa bao giờ** được quét riêng.
-`Hit@10` trước rerank là `0,9395`, tức reranker đang làm việc tốt trên pool
-hiện có. Thử `30` và `50`: chi phí là thời gian rerank tăng tuyến tính, lợi
-ích là trần recall cao hơn. Đây là thử nghiệm rẻ nhất còn lại ở tầng truy xuất.
-
-### 5.7. Tham số sinh
-
-`temperature=0` giữ nguyên — cần tái lập. `max_tokens=512` nhiều khả năng
-thừa cho span ngắn của NewsQA; giảm xuống sẽ cắt chi phí mà gần như không
-ảnh hưởng chất lượng. Đo trước bằng phân bố answer length ở §4.1.
-
----
-
-## 6. Thứ Tự Thực Hiện
-
-```
-1. Sửa định tuyến GLM (§3)          ─┐ blocker
-2. Chạy notebook 14, có artifact v2 ─┘
-3. Notebook 12: hierarchical + @7            → chốt chunking & top_n
-4. Baseline 2B: 281 câu, prompt hiện tại     → mốc so sánh
-5. Quét prompt (§5.1)                        → đòn bẩy lớn nhất
-6. Quét top_n {3,5,7} (§5.2)
-7. Query rewriting (§5.4)                    → phần thưởng lớn nhất
-8. Nếu còn ngân sách: top_k (§5.6), reranker (§5.5)
-9. CHỐT TOÀN BỘ CẤU HÌNH
-10. Chạy held-out 150 bài đúng MỘT lần       → robustness
-```
-
-Bước 4 phải chạy **trước** mọi bước tinh chỉnh: không có mốc thì không biết
-núm nào có tác dụng.
-
-Bước 10 chỉ được chạy sau bước 9. Không chọn, không tinh chỉnh, không "chạy
-thử xem sao" trên held-out — tập giữ kín mất giá trị ngay khi có một quyết
-định dựa trên nó.
-
----
-
-## 7. Điều Kiện Chấp Nhận Run
-
-1. Judge thực sự gọi GLM: manifest ghi đúng `judge_model`
-   (`accounts/fireworks/models/glm-5p3-flash`), `base_url` và provider;
-   preflight in ra endpoint thật.
-1b. Preflight khẳng định judge trả về `content` khác rỗng, không chỉ HTTP 200.
-2. Generator và judge là hai model khác nhau, hai credential khác nhau.
-3. Coverage generation `100%` trên 281 câu, không thiếu record.
-4. RAGAS coverage tối thiểu `95%` số generation thành công.
-5. Điểm số tách theo nhóm answerable / evidence-missing (§1).
-6. Mọi biến thể prompt được ghi nguyên văn vào manifest.
-7. Truy ngược được per-question bằng `question_id` cho cả deterministic và
-   RAGAS.
-8. Không có kết quả nào đến từ held-out.
+- Baseline 281 câu và hai finalist có deterministic/RAGAS coverage hợp lệ.
+- Winner được chọn đúng quy tắc đăng ký trước, không dựa trên held-out.
+- Held-out 871 câu được chạy đúng một lần sau khi khóa cấu hình.
+- Báo cáo nếu winner tốt hơn, không khác rõ ràng, hoặc tệ hơn baseline; không chỉ
+  công bố kết quả có lợi.
+- Cấu hình winner được đóng gói để app và benchmark cùng nạp một artifact/prompt.
+- Trong báo cáo sử dụng thuật ngữ "tối ưu prompt/cấu hình sinh"; không tuyên bố
+  đã fine-tune trọng số Gemini.
