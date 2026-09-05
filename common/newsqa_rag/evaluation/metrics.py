@@ -274,6 +274,43 @@ def _ragas_shim() -> None:
         _llms.VertexAI = type("VertexAI", (), {})
 
 
+FIREWORKS_BASE_URL = "https://api.fireworks.ai/inference/v1"
+
+# GLM 5.3 Flash emits reasoning_content before any visible content. Capped
+# below this it returns HTTP 200 with an empty message and
+# finish_reason="length", which RAGAS records as a parse failure rather than
+# as a broken judge. Measured: 64 tokens -> empty, 512 -> 279 tokens used.
+JUDGE_MIN_MAX_TOKENS = 512
+
+
+def _resolve_judge_provider(llm_model: str, provider: str = "auto") -> str:
+    """Pick the judge provider from the model name, never from the environment.
+
+    Inferring it from whichever API key happens to be set means a stray
+    DEEPSEEK_API_KEY silently reroutes a GLM judge to DeepSeek while the run
+    manifest still records GLM -- a provenance corruption that raises no
+    error. The model name is the caller's actual intent, so it decides.
+
+    Args:
+        llm_model: Judge model identifier.
+        provider: Explicit provider, or "auto" to derive one.
+
+    Returns:
+        One of "fireworks", "gemini", "deepseek", "openai".
+    """
+
+    if provider and provider != "auto":
+        return provider
+    name = llm_model.strip().lower()
+    if "glm" in name or name.startswith("accounts/fireworks/"):
+        return "fireworks"
+    if name.startswith("gemini"):
+        return "gemini"
+    if name.startswith("deepseek"):
+        return "deepseek"
+    return "openai"
+
+
 def _gemini_judge_options(llm_model: str, api_key: str) -> dict:
     """Build Gemini ChatOpenAI options without unsupported 3.7 controls."""
 
@@ -309,29 +346,43 @@ def _ragas_judge(llm_model: str, provider: str = "auto"):
     from langchain_community.embeddings import HuggingFaceEmbeddings
     from ragas.llms import LangchainLLMWrapper
     from ragas.embeddings import LangchainEmbeddingsWrapper
+    from langchain_openai import ChatOpenAI
 
-    if provider == "gemini":
+    resolved = _resolve_judge_provider(llm_model, provider)
+
+    if resolved == "gemini":
         if not os.getenv("GEMINI_API_KEY"):
             raise RuntimeError("GEMINI_API_KEY is required for the Gemini judge")
-        from langchain_openai import ChatOpenAI
-
         chat = ChatOpenAI(
             **_gemini_judge_options(llm_model, os.environ["GEMINI_API_KEY"])
         )
-    elif provider == "deepseek" or (
-        provider == "auto" and bool(os.getenv("DEEPSEEK_API_KEY"))
-    ):
+    elif resolved == "fireworks":
+        if not os.getenv("FIREWORKS_API_KEY"):
+            raise RuntimeError("FIREWORKS_API_KEY is required for the Fireworks judge")
+        chat = ChatOpenAI(
+            model=llm_model,
+            api_key=os.environ["FIREWORKS_API_KEY"],
+            base_url=os.getenv("FIREWORKS_BASE_URL") or FIREWORKS_BASE_URL,
+            temperature=0,
+            timeout=300.0,
+            max_retries=3,
+            max_tokens=JUDGE_MIN_MAX_TOKENS,
+        )
+    elif resolved == "deepseek":
         if not os.getenv("DEEPSEEK_API_KEY"):
             raise RuntimeError("DEEPSEEK_API_KEY is required for the DeepSeek judge")
-        from langchain_openai import ChatOpenAI
-
         model = llm_model if llm_model.startswith("deepseek") else "deepseek-chat"
         chat = ChatOpenAI(model=model, api_key=os.environ["DEEPSEEK_API_KEY"],
                           base_url="https://api.deepseek.com", temperature=0, max_retries=2)
     else:
-        from langchain_openai import ChatOpenAI
-
-        chat = ChatOpenAI(model=llm_model, temperature=0)
+        # Honour the repository's OPENAI_BASE_URL convention. Without it every
+        # non-Gemini, non-DeepSeek judge silently hits api.openai.com even when
+        # the project is pointed at an OpenAI-compatible gateway.
+        chat = ChatOpenAI(
+            model=llm_model,
+            temperature=0,
+            base_url=os.getenv("OPENAI_BASE_URL") or None,
+        )
 
     try:
         import torch
@@ -425,9 +476,10 @@ def evaluate_ragas_rows(
 
     # Keep judge requests at one candidate for providers that do not implement
     # RAGAS's default three-candidate answer-relevancy request consistently.
-    if provider in {"deepseek", "gemini"} or (
-        provider == "auto" and os.getenv("DEEPSEEK_API_KEY")
-    ):
+    # Fireworks is included for a second reason: GLM 5.3 Flash spends most of
+    # its output budget on reasoning, so three candidates triples the most
+    # expensive part of the run for no extra signal.
+    if _resolve_judge_provider(llm_model, provider) in {"deepseek", "gemini", "fireworks"}:
         answer_relevancy.strictness = 1
 
     dataset = Dataset.from_list([
