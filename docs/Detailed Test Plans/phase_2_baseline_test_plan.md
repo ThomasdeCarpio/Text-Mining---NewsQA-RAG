@@ -55,8 +55,8 @@ Baseline trả lời ba câu hỏi nghiên cứu:
 | Generator credential | Free-project `GEMINI_API_KEY_1`, interval `4,2` giây | 281 requests nằm trong daily quota và không vượt 15 RPM |
 | Output limit | 512 tokens | Đủ cho câu trả lời NewsQA ngắn và citation, tránh output dư thừa |
 | Generation prompt | Prompt RAG citation hiện tại của `RAGAgent` | Đo đúng implementation đang dùng trong ứng dụng |
-| RAGAS judge | `GLM 5.3 Flash` | Judge khác **nhà cung cấp** với generator, không chỉ khác kích thước cùng họ. Cần sửa định tuyến trước khi chạy: `phase_2_generation_tuning_plan.md` §3 |
-| Judge credential | Key Z.ai/Zhipu riêng | RAGAS có thể tạo nhiều LLM calls cho mỗi question; không dùng chung credential với generator |
+| RAGAS judge | `accounts/fireworks/models/glm-5p3-flash` (Fireworks AI) | Judge khác **nhà cung cấp** với generator, không chỉ khác kích thước cùng họ. Cần sửa định tuyến trước khi chạy: `phase_2_generation_tuning_plan.md` §3 |
+| Judge credential | `FIREWORKS_API_KEY` riêng | RAGAS có thể tạo nhiều LLM calls cho mỗi question; không dùng chung credential với generator |
 | Judge execution | Batch 5, 1 worker, tối đa 5 attempts | Giảm lỗi quota và giữ run ổn định |
 
 ### 2.2. Bằng chứng từ kết quả Phase 1
@@ -206,13 +206,15 @@ Môi trường, package versions, Git commit và GPU phải được lưu cùng 
 
 1. Pin Git commit, Hugging Face revision và seed.
 2. Kiểm tra Kaggle secrets `HF_TOKEN`, `GEMINI_API_KEY_1` (free generator key)
-   và key Z.ai/Zhipu cho judge. Hai credential không được giống nhau và không
+   và `FIREWORKS_API_KEY` cho judge. Hai credential không được giống nhau và không
    được thuộc cùng một nhà cung cấp.
-3. Gọi thử `gemini-3.1-flash-lite` qua OpenAI-compatible endpoint, và gọi thử
-   GLM 5.3 Flash để **xác minh chuỗi model ID thật** trước khi ghi vào manifest.
-   Preflight phải in ra `base_url` mà judge sẽ dùng: nhánh fallback của
-   `_ragas_judge()` không truyền `base_url`, và `provider="auto"` sẽ âm thầm
-   chọn DeepSeek nếu `DEEPSEEK_API_KEY` còn trong môi trường. Xem
+3. Gọi thử `gemini-3.1-flash-lite` qua OpenAI-compatible endpoint. Gọi thử
+   `accounts/fireworks/models/glm-5p3-flash` với `max_tokens>=512` và khẳng
+   định `content` trả về **khác rỗng**: GLM 5.3 Flash là reasoning model, nếu
+   cắt `max_tokens` thấp nó trả HTTP 200 kèm content rỗng và judge hỏng âm thầm.
+   Preflight cũng phải in ra `base_url` mà judge thực sự dùng: nhánh fallback
+   của `_ragas_judge()` không truyền `base_url`, và `provider="auto"` sẽ âm
+   thầm chọn DeepSeek nếu `DEEPSEEK_API_KEY` còn trong môi trường. Xem
    `phase_2_generation_tuning_plan.md` §3.
 4. Kiểm tra GPU, dung lượng đĩa, dependency và model access trước khi build index.
 

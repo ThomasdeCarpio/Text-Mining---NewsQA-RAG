@@ -52,8 +52,10 @@ thay đổi sau Giai đoạn 1 và sau khi đổi judge.
 | Retrieval artifact | Bundle từ `notebooks/public/14_export_locked_index_kaggle.ipynb` (corpus v2.0.0) | **thay** tag `phase2-bge-m3-512-64-v1` dựng trên v1.0.0 |
 | Reranker | `BAAI/bge-reranker-large`, `top_n=5` | **thay** `ms-marco-MiniLM-L-6-v2` |
 | Generator | `gemini-3.1-flash-lite`, `temperature=0`, `max_tokens=512` | giữ nguyên |
-| RAGAS judge | **`GLM 5.3 Flash`** | **thay** `gemini-3.7-flash` |
-| Judge credential | Key Z.ai/Zhipu riêng, **không** dùng chung key generator | — |
+| RAGAS judge | **`accounts/fireworks/models/glm-5p3-flash`** | **thay** `gemini-3.7-flash` |
+| Judge endpoint | Fireworks AI, `https://api.fireworks.ai/inference/v1` (OpenAI-compatible) | — |
+| Judge credential | `FIREWORKS_API_KEY` riêng, **không** dùng chung key generator | — |
+| Judge output budget | `max_tokens` **tối thiểu 512**, không cắt thấp hơn | GLM 5.3 Flash là reasoning model — xem §3.1 |
 | Retriever / chunking / `top_k` | BGE-M3 sparse · recursive `512/64` · `20` | giữ nguyên |
 
 Đổi judge sang GLM còn **cải thiện** thiết kế: judge và generator giờ khác
@@ -63,6 +65,41 @@ self-evaluation bias giảm thật, không phải giảm trên danh nghĩa.
 ---
 
 ## 3. Việc Phải Làm Trước Khi Chạy: Định Tuyến GLM
+
+> **Đã xác minh bằng call thật (2026-09-05).** Cả hai credential đều hoạt động.
+> GLM 5.3 Flash được phục vụ bởi **Fireworks AI**, không phải Z.ai/Zhipu.
+> Model ID chính xác, lấy từ `/models` của Fireworks:
+> `accounts/fireworks/models/glm-5p3-flash`.
+
+### 3.1. GLM 5.3 Flash là reasoning model — cạm bẫy đầu tiên
+
+Quan sát trực tiếp:
+
+| `max_tokens` | `finish_reason` | completion tokens | `content` trả về |
+|---:|---|---:|---|
+| 8 | `length` | 8 | **rỗng** |
+| 64 | `length` | 64 | **rỗng** (274 ký tự `reasoning_content`) |
+| 512 | `stop` | 279 | `{"verdict": 1}` (1.269 ký tự `reasoning_content`) |
+
+Model sinh `reasoning_content` **trước** rồi mới sinh `content` nhìn thấy được.
+Nếu `max_tokens` bị cắt thấp, judge trả về chuỗi rỗng kèm `finish_reason=length`
+— và RAGAS sẽ ghi nhận đó là parse error hoặc điểm 0, **không** báo lỗi
+credential. Đây là kiểu hỏng âm thầm, giống hệt lỗi định tuyến ở §3.2.
+
+Hệ quả bắt buộc:
+
+1. `max_tokens` cho judge **tối thiểu 512**; không tái sử dụng giới hạn 512 của
+   generator như thể hai bên giống nhau.
+2. Preflight phải khẳng định `content` **khác rỗng**, không chỉ khẳng định HTTP
+   200. Một call 200 với content rỗng vẫn là judge hỏng.
+3. Chi phí token của judge cao hơn hẳn model thường: ~279 completion token cho
+   một câu trả lời JSON tầm thường, phần lớn là reasoning.
+
+Code đã có tiền lệ xử lý đúng việc này — `_gemini_judge_options()` bỏ
+`temperature` riêng cho `gemini-3.7` vì lý do tương tự. Nhánh GLM cần sự cẩn
+thận tương đương.
+
+### 3.2. Hai lỗi định tuyến trong code
 
 **Đây là blocker, không phải tùy chọn.** Judge GLM chưa chạy được với code
 hiện tại. Hai lỗi trong `common/newsqa_rag/evaluation/metrics.py`:
@@ -75,8 +112,9 @@ hiện tại. Hai lỗi trong `common/newsqa_rag/evaluation/metrics.py`:
    ```
 
    Không truyền `base_url`, nên request đi tới `api.openai.com` chứ không tới
-   endpoint Z.ai. Judge sẽ lỗi xác thực, hoặc tệ hơn là gọi nhầm một model
-   OpenAI nếu `OPENAI_API_KEY` tình cờ hợp lệ.
+   endpoint Fireworks. Judge sẽ lỗi xác thực, hoặc tệ hơn là gọi nhầm một model
+   OpenAI nếu `OPENAI_API_KEY` tình cờ hợp lệ — và `.env.example` hiện đặt
+   `OPENAI_BASE_URL` trỏ tới XAH, nên khả năng gọi nhầm là có thật.
 
 2. **`provider="auto"` ưu tiên DeepSeek.** Nhánh chọn provider là
    `provider == "deepseek" or (provider == "auto" and bool(os.getenv("DEEPSEEK_API_KEY")))`.
@@ -84,14 +122,26 @@ hiện tại. Hai lỗi trong `common/newsqa_rag/evaluation/metrics.py`:
    DeepSeek và vẫn ghi `judge_model` là GLM vào manifest. Đây là lỗi làm hỏng
    provenance mà không báo lỗi.
 
-**Cách sửa tối thiểu**: thêm một nhánh `glm`/`zhipu` dùng
-`OPENAI_BASE_URL`-style config riêng, và bắt `provider` phải khớp tường minh
-với tiền tố của `--judge-model` thay vì đoán từ biến môi trường nào đang tồn
-tại. Preflight phải in ra `base_url` thực tế mà judge dùng.
+**Cách sửa tối thiểu**: thêm nhánh `fireworks` dùng `FIREWORKS_API_KEY` +
+`FIREWORKS_BASE_URL`, đặt `max_tokens>=512`, và bắt `provider` phải khớp tường
+minh với `--judge-model` thay vì đoán theo biến môi trường nào đang tồn tại.
+Giữ credential judge tách khỏi `OPENAI_API_KEY`/`OPENAI_BASE_URL` để model chat
+của ứng dụng không thể vô tình thay judge. Preflight phải in ra `base_url` thật.
 
-**Xác minh model ID.** Chuỗi ID chính xác của GLM 5.3 Flash phải được kiểm
-bằng một call thật ở bước preflight (tương tự `scripts/verify_gemini_models.py`)
-và ghi vào manifest. Không hard-code một ID chưa gọi thử bao giờ.
+### 3.3. Ngân sách token — cần xác nhận trước khi chạy
+
+Key Gemini được ghi nhận giới hạn `160k`. **Đơn vị chưa rõ và phải xác nhận**,
+vì hai cách hiểu cho kết quả trái ngược:
+
+- Nếu `160k` là **số request**: 281 request generation thừa sức nằm trong hạn.
+- Nếu `160k` là **số token**: một lần chạy đầy đủ sẽ **vượt hạn**. Ước tính
+  thô: 281 câu × (5 context × ~512 token + prompt + câu hỏi) ≈ **~790k token
+  input**, chưa tính output. Vượt gấp ~5 lần.
+
+Phải chốt đơn vị **trước** bước 4 của §6. Nếu là token, các lựa chọn theo thứ
+tự ưu tiên: giảm `top_n` xuống 3 (§5.2 vốn đã định quét), cắt bớt độ dài
+context, hoặc chia run thành nhiều đợt theo hạn ngạch. Không âm thầm giảm số
+câu hỏi — 281 câu là tập tinh chỉnh đã cố định, đổi nó là đổi phép đo.
 
 ---
 
@@ -242,8 +292,10 @@ thử xem sao" trên held-out — tập giữ kín mất giá trị ngay khi có
 
 ## 7. Điều Kiện Chấp Nhận Run
 
-1. Judge thực sự gọi GLM: manifest ghi đúng `judge_model`, `base_url` và
-   provider; preflight in ra endpoint thật.
+1. Judge thực sự gọi GLM: manifest ghi đúng `judge_model`
+   (`accounts/fireworks/models/glm-5p3-flash`), `base_url` và provider;
+   preflight in ra endpoint thật.
+1b. Preflight khẳng định judge trả về `content` khác rỗng, không chỉ HTTP 200.
 2. Generator và judge là hai model khác nhau, hai credential khác nhau.
 3. Coverage generation `100%` trên 281 câu, không thiếu record.
 4. RAGAS coverage tối thiểu `95%` số generation thành công.
