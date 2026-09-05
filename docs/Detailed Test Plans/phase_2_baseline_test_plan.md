@@ -86,7 +86,7 @@ deduplication; 871 câu còn lại thuộc held-out. Mỗi run phải lưu danh 
 | Judge | `accounts/fireworks/models/glm-5p3-flash` |
 | Judge provider | Fireworks AI, OpenAI-compatible endpoint |
 | Judge key | `FIREWORKS_API_KEY` |
-| Judge candidates | A: `reasoning_effort=none`, 512 tokens; B: `reasoning_effort=high`, 2.048 tokens |
+| Judge candidates | A: `reasoning_effort=low`; B: `reasoning_effort=high`; cùng giới hạn 2.048 tokens |
 | Judge runtime | timeout `300s`, batch 1, 1 worker, 3 SDK retries |
 | Random seed | `42` |
 

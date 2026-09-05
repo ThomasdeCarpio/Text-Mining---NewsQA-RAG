@@ -17,7 +17,7 @@ Baseline chạy trên tập `resolved` của development partition; final-test t
 | Reranker | `BAAI/bge-reranker-large`, top 5, batch 8 |
 | Generator | `gemini-3.1-flash-lite`, `reasoning_effort=minimal`, tối đa 512 output tokens |
 | RAGAS judge | `accounts/fireworks/models/glm-5p3-flash` qua Fireworks |
-| Judge smoke A | `reasoning_effort=none`, tối đa 512 output tokens |
+| Judge smoke A | `reasoning_effort=low`, tối đa 2.048 output tokens |
 | Judge smoke B | `reasoning_effort=high`, tối đa 2.048 output tokens |
 | Judge runtime | timeout 300 giây, batch 1, 1 worker, 3 SDK retries |
 

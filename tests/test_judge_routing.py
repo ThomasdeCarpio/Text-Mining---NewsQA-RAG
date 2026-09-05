@@ -110,16 +110,16 @@ class JudgeCliTests(unittest.TestCase):
             "--run-dir", "run",
             "--judge-provider", "fireworks",
             "--judge-model", "accounts/fireworks/models/glm-5p3-flash",
-            "--reasoning-effort", "none",
+            "--reasoning-effort", "low",
             "--judge-max-tokens", "512",
-            "--results-file", "judge_results_none.jsonl",
+            "--results-file", "judge_results_low.jsonl",
         ]
         with patch("sys.argv", argv):
             args = parse_args()
 
-        self.assertEqual(args.reasoning_effort, "none")
+        self.assertEqual(args.reasoning_effort, "low")
         self.assertEqual(args.judge_max_tokens, 512)
-        self.assertEqual(args.results_file, "judge_results_none.jsonl")
+        self.assertEqual(args.results_file, "judge_results_low.jsonl")
 
 
 if __name__ == "__main__":
