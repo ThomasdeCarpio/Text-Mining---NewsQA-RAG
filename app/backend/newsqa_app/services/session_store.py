@@ -1,7 +1,7 @@
 import threading
 from collections import deque
 
-from newsqa_rag.services.types import AgentEvent, ChatMessage
+from newsqa_app.services.types import AgentEvent, ChatMessage
 
 
 class SessionStore:

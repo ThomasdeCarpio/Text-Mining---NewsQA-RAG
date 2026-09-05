@@ -7,7 +7,7 @@ score means something different from what it looks like. So this report is not
 allowed to claim, and why"**.
 
 Everything here comes from a script in `scripts/eda/`, and each script saves its
-numbers to `scripts/eda/out/*.json`. `notebooks/06_dataset_eda.ipynb` runs them
+numbers to `outputs/eda/*.json`. `notebooks/06_dataset_eda.ipynb` runs them
 in order with explanations. To reproduce:
 
 ```bash
@@ -262,7 +262,7 @@ This is the biggest finding and the one most likely to be challenged, so the
 evidence is laid out in the order we established it — including the argument we
 had to throw away.
 
-![Truncation evidence](figures/eda/fig1_truncation.png)
+![Truncation evidence](../figures/eda/fig1_truncation.png)
 
 **The argument we rejected first.** Our initial reasoning was: *"the longest
 article is just under 4,600 characters, so there must be a cut-off."* **That
@@ -326,7 +326,7 @@ use a length cut-off to declare everything else intact.
 
 ### Does it actually hurt our scores?
 
-![Evidence position](figures/eda/fig2_evidence_position.png)
+![Evidence position](../figures/eda/fig2_evidence_position.png)
 
 **Much less than the 41% headline suggests** (`01m_truncation_impact.py`). We
 measured where the answer sits inside its article. The median answer is at the
@@ -419,7 +419,7 @@ rows is an artefact: newspaper3k leaves CNN's trailing `"All About <topic>"` tag
 worth 45–70 characters. That is why gaps of 40 characters or less are counted as
 furniture, not truncation.
 
-![Restoration reach](figures/eda/fig5_restoration.png)
+![Restoration reach](../figures/eda/fig5_restoration.png)
 
 Because our text is an exact **prefix** of the archived text, restoring an
 article means simply *appending* the missing end. Nothing before the join moves,
@@ -536,7 +536,7 @@ saying what was wrong with it (`05_reason_codes.py`, 1,340 questions):
 | `missing_time` | 19 | 1.4% | no time frame given |
 | others (4 codes) | 13 | 1.0% | |
 
-![Question defects and repair](figures/eda/fig3_question_repair.png)
+![Question defects and repair](../figures/eda/fig3_question_repair.png)
 
 957 questions have exactly one code, 174 have two or more, and 209 have none —
 those were fine as written.
@@ -735,7 +735,7 @@ overstates it and quietly favours sparse retrieval.
 
 From `04_distractor_collision.py`, measured on the `resolved` set.
 
-![Retrieval difficulty](figures/eda/fig4_retrieval_difficulty.png)
+![Retrieval difficulty](../figures/eda/fig4_retrieval_difficulty.png)
 
 ### How much competition is there?
 

@@ -1,0 +1,33 @@
+{
+  "unpaired_before": 11064,
+  "rescued": 8489,
+  "rescued_truncated": 4609,
+  "rescued_intact": 2916,
+  "matched_with_different_start": 375,
+  "gap_chars": {
+    "n": 4609,
+    "mean": 1162.3,
+    "median": 702,
+    "p75": 1846,
+    "p90": 3016,
+    "max": 7537
+  },
+  "leading_chars": {
+    "n": 375,
+    "mean": 220.7,
+    "median": 206,
+    "p75": 289,
+    "p90": 354,
+    "max": 583
+  },
+  "window": 100,
+  "index_region": [
+    200,
+    900
+  ],
+  "calibrated_recall": 0.98,
+  "by_role": {
+    "evaluation": 78,
+    "distractor": 4531
+  }
+}

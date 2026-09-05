@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException
 
-from newsqa_rag.api.schemas import (
+from newsqa_app.api.schemas import (
     AlgorithmOption,
     CollectionStats,
     RetrievalSearchRequest,
     RetrievalSearchResponse,
 )
-from newsqa_rag.services import retrieval_service
+from newsqa_app.services import retrieval_service
 
 router = APIRouter()
 

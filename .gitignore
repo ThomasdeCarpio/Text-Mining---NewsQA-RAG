@@ -39,6 +39,10 @@ database/*
 # Generated evaluation outputs (keep local; do not push)
 outputs/benchmarks/
 outputs/experiments/
-/results/
+outputs/frontend/
+outputs/retrieval/
+
+# Editable-install metadata: pyproject builds this at the repo root
+*.egg-info/
 
 *node_modules/

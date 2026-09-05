@@ -45,7 +45,7 @@ import time
 
 import common as C
 
-sys.path.insert(0, str(C.PROJECT / "backend"))
+sys.path.insert(0, str(C.PROJECT / "common"))
 
 ARCHIVE = C.PROJECT / "data" / "cnn_downloads.tgz"
 FURNITURE = 40

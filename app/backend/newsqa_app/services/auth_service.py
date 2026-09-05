@@ -1,4 +1,4 @@
-from newsqa_rag.services.types import User
+from newsqa_app.services.types import User
 
 # Hardcoded for this mock scaffold. Replace with a real user store later —
 # the login() signature stays the same.

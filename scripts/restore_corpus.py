@@ -64,7 +64,7 @@ import time
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT / "backend"))
+sys.path.insert(0, str(PROJECT / "common"))
 
 ARCHIVE = PROJECT / "data" / "cnn_downloads.tgz"
 SOURCE = PROJECT / "data" / "evaluation" / "newsqa_200_11064"

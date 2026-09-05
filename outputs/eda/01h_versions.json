@@ -1,0 +1,25 @@
+{
+  "corpus_articles": 11064,
+  "unique_normalised": 10839,
+  "duplicate_groups": 224,
+  "cross_role_groups": 0,
+  "paired_with_crawl": 94,
+  "pair_length_kinds": {
+    "benchmark shorter": 58,
+    "same length": 35,
+    "benchmark longer": 1
+  },
+  "exact_prefix": 41,
+  "answer_position_deciles": [
+    492,
+    239,
+    147,
+    90,
+    96,
+    84,
+    63,
+    60,
+    42,
+    27
+  ]
+}

@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "backend"))
+sys.path.insert(0, str(PROJECT_ROOT / "common"))
 
 from newsqa_rag.evaluation.testset import DatasetBuildError
 
@@ -141,7 +141,7 @@ def build_ablation_datasets(args: argparse.Namespace) -> dict:
 
                 env = os.environ.copy()
                 env["PYTHONPATH"] = os.pathsep.join(
-                    v for v in [str(PROJECT_ROOT / "backend"), env.get("PYTHONPATH", "")] if v
+                    v for v in [str(PROJECT_ROOT / "common"), env.get("PYTHONPATH", "")] if v
                 )
 
                 proc = subprocess.run(cmd, env=env, text=True, capture_output=True)

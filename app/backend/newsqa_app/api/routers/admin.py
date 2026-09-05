@@ -2,8 +2,8 @@ from dataclasses import asdict
 
 from fastapi import APIRouter
 
-from newsqa_rag.api.schemas import AgentEventSchema
-from newsqa_rag.services import eval_service
+from newsqa_app.api.schemas import AgentEventSchema
+from newsqa_app.services import eval_service
 
 router = APIRouter()
 

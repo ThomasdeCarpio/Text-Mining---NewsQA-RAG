@@ -1,0 +1,42 @@
+benchmark articles : 11,064
+anchors            : 10,649 heads, 7,487,256 mid-windows
+
+PASS 1 - cheap scan for candidate pages
+  20,000 pages, 10,855 candidates
+  40,000 pages, 13,183 candidates
+  60,000 pages, 13,724 candidates
+  80,000 pages, 14,176 candidates
+  scanned 92,579 pages in 87s
+  candidates: 14,319 pages, 10,608 distinct articles
+
+PASS 2 - NewsCleaner on the candidates, across 12 processes
+  2,000/14,319 cleaned, 750 restorable
+  4,000/14,319 cleaned, 1,623 restorable
+  6,000/14,319 cleaned, 2,526 restorable
+  8,000/14,319 cleaned, 3,320 restorable
+  10,000/14,319 cleaned, 3,996 restorable
+  12,000/14,319 cleaned, 4,463 restorable
+  14,000/14,319 cleaned, 4,602 restorable
+  cleaned 14,319 pages in 4.3 min  (56 pages/s)
+  per page: 55 failed to parse, 4,154 text not contained, 4,499 nothing extra, 5,611 had a tail
+
+  WHY EACH ARTICLE ENDED WHERE IT DID
+     4,603  41.6%  restored - the page had more text, appended
+     3,913  35.4%  already complete - page had nothing extra
+     2,092  18.9%  page text differs mid-article, unsafe to append
+         0   0.0%  page would not parse
+       456   4.1%  no archived page matched this article
+
+==========================================================================
+RESTORATION
+==========================================================================
+  articles restored          : 4,603 of 11,064  (41.6%)
+  articles kept unchanged    : 6,461
+  characters appended        : 5,351,580
+  per article: median 691  mean 1,163  p90 3,056  max 7,537
+  pages with text before ours: 272 (that lead is dropped, so offsets never move)
+
+  evaluation articles restored : 80
+  distractor articles restored : 4,523
+  wrote newsqa_200_11064_restored/staging/corpus/
+  wrote newsqa_200_11064_restored/restore_report.json

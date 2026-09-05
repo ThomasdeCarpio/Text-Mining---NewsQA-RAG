@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "backend"))
+sys.path.insert(0, str(PROJECT_ROOT / "common"))
 
 from newsqa_rag.evaluation.cloud_dataset import export_canonical_bundle
 from newsqa_rag.evaluation.testset import DatasetBuildError

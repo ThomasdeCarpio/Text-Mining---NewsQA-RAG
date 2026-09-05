@@ -1,0 +1,46 @@
+{
+  "original": {
+    "counts": {
+      "who": 342,
+      "how many": 71,
+      "what": 564,
+      "which": 36,
+      "where": 135,
+      "how long": 14,
+      "when": 55,
+      "how much": 7,
+      "yes/no": 16,
+      "other": 99,
+      "why": 1
+    },
+    "top2_share": 0.6761194029850747,
+    "top3_share": 0.7768656716417911
+  },
+  "resolved": {
+    "counts": {
+      "who": 264,
+      "how many": 85,
+      "what": 560,
+      "which": 124,
+      "where": 127,
+      "how long": 15,
+      "when": 52,
+      "how much": 6,
+      "yes/no": 12,
+      "other": 86,
+      "how (other)": 4,
+      "why": 1
+    },
+    "top2_share": 0.6167664670658682,
+    "top3_share": 0.7118263473053892
+  },
+  "answer_types": {
+    "short phrase": 312,
+    "long phrase": 342,
+    "proper noun": 534,
+    "date/time": 72,
+    "quantity": 22,
+    "yes/no": 7,
+    "number": 47
+  }
+}

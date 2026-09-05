@@ -1,0 +1,12 @@
+{
+  "n": 1340,
+  "exact_groups": 6,
+  "exact_gold_disagreement": 6,
+  "exact_cross_article": 5,
+  "pairs_compared": 29366,
+  "near_dup_pairs": 94,
+  "conflicting_pairs": 38,
+  "cross_article_conflicts": 34,
+  "questions_affected": 49,
+  "affected_share": 0.0366
+}

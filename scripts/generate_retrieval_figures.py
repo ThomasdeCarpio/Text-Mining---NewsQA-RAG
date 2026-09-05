@@ -8,7 +8,7 @@ import seaborn as sns
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CSV_PATH = PROJECT_ROOT / "results/retrieval/retrieval_ablation_summary_table.csv"
-FIGURES_DIR = PROJECT_ROOT / "results/retrieval/figures"
+FIGURES_DIR = PROJECT_ROOT / "outputs/retrieval/figures"
 
 
 def main():

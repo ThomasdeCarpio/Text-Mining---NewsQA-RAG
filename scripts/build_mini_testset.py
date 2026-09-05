@@ -2,7 +2,7 @@
 Build a small article-grouped NewsQA test set in one command, so later evaluation is trivial.
 
 Groups NewsQA by article (not per-question), maps each answer's evidence span to chunk IDs, and
-writes a JSONL test set (schema: docs/evaluation.md section 6.1). With --build-collection it also
+writes a JSONL test set (schema: docs/archive/evaluation.md section 6.1). With --build-collection it also
 ingests the same chunks into a Chroma collection, so the set is immediately runnable end to end.
 
 Usage:

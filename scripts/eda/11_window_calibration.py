@@ -35,7 +35,7 @@ import matplotlib.pyplot as plt
 
 import common as C
 
-sys.path.insert(0, str(C.PROJECT / "backend"))
+sys.path.insert(0, str(C.PROJECT / "common"))
 
 LOOSE = C.PROJECT / "data" / "cnn_downloads" / "cnn" / "downloads"
 FIGURES = C.PROJECT / "docs" / "figures" / "eda"

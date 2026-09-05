@@ -32,7 +32,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT / "backend"))
+sys.path.insert(0, str(PROJECT / "common"))
 
 from newsqa_rag.evaluation.cloud_dataset import (  # noqa: E402
     _artifact_record,

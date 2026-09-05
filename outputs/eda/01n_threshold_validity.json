@@ -1,0 +1,9 @@
+{
+  "pairs": 93,
+  "truncated": 40,
+  "intact": 53,
+  "truncated_below_threshold": 16,
+  "intact_above_threshold": 7,
+  "precision": 0.7741935483870968,
+  "recall": 0.6
+}

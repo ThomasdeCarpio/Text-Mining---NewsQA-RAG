@@ -10,9 +10,9 @@ readme = "README.md"
 requires-python = ">=3.11"
 
 [tool.setuptools.packages.find]
-where = ["backend"]
-include = ["newsqa_rag*"]
+where = ["common", "app/backend"]
+include = ["newsqa_rag*", "newsqa_app*"]
 
 [tool.pytest.ini_options]
-pythonpath = ["backend"]
+pythonpath = ["common", "app/backend"]
 testpaths = ["tests"]

@@ -10,5 +10,5 @@ thể chạy. Để test feature mới:
 5. chạy thật hoặc dùng Evaluation Desk.
 
 Không ghi đè ID cũ. Hướng dẫn và ví dụ:
-[`docs/experiments.md`](../../docs/experiments.md).
+[`docs/archive/experiments.md`](../../docs/archive/experiments.md).
 

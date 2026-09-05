@@ -57,7 +57,7 @@ from pathlib import Path
 
 import common as C
 
-sys.path.insert(0, str(C.PROJECT / "backend"))
+sys.path.insert(0, str(C.PROJECT / "common"))
 
 ARCHIVE = C.PROJECT / "data" / "cnn_downloads.tgz"
 FURNITURE = 40      # a gap this small is page chrome, not a sentence

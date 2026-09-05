@@ -14,7 +14,7 @@ PROJECT = Path(__file__).resolve().parents[2]
 DATASET = PROJECT / "data" / "evaluation" / "newsqa_200_11064"
 STAGING = DATASET / "staging"
 FINAL = DATASET / "final"
-OUT = Path(__file__).resolve().parent / "out"
+OUT = PROJECT / "outputs" / "eda"
 
 # Question variants, in pipeline order.
 VARIANTS = {

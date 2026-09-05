@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from newsqa_rag.api.routers import admin, auth, chat, experiments, retrieval
+from newsqa_app.api.routers import admin, auth, chat, experiments, retrieval
 from newsqa_rag.model_gateway import PROJECT_ROOT
 
 load_dotenv(PROJECT_ROOT / ".env", override=False)

@@ -1,0 +1,12 @@
+{
+  "clarified_rows": 1078,
+  "clarified_matches_resolved_text": 1078,
+  "resolved_not_in_clarified": 258,
+  "duplicate_groups": 224,
+  "redundant_articles": 225,
+  "difference_kinds": {
+    "whitespace only": 224
+  },
+  "chunks_removed_if_deduped": 0,
+  "gold_chunks_affected": 0
+}

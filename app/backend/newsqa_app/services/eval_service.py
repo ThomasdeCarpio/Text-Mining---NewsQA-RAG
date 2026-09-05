@@ -1,7 +1,7 @@
 import json
 
-from newsqa_rag.services.session_store import get_session_store
-from newsqa_rag.services.types import AgentEvent
+from newsqa_app.services.session_store import get_session_store
+from newsqa_app.services.types import AgentEvent
 from newsqa_rag.model_gateway import PROJECT_ROOT
 
 # Legacy one-off reports written by scripts/run_benchmark.py.

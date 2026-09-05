@@ -5,10 +5,10 @@ The React/Vite client calls FastAPI at `VITE_API_BASE_URL`, defaulting to
 
 ```bash
 # Terminal 1: repository root
-python -m uvicorn newsqa_rag.api.main:app --reload --port 8000
+python -m uvicorn newsqa_app.api.main:app --reload --port 8000
 
 # Terminal 2
-cd frontend
+cd app/frontend
 npm run dev
 ```
 

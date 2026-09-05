@@ -4,10 +4,10 @@ from dataclasses import asdict
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
-from newsqa_rag.api.schemas import AskRequest, ChatMessageSchema
-from newsqa_rag.services import chat_service
-from newsqa_rag.services.session_store import get_session_store
-from newsqa_rag.services.types import ChatMessage, Citation
+from newsqa_app.api.schemas import AskRequest, ChatMessageSchema
+from newsqa_app.services import chat_service
+from newsqa_app.services.session_store import get_session_store
+from newsqa_app.services.types import ChatMessage, Citation
 
 router = APIRouter()
 

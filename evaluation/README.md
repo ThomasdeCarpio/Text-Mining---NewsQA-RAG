@@ -7,10 +7,10 @@ metadata nhỏ cần commit để chứng minh dataset/index nào đã được 
   collection tương ứng;
 - `question_dedup/`: đề xuất trùng câu hỏi và quyết định human approval.
 
-Code nằm ở `backend/newsqa_rag/evaluation/`; cấu hình chạy nằm ở
+Code nằm ở `common/newsqa_rag/evaluation/`; cấu hình chạy nằm ở
 `configs/experiments/`; kết quả nằm ở `outputs/experiments/`; dữ liệu lớn nằm ở
 `data/evaluation/` và được Git bỏ qua.
 
 Không sửa manifest sinh tự động bằng tay. Xem
-[`docs/evaluation_dataset.md`](../docs/evaluation_dataset.md) khi cần tạo dataset
+[`docs/archive/evaluation_dataset.md`](../docs/archive/evaluation_dataset.md) khi cần tạo dataset
 mới.

@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "backend"))
+sys.path.insert(0, str(PROJECT_ROOT / "common"))
 
 from newsqa_rag.evaluation.cloud_dataset import (
     index_fingerprint,
@@ -57,9 +57,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _run(command: list[str]) -> None:
     environment = os.environ.copy()
-    backend = str(PROJECT_ROOT / "backend")
+    library = str(PROJECT_ROOT / "common")
     environment["PYTHONPATH"] = os.pathsep.join(
-        value for value in (backend, environment.get("PYTHONPATH", "")) if value
+        value for value in (library, environment.get("PYTHONPATH", "")) if value
     )
     subprocess.run(command, cwd=PROJECT_ROOT, check=True, env=environment)
 

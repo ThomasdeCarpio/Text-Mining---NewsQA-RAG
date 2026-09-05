@@ -8,8 +8,8 @@ from unittest.mock import Mock, patch
 
 from fastapi.testclient import TestClient
 
-from newsqa_rag.api.main import app
-from newsqa_rag.services import chat_service, retrieval_service
+from newsqa_app.api.main import app
+from newsqa_app.services import chat_service, retrieval_service
 
 
 class OptionalRAGApiTests(unittest.TestCase):

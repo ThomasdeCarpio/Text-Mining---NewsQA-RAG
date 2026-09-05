@@ -102,15 +102,15 @@ def parse_args() -> argparse.Namespace:
 def _implementation_hash() -> str:
     paths = [
         Path(__file__),
-        PROJECT_ROOT / "backend/newsqa_rag/agents/rag_agent.py",
-        PROJECT_ROOT / "backend/newsqa_rag/llm.py",
-        PROJECT_ROOT / "backend/newsqa_rag/retrieval/retriever_factory.py",
-        PROJECT_ROOT / "backend/newsqa_rag/retrieval/reranker.py",
-        PROJECT_ROOT / "backend/newsqa_rag/retrieval/hybrid.py",
-        PROJECT_ROOT / "backend/newsqa_rag/retrieval/dense.py",
-        PROJECT_ROOT / "backend/newsqa_rag/indexing/embeddings.py",
-        PROJECT_ROOT / "backend/newsqa_rag/indexing/bm25_index.py",
-        PROJECT_ROOT / "backend/newsqa_rag/indexing/learned_sparse_index.py",
+        PROJECT_ROOT / "common/newsqa_rag/agents/rag_agent.py",
+        PROJECT_ROOT / "common/newsqa_rag/llm.py",
+        PROJECT_ROOT / "common/newsqa_rag/retrieval/retriever_factory.py",
+        PROJECT_ROOT / "common/newsqa_rag/retrieval/reranker.py",
+        PROJECT_ROOT / "common/newsqa_rag/retrieval/hybrid.py",
+        PROJECT_ROOT / "common/newsqa_rag/retrieval/dense.py",
+        PROJECT_ROOT / "common/newsqa_rag/indexing/embeddings.py",
+        PROJECT_ROOT / "common/newsqa_rag/indexing/bm25_index.py",
+        PROJECT_ROOT / "common/newsqa_rag/indexing/learned_sparse_index.py",
     ]
     return stable_hash({str(path.relative_to(PROJECT_ROOT)): sha256_file(path) for path in paths})
 

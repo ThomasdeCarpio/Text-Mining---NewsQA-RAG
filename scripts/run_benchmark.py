@@ -129,7 +129,7 @@ def main():
     print(f"Loading test set from {args.testset} ...")
     test_entries = load_testset(args.testset)
 
-    # Validate the data contract early with actionable messages (see docs/evaluation.md §6.1)
+    # Validate the data contract early with actionable messages (see docs/archive/evaluation.md §6.1)
     if not test_entries:
         sys.exit(f"ERROR: test set '{args.testset}' is empty.")
     required = ["question", "ground_truth", "relevant_chunk_ids"]
@@ -138,7 +138,7 @@ def main():
         sys.exit(
             f"ERROR: test set rows are missing required field(s): {missing}.\n"
             f"       Expected schema per line: {required} (+ optional fields).\n"
-            f"       See docs/evaluation.md section 6.1."
+            f"       See docs/archive/evaluation.md section 6.1."
         )
 
     # Filter to entries that have relevant chunk IDs (for retrieval metrics)
@@ -150,7 +150,7 @@ def main():
         sys.exit(
             "ERROR: no rows have a non-empty 'relevant_chunk_ids', so retrieval cannot be scored.\n"
             "       This field must be engineered by mapping answer spans to chunk IDs\n"
-            "       (see docs/evaluation.md and newsqa_rag.evaluation.testset)."
+            "       (see docs/archive/evaluation.md and newsqa_rag.evaluation.testset)."
         )
 
     if args.n_eval:

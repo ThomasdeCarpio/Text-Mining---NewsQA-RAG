@@ -1,7 +1,7 @@
-"""Render the EDA figures used by docs/eda_report.md.
+"""Render the EDA figures used by docs/eda/eda_report.md.
 
-Reads the cached results in out/*.json, so it is cheap and cannot disagree with
-the report. Run the analysis scripts first if out/ is empty.
+Reads the cached results in outputs/eda/*.json, so it is cheap and cannot disagree with
+the report. Run the analysis scripts first if outputs/eda/ is empty.
 
 Writes 300 DPI PNGs to docs/figures/eda/.
 """

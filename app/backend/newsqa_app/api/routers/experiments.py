@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from newsqa_rag.services import experiment_service
+from newsqa_app.services import experiment_service
 
 router = APIRouter()
 

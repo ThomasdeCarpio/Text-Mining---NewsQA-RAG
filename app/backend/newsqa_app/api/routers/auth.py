@@ -2,8 +2,8 @@ import uuid
 
 from fastapi import APIRouter, HTTPException
 
-from newsqa_rag.api.schemas import LoginRequest, LoginResponse
-from newsqa_rag.services import auth_service
+from newsqa_app.api.schemas import LoginRequest, LoginResponse
+from newsqa_app.services import auth_service
 
 router = APIRouter()
 
