@@ -68,13 +68,32 @@ class RAGAgent:
         """Retrieve and rerank once so the trace can be checkpointed."""
         return self.rerank_trace(self.retrieve(question))
 
-    def generate_from_trace(self, trace: dict) -> dict:
-        """Generate from an existing retrieval trace and parse cited chunks."""
+    def generate_from_trace(
+        self,
+        trace: dict,
+        *,
+        system_prompt: str | None = None,
+        context_depth: int | None = None,
+    ) -> dict:
+        """Generate from a frozen ranked trace and parse cited chunks."""
         if self.llm is None:
             raise RuntimeError("Generation requires an LLM instance.")
 
+        ranked_chunks = trace["reranked_chunks"]
+        if context_depth is not None and context_depth < 1:
+            raise ValueError("context_depth must be at least 1")
+        generation_chunks = ranked_chunks[:context_depth]
+        if not generation_chunks:
+            raise RuntimeError("Generation requires at least one ranked context.")
+        contexts = [chunk["text"] for chunk in generation_chunks]
+
         t0 = time.perf_counter()
-        answer = self.llm.generate_rag_answer(trace["question"], trace["contexts"])
+        if system_prompt is None:
+            answer = self.llm.generate_rag_answer(trace["question"], contexts)
+        else:
+            answer = self.llm.generate_rag_answer(
+                trace["question"], contexts, system_prompt=system_prompt
+            )
         llm_ms = (time.perf_counter() - t0) * 1000
         if not answer.strip():
             raise RuntimeError("The generator returned an empty answer.")
@@ -82,10 +101,10 @@ class RAGAgent:
         raw_indices = [int(value) for value in self._CITATION_PATTERN.findall(answer)]
         citation_indices = list(dict.fromkeys(raw_indices))
         valid_indices = [
-            index for index in citation_indices if 1 <= index <= len(trace["reranked_chunks"])
+            index for index in citation_indices if 1 <= index <= len(generation_chunks)
         ]
         invalid_indices = [index for index in citation_indices if index not in valid_indices]
-        cited_chunks = [trace["reranked_chunks"][index - 1] for index in valid_indices]
+        cited_chunks = [generation_chunks[index - 1] for index in valid_indices]
 
         timing = dict(trace.get("timing_ms", {}))
         timing["llm_ms"] = round(llm_ms, 1)
@@ -94,6 +113,9 @@ class RAGAgent:
         )
         return {
             **trace,
+            "contexts": contexts,
+            "generation_context_depth": len(generation_chunks),
+            "generation_context_chunk_ids": [chunk["id"] for chunk in generation_chunks],
             "answer": answer,
             "citation_indices": valid_indices,
             "citation_chunk_ids": [chunk["id"] for chunk in cited_chunks],

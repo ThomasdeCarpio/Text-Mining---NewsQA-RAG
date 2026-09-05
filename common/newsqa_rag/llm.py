@@ -119,11 +119,17 @@ class OpenAILLM:
         }
         return response.choices[0].message.content or ""
 
-    def generate_rag_answer(self, question: str, contexts: list[str]) -> str:
-        """Format contexts into a numbered block, then call the default RAG prompt."""
+    def generate_rag_answer(
+        self,
+        question: str,
+        contexts: list[str],
+        *,
+        system_prompt: str | None = None,
+    ) -> str:
+        """Format contexts into a numbered block, then call the selected RAG prompt."""
         context_block = "\n\n".join(f"[{i + 1}] {c}" for i, c in enumerate(contexts))
         user_prompt = f"Context:\n{context_block}\n\nQuestion: {question}\n\nAnswer:"
-        return self.generate(self.DEFAULT_SYSTEM_PROMPT, user_prompt)
+        return self.generate(system_prompt or self.DEFAULT_SYSTEM_PROMPT, user_prompt)
 
 
 def get_llm(config: dict) -> OpenAILLM:

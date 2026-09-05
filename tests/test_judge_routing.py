@@ -113,6 +113,7 @@ class JudgeCliTests(unittest.TestCase):
             "--reasoning-effort", "low",
             "--judge-max-tokens", "512",
             "--results-file", "judge_results_low.jsonl",
+            "--question-ids-file", "judge_ids.json",
         ]
         with patch("sys.argv", argv):
             args = parse_args()
@@ -120,6 +121,7 @@ class JudgeCliTests(unittest.TestCase):
         self.assertEqual(args.reasoning_effort, "low")
         self.assertEqual(args.judge_max_tokens, 512)
         self.assertEqual(args.results_file, "judge_results_low.jsonl")
+        self.assertEqual(args.question_ids_file, "judge_ids.json")
 
 
 if __name__ == "__main__":

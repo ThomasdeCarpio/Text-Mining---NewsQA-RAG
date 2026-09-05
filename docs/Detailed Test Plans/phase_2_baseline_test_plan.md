@@ -62,13 +62,15 @@ Repository chia theo `article_key`, shuffle với seed `42`, sau đó lấy 50 b
 | Partition | Số bài | Số câu hỏi resolved | Mục đích |
 |---|---:|---:|---|
 | Development | 50 | 281 | Baseline và tuning |
-| Held-out final | 150 | 871 | Đánh giá một lần sau khi khóa Phase 2B |
+| Held-out final subset | 50 | 284 | Đánh giá winner một lần, sample article-level seed `46` |
+| Held-out reserve | 100 | 587 | Dành cho mở rộng sau, không sửa winner |
 | Tổng primary | 200 | 1.152 | Semantic-deduplicated resolved set |
 
 Đây là cùng article-level split đã dùng ở Phase 1. `281` không phải giới hạn
 `n_eval`: đó là toàn bộ semantic targets thuộc 50 bài development sau
-deduplication; 871 câu còn lại thuộc held-out. Mỗi run phải lưu danh sách
-`article_ids` và `question_ids` để không phụ thuộc vào thứ tự file.
+deduplication; 871 câu còn lại tạo held-out pool trước khi chia thành final và
+reserve. Mỗi run phải lưu danh sách `article_ids` và `question_ids` để không phụ
+thuộc vào thứ tự file.
 
 ### 2.3. Cấu hình pipeline
 
@@ -148,7 +150,7 @@ trong corpus, nên đây là lỗi của pipeline. Chỉ tách nhóm `gold_in_to
 | Smoke | 5 câu cố định | Chạy hết retrieve -> judge và kiểm tra schema |
 | RAGAS pilot | 25 câu cố định | Kiểm tra timeout, parse, chi phí và score coverage |
 | Development baseline | 281 câu | Baseline chính và mốc so sánh cho Phase 2B |
-| Held-out final | 871 câu | Chỉ chạy sau khi khóa winner Phase 2B |
+| Held-out final | 284 câu từ 50 bài unseen | Chỉ chạy sau khi khóa winner Phase 2B |
 
 Smoke, pilot và development phải dùng các ID được sinh một lần với seed `42`.
 Pilot được phân tầng theo article, loại câu hỏi và trạng thái gold evidence

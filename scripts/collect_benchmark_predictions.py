@@ -77,6 +77,27 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--top-k", type=int, default=None)
     parser.add_argument("--rerank-top-n", type=int, default=None)
     parser.add_argument("--generator-model", default=None)
+    parser.add_argument(
+        "--prompt-id",
+        default="p0",
+        help="Stable registered prompt identifier included in the run fingerprint.",
+    )
+    parser.add_argument(
+        "--system-prompt-file",
+        default=None,
+        help="UTF-8 file containing the exact RAG system prompt.",
+    )
+    parser.add_argument(
+        "--context-depth",
+        type=int,
+        default=None,
+        help="Use only the first N contexts from the frozen reranked top-N trace.",
+    )
+    parser.add_argument(
+        "--source-retrievals",
+        default=None,
+        help="Complete retrievals.jsonl to reuse instead of retrieving and reranking.",
+    )
     parser.add_argument("--retrieval-only", action="store_true")
     parser.add_argument(
         "--question-ids-file",
@@ -150,6 +171,31 @@ def _write_shared_trace(path: Path, trace: dict) -> None:
     os.replace(temporary, path)
 
 
+def load_source_retrievals(path: str | Path, entries: list[dict]) -> dict[str, dict]:
+    """Load and validate a complete frozen trace for the selected questions."""
+
+    source_cache = latest_by_question(
+        load_jsonl(path, recover_final_line=True)
+    )
+    invalid = []
+    for entry in entries:
+        question_id = entry["question_id"]
+        record = source_cache.get(question_id)
+        if (
+            not record
+            or record.get("status") != "success"
+            or not isinstance(record.get("trace"), dict)
+            or record.get("question") != entry["question"]
+        ):
+            invalid.append(question_id)
+    if invalid:
+        raise SystemExit(
+            "Source retrieval trace is missing, failed, or incompatible for selected "
+            f"questions: {invalid[:5]}"
+        )
+    return source_cache
+
+
 def main() -> None:
     args = parse_args()
     if args.max_attempts < 1:
@@ -160,6 +206,12 @@ def main() -> None:
         raise SystemExit("--warmup-queries cannot be negative")
     if args.generation_min_interval_seconds < 0:
         raise SystemExit("--generation-min-interval-seconds cannot be negative")
+    if args.context_depth is not None and args.context_depth < 1:
+        raise SystemExit("--context-depth must be at least 1")
+    if args.source_retrievals and args.retrieval_only:
+        raise SystemExit("--source-retrievals is only valid for generation runs")
+    if args.source_retrievals and args.shared_retrieval_cache:
+        raise SystemExit("--source-retrievals and --shared-retrieval-cache are mutually exclusive")
 
     config_path = PROJECT_ROOT / args.config
     with config_path.open(encoding="utf-8") as handle:
@@ -178,6 +230,16 @@ def main() -> None:
     top_n = args.rerank_top_n or int(
         retrieval_config.get("reranker", {}).get("top_n", 5)
     )
+    context_depth = args.context_depth or top_n
+    if context_depth > top_n:
+        raise SystemExit("--context-depth cannot exceed --rerank-top-n")
+    system_prompt = OpenAILLM.DEFAULT_SYSTEM_PROMPT
+    if args.system_prompt_file:
+        system_prompt = Path(args.system_prompt_file).read_text(encoding="utf-8").strip()
+        if not system_prompt:
+            raise SystemExit("--system-prompt-file cannot be empty")
+    if not args.prompt_id.strip():
+        raise SystemExit("--prompt-id cannot be empty")
     entries = [entry for entry in load_testset(args.testset) if entry.get("relevant_chunk_ids")]
     if args.question_ids_file:
         requested = json.loads(Path(args.question_ids_file).read_text(encoding="utf-8"))
@@ -227,7 +289,12 @@ def main() -> None:
         "generator_provider": generator_provider,
         "generator_model": generator_model,
         "generator_reasoning_effort": config.get("llm", {}).get("reasoning_effort"),
-        "rag_prompt": OpenAILLM.DEFAULT_SYSTEM_PROMPT,
+        "prompt_id": args.prompt_id,
+        "rag_prompt": system_prompt,
+        "context_depth": context_depth,
+        "source_retrievals_sha256": (
+            sha256_file(args.source_retrievals) if args.source_retrievals else None
+        ),
         "top_k": top_k,
         "rerank_top_n": top_n,
         "retrieval_only": args.retrieval_only,
@@ -257,6 +324,8 @@ def main() -> None:
             "collection": args.collection,
             "chunks": args.chunks_path,
             "bm25": args.bm25_path,
+            "source_retrievals": args.source_retrievals,
+            "system_prompt_file": args.system_prompt_file,
         },
     }
     if manifest_path.exists():
@@ -278,29 +347,35 @@ def main() -> None:
         load_jsonl(predictions_path, recover_final_line=True)
     )
 
-    store = None
-    if args.retriever in {"dense", "hybrid"}:
-        embedding_function = get_embedding_function(original_config)
-        store = ChromaStore(args.db_path, embedding_function)
-    chunks = None
-    if args.retriever in {"bm25", "sparse", "hybrid"}:
-        chunks = load_chunks(args.chunks_path)
-    retriever = get_retriever(
-        args.retriever,
-        config,
-        store,
-        args.collection,
-        chunks=chunks,
-        bm25_path=args.bm25_path,
-    )
-    reranker = get_reranker(config)
     llm = None if args.retrieval_only else get_llm(config)
-    agent = RAGAgent(retriever, reranker, llm, top_k=top_k, rerank_top_n=top_n)
+    source_cache = None
+    if args.source_retrievals:
+        source_cache = load_source_retrievals(args.source_retrievals, entries)
+        agent = RAGAgent(None, None, llm, top_k=top_k, rerank_top_n=top_n)
+    else:
+        store = None
+        if args.retriever in {"dense", "hybrid"}:
+            embedding_function = get_embedding_function(original_config)
+            store = ChromaStore(args.db_path, embedding_function)
+        chunks = None
+        if args.retriever in {"bm25", "sparse", "hybrid"}:
+            chunks = load_chunks(args.chunks_path)
+        retriever = get_retriever(
+            args.retriever,
+            config,
+            store,
+            args.collection,
+            chunks=chunks,
+            bm25_path=args.bm25_path,
+        )
+        reranker = get_reranker(config)
+        agent = RAGAgent(retriever, reranker, llm, top_k=top_k, rerank_top_n=top_n)
     generation_limiter = MinimumIntervalLimiter(
         args.generation_min_interval_seconds
     )
-    for entry in entries[:args.warmup_queries]:
-        agent.retrieve_and_rerank(entry["question"])
+    if source_cache is None:
+        for entry in entries[:args.warmup_queries]:
+            agent.retrieve_and_rerank(entry["question"])
 
     iterable = entries
     if args.progress:
@@ -319,48 +394,61 @@ def main() -> None:
 
             trace_record = retrieval_cache.get(question_id)
             if trace_record is None:
-                shared_path = None
-                shared_trace = None
-                if args.shared_retrieval_cache:
-                    shared_path = _shared_cache_path(args.shared_retrieval_cache, {
-                        "variant_manifest_sha256": sha256_file(args.variant_manifest),
-                        "config_sha256": sha256_file(config_path),
-                        "retriever": args.retriever,
-                        "top_k": top_k,
-                        "question": entry["question"],
-                    })
-                    shared_trace = _read_shared_trace(shared_path)
-                retrieval_trace, error, retrieval_attempts = run_with_retries(
-                    lambda: shared_trace or agent.retrieve(entry["question"]),
-                    stage="retrieval",
-                    question_id=question_id,
-                    attempts_path=attempts_path,
-                    max_attempts=args.max_attempts,
-                )
-                if retrieval_trace is None:
-                    record = {
+                if source_cache is not None:
+                    source_record = source_cache[question_id]
+                    trace_record = {
                         **_common_record(entry, fingerprint),
-                        "status": "exhausted",
-                        "failed_stage": "retrieval",
-                        "attempt_count": retrieval_attempts,
-                        "error": error,
+                        "status": "success",
+                        "trace": source_record["trace"],
+                        "source_run_fingerprint": source_record.get("run_fingerprint"),
+                        "attempt_count": 0,
                         "finished_at": utc_now(),
                     }
-                    append_jsonl(predictions_path, record)
-                    predictions[question_id] = record
-                    continue
-                if shared_path and shared_trace is None:
-                    _write_shared_trace(shared_path, retrieval_trace)
-                trace = agent.rerank_trace(retrieval_trace)
-                trace_record = {
-                    **_common_record(entry, fingerprint),
-                    "status": "success",
-                    "trace": trace,
-                    "attempt_count": retrieval_attempts,
-                    "finished_at": utc_now(),
-                }
-                append_jsonl(retrievals_path, trace_record)
-                retrieval_cache[question_id] = trace_record
+                    append_jsonl(retrievals_path, trace_record)
+                    retrieval_cache[question_id] = trace_record
+                else:
+                    shared_path = None
+                    shared_trace = None
+                    if args.shared_retrieval_cache:
+                        shared_path = _shared_cache_path(args.shared_retrieval_cache, {
+                            "variant_manifest_sha256": sha256_file(args.variant_manifest),
+                            "config_sha256": sha256_file(config_path),
+                            "retriever": args.retriever,
+                            "top_k": top_k,
+                            "question": entry["question"],
+                        })
+                        shared_trace = _read_shared_trace(shared_path)
+                    retrieval_trace, error, retrieval_attempts = run_with_retries(
+                        lambda: shared_trace or agent.retrieve(entry["question"]),
+                        stage="retrieval",
+                        question_id=question_id,
+                        attempts_path=attempts_path,
+                        max_attempts=args.max_attempts,
+                    )
+                    if retrieval_trace is None:
+                        record = {
+                            **_common_record(entry, fingerprint),
+                            "status": "exhausted",
+                            "failed_stage": "retrieval",
+                            "attempt_count": retrieval_attempts,
+                            "error": error,
+                            "finished_at": utc_now(),
+                        }
+                        append_jsonl(predictions_path, record)
+                        predictions[question_id] = record
+                        continue
+                    if shared_path and shared_trace is None:
+                        _write_shared_trace(shared_path, retrieval_trace)
+                    trace = agent.rerank_trace(retrieval_trace)
+                    trace_record = {
+                        **_common_record(entry, fingerprint),
+                        "status": "success",
+                        "trace": trace,
+                        "attempt_count": retrieval_attempts,
+                        "finished_at": utc_now(),
+                    }
+                    append_jsonl(retrievals_path, trace_record)
+                    retrieval_cache[question_id] = trace_record
 
             trace = trace_record["trace"]
             if args.retrieval_only:
@@ -377,7 +465,11 @@ def main() -> None:
             else:
                 def generate_from_trace():
                     generation_limiter.wait()
-                    return agent.generate_from_trace(trace)
+                    return agent.generate_from_trace(
+                        trace,
+                        system_prompt=system_prompt,
+                        context_depth=context_depth,
+                    )
 
                 result, error, generation_attempts = run_with_retries(
                     generate_from_trace,

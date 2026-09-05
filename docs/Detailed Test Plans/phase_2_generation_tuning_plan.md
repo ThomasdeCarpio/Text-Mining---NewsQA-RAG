@@ -33,7 +33,9 @@ tách biệt và model/provider hỗ trợ training.
 | ZIP SHA-256 | `fc5d67b7acf6e8be0205ce00b8069b3b6c8dcce853f8671f2feb3887b2707a24` |
 | Primary set | 1.152 semantic-deduplicated resolved questions |
 | Development | 50 bài, 281 câu resolved, seed `42` |
-| Held-out | 150 bài, 871 câu resolved |
+| Held-out pool | 150 bài, 871 câu resolved; chưa dùng khi tuning |
+| Final held-out subset | 50 bài unseen, 284 câu; sample theo article với seed `46` |
+| Held-out reserve | 100 bài, 587 câu; giữ nguyên cho mở rộng sau |
 | Supplementary set | 1.336 full resolved questions; không dùng chọn winner |
 | Retrieval | BGE-M3 learned sparse, `top_k=20` |
 | Reranking | `BAAI/bge-reranker-large`, top 5 |
@@ -113,27 +115,34 @@ không gọi Gemini hoặc GLM lại.
 | Tập | Số câu | Cách dùng |
 |---|---:|---|
 | Smoke | 5 | Kiểm tra mỗi prompt/config mới |
-| Screening | 100 | Quét P và C |
-| Judge calibration | 25 | RAGAS sớm cho mỗi cấu hình screening |
+| Screening | 80 | Quét P và C với chi phí giới hạn |
+| Judge calibration | 20 | RAGAS sớm cho mỗi cấu hình screening |
 | Full development | 281 | Xác nhận hai finalist |
-| Held-out final | 871 | Đánh giá winner đúng một lần |
+| Held-out final | 284 từ 50 bài unseen | Đánh giá winner đúng một lần |
 
-Tập 100 và 25 được tạo một lần với seed `42`, phân tầng theo article, question
+Tập 80 và 20 được tạo một lần với seed `42`, phân tầng theo article, question
 type và `gold_in_top5`. ID được commit/lưu trong experiment manifest. Không đổi
-mẫu sau khi xem kết quả.
+mẫu sau khi xem kết quả. Không giảm thấp hơn `80/20`: đây là screening để loại
+cấu hình yếu, không phải final inference, nhưng mẫu nhỏ hơn sẽ quá nhạy với vài
+article và độ nhiễu của LLM judge.
+
+Final subset được chọn từ 150 bài held-out bằng thứ tự hash seed `46`, lấy đúng
+50 bài đầu. Với artifact đã khóa, các bài này chứa `284` câu. Chọn theo article
+thay vì ép đúng 281 câu để giữ độc lập với development và tránh lấy dở một cụm
+câu hỏi của cùng bài.
 
 ### 5.2. Trình tự
 
 1. Hoàn tất và đóng băng baseline P0 trên 281 câu.
 2. Smoke 5 câu cho P1-P3; loại lỗi schema, citation và output rỗng.
-3. Chạy P0-P3 trên cùng 100 câu; deterministic score trên 100 và RAGAS trên
-   cùng 25 câu.
+3. Chạy P0-P3 trên cùng 80 câu; deterministic score trên 80 và RAGAS trên
+   cùng 20 câu.
 4. Chọn hai prompt theo quy tắc ở Mục 7.
-5. Chạy context depth `{1,3,5}` với hai prompt trên cùng 100/25 câu.
+5. Chạy context depth `{1,3,5}` với hai prompt trên cùng 80/20 câu.
 6. Chọn hai cấu hình finalist; chạy mỗi finalist trên toàn bộ 281 câu và chấm
    đầy đủ deterministic + RAGAS.
 7. Khóa winner, prompt text, context depth, model fingerprint và giá API.
-8. Chạy winner trên 871 câu held-out đúng một lần.
+8. Chạy winner trên 284 câu thuộc 50 bài held-out unseen đúng một lần.
 9. Công bố kết quả held-out mà không tiếp tục sửa cấu hình.
 
 ## 6. Metrics và phân tích
@@ -189,9 +198,10 @@ effect size vẫn phải được báo cáo.
   generator model và decoding config.
 - Lưu raw answer và raw judge output để audit LLM-as-a-Judge.
 - Judge khác provider với generator; ghi endpoint và model fingerprint.
-- Primary score luôn tính trên 1.152 semantic targets. Full set 1.336 câu chỉ
-  dùng cho sensitivity analysis của winner sau khi đã khóa cấu hình; không đưa
-  các câu trùng trở lại objective dùng để chọn prompt.
+- Primary benchmark lấy từ 1.152 semantic targets: tuning dùng 281 development
+  và final report dùng 284 held-out đã đăng ký trước. Full set 1.336 câu chỉ
+  dùng cho sensitivity analysis sau khi đã khóa cấu hình; không đưa các câu
+  trùng trở lại objective dùng để chọn prompt.
 - Nếu RAGAS disagreement quan trọng, human-review một mẫu lỗi có phân tầng;
   không sửa điểm từng câu tùy ý.
 - Không dùng held-out cho prompt debugging, threshold tuning hay retry có chọn
@@ -218,11 +228,42 @@ Mỗi run phải resume được. Successful record không được ghi trùng; 
 giữ stage, error type, attempt count và timestamp. Kết quả mỗi vòng gồm
 per-question JSONL, summary CSV/JSON, manifest, environment và chi phí.
 
+Thực thi được chia thành các notebook nhỏ để chạy độc lập trên Kaggle/Colab:
+
+| Notebook | Nền tảng | Trách nhiệm |
+|---|---|---|
+| `13a_phase_2b_0_preparation_kaggle.ipynb` | Kaggle | Khóa subset và đóng gói baseline |
+| `13b`/`13c`/`13d_phase_2b_1_prompt_*_colab.ipynb` | Colab | Chạy riêng P1, P2, P3 trên 80/20 |
+| `13e`/`13f_phase_2b_2_depth_*_colab.ipynb` | Colab | Chạy hai prompt finalist ở depth 1 hoặc 3; depth 5 tái sử dụng Phase 2B.1 |
+| `13g_phase_2b_3_finalist_1_kaggle.ipynb` | Kaggle | Xác nhận finalist 1 trên 281 câu |
+| `13h_phase_2b_3_finalist_2_colab.ipynb` | Colab | Xác nhận finalist 2 trên 281 câu |
+| `13i_phase_2b_4_heldout_final_kaggle.ipynb` | Kaggle | Chạy winner trên 284 câu held-out |
+
+Phase 2B.0 xuất `phase2b_preparation_bundle.zip`. Mọi notebook sau phải nạp
+đúng bundle này và kiểm tra lại hash của toàn bộ subset. Các biến
+`PROMPT_FINALISTS`, `FINALIST_CONFIG` và `LOCKED_WINNER` chỉ được điền từ decision
+record của vòng trước; notebook không tự chọn winner theo một scalar metric.
+Mỗi notebook có checkpoint/result ZIP riêng để tránh một session lỗi làm mất
+toàn bộ tournament.
+
+Các notebook mặc định `EXECUTE_API_CALLS=False`. Với Colab, mỗi notebook cho
+phép đặt `GEMINI_SECRET_NAME` riêng; chạy song song chỉ tăng throughput khi các
+key thuộc project/quota độc lập. Tất cả vẫn dùng chung `FIREWORKS_API_KEY` và
+phải tuân theo rate limit của tài khoản đó.
+
+Exact prompt text được quản lý tại
+`configs/experiments/phase2_generation_prompts.yaml`. Collector nhận
+`--source-retrievals`, `--prompt-id`, `--system-prompt-file` và
+`--context-depth`; vì vậy các run generation tái sử dụng cùng ranked trace thay
+vì gọi lại retriever/reranker. Judge nhận `--question-ids-file` để mọi cấu hình
+screening được chấm trên đúng cùng 20 câu.
+
 ## 10. Điều kiện hoàn thành Phase 2
 
 - Baseline 281 câu và hai finalist có deterministic/RAGAS coverage hợp lệ.
 - Winner được chọn đúng quy tắc đăng ký trước, không dựa trên held-out.
-- Held-out 871 câu được chạy đúng một lần sau khi khóa cấu hình.
+- Held-out final 284 câu từ 50 bài unseen được chạy đúng một lần sau khi khóa
+  cấu hình; 587 câu còn lại không được dùng để sửa winner.
 - Báo cáo nếu winner tốt hơn, không khác rõ ràng, hoặc tệ hơn baseline; không chỉ
   công bố kết quả có lợi.
 - Cấu hình winner được đóng gói để app và benchmark cùng nạp một artifact/prompt.

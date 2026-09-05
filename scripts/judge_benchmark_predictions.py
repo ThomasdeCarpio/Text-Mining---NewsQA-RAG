@@ -66,6 +66,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=10)
     parser.add_argument("--max-workers", type=int, default=4)
     parser.add_argument("--n-eval", type=int, default=None)
+    parser.add_argument(
+        "--question-ids-file",
+        default=None,
+        help="JSON list selecting an exact, ordered subset of successful predictions.",
+    )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max-attempts", type=int, default=3)
     parser.add_argument("--retry-failed", action="store_true")
@@ -125,7 +130,23 @@ def main() -> None:
         for question_id in manifest.get("inputs", {}).get("question_ids", [])
         if question_id in predictions and predictions[question_id].get("status") == "success"
     ]
-    if args.n_eval:
+    if args.question_ids_file:
+        requested = json.loads(Path(args.question_ids_file).read_text(encoding="utf-8"))
+        if not isinstance(requested, list) or not requested or not all(
+            isinstance(question_id, str) for question_id in requested
+        ):
+            raise SystemExit("--question-ids-file must contain a non-empty JSON string list")
+        if len(requested) != len(set(requested)):
+            raise SystemExit("--question-ids-file contains duplicate question IDs")
+        available = {record["question_id"]: record for record in successful}
+        missing = sorted(set(requested) - set(available))
+        if missing:
+            raise SystemExit(
+                "Question IDs are absent from successful predictions: "
+                f"{missing[:5]}"
+            )
+        successful = [available[question_id] for question_id in requested]
+    elif args.n_eval:
         successful = random.Random(args.seed).sample(
             successful, min(args.n_eval, len(successful))
         )

@@ -23,7 +23,7 @@ from newsqa_rag.retrieval.reranker import (
     NoOpReranker,
     get_reranker,
 )
-from scripts.collect_benchmark_predictions import MinimumIntervalLimiter
+from scripts.collect_benchmark_predictions import MinimumIntervalLimiter, load_source_retrievals
 
 
 class _Retriever:
@@ -37,6 +37,17 @@ class _Retriever:
 class _LLM:
     def generate_rag_answer(self, question: str, contexts: list[str]) -> str:
         return "The answer is supported [2], while [9] is invalid."
+
+
+class _PromptAwareLLM:
+    def __init__(self):
+        self.request = None
+
+    def generate_rag_answer(
+        self, question: str, contexts: list[str], *, system_prompt: str | None = None
+    ) -> str:
+        self.request = (question, contexts, system_prompt)
+        return "The first context supports this [1], while [2] is invalid."
 
 
 class _CrossEncoderModel:
@@ -54,6 +65,29 @@ class BenchmarkTraceTests(unittest.TestCase):
         self.assertEqual(result["citation_chunk_ids"], ["b"])
         self.assertEqual(result["invalid_citation_indices"], [9])
         self.assertEqual(result["retrieved_chunks"], trace["retrieved_chunks"])
+
+    def test_agent_limits_generation_context_without_changing_ranked_trace(self):
+        llm = _PromptAwareLLM()
+        agent = RAGAgent(_Retriever(), NoOpReranker(), llm, top_k=2, rerank_top_n=2)
+        trace = agent.retrieve_and_rerank("Question?")
+
+        result = agent.generate_from_trace(
+            trace, system_prompt="Registered prompt", context_depth=1
+        )
+
+        self.assertEqual(llm.request, ("Question?", ["First context."], "Registered prompt"))
+        self.assertEqual(result["generation_context_depth"], 1)
+        self.assertEqual(result["generation_context_chunk_ids"], ["a"])
+        self.assertEqual(result["retrieved_ids"], ["a", "b"])
+        self.assertEqual(result["citation_chunk_ids"], ["a"])
+        self.assertEqual(result["invalid_citation_indices"], [2])
+
+    def test_agent_rejects_zero_generation_context_depth(self):
+        agent = RAGAgent(_Retriever(), NoOpReranker(), _LLM(), top_k=2, rerank_top_n=2)
+        trace = agent.retrieve_and_rerank("Question?")
+
+        with self.assertRaisesRegex(ValueError, "context_depth"):
+            agent.generate_from_trace(trace, context_depth=0)
 
     def test_cross_encoder_preserves_retrieval_score_and_reorders(self):
         reranker = CrossEncoderReranker("test-model")
@@ -131,6 +165,26 @@ class BenchmarkCacheTests(unittest.TestCase):
 
         self.assertEqual(sleeps, [3.2])
         self.assertEqual(limiter.last_started_at, 4.2)
+
+    def test_frozen_retrieval_trace_requires_matching_successful_questions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "retrievals.jsonl"
+            append_jsonl(path, {
+                "question_id": "q1",
+                "question": "Question?",
+                "status": "success",
+                "trace": {"reranked_chunks": [{"id": "c1", "text": "Context"}]},
+            })
+
+            loaded = load_source_retrievals(
+                path, [{"question_id": "q1", "question": "Question?"}]
+            )
+
+            self.assertEqual(set(loaded), {"q1"})
+            with self.assertRaisesRegex(SystemExit, "incompatible"):
+                load_source_retrievals(
+                    path, [{"question_id": "q1", "question": "Changed question?"}]
+                )
 
     def test_sparse_preflight_requires_sparse_artifact_not_chroma(self):
         with tempfile.TemporaryDirectory() as directory:
