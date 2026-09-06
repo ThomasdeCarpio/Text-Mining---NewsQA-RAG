@@ -2,11 +2,24 @@ import json
 from pathlib import Path
 
 from newsqa_rag.evaluation.abstention import (
+    PARTITION_TARGETS,
+    TARGETS,
     build_review_queue,
     validate_cases,
 )
-from scripts.score_abstention_predictions import _cluster_bootstrap, _metrics
-from scripts.collect_abstention_predictions import _contexts_for, _parse_json
+from scripts.calibrate_abstention_threshold import _apply_threshold
+from scripts.prepare_abstention_dataset import _load_review_cases, _readable_review_document
+from scripts.score_abstention_predictions import (
+    _cluster_bootstrap,
+    _conservative_label,
+    _metrics,
+)
+from scripts.collect_abstention_predictions import (
+    _contexts_for,
+    _parse_baseline,
+    _parse_json,
+    _retrieval_features,
+)
 
 
 def _questions(count=12):
@@ -73,6 +86,7 @@ def test_builder_uses_overlays_without_mutating_chunks(monkeypatch):
                 {
                     "case_type": "external_unanswerable",
                     "base_question_id": f"external-{i}",
+                    "source_article_id": f"withheld-article-{i}",
                     "question": f"What happened in absent article {i}?",
                     "partition": "development",
                     "construction": {"source": "withheld_newsqa"},
@@ -174,6 +188,17 @@ def test_abstention_metrics_report_both_error_directions():
     assert result["abstention_recall"] == 0.5
     assert result["false_answer_rate"] == 0.5
     assert result["false_abstention_rate"] == 0.5
+    assert result["selective_risk"] == 0.5
+
+
+def test_exhausted_prediction_is_counted_as_worst_case_error():
+    assert _conservative_label("answerable", {"status": "exhausted"}) == (
+        "insufficient_evidence",
+        False,
+    )
+    assert _conservative_label(
+        "insufficient_evidence", {"status": "success", "answerability": None}
+    ) == ("answerable", False)
 
 
 def test_structured_output_parser_enforces_abstention_contract():
@@ -223,3 +248,159 @@ def test_confidence_interval_bootstraps_base_questions_not_variants():
         seed=42,
     )
     assert set(intervals["abstention_recall"]) == {"lower", "upper"}
+
+
+def test_compact_profile_has_exact_preregistered_totals():
+    assert sum(TARGETS["compact_200"].values()) == 200
+    assert sum(PARTITION_TARGETS["compact_200"]["development"].values()) == 140
+    assert sum(PARTITION_TARGETS["compact_200"]["final_test"].values()) == 60
+    for case_type, total in TARGETS["compact_200"].items():
+        assert sum(
+            PARTITION_TARGETS["compact_200"][partition][case_type]
+            for partition in ("development", "final_test")
+        ) == total
+
+
+def test_baseline_parser_only_accepts_canonical_abstention():
+    abstained = _parse_baseline(
+        "I cannot find this information in the provided context.", 2
+    )
+    assert abstained == {
+        "answerability": "insufficient_evidence",
+        "answer": None,
+        "citations": [],
+    }
+    answered = _parse_baseline("Natalie Cole [2]", 2)
+    assert answered["answerability"] == "answerable"
+    assert answered["citations"] == [2]
+
+
+def test_retrieval_features_are_only_applicable_to_full_corpus_cases():
+    trace = {
+        "reranked_chunks": [
+            {"id": "one", "reranker_score": 0.8},
+            {"id": "two", "reranker_score": 0.3},
+        ]
+    }
+    full = {"case_id": "c1", "base_question_id": "q1", "scope": "full_corpus"}
+    controlled = {"case_id": "c2", "base_question_id": "q2", "scope": "provided_context"}
+    assert _retrieval_features(full, {"c1": trace}) == {
+        "applicable": True,
+        "top1_reranker_score": 0.8,
+        "top1_top2_margin": 0.5,
+    }
+    assert not _retrieval_features(controlled, {"c2": trace})["applicable"]
+
+
+def test_score_gate_preserves_inapplicable_cases_and_rejects_low_scores():
+    cases = [
+        {"case_id": "low"},
+        {"case_id": "high"},
+        {"case_id": "controlled"},
+    ]
+    predictions = [
+        {
+            "case_id": "low",
+            "answerability": "answerable",
+            "answer": "guess",
+            "citations": [1],
+            "retrieval_features": {"applicable": True, "top1_reranker_score": 0.2},
+        },
+        {
+            "case_id": "high",
+            "answerability": "answerable",
+            "answer": "supported",
+            "citations": [1],
+            "retrieval_features": {"applicable": True, "top1_reranker_score": 0.8},
+        },
+        {
+            "case_id": "controlled",
+            "answerability": "answerable",
+            "answer": "unchanged",
+            "citations": [1],
+            "retrieval_features": {"applicable": False, "top1_reranker_score": None},
+        },
+    ]
+    by_id = {row["case_id"]: row for row in _apply_threshold(cases, predictions, 0.5)}
+    assert by_id["low"]["answerability"] == "insufficient_evidence"
+    assert by_id["low"]["gate"]["rejected"] is True
+    assert by_id["high"]["answerability"] == "answerable"
+    assert by_id["controlled"]["answer"] == "unchanged"
+
+
+def test_readable_review_round_trip(tmp_path):
+    cases = [
+        {
+            "case_id": "one",
+            "partition": "development",
+            "case_type": "answerable_control",
+            "source_gold_chunk_ids": ["chunk-0-0"],
+            "provided_context_chunk_ids": ["chunk-0-1"],
+            "excluded_chunk_ids": [],
+            "human_review": {"decision": "pending"},
+        }
+    ]
+    manifest = {
+        "mode": "compact_200",
+        "seed": 42,
+        "targets": TARGETS["compact_200"],
+        "deficits": {},
+    }
+    document = _readable_review_document(cases, _chunks(1), manifest)
+    path = tmp_path / "review_queue_readable.json"
+    path.write_text(json.dumps(document), encoding="utf-8")
+    loaded = _load_review_cases(path)
+    assert loaded[0]["case_id"] == "one"
+    assert loaded[0]["review_material"]["source_gold_chunks"][0]["chunk_id"] == "chunk-0-0"
+
+
+def test_compact_builder_fulfils_exact_type_and_partition_quotas():
+    questions = _questions(100)
+    chunks = _chunks(100)
+    retrievals = []
+    for index in range(100):
+        ranked_id = f"chunk-{(index + 20) % 100}-1" if index < 10 else f"chunk-{index}-0"
+        fallback_id = f"chunk-{(index + 30) % 100}-1"
+        retrievals.append(
+            {
+                "question_id": f"q{index}",
+                "status": "success",
+                "trace": {
+                    "reranked_chunks": [{"id": ranked_id}, {"id": fallback_id}]
+                },
+            }
+        )
+    authored = [
+        {
+            "case_type": "counterfactual",
+            "base_question_id": f"q{index}",
+            "question": f"Did Person {index} lose event {index}?",
+            "construction": {"changed_field": "event"},
+        }
+        for index in range(100)
+    ]
+    authored.extend(
+        {
+            "case_type": "external_unanswerable",
+            "base_question_id": f"external-{index}",
+            "source_article_id": f"withheld-{index}",
+            "question": f"What happened in withheld report {index}?",
+            "partition": "development" if index < 15 else "final_test",
+            "construction": {"source": "withheld_newsqa"},
+        }
+        for index in range(22)
+    )
+    cases, manifest = build_review_queue(
+        questions,
+        chunks,
+        mode="compact_200",
+        seed=42,
+        development_articles=70,
+        retrieval_records=retrievals,
+        authored_cases=authored,
+    )
+    assert len(cases) == 200
+    assert not manifest["deficits"]
+    assert manifest["observed"] == TARGETS["compact_200"]
+    assert manifest["observed_by_partition"] == PARTITION_TARGETS["compact_200"]
+    assert validate_cases(cases, chunks)["status"] == "passed"

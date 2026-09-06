@@ -8,12 +8,14 @@ import json
 import os
 import sys
 from collections import Counter
+from copy import deepcopy
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "common"))
 
 from newsqa_rag.evaluation.abstention import (
+    PARTITION_TARGETS,
     SCHEMA_VERSION,
     TARGETS,
     artifact_record,
@@ -39,6 +41,10 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--development-articles", type=int, default=50)
     prepare.add_argument("--retrievals", help="Successful locked-pipeline retrievals.jsonl")
     prepare.add_argument("--authored-cases", help="Reviewed proposals for external/counterfactual cases")
+    prepare.add_argument(
+        "--question-ids-file",
+        help="Optional JSON list restricting source questions, such as Phase 2 heldout_reserve IDs",
+    )
     prepare.add_argument("--overwrite", action="store_true")
 
     finalize = subparsers.add_parser("finalize", help="Freeze an approved review queue")
@@ -57,6 +63,74 @@ def _ensure_output(directory: Path, overwrite: bool) -> None:
     directory.mkdir(parents=True, exist_ok=True)
 
 
+def _load_review_cases(path: Path) -> list[dict]:
+    """Load either the canonical JSONL queue or its editable grouped JSON view."""
+    if path.suffix.lower() == ".json":
+        value = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(value, list):
+            return value
+        if isinstance(value, dict) and isinstance(value.get("groups"), list):
+            return [
+                case
+                for group in value["groups"]
+                for case in (group.get("cases") or [])
+                if isinstance(case, dict)
+            ]
+        raise DatasetBuildError("Readable review JSON must be a list or contain groups[].cases")
+    return load_jsonl(path)
+
+
+def _readable_review_document(cases: list[dict], chunks: list[dict], manifest: dict) -> dict:
+    by_chunk = {str(row["id"]): row for row in chunks}
+
+    def material(chunk_ids: list[str]) -> list[dict]:
+        return [
+            {"chunk_id": chunk_id, "text": by_chunk[chunk_id].get("text", "")}
+            for chunk_id in chunk_ids
+            if chunk_id in by_chunk
+        ]
+
+    groups = []
+    for partition in ("development", "final_test"):
+        for case_type in TARGETS[manifest["mode"]]:
+            selected = []
+            for source in cases:
+                if source.get("partition") != partition or source.get("case_type") != case_type:
+                    continue
+                case = deepcopy(source)
+                case["review_material"] = {
+                    "source_gold_chunks": material(case.get("source_gold_chunk_ids") or []),
+                    "provided_context_chunks": material(case.get("provided_context_chunk_ids") or []),
+                    "excluded_chunks": material(case.get("excluded_chunk_ids") or []),
+                }
+                selected.append(case)
+            if selected:
+                groups.append(
+                    {
+                        "partition": partition,
+                        "case_type": case_type,
+                        "case_count": len(selected),
+                        "cases": selected,
+                    }
+                )
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "status": "awaiting_human_review",
+        "instructions": {
+            "editable_fields": ["human_review", "secondary_review"],
+            "finalize_with_this_file": True,
+            "review_material_is_ignored_by_validation": True,
+        },
+        "summary": {
+            "mode": manifest["mode"],
+            "seed": manifest["seed"],
+            "targets": manifest["targets"],
+            "deficits": manifest["deficits"],
+        },
+        "groups": groups,
+    }
+
+
 def prepare(args: argparse.Namespace) -> dict:
     locked_root = Path(args.locked_root).resolve()
     testset_path = locked_root / "testset_resolved.jsonl"
@@ -68,6 +142,16 @@ def prepare(args: argparse.Namespace) -> dict:
     output = Path(args.output_dir).resolve()
     _ensure_output(output, args.overwrite)
     questions = load_jsonl(testset_path)
+    if args.question_ids_file:
+        requested = json.loads(Path(args.question_ids_file).read_text(encoding="utf-8"))
+        if not isinstance(requested, list) or len(requested) != len(set(requested)):
+            raise DatasetBuildError("--question-ids-file must contain a unique JSON list")
+        requested_set = {str(value) for value in requested}
+        available = {str(row["question_id"]) for row in questions}
+        missing = sorted(requested_set - available)
+        if missing:
+            raise DatasetBuildError(f"Unknown source question IDs: {missing[:5]}")
+        questions = [row for row in questions if str(row["question_id"]) in requested_set]
     chunks = load_jsonl(chunks_path)
     retrievals = load_jsonl(args.retrievals) if args.retrievals else []
     authored = load_jsonl(args.authored_cases) if args.authored_cases else []
@@ -81,10 +165,15 @@ def prepare(args: argparse.Namespace) -> dict:
         authored_cases=authored,
     )
     review_path = output / "review_queue.jsonl"
+    readable_review_path = output / "review_queue_readable.json"
     overlays_path = output / "corpus_overlays.jsonl"
     validation_path = output / "validation_report.json"
     manifest_path = output / "manifest.json"
     save_jsonl(cases, review_path)
+    atomic_write_json(
+        readable_review_path,
+        _readable_review_document(cases, chunks, manifest),
+    )
     save_jsonl(
         [
             {
@@ -112,9 +201,15 @@ def prepare(args: argparse.Namespace) -> dict:
             "inputs": {
                 "retrievals_sha256": sha256_file(args.retrievals) if args.retrievals else None,
                 "authored_cases_sha256": sha256_file(args.authored_cases) if args.authored_cases else None,
+                "question_ids_sha256": sha256_file(args.question_ids_file) if args.question_ids_file else None,
+            },
+            "source_selection": {
+                "questions": len(questions),
+                "articles": len({str(row["article_key"]) for row in questions}),
             },
             "artifacts": {
                 "review_queue": artifact_record(review_path),
+                "review_queue_readable": artifact_record(readable_review_path),
                 "corpus_overlays": artifact_record(overlays_path),
                 "validation_report": artifact_record(validation_path),
             },
@@ -128,8 +223,19 @@ def finalize(args: argparse.Namespace) -> dict:
     review_path = Path(args.review_queue).resolve()
     chunks_path = Path(args.chunks).resolve()
     output = Path(args.output_dir).resolve()
+    if args.mode == "compact_200" and not args.source_manifest:
+        raise DatasetBuildError("compact_200 finalization requires --source-manifest")
+    if args.source_manifest:
+        source_manifest_path = Path(args.source_manifest).resolve()
+        if not source_manifest_path.is_file():
+            raise DatasetBuildError(f"Missing source manifest: {source_manifest_path}")
+        source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
+        if source_manifest.get("mode") != args.mode:
+            raise DatasetBuildError("Source manifest mode does not match --mode")
     _ensure_output(output, args.overwrite)
-    cases = load_jsonl(review_path)
+    cases = _load_review_cases(review_path)
+    for case in cases:
+        case.pop("review_material", None)
     chunks = load_jsonl(chunks_path)
     validation = validate_cases(cases, chunks, require_approved=True)
     counts = Counter(row.get("case_type") for row in cases)
@@ -142,6 +248,44 @@ def finalize(args: argparse.Namespace) -> dict:
     if count_errors:
         validation["status"] = "failed"
         validation["errors"].append(f"target_count_mismatch:{count_errors}")
+    partition_errors = {}
+    for partition, targets in (PARTITION_TARGETS.get(args.mode) or {}).items():
+        observed = Counter(
+            row.get("case_type") for row in cases if row.get("partition") == partition
+        )
+        mismatches = {
+            name: {"expected": target, "observed": observed.get(name, 0)}
+            for name, target in targets.items()
+            if observed.get(name, 0) != target
+        }
+        if mismatches:
+            partition_errors[partition] = mismatches
+    if partition_errors:
+        validation["status"] = "failed"
+        validation["errors"].append(f"partition_target_mismatch:{partition_errors}")
+    if args.mode == "compact_200":
+        internal_articles = {
+            str(row.get("source_article_id"))
+            for row in cases
+            if row.get("case_type") != "external_unanswerable"
+            and row.get("source_article_id")
+        }
+        external_articles = {
+            str(row.get("source_article_id"))
+            for row in cases
+            if row.get("case_type") == "external_unanswerable"
+            and row.get("source_article_id")
+        }
+        if len(internal_articles) < 60:
+            validation["status"] = "failed"
+            validation["errors"].append(
+                f"insufficient_internal_article_diversity:required=60:observed={len(internal_articles)}"
+            )
+        if len(external_articles) != 22:
+            validation["status"] = "failed"
+            validation["errors"].append(
+                f"external_articles_must_be_unique:required=22:observed={len(external_articles)}"
+            )
     validation_path = output / "validation_report.json"
     atomic_write_json(validation_path, validation)
     if validation["status"] != "passed":
@@ -149,9 +293,19 @@ def finalize(args: argparse.Namespace) -> dict:
             f"Abstention dataset validation failed; inspect {validation_path}"
         )
     cases_path = output / "cases.jsonl"
+    development_path = output / "development_cases.jsonl"
+    final_test_path = output / "final_test_cases.jsonl"
     overlays_path = output / "corpus_overlays.jsonl"
     approval_path = output / "human_approval.json"
     save_jsonl(cases, cases_path)
+    save_jsonl(
+        [row for row in cases if row.get("partition") == "development"],
+        development_path,
+    )
+    save_jsonl(
+        [row for row in cases if row.get("partition") == "final_test"],
+        final_test_path,
+    )
     save_jsonl(
         [
             {
@@ -180,6 +334,7 @@ def finalize(args: argparse.Namespace) -> dict:
         "status": "finalized",
         "mode": args.mode,
         "targets": expected,
+        "partition_targets": PARTITION_TARGETS.get(args.mode),
         "source_manifest_sha256": sha256_file(args.source_manifest) if args.source_manifest else None,
         "source_chunks_sha256": sha256_file(chunks_path),
         "artifacts": {},
@@ -187,6 +342,8 @@ def finalize(args: argparse.Namespace) -> dict:
     manifest_path = output / "manifest.json"
     for name, path in (
         ("cases", cases_path),
+        ("development_cases", development_path),
+        ("final_test_cases", final_test_path),
         ("corpus_overlays", overlays_path),
         ("human_approval", approval_path),
         ("validation_report", validation_path),

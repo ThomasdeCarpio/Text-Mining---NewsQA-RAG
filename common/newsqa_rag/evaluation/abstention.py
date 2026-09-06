@@ -48,6 +48,38 @@ TARGETS = {
         "counterfactual": 50,
         "partial_weak_evidence": 50,
     },
+    "compact_200": {
+        "answerable_control": 80,
+        "natural_retrieval_miss": 10,
+        "controlled_context_ablation": 22,
+        "removed_article": 22,
+        "external_unanswerable": 22,
+        "counterfactual": 22,
+        "partial_weak_evidence": 22,
+    },
+}
+
+PARTITION_TARGETS = {
+    "compact_200": {
+        "development": {
+            "answerable_control": 56,
+            "natural_retrieval_miss": 7,
+            "controlled_context_ablation": 16,
+            "removed_article": 16,
+            "external_unanswerable": 15,
+            "counterfactual": 15,
+            "partial_weak_evidence": 15,
+        },
+        "final_test": {
+            "answerable_control": 24,
+            "natural_retrieval_miss": 3,
+            "controlled_context_ablation": 6,
+            "removed_article": 6,
+            "external_unanswerable": 7,
+            "counterfactual": 7,
+            "partial_weak_evidence": 7,
+        },
+    }
 }
 
 
@@ -84,6 +116,45 @@ def article_partitions(questions: list[dict], seed: int, development_articles: i
     random.Random(seed).shuffle(articles)
     development = set(articles[:development_articles])
     return {article: ("development" if article in development else "final_test") for article in articles}
+
+
+def compact_article_partitions(
+    questions: list[dict],
+    natural_miss_rows: list[dict],
+    seed: int,
+    development_articles: int,
+) -> dict[str, str]:
+    """Create an article split with enough observed misses for both partitions."""
+    articles = sorted({str(row["article_key"]) for row in questions})
+    if development_articles >= len(articles):
+        raise DatasetBuildError("development_articles must be smaller than article count")
+    miss_counts = Counter(str(row["article_key"]) for row in natural_miss_rows)
+    dev_misses = PARTITION_TARGETS["compact_200"]["development"]["natural_retrieval_miss"]
+    final_misses = PARTITION_TARGETS["compact_200"]["final_test"]["natural_retrieval_miss"]
+    if sum(miss_counts.values()) < dev_misses + final_misses:
+        raise DatasetBuildError(
+            "compact_200 requires at least "
+            f"{dev_misses + final_misses} natural retrieval misses; "
+            f"observed {sum(miss_counts.values())}"
+        )
+    rng = random.Random(seed)
+    for _ in range(10_000):
+        candidate = list(articles)
+        rng.shuffle(candidate)
+        development = set(candidate[:development_articles])
+        observed_development = sum(
+            count for article, count in miss_counts.items() if article in development
+        )
+        observed_final = sum(miss_counts.values()) - observed_development
+        if observed_development >= dev_misses and observed_final >= final_misses:
+            return {
+                article: ("development" if article in development else "final_test")
+                for article in articles
+            }
+    raise DatasetBuildError(
+        "Could not construct the compact_200 article split with the required "
+        "natural-miss capacity"
+    )
 
 
 def chunk_indexes(chunks: list[dict]) -> tuple[dict[str, dict], dict[str, list[str]], dict[str, list[str]]]:
@@ -156,7 +227,7 @@ def retrieval_map(records: list[dict]) -> dict[str, list[str]]:
     for record in records:
         if record.get("status") != "success":
             continue
-        question_id = str(record.get("question_id") or "")
+        question_id = str(record.get("question_id") or record.get("base_question_id") or "")
         ids = _trace_chunks(record)
         if question_id and ids:
             mapped[question_id] = ids
@@ -169,6 +240,42 @@ def _sample(rows: list[dict], count: int, rng: random.Random) -> list[dict]:
     if len(rows) < count:
         return list(rows)
     return rng.sample(rows, count)
+
+
+def _partition_of(candidate: dict | tuple) -> str:
+    row = candidate[0] if isinstance(candidate, tuple) else candidate
+    return str(row.get("partition") or "")
+
+
+def _sample_for_type(
+    candidates: list,
+    case_type: str,
+    mode: str,
+    rng: random.Random,
+) -> list:
+    partition_targets = PARTITION_TARGETS.get(mode)
+    if not partition_targets:
+        return _sample(candidates, TARGETS[mode][case_type], rng)
+    selected = []
+    for partition in ("development", "final_test"):
+        pool = [item for item in candidates if _partition_of(item) == partition]
+        target = partition_targets[partition][case_type]
+        if case_type == "answerable_control":
+            by_article: dict[str, list] = defaultdict(list)
+            for item in pool:
+                row = item[0] if isinstance(item, tuple) else item
+                by_article[str(row.get("article_key") or row.get("source_article_id"))].append(item)
+            article_ids = sorted(by_article)
+            rng.shuffle(article_ids)
+            chosen = [rng.choice(by_article[article]) for article in article_ids[:target]]
+            if len(chosen) < target:
+                chosen_ids = {id(item) for item in chosen}
+                remaining = [item for item in pool if id(item) not in chosen_ids]
+                chosen.extend(_sample(remaining, target - len(chosen), rng))
+            selected.extend(chosen)
+        else:
+            selected.extend(_sample(pool, target, rng))
+    return selected
 
 
 def _answer_bearing_chunk_ids(row: dict, candidate_ids: Iterable[str], by_chunk: dict[str, dict]) -> set[str]:
@@ -203,6 +310,8 @@ def _normalize_authored_case(raw: dict, questions: dict[str, dict], partitions: 
     else:
         source_article = str(raw.get("source_article_id") or "")
         partition = str(raw.get("partition") or "development")
+        if partition not in {"development", "final_test"}:
+            raise DatasetBuildError(f"Invalid external case partition: {partition!r}")
         synthetic = {
             "question_id": base_id or stable_hash(question)[:32],
             "question": question,
@@ -236,41 +345,77 @@ def build_review_queue(
     if len(by_question) != len(questions):
         raise DatasetBuildError("Question IDs must be unique")
     by_chunk, chunks_by_article, physical_by_article = chunk_indexes(chunks)
-    partitions = article_partitions(questions, seed, development_articles)
-    pool = [row for row in questions if mode == "full" or partitions[row["article_key"]] == "development"]
     rng = random.Random(seed)
     trace_map = retrieval_map(retrieval_records or [])
-    cases: list[dict] = []
-
-    for row in _sample(pool, targets["answerable_control"], rng):
-        case = _base_case(row, "answerable_control", partitions[row["article_key"]])
-        case["provided_context_chunk_ids"] = list(row.get("relevant_chunk_ids") or [])
-        cases.append(case)
-
-    misses = []
-    for row in pool:
+    observed_misses = []
+    for row in questions:
         ranked = trace_map.get(str(row["question_id"]), [])
         gold = set(row.get("relevant_chunk_ids") or [])
         if ranked and gold.isdisjoint(ranked) and not _answer_bearing_chunk_ids(row, ranked, by_chunk):
-            misses.append((row, ranked))
-    for row, ranked in _sample(misses, targets["natural_retrieval_miss"], rng):
+            observed_misses.append(row)
+    partitions = (
+        compact_article_partitions(questions, observed_misses, seed, development_articles)
+        if mode == "compact_200"
+        else article_partitions(questions, seed, development_articles)
+    )
+    pool = [
+        {**row, "partition": partitions[row["article_key"]]}
+        for row in questions
+        if mode in {"full", "compact_200"}
+        or partitions[row["article_key"]] == "development"
+    ]
+    cases: list[dict] = []
+
+    control_pool = pool
+    if mode == "compact_200":
+        control_pool = []
+        for row in pool:
+            ranked = trace_map.get(str(row["question_id"]), [])
+            if set(row.get("relevant_chunk_ids") or []) & set(ranked[:3]):
+                control_pool.append(row)
+    selected_control_rows = _sample_for_type(
+        control_pool, "answerable_control", mode, rng
+    )
+    for row in selected_control_rows:
+        case = _base_case(row, "answerable_control", partitions[row["article_key"]])
+        case["provided_context_chunk_ids"] = (
+            trace_map.get(str(row["question_id"]), [])[:5]
+            or list(row.get("relevant_chunk_ids") or [])
+        )
+        cases.append(case)
+
+    observed_miss_ids = {str(row["question_id"]) for row in observed_misses}
+    misses = [
+        (row, trace_map[str(row["question_id"])])
+        for row in pool
+        if str(row["question_id"]) in observed_miss_ids
+    ]
+    for row, ranked in _sample_for_type(misses, "natural_retrieval_miss", mode, rng):
         case = _base_case(row, "natural_retrieval_miss", partitions[row["article_key"]])
         case["provided_context_chunk_ids"] = ranked
         case["construction"]["retrieval_observed"] = True
         cases.append(case)
 
-    ablation_pool = [row for row in pool if trace_map.get(str(row["question_id"]))]
-    for row in _sample(ablation_pool, targets["controlled_context_ablation"], rng):
+    derived_pool = selected_control_rows if mode == "compact_200" else pool
+    ablation_pool = []
+    for row in derived_pool:
+        ranked = trace_map.get(str(row["question_id"]), [])
         gold = set(row.get("relevant_chunk_ids") or [])
-        ranked = trace_map[str(row["question_id"])]
         leaking = _answer_bearing_chunk_ids(row, ranked, by_chunk)
+        excluded = gold | leaking
+        remaining = [item for item in ranked if item not in excluded]
+        if remaining:
+            ablation_pool.append((row, remaining, excluded))
+    for row, remaining, excluded in _sample_for_type(
+        ablation_pool, "controlled_context_ablation", mode, rng
+    ):
         case = _base_case(row, "controlled_context_ablation", partitions[row["article_key"]])
-        case["excluded_chunk_ids"] = sorted(gold | leaking)
-        case["provided_context_chunk_ids"] = [item for item in ranked if item not in (gold | leaking)]
+        case["excluded_chunk_ids"] = sorted(excluded)
+        case["provided_context_chunk_ids"] = remaining
         cases.append(case)
 
-    removal_pool = [row for row in pool if row.get("article_key") in chunks_by_article]
-    for row in _sample(removal_pool, targets["removed_article"], rng):
+    removal_pool = [row for row in derived_pool if row.get("article_key") in chunks_by_article]
+    for row in _sample_for_type(removal_pool, "removed_article", mode, rng):
         article = str(row["article_key"])
         case = _base_case(row, "removed_article", partitions[article])
         case["excluded_chunk_ids"] = sorted(chunks_by_article[article])
@@ -278,7 +423,7 @@ def build_review_queue(
         cases.append(case)
 
     weak_pool = []
-    for row in pool:
+    for row in derived_pool:
         article_chunks = chunks_by_article.get(str(row.get("article_key")), [])
         gold = set(row.get("relevant_chunk_ids") or [])
         leaking = _answer_bearing_chunk_ids(row, article_chunks, by_chunk)
@@ -286,7 +431,7 @@ def build_review_queue(
         remaining = [chunk_id for chunk_id in article_chunks if chunk_id not in excluded]
         if remaining:
             weak_pool.append((row, remaining, excluded))
-    for row, remaining, excluded in _sample(weak_pool, targets["partial_weak_evidence"], rng):
+    for row, remaining, excluded in _sample_for_type(weak_pool, "partial_weak_evidence", mode, rng):
         case = _base_case(row, "partial_weak_evidence", partitions[row["article_key"]])
         case["excluded_chunk_ids"] = sorted(excluded)
         case["provided_context_chunk_ids"] = remaining[:5]
@@ -297,10 +442,19 @@ def build_review_queue(
     ]
     for case_type in ("external_unanswerable", "counterfactual"):
         candidates = [row for row in normalized_authored if row["case_type"] == case_type]
-        cases.extend(_sample(candidates, targets[case_type], rng))
+        if mode == "compact_200" and case_type == "counterfactual":
+            control_ids = {str(row["question_id"]) for row in selected_control_rows}
+            candidates = [row for row in candidates if row["base_question_id"] in control_ids]
+        cases.extend(_sample_for_type(candidates, case_type, mode, rng))
 
     cases.sort(key=lambda row: (row["partition"], row["case_type"], row["case_id"]))
     observed = Counter(row["case_type"] for row in cases)
+    observed_by_partition = {
+        partition: dict(sorted(Counter(
+            row["case_type"] for row in cases if row["partition"] == partition
+        ).items()))
+        for partition in ("development", "final_test")
+    }
     deficits = {name: count - observed.get(name, 0) for name, count in targets.items() if observed.get(name, 0) < count}
     manifest = {
         "schema_version": SCHEMA_VERSION,
@@ -309,8 +463,21 @@ def build_review_queue(
         "mode": mode,
         "seed": seed,
         "development_articles": development_articles,
+        "partition_method": (
+            "seeded_article_split_stratified_by_observed_natural_miss"
+            if mode == "compact_200"
+            else "seeded_article_split"
+        ),
+        "partition_articles": {
+            partition: sorted(
+                article for article, assigned in partitions.items() if assigned == partition
+            )
+            for partition in ("development", "final_test")
+        },
         "targets": targets,
         "observed": dict(sorted(observed.items())),
+        "partition_targets": PARTITION_TARGETS.get(mode),
+        "observed_by_partition": observed_by_partition,
         "deficits": deficits,
         "instructions": {
             "authored_case_types": ["external_unanswerable", "counterfactual"],
@@ -353,6 +520,8 @@ def validate_cases(cases: list[dict], chunks: list[dict], *, require_approved: b
             errors.append(f"{case_id}:answerable_without_gold")
         if case_type in CONTEXT_SCOPED_TYPES and source_gold & provided:
             errors.append(f"{case_id}:gold_context_leakage")
+        if case_type in CONTEXT_SCOPED_TYPES and not provided:
+            errors.append(f"{case_id}:empty_controlled_context")
         if case_type in CONTEXT_SCOPED_TYPES:
             normalized_answers = {
                 " ".join(str(answer).lower().split()).strip(".,!?;:\"'")
@@ -368,6 +537,18 @@ def validate_cases(cases: list[dict], chunks: list[dict], *, require_approved: b
             source = case.get("source_article_id")
             if source not in chunks_by_article or set(chunks_by_article[source]) != set(case.get("excluded_chunk_ids") or []):
                 errors.append(f"{case_id}:incomplete_article_removal")
+            if not case.get("excluded_article_ids"):
+                errors.append(f"{case_id}:missing_physical_article_exclusion")
+        if case_type == "external_unanswerable":
+            source = str(case.get("source_article_id") or "")
+            if not source:
+                errors.append(f"{case_id}:missing_external_article_id")
+            elif source in chunks_by_article:
+                errors.append(f"{case_id}:external_article_exists_in_corpus")
+        if case_type == "counterfactual":
+            changed_field = str((case.get("construction") or {}).get("changed_field") or "")
+            if changed_field not in {"subject", "event", "location", "date", "quantity"}:
+                errors.append(f"{case_id}:invalid_counterfactual_changed_field")
         review = case.get("human_review") or {}
         if require_approved:
             if review.get("decision") != "approved":

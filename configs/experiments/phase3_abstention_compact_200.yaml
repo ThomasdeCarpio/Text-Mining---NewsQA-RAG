@@ -1,0 +1,34 @@
+schema_version: 1
+experiment:
+  id: phase3-abstention-compact-200
+dataset:
+  mode: compact_200
+  source_subset: heldout_reserve
+  cases: evaluation/abstention/compact_200/final/cases.jsonl
+  source_artifact: locked-bge-m3-512-64-deduplicated-v2
+  seed: 42
+  development_cases: 140
+  final_cases: 60
+execution:
+  smoke_cases: 7
+  max_attempts: 3
+  resumable: true
+  generation_min_interval_seconds: 4.2
+policies:
+  baseline: phase2_baseline
+  prompt_only: structured_abstention
+  combined: structured_abstention_with_score_gate
+threshold:
+  feature: top1_reranker_score
+  decision: abstain_when_score_below_threshold
+  max_false_abstention_rate: 0.10
+selection:
+  minimum_generation_success_rate: 0.98
+  maximum_false_abstention_rate: 0.10
+  maximum_answerable_f1_drop: 0.02
+  maximum_citation_validity_drop: 0.01
+  practical_false_answer_tie: 0.02
+output_contract:
+  answerability: [answerable, insufficient_evidence]
+  abstention_answer: null
+  abstention_citations: []

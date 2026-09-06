@@ -17,6 +17,25 @@ sys.path.insert(0, str(PROJECT_ROOT / "common"))
 
 from newsqa_rag.evaluation.abstention import load_jsonl
 from newsqa_rag.evaluation.benchmark_io import atomic_write_json, utc_now
+from newsqa_rag.evaluation.metrics import evaluate_citations, evaluate_qa
+
+
+CONTROLLED_CONTEXT_TYPES = {
+    "controlled_context_ablation",
+    "partial_weak_evidence",
+}
+
+
+def _conservative_label(gold: str, prediction: dict) -> tuple[str, bool]:
+    label = prediction.get("answerability")
+    valid = prediction.get("status") == "success" and label in {
+        "answerable",
+        "insufficient_evidence",
+    }
+    if valid:
+        return str(label), True
+    opposite = "answerable" if gold == "insufficient_evidence" else "insufficient_evidence"
+    return opposite, False
 
 
 def _metrics(pairs: list[tuple[str, str]]) -> dict:
@@ -35,6 +54,7 @@ def _metrics(pairs: list[tuple[str, str]]) -> dict:
         "false_answer_rate": round(fn / (tp + fn), 4) if tp + fn else 0.0,
         "false_abstention_rate": round(fp / (tn + fp), 4) if tn + fp else 0.0,
         "coverage": round((tn + fn) / len(pairs), 4) if pairs else 0.0,
+        "selective_risk": round(fn / (tn + fn), 4) if tn + fn else 0.0,
         "confusion_matrix": {"tp": tp, "fp": fp, "fn": fn, "tn": tn},
     }
 
@@ -59,6 +79,7 @@ def _cluster_bootstrap(rows: list[tuple[str, str, str]], repetitions: int, seed:
             "false_answer_rate",
             "false_abstention_rate",
             "coverage",
+            "selective_risk",
         ):
             values[name].append(float(metrics[name]))
     return {
@@ -67,6 +88,60 @@ def _cluster_bootstrap(rows: list[tuple[str, str, str]], repetitions: int, seed:
             "upper": round(float(np.percentile(samples, 97.5)), 4),
         }
         for name, samples in sorted(values.items())
+    }
+
+
+def _answerable_quality(cases: list[dict], by_id: dict[str, dict]) -> dict:
+    qa_samples = []
+    citation_samples = []
+    for case in cases:
+        if case.get("answerability_label") != "answerable":
+            continue
+        prediction = by_id.get(case["case_id"]) or {}
+        answer = prediction.get("answer") if prediction.get("answerability") == "answerable" else ""
+        answer = answer or ""
+        qa_samples.append(
+            {
+                "prediction": answer,
+                "ground_truth": case.get("ground_truth") or "",
+                "accepted_answers": case.get("accepted_answers") or [],
+            }
+        )
+        context_ids = prediction.get("context_chunk_ids") or []
+        citation_indices = prediction.get("citations") or []
+        citation_samples.append(
+            {
+                "citation_chunk_ids": [
+                    context_ids[index - 1]
+                    for index in citation_indices
+                    if isinstance(index, int) and 1 <= index <= len(context_ids)
+                ],
+                "invalid_citation_indices": prediction.get("invalid_citations") or [],
+                "relevant_chunk_ids": case.get("gold_relevant_chunk_ids") or [],
+            }
+        )
+    return {"qa": evaluate_qa(qa_samples), "citations": evaluate_citations(citation_samples)}
+
+
+def _execution_summary(predictions: list[dict], expected: int) -> dict:
+    successful = [row for row in predictions if row.get("status") == "success"]
+    usage_keys = ("input_tokens", "output_tokens", "total_tokens")
+    usage = {
+        key: sum(int((row.get("usage") or {}).get(key, 0)) for row in successful)
+        for key in usage_keys
+    }
+    latency = [float(row["generation_ms"]) for row in successful if isinstance(row.get("generation_ms"), (int, float))]
+    return {
+        "expected": expected,
+        "successful": len(successful),
+        "failed": expected - len(successful),
+        "success_rate": round(len(successful) / expected, 4) if expected else 0.0,
+        "usage": usage,
+        "generation_latency_ms": {
+            "mean": round(float(np.mean(latency)), 1) if latency else None,
+            "p50": round(float(np.percentile(latency, 50)), 1) if latency else None,
+            "p95": round(float(np.percentile(latency, 95)), 1) if latency else None,
+        },
     }
 
 
@@ -82,8 +157,10 @@ def main() -> int:
     predictions = load_jsonl(args.predictions)
     by_id = {row.get("case_id"): row for row in predictions if row.get("case_id")}
     pairs = []
+    successful_pairs = []
     clustered_pairs = []
     grouped: dict[str, list[tuple[str, str]]] = defaultdict(list)
+    grouped_tracks: dict[str, list[tuple[str, str]]] = defaultdict(list)
     invalid = []
     missing = []
     for case in cases:
@@ -91,34 +168,49 @@ def main() -> int:
         if prediction is None:
             missing.append(case["case_id"])
             continue
-        label = prediction.get("answerability")
-        if label not in {"answerable", "insufficient_evidence"}:
+        label, valid = _conservative_label(case["answerability_label"], prediction)
+        if not valid:
             invalid.append(case["case_id"])
-            continue
         pair = (case["answerability_label"], label)
         pairs.append(pair)
-        clustered_pairs.append((case["base_question_id"], *pair))
+        if valid:
+            successful_pairs.append(pair)
+        # Article-level clusters also keep variants of different questions from
+        # the same source article together. External cases use their unique
+        # withheld article ID; base_question_id remains the fallback.
+        cluster_id = str(case.get("source_article_id") or case["base_question_id"])
+        clustered_pairs.append((cluster_id, *pair))
         grouped[case["case_type"]].append(pair)
+        track = "controlled_context" if case["case_type"] in CONTROLLED_CONTEXT_TYPES else "end_to_end"
+        grouped_tracks[track].append(pair)
     report = {
         "schema_version": 1,
         "generated_at": utc_now(),
         "coverage": {
             "expected": len(cases),
-            "scored": len(pairs),
+            "scored": len(successful_pairs),
+            "conservative_denominator": len(pairs),
             "missing": len(missing),
-            "invalid_schema": len(invalid),
+            "failed_or_invalid": len(invalid),
         },
+        "prediction_policies": sorted(
+            {str(row.get("policy")) for row in by_id.values() if row.get("policy")}
+        ),
         "overall": _metrics(pairs),
+        "successful_only": _metrics(successful_pairs),
         "confidence_intervals_95": _cluster_bootstrap(
             clustered_pairs, args.bootstrap_repetitions, args.seed
         ),
         "by_case_type": {name: _metrics(values) for name, values in sorted(grouped.items())},
+        "by_track": {name: _metrics(values) for name, values in sorted(grouped_tracks.items())},
+        "answerable_quality": _answerable_quality(cases, by_id),
+        "execution": _execution_summary(list(by_id.values()), len(cases)),
         "missing_case_ids": missing,
         "invalid_case_ids": invalid,
     }
     atomic_write_json(args.output, report)
     print(json.dumps(report, indent=2, sort_keys=True))
-    return 0 if not missing and not invalid else 2
+    return 0 if not missing else 2
 
 
 if __name__ == "__main__":
