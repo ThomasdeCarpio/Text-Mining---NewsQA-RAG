@@ -114,7 +114,7 @@ trước final.
 ## 5. Trình tự chạy
 
 1. Khóa Phase 2 winner manifest.
-2. Dùng notebook `14a_phase_3_abstention_preparation_kaggle.ipynb` để thu source
+2. Dùng notebook `14a_phase_3_abstention_preparation_colab.ipynb` để thu source
    retrieval, tạo review queue từ `heldout_reserve` và authored proposals.
 3. Review, secondary review, validate và finalize dataset.
 4. Thu case-specific retrieval trace sau khi áp dụng overlay.
