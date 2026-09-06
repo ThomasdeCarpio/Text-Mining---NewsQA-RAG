@@ -56,6 +56,15 @@ def _configuration(stage: str, platform: str, options: dict) -> str:
         run_id = f"phase2b_3_finalist_{options['slot']}"
     else:
         run_id = "phase2b_4_heldout_final"
+    baseline_source = ""
+    baseline_results_comment = "Phase 2B.0 only: attached Phase 2A full-results ZIP/directory."
+    if stage == "prepare":
+        baseline_results_comment = "Optional local ZIP/directory override; otherwise download from private HF."
+        baseline_source = """HF_BASELINE_REPO_ID='ThomasAnderson2009/newsqa-rag-phase2-experiments'
+HF_BASELINE_REVISION='bd83647c784d7f7d466bbd954fe7d35b5252a2f5'  # phase2a-baseline-deduplicated-v2
+HF_BASELINE_FILENAME='phase2a/baseline-deduplicated-v2/phase2_e2e_baseline_full_results.zip'
+HF_BASELINE_SHA256='044c913d20942c2dc8c1dcfa39544a7baf082f386b6d5f934e01c9c7feaf6017'
+"""
     specific = ""
     if stage == "prompt":
         specific = f"PROMPT_ID='{options['prompt_id']}'\n"
@@ -80,8 +89,8 @@ REPO_COMMIT='{REPO_COMMIT}'
 PLATFORM='{platform}'
 RUN_ID='{run_id}'
 PREPARATION_BUNDLE_PATH=''  # Required except in Phase 2B.0; Drive path on Colab or attached Kaggle input.
-BASELINE_RESULTS_PATH=''  # Phase 2B.0 only: attached Phase 2A full-results ZIP/directory.
-RESTORE_CHECKPOINT_PATH=''  # Optional checkpoint from the same notebook only.
+BASELINE_RESULTS_PATH=''  # {baseline_results_comment}
+{baseline_source}RESTORE_CHECKPOINT_PATH=''  # Optional checkpoint from the same notebook only.
 EXECUTE_API_CALLS=False  # Set True only for an approved execution notebook.
 GEMINI_SECRET_NAME='GEMINI_API_KEY_1'  # Give each Colab prompt/depth notebook its own key.
 UPSTREAM_DECISION_PATH=''  # Optional JSON decision record; retained in provenance.
@@ -174,10 +183,9 @@ def _load_artifacts(source: dict, stage: str) -> dict:
     if stage == "prepare":
         block = """baseline_input=Path(BASELINE_RESULTS_PATH) if BASELINE_RESULTS_PATH else None
 if baseline_input is None:
-    candidates=sorted(KAGGLE_INPUT.rglob('phase2_e2e_baseline_full_results.zip'))
-    if not candidates: candidates=sorted(path.parent for path in KAGGLE_INPUT.rglob('full_manifest.json'))
-    assert candidates, 'Attach the completed Phase 2A full-results archive or set BASELINE_RESULTS_PATH'
-    baseline_input=candidates[-1]
+    assert HF_TOKEN, 'Configure the read-only HF_TOKEN Kaggle secret for the private Phase 2 results repo'
+    baseline_input=Path(hf_hub_download(repo_id=HF_BASELINE_REPO_ID,repo_type='dataset',revision=HF_BASELINE_REVISION,filename=HF_BASELINE_FILENAME,token=HF_TOKEN))
+    assert sha256_file(baseline_input)==HF_BASELINE_SHA256, 'Phase 2A baseline archive checksum mismatch'
 if baseline_input.is_file(): shutil.unpack_archive(baseline_input,BASELINE_ROOT)
 else: shutil.copytree(baseline_input,BASELINE_ROOT,dirs_exist_ok=True)
 """
@@ -197,6 +205,12 @@ for path in [baseline_retrievals,baseline_predictions,baseline_judges]: assert p
 def _partitions(source: dict, stage: str) -> dict:
     cell = _cell(source, "partitions")
     if stage == "prepare":
+        text = "".join(cell["source"])
+        text = text.replace(
+            "subset_manifest={'schema_version':1,",
+            "subset_manifest={'schema_version':1,'baseline_artifact':{'repo_id':HF_BASELINE_REPO_ID,'revision':HF_BASELINE_REVISION,'filename':HF_BASELINE_FILENAME,'sha256':HF_BASELINE_SHA256},",
+        )
+        cell["source"] = text.splitlines(True)
         return cell
     text = "".join(cell["source"])
     prefix = """prepared_subset_path=RESULTS/'subset_manifest.json'
@@ -310,13 +324,20 @@ def build_notebook(source: dict, stage: str, platform: str, options: dict) -> di
         "finalist": "Run one configured finalist on all 281 development questions. Execute the two finalist notebooks independently.",
         "heldout": "Run the locked winner once on 284 questions from 50 seeded unseen articles. Results must not change the winner.",
     }[stage]
+    input_description = (
+        "Phase 2B.0 downloads the private Phase 2A baseline by exact HF commit "
+        "and SHA-256. It also downloads and verifies the separate locked corpus artifact."
+        if stage == "prepare"
+        else "The Phase 2B.0 bundle supplies the frozen baseline traces and subset manifest. "
+        "The locked corpus artifact is downloaded independently and verified by SHA-256."
+    )
     cells = [
         _markdown("title", f"# {title} ({platform.title()})\n\n{description}\n"),
         _code("configuration", _configuration(stage, platform, options)),
         _markdown("environment", "## 1. Environment and immutable inputs\n\nSet only the configuration values at the top. Every run validates the locked artifact, preparation bundle, subset hashes, and repository commit.\n"),
         _code("setup", _setup(stage, platform)),
         _helpers(source),
-        _markdown("inputs", "## 2. Load validated inputs\n\nThe Phase 2B.0 bundle supplies the frozen baseline traces and subset manifest. The locked corpus artifact is downloaded independently and verified by SHA-256.\n"),
+        _markdown("inputs", f"## 2. Load validated inputs\n\n{input_description}\n"),
         _load_artifacts(source, stage),
         _cell(source, "runtime-profile"),
         _partitions(source, stage),

@@ -46,6 +46,12 @@ def test_split_notebooks_have_fixed_assignments_and_shared_subset_checks():
         if stage != "prepare":
             assert "Preparation subset hashes verified" in source
             assert "PREPARATION_BUNDLE_PATH" in source
+        else:
+            assert "HF_BASELINE_REPO_ID='ThomasAnderson2009/newsqa-rag-phase2-experiments'" in source
+            assert "HF_BASELINE_REVISION='bd83647c784d7f7d466bbd954fe7d35b5252a2f5'" in source
+            assert "HF_BASELINE_SHA256='044c913d20942c2dc8c1dcfa39544a7baf082f386b6d5f934e01c9c7feaf6017'" in source
+            assert "Configure the read-only HF_TOKEN Kaggle secret" in source
+            assert "'baseline_artifact'" in source
         if stage == "prompt":
             assert f"PROMPT_ID='{options['prompt_id']}'" in source
         if stage == "context":
