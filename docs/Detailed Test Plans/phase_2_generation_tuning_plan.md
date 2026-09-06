@@ -235,8 +235,8 @@ Thực thi được chia thành các notebook nhỏ để chạy độc lập tr
 | `13a_phase_2b_0_preparation_kaggle.ipynb` | Kaggle | Khóa subset và đóng gói baseline |
 | `13b`/`13c`/`13d_phase_2b_1_prompt_*_colab.ipynb` | Colab | Chạy riêng P1, P2, P3 trên 80/20 |
 | `13e`/`13f_phase_2b_2_depth_*_colab.ipynb` | Colab | Chạy hai prompt finalist ở depth 1 hoặc 3; depth 5 tái sử dụng Phase 2B.1 |
-| `13g_phase_2b_3_finalist_1_kaggle.ipynb` | Kaggle | Xác nhận finalist 1 trên 281 câu |
-| `13h_phase_2b_3_finalist_2_colab.ipynb` | Colab | Xác nhận finalist 2 trên 281 câu |
+| `13g_phase_2b_3_finalist_1_kaggle.ipynb` | Colab | Xác nhận finalist 1 P2/depth 5 trên 281 câu; tên file cũ được giữ để tương thích |
+| `13h_phase_2b_3_finalist_2_colab.ipynb` | Colab | Xác nhận finalist 2 P2/depth 3 trên 281 câu |
 | `13i_phase_2b_4_heldout_final_kaggle.ipynb` | Kaggle | Chạy winner trên 284 câu held-out |
 
 Phase 2B.0 xuất `phase2b_preparation_bundle.zip`. Mọi notebook sau phải nạp

@@ -39,7 +39,12 @@ def test_split_notebooks_have_fixed_assignments_and_shared_subset_checks():
         source = "\n".join(
             "".join(cell.get("source", [])) for cell in notebook["cells"]
         )
-        assert f"PLATFORM='{platform}'" in source
+        expected_platform = (
+            "colab"
+            if filename == "13g_phase_2b_3_finalist_1_kaggle.ipynb"
+            else platform
+        )
+        assert f"PLATFORM='{expected_platform}'" in source
         assert "SCREENING_QUESTIONS=80" in source
         assert "JUDGE_CALIBRATION_QUESTIONS=20" in source
         assert "FINAL_HELDOUT_ARTICLES=50" in source
@@ -62,6 +67,10 @@ def test_split_notebooks_have_fixed_assignments_and_shared_subset_checks():
         if stage == "context":
             assert f"CONTEXT_DEPTH={options['depth']}" in source
             assert "CONTEXT_DEPTH in {1,3}" in source
+        if stage == "finalist" and options["slot"] == 1:
+            assert "FINALIST_CONFIG={'prompt_id':'p2','context_depth':5}" in source
+        if stage == "finalist" and options["slot"] == 2:
+            assert "FINALIST_CONFIG={'prompt_id':'p2','context_depth':3}" in source
         if stage == "heldout":
             assert "len(heldout_ids)==284" in source
             assert "len(heldout_reserve_ids)==587" in source
