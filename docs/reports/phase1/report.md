@@ -430,6 +430,8 @@ Bản EDA gốc (`docs/eda/eda_report.md`) chạy trên kho ngữ liệu **v1.0.
 | Biên độ nhiễu nhãn (≥2 từ hiếm chung) | 6,5% | **7,0%** | §1: ngưỡng nâng lên, §3.2B đổi kết luận |
 | Cận trên (khớp chuỗi bất kỳ) | 23,1% | **24,5%** | — |
 
-**Một kết luận đã thay đổi vì việc đo lại này.** Khoảng cách BGE-M3 vs BM25-stemmed trên tập `original` là 0,0680 — trước đây vượt ngưỡng 6,5%, nay **nằm dưới ngưỡng 7,0%**. Báo cáo đã sửa §3.2B: lựa chọn BGE-M3 nay được biện minh bằng cơ chế dữ liệu, không phải bằng ưu thế điểm số. Đây là hướng sửa **bất lợi** cho lập luận của nhóm, và vẫn được ghi lại đầy đủ.
+**Một kết luận đã thay đổi vì việc đo lại này.** Khoảng cách BGE-M3 vs BM25-stemmed trên tập `original` là 0,0680 — trước đây vượt ngưỡng 6,5%, nay **nằm dưới ngưỡng 7,0%**. Đây là hướng sửa **bất lợi** cho lập luận của nhóm, và vẫn được ghi lại đầy đủ.
+
+Cần đọc kết quả này cùng với §1.2 để không mâu thuẫn: khoảng cách đó **có ý nghĩa thống kê** (CI95 của hiệu theo cặp là [+0,0311; +0,1056], không chứa 0) nhưng **chưa vượt ngưỡng ý nghĩa thực tiễn** 7,0%. Hai điều kiện khác nhau, và ở đây chúng cho hai câu trả lời khác nhau. Vì vậy §3.2B phát biểu đúng mức: BGE-M3 hơn BM25-stemmed một cách nhất quán trên `original`, nhưng lý do chọn nó vẫn là **cơ chế dữ liệu** (câu hỏi thiếu mỏ neo từ vựng), không phải độ lớn của khoảng cách điểm.
 
 **Tái lập:** `scripts/eda/12_chunk_counts.py` in ra bảng chunk cho cả hai phiên bản kho ngữ liệu. Các chỉ số từ hiếm và đối thủ được tạo bằng cách chạy `scripts/eda/03_lexical_overlap.py` và `04_distractor_collision.py` với `common.FINAL` trỏ vào bản v2.0.0 đã materialize từ `data/evaluation/newsqa_200_11064_restored/`.
