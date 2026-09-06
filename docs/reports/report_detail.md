@@ -3,7 +3,7 @@
 > **Dự án:** NewsQA RAG — Text Mining (HK3/Năm 3)
 > **Kho ngữ liệu:** `MatchaMacchiato/newsqa_200_11064_v2.0.0` — 11.064 bài báo, **22.766 chunks** (bản đã phục hồi phần đuôi bị cắt)
 > **Tập đánh giá:** 1.152 câu hỏi `resolved` đã khử trùng lặp ngữ nghĩa và có người duyệt, chia theo bài báo
-> **Bản tóm tắt (đọc trước):** [report.md](report.md)  
+> **Bản tóm tắt (đọc trước):** [report.md](report.md) · **Chi tiết từng phase:** [Phase 1](phase1/report.md) · [Phase 2](phase2/report.md)  
 > **Báo cáo chi tiết từng phase:** [Phase 1 — Retrieval Tournament](phase1/report.md) · [Phase 1 (bản tiếng Anh, gọn)](../phase1_results.md) · [EDA](../eda/eda_report.md)
 > **Nguồn số liệu:** `docs/reports/phase1/{round1,round2,round3}.csv`, `winner_lock.jsonl`, `paired_significance.json` và artifact Phase 2 trên Kaggle/Colab
 

@@ -1,86 +1,128 @@
-# NewsQA RAG — Tóm tắt Phase 1 + Phase 2
+# NewsQA RAG — Tóm tắt
 
-> Chi tiết đầy đủ: **[report_detail.md](report_detail.md)** · Phase 1: [phase1/report.md](phase1/report.md) · EDA: [../eda/eda_report.md](../eda/eda_report.md)
+> Chi tiết: **[Phase 1](phase1/report.md)** · **[Phase 2](phase2/report.md)** · [EDA](../eda/eda_report.md) · [Báo cáo gộp hai phase](report_detail.md)
 
-## Hệ thống đang là gì
+Hệ thống hỏi–đáp trên 11.064 bài báo CNN. Người dùng hỏi một câu, hệ thống tìm đoạn văn chứa câu trả lời rồi để LLM viết đáp án kèm trích dẫn.
 
 ```
-Câu hỏi → BGE-M3 sparse (top 20) → bge-reranker-large (top 5) → Gemini 3.1 Flash-Lite → đáp án + citation
-          └─────────── Phase 1 khóa ───────────┘   └────── Phase 2 tinh chỉnh ──────┘
+Câu hỏi → [ tìm đoạn văn ] → [ viết đáp án ] → đáp án + citation
+             PHASE 1              PHASE 2
 ```
 
-Chunk 512/64. Corpus 11.064 bài, 22.766 chunk. Đánh giá trên 1.152 câu `resolved` đã khử trùng lặp, chia theo bài báo: **281 câu development** (tinh chỉnh) / 284 câu held-out / 587 câu dự trữ.
+Dự án chia hai giai đoạn vì hai việc đó hỏng theo hai cách khác nhau và phải đo bằng hai loại thước khác nhau.
 
-## Trạng thái
-
-| | Trạng thái | Kết quả |
+| | Trạng thái | Chốt được gì |
 | :--- | :--- | :--- |
-| EDA | ✅ | Ngưỡng nhiễu nhãn 7,0–24,5%; phục hồi 4.603 bài bị cắt |
-| Phase 1 — chọn retrieval | ✅ khóa | 23 cấu hình, 3 vòng → BGE-M3 + bge-reranker-large + 512/64 |
-| Phase 2A — baseline | ✅ | Answer Correctness 0,6308 |
-| Phase 2B — tinh chỉnh prompt & depth | ✅ | **Winner: P2-depth5**, AC 0,7350 |
-| Phase 2B.4 — held-out | ❌ chưa chạy | *số công bố nằm ở đây* |
-| Phase 3 — abstention | ⛔ bị chặn | chờ duyệt tay 200 case |
+| EDA — khảo sát dữ liệu | ✅ | Ngưỡng nhiễu nhãn 7,0–24,5%; phục hồi 4.603 bài bị cắt |
+| **Phase 1** — chọn cách lấy đoạn văn | ✅ khóa | BGE-M3 sparse + bge-reranker-large + chunk 512/64 |
+| **Phase 2** — chọn cách hỏi LLM | ✅ chọn xong | Prompt P2, 5 đoạn context |
+| Phase 2 — held-out | ❌ chưa chạy | *số công bố nằm ở đây* |
+| Phase 3 — biết từ chối trả lời | ⛔ bị chặn | chờ duyệt tay 200 case |
 
-## Ba kết quả chính
+---
 
-**1. Sparse thắng dense áp đảo.** +0,1634 nDCG@5, CI95 [+0,1231; +0,2080]. Không phải chênh lệch nhỏ. Reranker thêm +0,0659 nữa. Cấu hình khóa đạt **Hit@5 0,9573 / nDCG@5 0,8976** trên tập `resolved`.
+# PHASE 1 — Chọn cách lấy đoạn văn
 
-**2. Prompt đúng dạng đáng giá hơn mọi thứ khác ở tầng sinh.** Baseline có AC 0,6308 nhưng **Exact Match 0,0000** — model biết đáp án nhưng nói dài. Gold NewsQA là span ngắn. Prompt P2 ép trả lời trực tiếp, đúng answer type:
+**Việc của nó:** trong 22.766 đoạn văn, tìm ra 5 đoạn nhiều khả năng chứa câu trả lời nhất. Không gọi LLM, không tốn tiền API.
 
-| | P0 (baseline) | **P2-depth5 (winner)** |
-| :--- | ---: | ---: |
-| Answer Correctness | 0,6308 | **0,7350** (+0,1043) |
-| Exact Match | 0,0000 | **0,0925** |
-| Token F1 | 0,2648 | **0,4191** |
-| Faithfulness | 0,9761 | **0,9801** |
-| Citation F1 | 0,8025 | **0,8391** |
+**Đã thử:** 23 cấu hình, chia 3 vòng để khỏi phải chạy đủ 72 tổ hợp.
 
-Mọi mức tăng đều có ý nghĩa thống kê (bootstrap gom cụm bài báo, CI95 không chứa 0), và grounding **không giảm**.
+| Vòng | Thử gì | Thắng |
+| :--- | :--- | :--- |
+| 1 | 4 mô hình dense × 4 mô hình sparse | **BGE-M3 sparse** |
+| 2 | 3 retriever × 3 reranker | **+ bge-reranker-large** |
+| 3 | 3 kích thước chunk (256/512/1024) | 512/64 — *không ai thắng rõ* |
 
-**3. Guardrail đã chặn một cấu hình điểm cao hơn.** P2-depth3 có AC **0,7711** — cao hơn winner — nhưng bị loại vì làm tụt Faithfulness (−0,0200) và Citation Validity (−0,0142) quá ngưỡng đăng ký trước. Kiểm định theo cặp xác nhận **cả hai mức tụt đều là thật**, không phải nhiễu đo.
+**Kết quả cấu hình khóa** (281 câu development, tập `resolved`):
 
-> Bộ quy tắc được khóa **trước khi** nhìn thấy kết quả, nên nó phân xử được đúng tình huống này: một cấu hình đổi tính trung thực lấy điểm số. Nới ngưỡng lúc này chính là hành vi mà việc đăng ký trước sinh ra để ngăn.
+| Hit@1 | Hit@5 | nDCG@5 | Recall@5 | Latency P50 |
+| ---: | ---: | ---: | ---: | ---: |
+| 0,8221 | **0,9573** | 0,8976 | 0,9555 | 510 ms |
 
-## Phát hiện đáng kể nhất về phương pháp
+**Vì sao chọn như vậy:**
 
-**Phase 1 đã định giá sẵn câu hỏi của Phase 2, miễn phí.** Đường cong Hit@k của cấu hình khóa cho biết chính xác việc cắt context tốn bao nhiêu bằng chứng:
+- **Sparse thắng dense +0,1634 nDCG@5** (CI95 [+0,1231; +0,2080]) — không phải chênh lệch nhỏ. EDA giải thích: câu hỏi NewsQA bám vào tên riêng, ngày tháng, con số — thứ mà khớp từ vựng bắt được còn embedding thì làm nhòe đi.
+- **Reranker thêm +0,0659 nDCG@5.** EDA đo được mỗi câu hỏi có trung vị **25 đoạn đối thủ** cùng chủ đề, nên lọc lại là bắt buộc chứ không phải tùy chọn.
+- **Chunk size là kết quả null.** Ba kích thước chồng lấn nhau; chọn 512 vì lý do vận hành, không vì nó thắng.
 
-| Depth | Hit@k | Số câu mất sạch bằng chứng (/281) |
+---
+
+# PHASE 2 — Chọn cách hỏi LLM
+
+**Việc của nó:** với 5 đoạn văn Phase 1 đưa sang, tìm cách ra lệnh cho Gemini sao cho nó trả lời đúng mà không bịa. **Không huấn luyện lại gì cả** — chỉ đổi hai thứ: nội dung prompt, và số đoạn context đưa vào.
+
+**Điểm xuất phát** (prompt gốc P0, 5 context, 281 câu):
+
+| Answer Correctness | Exact Match | Faithfulness |
+| ---: | ---: | ---: |
+| 0,6308 | **0,0000** | 0,9761 |
+
+Ba số này đọc cùng nhau ra một chẩn đoán: **hệ thống không bịa, nó chỉ nói dài.** Model biết đáp án nhưng gói trong một đoạn văn, trong khi đáp án chuẩn của NewsQA là một span rất ngắn — một cái tên, một mốc thời gian, một con số.
+
+**Đã thử:** 4 prompt × 3 mức độ sâu context. Mỗi prompt nhắm vào một nhóm lỗi đã đếm được từ audit tay 30 câu điểm thấp.
+
+| Prompt | Nhắm nhóm lỗi | Cỡ nhóm | Kết quả |
+| :--- | :--- | ---: | :--- |
+| P1 — siết grounding | Hallucination | ~0 | ❌ nhắm vào vấn đề không tồn tại |
+| **P2 — trả lời ngắn, đúng answer type** | Đúng nhưng quá dài | **11/30** | ✅ thắng |
+| P3 — chọn đúng đoạn trước khi trả lời | Trộn bài, trộn mốc thời gian | 3/30 | ⚠️ đúng hướng, chưa đủ mạnh |
+
+**Chọn:** prompt **P2** với **5 đoạn context**.
+
+| | P0 (gốc) | **P2-depth5 (chọn)** | P2-depth3 (loại) |
+| :--- | ---: | ---: | ---: |
+| Answer Correctness | 0,6308 | **0,7350** | *0,7711* |
+| Exact Match | 0,0000 | **0,0925** | *0,2633* |
+| Faithfulness | 0,9761 | **0,9801** | 0,9561 ❌ |
+| Citation Validity | 0,9893 | 0,9858 | 0,9751 ❌ |
+
+**Vì sao chọn P2-depth5 dù P2-depth3 điểm cao hơn:**
+
+Phase 2 có **4 điều kiện được khóa trước khi nhìn thấy kết quả** — vì ở tầng sinh, sai một chút nghĩa là hệ thống nói điều không có trong bằng chứng, chứ không chỉ là xếp hạng kém. P2-depth3 trượt 2 trong 4: nó làm tụt Faithfulness và Citation Validity quá ngưỡng.
+
+Kiểm định theo cặp xác nhận **cả hai mức tụt đều là thật** (CI95 không chứa 0), không phải nhiễu đo. Nới ngưỡng lúc này chính là hành vi mà việc đăng ký trước sinh ra để ngăn.
+
+P2-depth5 tăng correctness +0,1043 (CI95 [+0,0844; +0,1240]) mà **không** làm giảm grounding. Cái giá: tốn input token nhiều hơn depth 3 khoảng 60%.
+
+---
+
+# Chỗ Phase 1 giúp Phase 2
+
+Phát hiện phương pháp đáng kể nhất của dự án: **Phase 1 đã trả lời sẵn một câu hỏi của Phase 2, miễn phí.**
+
+Phase 2 cần biết cắt bớt context tốn gì. Đường cong Hit@k mà Phase 1 đã đo cho biết chính xác:
+
+| Số context | Hit@k | Số câu mất sạch bằng chứng (/281) |
 | ---: | ---: | ---: |
 | 1 | 0,8221 | **38** |
 | 3 | 0,9324 | **7** |
 | 5 | 0,9573 | 0 |
 
-Phase 2 quan sát được **đúng 7 câu abstention không citation** ở depth 3, 2 trong đó có gold ở rank 4 — bị cắt mất. Con số khớp chính xác. Depth không phải cái núm miễn phí, và lẽ ra có thể dự đoán kết quả trước khi chi tiền API.
+Phase 2 quan sát được **đúng 7 câu** trả về "không tìm thấy thông tin" ở depth 3, 2 trong đó có bằng chứng ở hạng 4 — bị cắt mất. Con số khớp chính xác.
 
-## Vì sao chọn như vậy — nối với EDA
+Bài học: đọc Hit@k trước, rồi mới chọn depth để thử. Đỡ được cả một vòng chi tiền API.
 
-| Phát hiện EDA | Dẫn tới |
-| :--- | :--- |
-| 7,0–24,5% câu có distractor trả lời được nhưng bị chấm sai | Ngưỡng nhiễu 7,0%; và giải thích vì sao người duyệt thấy 23/30 câu điểm thấp thực ra đúng ⇒ **AC 0,6308 là cận dưới**, không phải năng lực thật |
-| Câu hỏi `original` thiếu mỏ neo định danh (28,4% vs 59,5% có mỏ neo) | Chọn sparse; và giải thích vì sao BGE-M3 hơn BM25 **chỉ trên** `original` |
-| Trung vị 25 chunk đối thủ mỗi câu | Reranker là bắt buộc, không phải tùy chọn |
-| Bằng chứng nằm ở 16% đầu bài | Hit@1 cao tới 0,8221; truncation không gây hại |
-| Notebook cũ đặt judge = generator | Phase 2 tách hẳn hai provider |
+---
 
-## Còn thiếu gì
+# Chưa được phép kết luận
 
-| # | Việc | Chặn |
-| ---: | :--- | :--- |
-| 1 | Tạo `phase2b_winner_decision.json` | Held-out |
-| 2 | **Audit mù 30 cặp P0 ↔ winner, hai người chấm độc lập** | Đóng Phase 2 — cần chia việc |
-| 3 | Lặp 25 câu × 2 cấu hình đo độ ổn định API | Đóng Phase 2 |
-| 4 | Phân tầng `gold_in_top5` + article macro — **không tốn API**, dữ liệu đã có | Đóng Phase 2 |
-| 5 | Chạy held-out 284 câu, **đúng một lần** | Số công bố |
-| 6 | Chạy lại vòng 1 trên chỉ mục đã đóng gói (cố định số dense) | Phase 1 §4.3 |
-| 7 | Chạy Phase 1 held-out trên 150 bài final-test | Nghiệm thu Phase 1 |
-| 8 | Duyệt dataset abstention 200 case | Phase 3 |
+**Phase 1** — không phân định được mô hình dense nào tốt nhất, và dense chưa tái lập được giữa các lần chạy (trôi 0,0143 > khoảng cách giữa các mô hình 0,0094). Chunk size là kết quả null; hybrid là "không chứng minh được có lợi", không phải "đã chứng minh có hại".
 
-## Chưa được phép kết luận
+**Phase 2** — **chưa có số nào để công bố**: mọi số trên đo ở tập tinh chỉnh nên lệch lạc quan theo cấu trúc. P2-depth5 thắng vì nó **hợp lệ**, không phải vì chất lượng cao nhất. Và AC 0,6308 của baseline là **cận dưới** — EDA cho thấy 7,0–24,5% câu bị chấm sai oan, người duyệt thấy 23/30 câu điểm thấp thực ra đúng.
 
-- **Chưa có số nào để công bố.** Mọi số trên đo ở tập tinh chỉnh, lệch lạc quan theo cấu trúc. Số công bố là số held-out.
-- **P2-depth5 thắng vì nó hợp lệ**, không phải vì nó chất lượng cao nhất. Depth 3 có correctness cao hơn có ý nghĩa.
-- **Không phân định được best dense**, và dense chưa tái lập được giữa các lần chạy (drift 0,0143 > khoảng cách giữa các model 0,0094).
-- **Chunk size là kết quả null** — ba kích thước chồng lấn nhau. Chọn 512 vì lý do vận hành.
-- **Phase 1 chưa chạy held-out** như exec guide yêu cầu.
+---
+
+# Còn thiếu gì
+
+| # | Việc | Phase | Ghi chú |
+| ---: | :--- | :--- | :--- |
+| 1 | Bổ sung phân tầng `gold_in_top5` và article-macro | 2 | **Không tốn API** — dữ liệu đã có |
+| 2 | Chạy lại vòng 1 trên chỉ mục đã đóng gói (cố định số dense) | 1 | Rẻ — bỏ qua bước dựng chỉ mục |
+| 3 | Tạo `phase2b_winner_decision.json` | 2 | Điều kiện để chạy held-out |
+| 4 | Audit mù 30 cặp P0 ↔ winner, **hai người chấm độc lập** | 2 | **Cần chia việc giữa hai người** |
+| 5 | Lặp 25 câu × 2 cấu hình đo độ ổn định API | 2 | |
+| 6 | Chạy held-out 284 câu, **đúng một lần** | 2 | Số công bố |
+| 7 | Chạy held-out 150 bài final-test | 1 | Nghiệm thu Phase 1 |
+| 8 | Duyệt tay dataset abstention 200 case | 3 | 3 loại cần reviewer thứ hai |
+
+Ngoài ra test plan Phase 1 §6 yêu cầu **4 biểu đồ 300 DPI** (so sánh embedding, dumbbell ΔMRR@5, Pareto accuracy–latency, phân rã latency) — hiện chưa có cái nào; `scripts/generate_retrieval_figures.py` chưa nối được vào CSV các vòng.
