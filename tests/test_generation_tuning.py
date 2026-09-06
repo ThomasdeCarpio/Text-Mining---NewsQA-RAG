@@ -43,6 +43,9 @@ def test_split_notebooks_have_fixed_assignments_and_shared_subset_checks():
         assert "SCREENING_QUESTIONS=80" in source
         assert "JUDGE_CALIBRATION_QUESTIONS=20" in source
         assert "FINAL_HELDOUT_ARTICLES=50" in source
+        assert "HF_ARTIFACT_REPO_ID='ThomasAnderson2009/newsqa-rag-phase2-locked-v2'" in source
+        assert "HF_ARTIFACT_REVISION='locked-bge-m3-512-64-deduplicated-v2'" in source
+        assert "HF_ARTIFACT_SHA256='fc5d67b7acf6e8be0205ce00b8069b3b6c8dcce853f8671f2feb3887b2707a24'" in source
         if stage != "prepare":
             assert "Preparation subset hashes verified" in source
             assert "PREPARATION_BUNDLE_PATH" in source

@@ -86,6 +86,10 @@ HF_BASELINE_SHA256='044c913d20942c2dc8c1dcfa39544a7baf082f386b6d5f934e01c9c7feaf
     return f"""from pathlib import Path
 REPO_URL='https://github.com/ThomasdeCarpio/Text-Mining---NewsQA-RAG.git'
 REPO_COMMIT='{REPO_COMMIT}'
+HF_ARTIFACT_REPO_ID='ThomasAnderson2009/newsqa-rag-phase2-locked-v2'
+HF_ARTIFACT_REVISION='locked-bge-m3-512-64-deduplicated-v2'
+HF_ARTIFACT_FILENAME='artifacts/locked-bge-m3-512-64-deduplicated-v2/locked-bge-m3-512-64-deduplicated-v2.zip'
+HF_ARTIFACT_SHA256='fc5d67b7acf6e8be0205ce00b8069b3b6c8dcce853f8671f2feb3887b2707a24'
 PLATFORM='{platform}'
 RUN_ID='{run_id}'
 PREPARATION_BUNDLE_PATH=''  # Required except in Phase 2B.0; Drive path on Colab or attached Kaggle input.
