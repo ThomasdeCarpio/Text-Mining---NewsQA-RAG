@@ -24,6 +24,39 @@ Charts (300 DPI, saved to `docs/figures/eda/`): `fig1_truncation`,
 
 ---
 
+> ### ⚠️ Which corpus this report describes
+>
+> Everything below was measured on the **v1.0.0** corpus — **19,263 chunks**,
+> before `scripts/restore_corpus.py` appended the truncated article tails.
+> Section 4 argues for that restoration; it has since been done, and **Phase 1
+> and Phase 2 both run on the restored v2.0.0 corpus (22,766 chunks)**.
+>
+> This report is deliberately left as it was: it is the analysis that *motivated*
+> the restoration, and rewriting it would erase that reasoning. But **do not
+> quote its corpus-dependent numbers as current.** Every one of them has been
+> re-measured on v2.0.0 with these same scripts; the side-by-side table is
+> Appendix A of [`docs/reports/phase1/report.md`](../reports/phase1/report.md),
+> and the short version is:
+>
+> | | v1.0.0 (here) | v2.0.0 (current) |
+> |---|---|---|
+> | chunks | 19,263 | **22,766** |
+> | chunks per article | 1.74 | **2.06** |
+> | rare-term threshold (IDF ≥ 6.0) | ≤46 chunks | **≤55 chunks** |
+> | rare terms/question, original → resolved | 0.33 → 0.89 | **0.34 → 0.93** |
+> | questions with an anchor, original → resolved | 27.7% → 57.7% | **28.4% → 59.5%** |
+> | questions with no rare term | 493 (37%) | **470 (35.2%)** |
+> | median competitors | 20 | **25** |
+> | narrowed to ≤10 competitors | 30.7% | **25.8%** |
+> | ambiguity margin (strong / upper bound) | 6.5% / 23.1% | **7.0% / 24.5%** |
+>
+> Every conclusion in this report survived the re-measurement. Two got stronger
+> (the reranker case, and the chunk-size null result); one comparison that used
+> to clear the noise margin no longer does (BGE-M3 vs BM25-stemmed on the
+> `original` questions), and that is recorded in the Phase 1 report.
+
+---
+
 ## TL;DR — the eight things that matter
 
 **1. The articles are cut off, and it is the benchmark's fault, not ours.**
@@ -51,8 +84,9 @@ more than 200 characters.
 This is the answer if the dataset choice is challenged: the original CNN pages
 are **already in the repository** (`data/cnn_downloads.tgz`, 92,579 pages), our
 text is an exact prefix of them, so restoring an article means appending — no
-crawl, and every existing answer position stays valid. We measured the defect,
-priced the fix, and judged it not worth spending the study on. *(Sections 3, 4)*
+crawl, and every existing answer position stays valid. We measured the defect and
+priced the fix here; it was **carried out afterwards** — see the banner above.
+*(Sections 3, 4)*
 
 **3. The original questions contain 34 impossible pairs.** *"what does faa say"*
 appears three times pointing at three different articles. No retriever can
@@ -81,11 +115,7 @@ by less than that are not meaningfully different.** *(Section 7)*
 
 **7. Two experiments are not worth running.** Chunking strategy has little
 headroom (**1.74 chunks per article** — chunk retrieval ≈ article retrieval
-here). *Post-restoration update: on the v2.0.0 corpus this is **2.06 chunks per
-article** across **22,766 chunks**, with 24.1% of articles now at 3 or more
-(was 0.96%). The Phase 1 round-3 result held anyway — see
-`docs/phase1_results.md` §4. Every "19,263" and "1.74" below is a v1.0.0
-figure.* And
+here; 2.06 on v2.0.0, where the Phase 1 round-3 result held anyway). And
 **@7 does not exist**: the scorer emits k ∈ {1, 3, 5, 10}. Report @3/@5/@10.
 *(Sections 1, 9)*
 
