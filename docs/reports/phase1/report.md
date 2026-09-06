@@ -124,17 +124,17 @@ graph TD
 
 | Nhóm | Mô hình Truy xuất | nDCG@5 (`resolved`) | Hit@1 (`resolved`) | Hit@5 (`resolved`) | MRR@5 (`resolved`) | nDCG@5 (`original`) | P50 Latency (ms) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Sparse** | **BAAI/bge-m3 (Learned Sparse)** | **0.8317** | **0.7260** | **0.9181** | **0.8059** | **0.4243** | 78.1 ms |
-| Sparse | BM25 Okapi (stemmed) | 0.8123 | 0.6940 | 0.9146 | 0.7815 | 0.3563 | 58.6 ms |
-| Sparse | BM25+ simple | 0.7206 | 0.5872 | 0.8221 | 0.6881 | 0.2436 | 101.5 ms |
-| Sparse | BM25 Okapi (simple) | 0.7087 | 0.5765 | 0.8185 | 0.6733 | 0.2420 | 109.9 ms |
-| **Dense** | **intfloat/e5-base-v2** | **0.6661** | **0.5267** | **0.7829** | **0.6298** | **0.2325** | 15.8 ms |
-| Dense | BAAI/bge-small-en-v1.5 | 0.6472 | 0.5231 | 0.7544 | 0.6163 | 0.2285 | 16.0 ms |
+| **Sparse** | **BAAI/bge-m3 (Learned Sparse)** | **0.8317** | **0.7260** | **0.9181** | **0.8059** | **0.4243** | 76.7 ms |
+| Sparse | BM25 Okapi (stemmed) | 0.8123 | 0.6940 | 0.9146 | 0.7815 | 0.3563 | 56.1 ms |
+| Sparse | BM25+ simple | 0.7206 | 0.5872 | 0.8221 | 0.6881 | 0.2436 | 101.1 ms |
+| Sparse | BM25 Okapi (simple) | 0.7087 | 0.5765 | 0.8185 | 0.6733 | 0.2420 | 111.8 ms |
+| **Dense** | **intfloat/e5-base-v2** | **0.6684** | 0.5267 | **0.7865** | **0.6316** | 0.2263 | 15.5 ms |
+| Dense | BAAI/bge-small-en-v1.5 | 0.6589 | **0.5374** | 0.7651 | 0.6285 | 0.2249 | 16.0 ms |
+| Dense | BAAI/bge-large-en-v1.5 | 0.6536 | 0.5338 | 0.7544 | 0.6252 | **0.2325** | 27.4 ms |
+| Dense | sentence-transformers/all-MiniLM-L6-v2 | 0.5165 | 0.3879 | 0.6299 | 0.4851 | 0.1788 | 10.6 ms |
 
 > [!CAUTION]
-> **Bốn dòng Dense mang sai số tái lập ~0.01 và phải đọc kèm §3.2C.** Chạy lại đúng cấu hình này cho `bge-small` ra nDCG@5 = 0.6589 thay vì 0.6472 (trôi +0.0117), `e5-base` ra 0.6684 thay vì 0.6661. Bốn dòng Sparse tái lập chính xác tuyệt đối. Bảng trên lấy từ một lần chạy duy nhất để giữ tính nhất quán nội bộ; **không được dùng nó để xếp hạng hai mô hình dense với nhau.**
-| Dense | BAAI/bge-large-en-v1.5 | 0.6478 | 0.5302 | 0.7473 | 0.6199 | 0.2238 | 27.5 ms |
-| Dense | sentence-transformers/all-MiniLM-L6-v2 | 0.5129 | 0.3843 | 0.6263 | 0.4815 | 0.1766 | 10.8 ms |
+> **Bốn dòng Sparse tái lập chính xác tuyệt đối; bốn dòng Dense thì không** (§3.2C). Chạy lại đúng cấu hình này trên cùng dữ liệu, **cả bốn** mô hình dense đều cho số khác — lệch tới 0.0143 — trong khi **cả bốn** mô hình sparse cho số giống hệt đến từng chữ số. Vì vậy **thứ hạng nội bộ giữa các mô hình dense trong bảng này không dùng được**; các ô in đậm ở nhóm Dense chỉ ghi nhận ai dẫn đầu *ở lần chạy này*, và ba cột khác nhau lại cho ba người dẫn đầu khác nhau. Ngôi đầu của nhóm Sparse thì tuyệt đối vững.
 
 ---
 
@@ -199,12 +199,26 @@ Kết quả `paired_comparison` (bootstrap theo cặp trên 281 câu, seed 42 �
 >
 > | Mô hình | nDCG@5 lần 1 | lần 2 | trôi |
 > | :--- | :---: | :---: | :---: |
-> | sparse BGE-M3 | 0.8317 | 0.8317 | **0.0000** |
-> | sparse BM25-stemmed | 0.8123 | 0.8123 | **0.0000** |
+> | **sparse** BGE-M3 | 0.8317 | 0.8317 | **0.0000** |
+> | **sparse** BM25-stemmed | 0.8123 | 0.8123 | **0.0000** |
+> | **sparse** BM25+ simple | 0.7206 | 0.7206 | **0.0000** |
+> | **sparse** BM25 Okapi simple | 0.7087 | 0.7087 | **0.0000** |
 > | dense e5-base-v2 | 0.6661 | 0.6684 | +0.0023 |
 > | dense bge-small | 0.6472 | 0.6589 | **+0.0117** |
+> | dense bge-large | 0.6478 | 0.6536 | +0.0058 |
+> | dense all-MiniLM-L6-v2 | 0.5129 | 0.5165 | +0.0036 |
 >
-> **Nhánh sparse tái lập chính xác đến từng chữ số. Nhánh dense thì không.** Nguyên nhân nằm ở ba chỗ không được cố định seed, tất cả đều chỉ tồn tại trên đường đi dense: chỉ mục **HNSW của Chroma là xấp xỉ** và chỉ nhận `hnsw:space`, không nhận seed (`common/newsqa_rag/indexing/chroma_store.py:33`); `model.encode()` **không ghim `batch_size`** nên cách gom batch đổi theo độ dài văn bản (`embeddings.py:148`); và không nơi nào trong repo đặt `torch.manual_seed` hay `use_deterministic_algorithms`.
+> **Cả 4/4 mô hình sparse tái lập chính xác đến từng chữ số. Cả 4/4 mô hình dense đều trôi** (mức trôi lớn nhất trên mọi metric: 0.0143).
+>
+> **Và thứ hạng dense đảo lộn thật sự — không chỉ là số nhích nhẹ:**
+>
+> | Hạng | `resolved` lần 1 → lần 2 | `original` lần 1 → lần 2 |
+> | :---: | :--- | :--- |
+> | 1 | e5-base → e5-base | e5-base → **bge-large** |
+> | 2 | bge-large → **bge-small** | bge-small → **e5-base** |
+> | 3 | bge-small → **bge-large** | bge-large → **bge-small** |
+>
+> Trên tập `original`, **cả ba vị trí đầu đều đổi chỗ**, và người dẫn đầu mới (`bge-large`, 0.2325) ghi đúng con số mà `e5-base` từng ghi ở lần chạy trước. Cùng lúc đó, thứ hạng sparse **giống hệt nhau ở cả hai lần chạy**. Nguyên nhân nằm ở ba chỗ không được cố định seed, tất cả đều chỉ tồn tại trên đường đi dense: chỉ mục **HNSW của Chroma là xấp xỉ** và chỉ nhận `hnsw:space`, không nhận seed (`common/newsqa_rag/indexing/chroma_store.py:33`); `model.encode()` **không ghim `batch_size`** nên cách gom batch đổi theo độ dài văn bản (`embeddings.py:148`); và không nơi nào trong repo đặt `torch.manual_seed` hay `use_deterministic_algorithms`.
 >
 > **Hệ quả trực tiếp:** độ trôi giữa hai lần chạy của một mô hình (**0.0117**) **lớn hơn khoảng cách giữa hai mô hình** (**0.0094**). Không thể xếp hạng `e5-base` với `bge-small` bằng dữ liệu này — thứ tự của chúng đổi theo lần chạy chứ không theo chất lượng.
 

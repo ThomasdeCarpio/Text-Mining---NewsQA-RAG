@@ -60,14 +60,19 @@ nDCG@5, first-stage only, no reranker:
 
 | Retriever | `original` (floor) | `resolved` (realistic) | p50 latency |
 |---|---|---|---|
-| **sparse — BGE-M3 learned sparse** | **0.4243** | **0.8317** | 78 ms |
-| sparse — BM25 Okapi, stemmed | 0.3563 | 0.8123 | 59 ms |
-| sparse — BM25+ simple | 0.2436 | 0.7206 | 102 ms |
-| sparse — BM25 Okapi, simple | 0.2420 | 0.7087 | 110 ms |
-| **dense — intfloat/e5-base-v2** | **0.2325** | **0.6661** | 16 ms |
-| dense — BAAI/bge-small-en-v1.5 | 0.2285 | 0.6472 | 16 ms |
-| dense — BAAI/bge-large-en-v1.5 | 0.2238 | 0.6478 | 28 ms |
-| dense — all-MiniLM-L6-v2 | 0.1766 | 0.5129 | 11 ms |
+| **sparse — BGE-M3 learned sparse** | **0.4243** | **0.8317** | 77 ms |
+| sparse — BM25 Okapi, stemmed | 0.3563 | 0.8123 | 56 ms |
+| sparse — BM25+ simple | 0.2436 | 0.7206 | 101 ms |
+| sparse — BM25 Okapi, simple | 0.2420 | 0.7087 | 112 ms |
+| **dense — intfloat/e5-base-v2** | 0.2263 | **0.6684** | 16 ms |
+| dense — BAAI/bge-small-en-v1.5 | 0.2249 | 0.6589 | 16 ms |
+| dense — BAAI/bge-large-en-v1.5 | **0.2325** | 0.6536 | 27 ms |
+| dense — all-MiniLM-L6-v2 | 0.1788 | 0.5165 | 11 ms |
+
+> **The four dense rows do not reproduce.** Re-running this exact configuration
+> on the same data moved every dense model (up to 0.0143) and reshuffled their
+> ranking, while every sparse model returned identical figures to four decimal
+> places. Do not read a dense ordering out of this table — see §2.3.
 
 **Winners: BGE-M3 sparse, and e5-base-v2 dense.**
 
@@ -89,26 +94,55 @@ state it.
 
 ### Why BGE-M3 over BM25
 
-BM25-stemmed is within 0.019 of BGE-M3 on `resolved` — inside the noise margin,
-so on that set alone we could not separate them. On `original` the gap is
-**0.068** — which now sits just *inside* the 7.0% margin too, so the measurement
-does not separate them either way. What decides it is the mechanism EDA §7
-describes: **35.2% of questions (470/1,336) contain
-no rare term at all**, and a pure lexical scorer has nothing to grab on those.
-BGE-M3's learned term weights degrade more gracefully there.
+The paired bootstrap settles this, and it splits by variant:
+
+| Variant | delta nDCG@5 (BGE-M3 − BM25) | CI95 of the delta | Verdict |
+|---|---|---|---|
+| **`original`** | **+0.0680** | **[+0.0311, +0.1056]** | **significant** (4/4 metrics) |
+| `resolved` | +0.0194 | [−0.0125, +0.0508] | not separated |
+
+That split *is* the EDA mechanism, measured. `original` carries a rare-term
+anchor on only **28.4%** of questions and **35.2% (470/1,336) carry none at
+all**; `resolved` raises the anchored share to **59.5%**. BGE-M3's advantage
+appears exactly where lexical matching runs out of handles and disappears
+exactly where it does not. A model winning by luck does not produce that
+clean a context dependence — so the "learned term weights degrade more
+gracefully" claim now has a measured fingerprint, not just an assertion.
 
 ### Why the dense pick was wrong the first time — the noise rule in action
 
 Our first run selected the dense winner on the `original` set, where
 bge-small scored 0.2285 and e5-base 0.2325. **A 0.004 gap — deep inside the
-7.0% margin.** We were reading noise as a result.
+7.0% margin.** We were reading noise as a result. `select_winner` now defaults
+to `resolved` (`common/newsqa_rag/evaluation/phase1.py`) and rounds 1–2 were
+re-run.
 
-On `resolved`, e5-base leads by 0.019 nDCG@5 and by **2.9 points of Hit@5**
-(0.7829 vs 0.7544), and it is faster than bge-large at the same cost as
-bge-small. `select_winner` now defaults to `resolved`
-(`common/newsqa_rag/evaluation/phase1.py`), and rounds 1–2 were re-run. The
-final locked configuration did not change — but the reported dense figure did,
-and it is now the one we can defend.
+**But the deeper problem is that no dense ranking here is stable.** The paired
+bootstrap cannot separate e5-base from bge-small on any metric or either
+variant, and bge-small is slightly *ahead* at Hit@1 (−0.0107 for e5). Then
+re-running the identical configuration showed why:
+
+| | nDCG@5 run 1 | run 2 | drift |
+|---|---|---|---|
+| sparse — all four models | — | — | **0.0000** |
+| dense — e5-base-v2 | 0.6661 | 0.6684 | +0.0023 |
+| dense — bge-small | 0.6472 | 0.6589 | **+0.0117** |
+| dense — bge-large | 0.6478 | 0.6536 | +0.0058 |
+| dense — all-MiniLM-L6-v2 | 0.5129 | 0.5165 | +0.0036 |
+
+Run-to-run drift for one model (0.0117) **exceeds the gap between two models**
+(0.0094), and on `original` all three top dense positions changed places
+between runs. Three unseeded sources explain it, all of them dense-only:
+Chroma's HNSW index is approximate and takes only `hnsw:space`, no seed
+(`indexing/chroma_store.py:33`); `model.encode()` pins no `batch_size`, so
+batching shifts with text length (`indexing/embeddings.py:148`); and nothing
+in the repo sets `torch.manual_seed` or `use_deterministic_algorithms`. Sparse
+scoring is exact and uses none of them.
+
+**This changes nothing we ship.** The locked configuration is sparse-only, so
+no dense component reaches production; the dense arm survives only inside the
+round-2 hybrid, which lost. We keep e5-base because the pre-registered
+tie-break selects it on `resolved`, and we make no claim that it is better.
 
 ---
 
