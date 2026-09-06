@@ -8,7 +8,11 @@ wins the tournament *and* wins for a reason the data predicted in advance is a
 defensible choice. One that only wins the tournament is a coin flip we got lucky on.
 
 Every number below is measured on the **281 resolved development questions**
-(50 articles), searching a corpus of **19,263 chunks** from 11,064 articles.
+(50 articles), searching a corpus of **22,766 chunks** from 11,064 articles
+(dataset `newsqa_200_11064_v2.0.0`, after the truncated article tails were
+restored). The EDA was written against the pre-restoration v1.0.0 corpus of
+19,263 chunks, so where a figure differs between the two this document uses the
+v2.0.0 one and says so.
 Raw output: `reports/phase1/round{1,2,3}.csv`, winners in
 `reports/phase1/winner_lock.jsonl`.
 
@@ -174,9 +178,27 @@ nDCG@5 on `resolved`, sparse + bge-reranker-large:
 
 **Honest reading: this round has no winner worth the name.** The full spread is
 0.047 nDCG@5 — *below* the 6.5% ambiguity margin. EDA said so before we ran it:
-NewsQA articles average **1.74 chunks per article**, so chunk retrieval is
-almost the same task as article retrieval, and there is no headroom for a
-chunking strategy to exploit.
+NewsQA articles are short enough that chunk retrieval is almost the same task
+as article retrieval, leaving little headroom for a chunking strategy.
+
+The EDA measured that on the pre-restoration corpus (**1.74 chunks per
+article**, max 3). Re-measured on the v2.0.0 corpus Phase 1 actually ran on, the
+figure is **2.06 chunks per article** (max 7) — restoration appended 5.35M
+characters to 41.6% of articles and grew the chunk count 19,263 → 22,766. The
+median article is unchanged at 2 chunks, and **75.9% of articles still produce
+at most 2**.
+
+| | v1.0.0 (EDA) | **v2.0.0 (Phase 1)** |
+|---|---|---|
+| chunks | 19,263 | **22,766** |
+| mean chunks/article | 1.74 | **2.06** |
+| median tokens/article | 720 | **724** |
+| articles with ≥3 chunks | 106 (0.96%) | **2,669 (24.1%)** |
+
+This makes the null result *stronger*, not weaker. Restoration created real
+headroom for chunk size to matter — 24% of articles now split three or more ways
+instead of 1% — and the three configurations still land within noise of each
+other.
 
 We report 512/64 as the pick because it does score highest and it is the middle
 setting — but the defensible claim is *"chunk size does not matter on this

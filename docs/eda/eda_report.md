@@ -79,8 +79,13 @@ a *distractor* article that plausibly answers them — the same news event cover
 twice. Our scoring calls those retrievals wrong. **Two configurations differing
 by less than that are not meaningfully different.** *(Section 7)*
 
-**7. Two experiments are not worth running.** Chunking strategy has no headroom
-(**1.74 chunks per article** — chunk retrieval ≈ article retrieval here). And
+**7. Two experiments are not worth running.** Chunking strategy has little
+headroom (**1.74 chunks per article** — chunk retrieval ≈ article retrieval
+here). *Post-restoration update: on the v2.0.0 corpus this is **2.06 chunks per
+article** across **22,766 chunks**, with 24.1% of articles now at 3 or more
+(was 0.96%). The Phase 1 round-3 result held anyway — see
+`docs/phase1_results.md` §4. Every "19,263" and "1.74" below is a v1.0.0
+figure.* And
 **@7 does not exist**: the scorer emits k ∈ {1, 3, 5, 10}. Report @3/@5/@10.
 *(Sections 1, 9)*
 

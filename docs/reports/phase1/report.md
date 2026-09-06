@@ -175,11 +175,22 @@ Vòng 3 kiểm tra tính bền vững của Quán quân Vòng 2 trên 3 kích th
 
 #### Nhận định khoa học thẳng thắn: Vòng đấu không có người thắng áp đảo
 * Khoảng cách giữa cấu hình cao nhất (512/64: 0.8976) và thấp nhất (256/32: 0.8507) là **0.0469 — hoàn toàn nằm dưới biên độ nhiễu 6.5%**.
-* **Lý giải từ EDA §1:** Phân bố độ dài bài báo NewsQA cho thấy một đặc tính mấu chốt:
-  * Chiều dài trung vị của bài báo chỉ khoảng 658 - 722 tokens.
-  * Sau khi cắt nhỏ, toàn bộ kho ngữ liệu chỉ tạo ra trung bình **1.74 chunks/bài báo** (trong đó 2.971 bài chỉ là 1 chunk duy nhất, 7.987 bài là 2 chunks, và chỉ có 106 bài thành 3 chunks).
+* **Lý giải từ EDA §1 — đo lại trên kho ngữ liệu v2.0.0 đã phục hồi:** Phân bố độ dài bài báo NewsQA cho thấy một đặc tính mấu chốt. Số liệu dưới đây là của kho ngữ liệu mà Phase 1 **thực sự chạy trên đó** (`newsqa_200_11064_v2.0.0`, sau khi đã nối lại phần đuôi bị cắt cho 4.603 bài):
+
+  | | v1.0.0 (kho EDA đo ban đầu) | **v2.0.0 (Phase 1 chạy trên đây)** |
+  |---|---|---|
+  | tổng số chunk | 19.263 | **22.766** |
+  | trung bình chunk/bài | 1,74 | **2,06** |
+  | trung vị token/bài | 720 | **724** |
+  | phân bố (1 / 2 / 3 / 4+ chunk) | 2.971 / 7.987 / 106 / 0 | **2.939 / 5.456 / 1.934 / 735** |
+  | nhiều chunk nhất | 3 | **7** |
+
+  Phục hồi đã nối thêm 5,35 triệu ký tự vào 41,6% số bài, nên số chunk tăng 18,2%. Nhưng **trung vị không đổi** (720 → 724 token): phục hồi chỉ chạm tới một phần kho, còn **75,9% số bài vẫn chỉ có tối đa 2 chunk**.
+
 * **Kết luận:**
-  > *"Trên kho ngữ liệu này, bài toán tìm đúng chunk gần như đồng nhất với bài toán tìm đúng bài báo. Không có dư địa kỹ thuật để chiến lược chunking tạo ra đột biến về chất lượng."*
+  > *"Với ba phần tư kho ngữ liệu, bài toán tìm đúng chunk gần như đồng nhất với bài toán tìm đúng bài báo. Dư địa để chiến lược chunking tạo đột biến là rất hẹp."*
+
+  Điều đáng nói là **việc phục hồi đã mở ra dư địa đó**: trước phục hồi chỉ 106 bài (0,96%) tách thành 3 chunk trở lên, sau phục hồi là 2.669 bài (24,1%). Vậy mà chênh lệch giữa ba cấu hình chunk vẫn chỉ 0,0469 — dưới ngưỡng nhiễu. Kết quả "chunk size không quan trọng" vì thế **mạnh hơn**, chứ không yếu đi: nó đứng vững ngay cả khi đã có chỗ cho nó thay đổi.
 * **Lý do chọn 512/64:** Không tuyên bố "512/64 là tối ưu tuyệt đối", mà khẳng định 512/64 được chọn vì:
   1. Đạt điểm số cao nhất trong các cấu hình thử nghiệm;
   2. Kích thước 512 tokens là điểm cân bằng hoàn hảo cho LLM ở Phase 2: không quá ngắn khiến câu trả lời bị cắt đôi sang chunk khác (như 256), cũng không quá dài gây loãng thông tin và tăng chi phí token context (như 1024).
