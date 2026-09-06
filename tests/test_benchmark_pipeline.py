@@ -17,6 +17,7 @@ from newsqa_rag.evaluation.benchmark_io import (
     run_with_retries,
 )
 from newsqa_rag.evaluation.metrics import evaluate_citations, evaluate_qa, recall_at_k
+from newsqa_rag.response_parsing import extract_answer_text, parse_citation_indices
 from newsqa_rag.retrieval.reranker import (
     BGESequenceClassificationReranker,
     CrossEncoderReranker,
@@ -65,6 +66,20 @@ class BenchmarkTraceTests(unittest.TestCase):
         self.assertEqual(result["citation_chunk_ids"], ["b"])
         self.assertEqual(result["invalid_citation_indices"], [9])
         self.assertEqual(result["retrieved_chunks"], trace["retrieved_chunks"])
+
+    def test_agent_maps_grouped_citations_and_deduplicates_indices(self):
+        class GroupedCitationLLM:
+            def generate_rag_answer(self, question, contexts):
+                return "Supported by both contexts [1, 2] and again [2; 9]."
+
+        agent = RAGAgent(
+            _Retriever(), NoOpReranker(), GroupedCitationLLM(), top_k=2, rerank_top_n=2
+        )
+        result = agent.generate_from_trace(agent.retrieve_and_rerank("Question?"))
+
+        self.assertEqual(result["citation_indices"], [1, 2])
+        self.assertEqual(result["citation_chunk_ids"], ["a", "b"])
+        self.assertEqual(result["invalid_citation_indices"], [9])
 
     def test_agent_limits_generation_context_without_changing_ranked_trace(self):
         llm = _PromptAwareLLM()
@@ -133,6 +148,16 @@ class BenchmarkMetricTests(unittest.TestCase):
         )
         self.assertEqual(result["exact_match"], 1.0)
         self.assertEqual(result["f1"], 1.0)
+
+    def test_qa_extracts_labeled_answer_and_grouped_reference_line(self):
+        prediction = "Answer: Henrik Stenson [1, 2]\nReferences: [1][2]"
+
+        self.assertEqual(extract_answer_text(prediction), "Henrik Stenson")
+        self.assertEqual(parse_citation_indices(prediction), [1, 2])
+        self.assertEqual(
+            evaluate_qa([{"prediction": prediction, "ground_truth": "Henrik Stenson"}]),
+            {"exact_match": 1.0, "f1": 1.0, "n_samples": 1},
+        )
 
     def test_citation_metrics_compare_cited_and_gold_chunk_ids(self):
         result = evaluate_citations(

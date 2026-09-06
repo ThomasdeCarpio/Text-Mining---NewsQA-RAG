@@ -1,7 +1,7 @@
 """Focused tests for benchmark score assembly."""
 
 from newsqa_rag.evaluation.metrics import _gemini_judge_options
-from scripts.score_benchmark_predictions import _merge_judge_scores
+from scripts.score_benchmark_predictions import _citation_fields, _merge_judge_scores
 
 
 def test_merge_judge_scores_adds_only_successful_rows():
@@ -15,6 +15,22 @@ def test_merge_judge_scores_adds_only_successful_rows():
     assert rows[0]["ragas"] == {"faithfulness": 0.75}
     assert "ragas" not in rows[1]
     assert "ragas" not in rows[2]
+
+
+def test_rescoring_reconstructs_grouped_citations_from_raw_answer():
+    result = {
+        "citation_indices": [],
+        "citation_chunk_ids": [],
+        "invalid_citation_indices": [],
+        "contexts": ["First", "Second"],
+        "reranked_chunks": [{"id": "c1"}, {"id": "c2"}],
+    }
+
+    assert _citation_fields("Supported [1, 2] and invalid [9].", result) == (
+        [1, 2],
+        [9],
+        ["c1", "c2"],
+    )
 
 
 def test_gemini_37_judge_omits_deprecated_sampling_controls():

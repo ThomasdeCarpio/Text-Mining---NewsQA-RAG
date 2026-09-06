@@ -51,10 +51,12 @@ def test_split_notebooks_have_fixed_assignments_and_shared_subset_checks():
             assert "PREPARATION_BUNDLE_PATH" in source
         else:
             assert "HF_BASELINE_REPO_ID='ThomasAnderson2009/newsqa-rag-phase2-experiments'" in source
-            assert "HF_BASELINE_REVISION='bd83647c784d7f7d466bbd954fe7d35b5252a2f5'" in source
-            assert "HF_BASELINE_SHA256='044c913d20942c2dc8c1dcfa39544a7baf082f386b6d5f934e01c9c7feaf6017'" in source
+            assert "HF_BASELINE_REVISION='353c517decd13f6d13c1615e2980a3e8d340d434'" in source
+            assert "HF_BASELINE_SHA256='45ec892225d92688d9ce12b262223543e8b5c84cc5d273e698a9040f4ec0ba31'" in source
             assert "Configure the read-only HF_TOKEN Kaggle secret" in source
             assert "'baseline_artifact'" in source
+            assert "import newsqa_rag" in source
+            assert "preparation_bundle_manifest.json" in source
         if stage == "prompt":
             assert f"PROMPT_ID='{options['prompt_id']}'" in source
         if stage == "context":

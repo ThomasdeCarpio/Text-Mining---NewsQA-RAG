@@ -27,6 +27,7 @@ from newsqa_rag.evaluation.metrics import (
     mrr_at_k,
     ndcg_at_k,
 )
+from newsqa_rag.response_parsing import cited_chunk_ids, extract_answer_text
 
 
 def parse_args() -> argparse.Namespace:
@@ -60,6 +61,16 @@ def _merge_judge_scores(score_rows: list[dict], judge_records: dict[str, dict]) 
             row["ragas"] = dict(judge["scores"])
             merged += 1
     return merged
+
+
+def _citation_fields(answer: str, result: dict) -> tuple[list[int], list[int], list[str]]:
+    """Reconstruct citations from the raw answer instead of cached parser output."""
+
+    generation_chunk_ids = result.get("generation_context_chunk_ids") or [
+        chunk["id"]
+        for chunk in result.get("reranked_chunks", [])[: len(result.get("contexts", []))]
+    ]
+    return cited_chunk_ids(answer, generation_chunk_ids)
 
 
 def main() -> None:
@@ -126,9 +137,12 @@ def main() -> None:
         if success and not manifest.get("inputs", {}).get("retrieval_only"):
             qa_success.append(qa_sample)
 
+        citation_indices, invalid_citation_indices, citation_ids = _citation_fields(
+            answer, result
+        )
         citation_sample = {
-            "citation_chunk_ids": result.get("citation_chunk_ids", []),
-            "invalid_citation_indices": result.get("invalid_citation_indices", []),
+            "citation_chunk_ids": citation_ids,
+            "invalid_citation_indices": invalid_citation_indices,
             "relevant_chunk_ids": relevant_ids,
         }
         citation_samples.append(citation_sample)
@@ -155,6 +169,8 @@ def main() -> None:
             "standalone_label": record.get("standalone_label", "unlabeled"),
             "answer_modified": bool(record.get("answer_modified", False)),
             "status": record.get("status"),
+            "evaluated_answer": extract_answer_text(answer),
+            "citation_indices": citation_indices,
             "retrieval": evaluate_retrieval([reranked_sample], reranked_k_values),
             "retrieval_initial": evaluate_retrieval([initial_sample], initial_k_values),
             "qa": evaluate_qa([qa_sample]),
@@ -224,6 +240,11 @@ def main() -> None:
         "schema_version": 2,
         "generated_at": utc_now(),
         "run_fingerprint": manifest.get("run_fingerprint"),
+        "scoring": {
+            "answer_extraction": "answer-text-v1",
+            "citation_parsing": "numbered-groups-v1",
+            "citations_recomputed_from_raw_answer": True,
+        },
         "config": {
             **manifest.get("inputs", {}),
             "n_eval": len(expected_ids),

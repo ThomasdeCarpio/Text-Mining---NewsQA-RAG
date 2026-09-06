@@ -7,6 +7,8 @@ from typing import Optional
 
 import numpy as np
 
+from newsqa_rag.response_parsing import extract_answer_text
+
 
 # ---------------------------------------------------------------------------
 # Retrieval metrics
@@ -118,7 +120,7 @@ def evaluate_qa(samples: list[dict]) -> dict:
     em_scores = []
     f1_scores = []
     for sample in samples:
-        prediction = re.sub(r"\[\d+]", "", sample["prediction"])
+        prediction = extract_answer_text(sample["prediction"])
         answers = sample.get("accepted_answers") or [sample["ground_truth"]]
         em_scores.append(max(exact_match(prediction, answer) for answer in answers))
         f1_scores.append(max(f1_score_qa(prediction, answer) for answer in answers))

@@ -1,9 +1,9 @@
-import re
 import time
 
 from newsqa_rag.retrieval import BaseRetriever
 from newsqa_rag.retrieval.reranker import BaseReranker
 from newsqa_rag.llm import OpenAILLM
+from newsqa_rag.response_parsing import split_citation_indices
 
 
 class RAGAgent:
@@ -27,8 +27,6 @@ class RAGAgent:
         self.llm = llm
         self.top_k = top_k
         self.rerank_top_n = rerank_top_n
-
-    _CITATION_PATTERN = re.compile(r"\[(\d+)]")
 
     def retrieve(self, question: str) -> dict:
         """Retrieve candidates without reranking so the result can be shared."""
@@ -98,12 +96,9 @@ class RAGAgent:
         if not answer.strip():
             raise RuntimeError("The generator returned an empty answer.")
 
-        raw_indices = [int(value) for value in self._CITATION_PATTERN.findall(answer)]
-        citation_indices = list(dict.fromkeys(raw_indices))
-        valid_indices = [
-            index for index in citation_indices if 1 <= index <= len(generation_chunks)
-        ]
-        invalid_indices = [index for index in citation_indices if index not in valid_indices]
+        valid_indices, invalid_indices = split_citation_indices(
+            answer, len(generation_chunks)
+        )
         cited_chunks = [generation_chunks[index - 1] for index in valid_indices]
 
         timing = dict(trace.get("timing_ms", {}))
