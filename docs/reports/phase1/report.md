@@ -46,7 +46,47 @@ Quy tắc 7.0% ở trên là một **ngưỡng thận trọng ở mức toàn h�
 | Sparse **vs** Hybrid (cùng reranker) | [0.8688, 0.9229] vs [0.8032, 0.8753] | *Chồng lấn* — không tách được |
 | 512/64 **vs** 256/32 **vs** 1024/128 | ba khoảng chồng lấn nhau | *Chồng lấn* — vòng 3 không có người thắng |
 
-> **Đọc bảng này cho đúng.** Ba dòng đầu là các kết luận nhóm **được phép** phát biểu mạnh. Bốn dòng sau nhóm chỉ được phát biểu là "chọn vì lý do khác" (cơ chế dữ liệu, độ trễ, hoặc thắng trên cả hai tập câu hỏi) — **không** được nói là "tốt hơn có ý nghĩa thống kê". Ngược lại, CI95 chồng lấn **không chứng minh hai cấu hình bằng nhau**: vì mọi cấu hình chạy trên đúng cùng 281 câu hỏi, một phép kiểm định theo cặp (*paired test*) sẽ nhạy hơn so sánh hai khoảng biên. Đây là ngưỡng thận trọng, không phải kết luận vô hiệu.
+> **Đọc bảng này cho đúng.** Ba dòng đầu là các kết luận nhóm **được phép** phát biểu mạnh ngay từ màn lọc này. Bốn dòng sau **chưa** kết luận được gì — và quan trọng: **CI95 chồng lấn KHÔNG chứng minh hai cấu hình bằng nhau.** Vì mọi cấu hình chạy trên đúng cùng 281 câu hỏi, phép kiểm định theo cặp ở §1.2 nhạy hơn hẳn, và nó **đã lật một trong bốn dòng đó** (BGE-M3 vs BM25 trên tập `original`). Bảng này là màn lọc thô, không phải phán quyết.
+
+### 1.2. Phán quyết cuối cùng: kiểm định bootstrap theo cặp (paired bootstrap)
+
+CI95 ở §1.1 là **khoảng biên** — tính riêng cho từng cấu hình. Với thiết kế này nó vẫn còn quá thận trọng, vì **mọi cấu hình chạy trên đúng cùng 281 câu hỏi**. Phần lớn dao động của điểm số đến từ *câu hỏi này khó, câu hỏi kia dễ* — một nguồn nhiễu **dùng chung**, và nó **tự triệt tiêu** khi lấy hiệu trên từng câu trước rồi mới tổng hợp.
+
+```
+CI95 biên :  đo mean(A), đo mean(B), xem hai khoảng có chạm nhau không
+             -> mang nguyên độ khó của câu hỏi vào phép so sánh
+paired    :  đo mean(A_i − B_i) trên từng câu i
+             -> độ khó của câu hỏi triệt tiêu, phương sai nhỏ hơn nhiều
+```
+
+Mức chênh lệch về độ nhạy, đo bằng dữ liệu mô phỏng cùng cỡ mẫu:
+
+| Tình huống | CI95 của hiệu | Kết luận |
+| :--- | :---: | :--- |
+| chênh **+0.02 nhất quán** theo từng câu | [+0.0196, +0.0200] | phát hiện được |
+| chênh **−0.022 ngẫu nhiên** | [−0.0755, +0.0328] | không phát hiện — đúng như mong đợi |
+
+Khoảng CI **biên** rộng khoảng 0.09, nên nó không bao giờ phát hiện được chênh lệch 0.02 — kể cả khi chênh lệch đó hoàn toàn thật. Vì vậy:
+
+> **Quy tắc phán quyết: khoảng CI95 của HIỆU theo từng câu không chứa 0 ⇒ khác biệt có ý nghĩa.**
+> CI95 biên (§1.1) chỉ dùng làm màn lọc thô. Ngưỡng nhiễu 7.0% (§1) là ràng buộc về *ý nghĩa thực tiễn*, tách biệt với *ý nghĩa thống kê*.
+
+Phép kiểm định dùng `common/newsqa_rag/experiments.py::paired_comparison` — 1.000 lần lấy mẫu bootstrap, `seed=42`, chạy trên file điểm theo từng câu của mỗi run. Kết quả đầy đủ: `docs/reports/phase1/paired_significance.json`.
+
+| So sánh | Tập | Hiệu nDCG@5 | CI95 của hiệu | Phán quyết |
+| :--- | :--- | :---: | :---: | :--- |
+| BGE-M3 **vs** e5-base dense | `resolved` | +0.1634 | [+0.1231, +0.2080] | **có ý nghĩa** |
+| BGE-M3 **vs** e5-base dense | `original` | +0.1981 | [+0.1537, +0.2429] | **có ý nghĩa** |
+| BGE-M3 **vs** BM25-stemmed | `original` | +0.0680 | [+0.0311, +0.1056] | **có ý nghĩa** |
+| BGE-M3 **vs** BM25-stemmed | `resolved` | +0.0194 | [−0.0125, +0.0508] | không tách được |
+| e5-base **vs** bge-small | `resolved` | +0.0094 | [−0.0261, +0.0448] | không tách được |
+| e5-base **vs** bge-small | `original` | +0.0014 | [−0.0288, +0.0315] | không tách được |
+
+**Hai thay đổi so với bản báo cáo trước**, cả hai đều do đổi sang phép kiểm định đúng:
+1. **§3.2B được nâng cấp:** BGE-M3 hơn BM25-stemmed **có ý nghĩa** trên tập `original` (4/4 metric) — trước đây ghi là "không chứng minh được".
+2. **§3.2C bị hạ cấp:** `e5-base` **không** hơn `bge-small` ở bất kỳ metric hay tập nào.
+
+---
 
 Đồng thời, kết quả luôn được báo cáo theo **dải giá trị (Range Reporting)**:
 * **Cận dưới (Sàn - Floor):** Tập `original` (câu hỏi gốc của NewsQA, chứa nhiều câu hỏi cụt, mơ hồ và 34 cặp câu hỏi bất khả thi).
@@ -90,6 +130,9 @@ graph TD
 | Sparse | BM25 Okapi (simple) | 0.7087 | 0.5765 | 0.8185 | 0.6733 | 0.2420 | 109.9 ms |
 | **Dense** | **intfloat/e5-base-v2** | **0.6661** | **0.5267** | **0.7829** | **0.6298** | **0.2325** | 15.8 ms |
 | Dense | BAAI/bge-small-en-v1.5 | 0.6472 | 0.5231 | 0.7544 | 0.6163 | 0.2285 | 16.0 ms |
+
+> [!CAUTION]
+> **Bốn dòng Dense mang sai số tái lập ~0.01 và phải đọc kèm §3.2C.** Chạy lại đúng cấu hình này cho `bge-small` ra nDCG@5 = 0.6589 thay vì 0.6472 (trôi +0.0117), `e5-base` ra 0.6684 thay vì 0.6661. Bốn dòng Sparse tái lập chính xác tuyệt đối. Bảng trên lấy từ một lần chạy duy nhất để giữ tính nhất quán nội bộ; **không được dùng nó để xếp hạng hai mô hình dense với nhau.**
 | Dense | BAAI/bge-large-en-v1.5 | 0.6478 | 0.5302 | 0.7473 | 0.6199 | 0.2238 | 27.5 ms |
 | Dense | sentence-transformers/all-MiniLM-L6-v2 | 0.5129 | 0.3843 | 0.6263 | 0.4815 | 0.1766 | 10.8 ms |
 
@@ -106,20 +149,68 @@ graph TD
 * **Chứng minh tính bền vững:** EDA từng cảnh báo: *"Nếu chỉ đo trên tập resolved, sparse sẽ được ưu ái không công bằng"*. Tuy nhiên, khi nhìn vào cột `original` (nơi câu hỏi chưa được làm rõ từ hiếm), **BGE-M3 Sparse vẫn đánh bại e5-base Dense tới 0.1918 nDCG@5** (0.4243 vs 0.2325). Khoảng cách này gấp **2.7 lần** biên độ nhiễu 7.0%, và trên tập `resolved` hai khoảng CI95 **hoàn toàn không chồng lấn** ([0.7952, 0.8668] vs [0.6191, 0.7108]). Đây là kết luận duy nhất trong Vòng 1 được phát biểu ở mức mạnh — và nó vượt qua được chính cái thiên vị mà EDA đã cảnh báo.
 
 #### B. Tại sao BGE-M3 vượt trội hơn BM25 truyền thống?
+> [!IMPORTANT]
+> **Kiểm định theo cặp đã xác nhận: BGE-M3 hơn BM25-stemmed có ý nghĩa thống kê — nhưng chỉ trên tập `original`.** Và đó chính là bằng chứng mạnh nhất cho lập luận cơ chế dưới đây.
+
+Kết quả `paired_comparison` (bootstrap theo cặp trên 281 câu, seed 42 — xem §1.2 và `docs/reports/phase1/paired_significance.json`), hiệu = BGE-M3 trừ BM25-stemmed:
+
+| Tập | Metric | Hiệu | CI95 của hiệu | Kết luận |
+| :--- | :--- | :---: | :---: | :--- |
+| **`original`** | **nDCG@5** | **+0.0680** | **[+0.0311, +0.1056]** | **BGE-M3 thắng có ý nghĩa** |
+| `original` | MRR@5 | +0.0719 | [+0.0342, +0.1110] | **có ý nghĩa** |
+| `original` | Hit@1 | +0.0783 | [+0.0320, +0.1281] | **có ý nghĩa** |
+| `original` | Hit@5 | +0.0569 | [+0.0071, +0.1068] | **có ý nghĩa** |
+| `resolved` | nDCG@5 | +0.0194 | [−0.0125, +0.0508] | không tách được |
+| `resolved` | MRR@5 | +0.0244 | [−0.0124, +0.0598] | không tách được |
+| `resolved` | Hit@1 | +0.0320 | [−0.0214, +0.0854] | không tách được |
+| `resolved` | Hit@5 | +0.0036 | [−0.0285, +0.0320] | không tách được |
+
+**Bốn trên bốn metric đều có ý nghĩa ở `original`, không metric nào có ý nghĩa ở `resolved`.** Đây không phải kết quả lộn xộn — nó là **đúng hình dạng mà EDA đã dự đoán**:
+
+* Tập `original` là tập **thiếu từ hiếm**: chỉ **28.4%** câu có mỏ neo từ vựng, và **35.2% câu hỏi (470/1.336) không chứa bất kỳ từ hiếm nào**. Đây là địa hình BM25 thuần từ vựng không có gì để bám.
+* Tập `resolved` đã được bổ sung thực thể, nâng tỉ lệ có mỏ neo lên **59.5%**. Khi câu hỏi đã giàu từ hiếm, BM25 bắt kịp — và hai mô hình trở nên không phân biệt được.
+
+> **Đây là điều làm lập luận trở nên vững:** ưu thế của BGE-M3 **xuất hiện đúng ở nơi EDA nói nó phải xuất hiện, và biến mất đúng ở nơi EDA nói nó sẽ biến mất.** Một mô hình thắng nhờ may mắn sẽ không có hành vi phụ thuộc ngữ cảnh gọn gàng như vậy. Cơ chế "learned lexical weights giúp suy thoái mượt mà khi thiếu từ neo" không còn là suy đoán — nó có dấu vân tay đo được.
+
+**Vậy tại sao chọn BGE-M3:**
+1. **Thắng có ý nghĩa thống kê trên tập khó** (`original`) ở cả bốn metric, và không thua ở tập dễ.
+2. **Cơ chế được xác nhận thực nghiệm**, không chỉ được viện dẫn (lập luận ở trên).
+3. **Nhất quán với Phase 2:** BGE-M3 đã khóa trong artifact `bge_m3_sparse.pkl`.
+
+> [!NOTE]
+> **Vì sao trước đây báo cáo ghi "không chứng minh được".** Khoảng cách 0.0680 nằm dưới ngưỡng nhiễu 7.0%, và hai khoảng CI95 **biên** chồng lấn ([0.7952, 0.8668] vs [0.7772, 0.8484]). Cả hai phép đó đều quá thận trọng với thiết kế này (§1.2). Kiểm định theo cặp — phép đo đúng — cho kết luận ngược lại. Ghi lại quá trình sửa này vì nó cho thấy **chọn sai phép kiểm định có thể chôn vùi một kết quả thật**.
+
+#### C. Best Dense: một lựa chọn không phân định được, và điều đó tự nó là một phát hiện
+
+* Trong lần chạy ban đầu, nhóm chọn `bge-small` làm đại diện Dense vì trên tập `original` nó đạt 0.2285 so với `e5-base` đạt 0.2325 — chênh **0.004**, hoàn toàn là nhiễu. Sửa quy tắc chọn winner sang tập `resolved` khiến `e5-base-v2` lên thay.
+* **Nhưng kiểm định theo cặp cho thấy `e5-base-v2` cũng KHÔNG hơn `bge-small` một cách có ý nghĩa** — không ở metric nào, không ở tập nào:
+
+  | Tập | nDCG@5 | MRR@5 | Hit@1 | Hit@5 |
+  | :--- | :---: | :---: | :---: | :---: |
+  | `resolved` | +0.0094 [−0.0261, +0.0448] | +0.0031 [−0.0338, +0.0411] | **−0.0107** [−0.0605, +0.0391] | +0.0214 [−0.0214, +0.0641] |
+  | `original` | +0.0014 [−0.0288, +0.0315] | −0.0054 [−0.0355, +0.0258] | **−0.0107** [−0.0498, +0.0249] | +0.0178 [−0.0214, +0.0569] |
+
+  *(hiệu = e5-base trừ bge-small; cả 8 khoảng đều chứa 0)*. Đáng chú ý: ở **Hit@1** — vị trí quan trọng nhất — `bge-small` còn nhỉnh hơn.
+
 > [!WARNING]
-> **Đây là lựa chọn nhóm KHÔNG chứng minh được bằng thống kê, và báo cáo nói thẳng điều đó.**
+> **Phát hiện ngoài dự kiến: nhánh dense không tái lập được giữa hai lần chạy.**
+>
+> Khi đối chiếu file điểm của lần chạy lại với lần chạy ngày 05/09 trên **cùng một cấu hình, cùng dữ liệu**:
+>
+> | Mô hình | nDCG@5 lần 1 | lần 2 | trôi |
+> | :--- | :---: | :---: | :---: |
+> | sparse BGE-M3 | 0.8317 | 0.8317 | **0.0000** |
+> | sparse BM25-stemmed | 0.8123 | 0.8123 | **0.0000** |
+> | dense e5-base-v2 | 0.6661 | 0.6684 | +0.0023 |
+> | dense bge-small | 0.6472 | 0.6589 | **+0.0117** |
+>
+> **Nhánh sparse tái lập chính xác đến từng chữ số. Nhánh dense thì không.** Nguyên nhân nằm ở ba chỗ không được cố định seed, tất cả đều chỉ tồn tại trên đường đi dense: chỉ mục **HNSW của Chroma là xấp xỉ** và chỉ nhận `hnsw:space`, không nhận seed (`common/newsqa_rag/indexing/chroma_store.py:33`); `model.encode()` **không ghim `batch_size`** nên cách gom batch đổi theo độ dài văn bản (`embeddings.py:148`); và không nơi nào trong repo đặt `torch.manual_seed` hay `use_deterministic_algorithms`.
+>
+> **Hệ quả trực tiếp:** độ trôi giữa hai lần chạy của một mô hình (**0.0117**) **lớn hơn khoảng cách giữa hai mô hình** (**0.0094**). Không thể xếp hạng `e5-base` với `bge-small` bằng dữ liệu này — thứ tự của chúng đổi theo lần chạy chứ không theo chất lượng.
 
-* Trên tập `resolved`, BGE-M3 chỉ hơn BM25-stemmed $\Delta \text{nDCG@5} = 0.8317 - 0.8123 = 0.0194$, và hai khoảng CI95 chồng lấn gần như hoàn toàn ([0.7952, 0.8668] vs [0.7772, 0.8484]).
-* Trên tập `original`, khoảng cách rộng hơn — **0.0680** (0.4243 vs 0.3563) — nhưng vẫn **nằm ngay dưới ngưỡng nhiễu 7.0%**. Bằng chứng đo lường **không đủ** để tuyên bố BGE-M3 tốt hơn BM25-stemmed.
-* **Vậy tại sao vẫn chọn BGE-M3?** Ba lý do, không lý do nào là "điểm cao hơn":
-  1. **Cơ chế dữ liệu (EDA §7):** có **35.2% câu hỏi (470/1.336) không chứa bất kỳ từ hiếm nào** (chỉ gồm từ phổ biến như *"who was found dead"*, *"where did the accident happen"*). Ở nhóm này BM25 thuần từ vựng không có từ neo để bám. BGE-M3 dùng trọng số nơ-ron học được (*learned lexical weights*) và mở rộng từ vựng tự động, nên suy thoái mượt mà hơn (*degrade gracefully*).
-  2. **Thắng trên cả hai tập câu hỏi**, không phụ thuộc vào tập nào được chọn để báo cáo.
-  3. **Nhất quán với Phase 2:** BGE-M3 là mô hình đã được khóa trong artifact `bge_m3_sparse.pkl`; đổi sang BM25 lúc này đồng nghĩa dựng lại toàn bộ chỉ mục mà không có bằng chứng nào cho thấy sẽ tốt hơn.
-* **Phát biểu trung thực:** *"BM25-stemmed là đối thủ ngang tài trên corpus này. Nhóm chọn BGE-M3 vì cơ chế xử lý nhóm câu hỏi không có từ hiếm, chứ không phải vì nó ghi điểm cao hơn một cách có ý nghĩa."*
-
-#### C. Bài học sửa sai về lựa chọn Best Dense (The Noise Rule in Action)
-* Trong lần chạy ban đầu, nhóm từng chọn `bge-small` làm đại diện Dense vì trên tập `original` nó đạt 0.2285 so với `e5-base` đạt 0.2325 (chênh lệch chỉ **0.004** — hoàn toàn là nhiễu).
-* Khi chuẩn hóa giao thức chuyển sang đánh giá trên `resolved`, `e5-base-v2` dẫn trước `bge-small` tới **+0.0189 nDCG@5** và **+2.85% Hit@5** (0.7829 vs 0.7544), đồng thời độ trễ tương đương (15.8ms vs 16.0ms). Do đó, `e5-base-v2` mới là lựa chọn Dense có căn cứ khoa học vững chắc.
+* **Vậy chọn gì?** `e5-base-v2` được giữ vì đó là kết quả của **quy tắc tie-break đã đăng ký trước** (chất lượng trước, độ trễ sau) áp trên tập `resolved`. Nhưng báo cáo **không** tuyên bố nó tốt hơn.
+* **Và điều này không ảnh hưởng tới sản phẩm cuối.** Cấu hình khóa là **sparse thuần** — không có thành phần dense nào trong đường chạy production. Nhánh dense chỉ còn tác động gián tiếp qua arm Hybrid ở Vòng 2, mà Hybrid đã thua. Nói cách khác: **câu hỏi "dense nào tốt hơn" không có hệ quả nào lên hệ thống được giao.**
+* **Bài học phương pháp:** hai kết luận trong báo cáo này từng suýt được phát biểu dựa trên chênh lệch nhỏ hơn độ nhiễu đo lường của chính công cụ. Cách phát hiện ra là **chạy lại rồi so sánh**, chứ không phải nhìn vào con số đẹp.
 
 ---
 

@@ -1,0 +1,327 @@
+{
+  "schema_version": 1,
+  "method": "paired percentile bootstrap over per-question scores",
+  "implementation": "common/newsqa_rag/experiments.py::paired_comparison",
+  "samples": 1000,
+  "seed": 42,
+  "n_questions": 281,
+  "source": "Phase 1 rerun, deterministic_scores.jsonl per run",
+  "rule": "CI95 of the per-question delta excluding 0 means a significant difference",
+  "comparisons": [
+    {
+      "report_section": "3.2C",
+      "variant": "resolved",
+      "A": "bge-small-en-v1.5",
+      "B": "e5-base-v2",
+      "metrics": {
+        "retrieval.ndcg@5": {
+          "delta_B_minus_A": 0.009437,
+          "ci95_low": -0.026142,
+          "ci95_high": 0.044755,
+          "n_pairs": 281,
+          "significant": false
+        },
+        "retrieval.mrr@5": {
+          "delta_B_minus_A": 0.003083,
+          "ci95_low": -0.03375,
+          "ci95_high": 0.041052,
+          "n_pairs": 281,
+          "significant": false
+        },
+        "retrieval.hit_rate@1": {
+          "delta_B_minus_A": -0.010676,
+          "ci95_low": -0.060498,
+          "ci95_high": 0.039146,
+          "n_pairs": 281,
+          "significant": false
+        },
+        "retrieval.hit_rate@5": {
+          "delta_B_minus_A": 0.021352,
+          "ci95_low": -0.021352,
+          "ci95_high": 0.064057,
+          "n_pairs": 281,
+          "significant": false
+        }
+      },
+      "verdict": "not separated"
+    },
+    {
+      "report_section": "3.2C",
+      "variant": "original",
+      "A": "bge-small-en-v1.5",
+      "B": "e5-base-v2",
+      "metrics": {
+        "retrieval.ndcg@5": {
+          "delta_B_minus_A": 0.001351,
+          "ci95_low": -0.028766,
+          "ci95_high": 0.031524,
+          "n_pairs": 281,
+          "significant": false
+        },
+        "retrieval.mrr@5": {
+          "delta_B_minus_A": -0.005397,
+          "ci95_low": -0.035469,
+          "ci95_high": 0.025816,
+          "n_pairs": 281,
+          "significant": false
+        },
+        "retrieval.hit_rate@1": {
+          "delta_B_minus_A": -0.010676,
+          "ci95_low": -0.049822,
+          "ci95_high": 0.024911,
+          "n_pairs": 281,
+          "significant": false
+        },
+        "retrieval.hit_rate@5": {
+          "delta_B_minus_A": 0.017794,
+          "ci95_low": -0.021352,
+          "ci95_high": 0.05694,
+          "n_pairs": 281,
+          "significant": false
+        }
+      },
+      "verdict": "not separated"
+    },
+    {
+      "report_section": "3.2B",
+      "variant": "resolved",
+      "A": "BM25-okapi-stemmed",
+      "B": "BGE-M3",
+      "metrics": {
+        "retrieval.ndcg@5": {
+          "delta_B_minus_A": 0.019447,
+          "ci95_low": -0.012543,
+          "ci95_high": 0.050836,
+          "n_pairs": 281,
+          "significant": false
+        },
+        "retrieval.mrr@5": {
+          "delta_B_minus_A": 0.024437,
+          "ci95_low": -0.012353,
+          "ci95_high": 0.059804,
+          "n_pairs": 281,
+          "significant": false
+        },
+        "retrieval.hit_rate@1": {
+          "delta_B_minus_A": 0.032028,
+          "ci95_low": -0.021352,
+          "ci95_high": 0.085409,
+          "n_pairs": 281,
+          "significant": false
+        },
+        "retrieval.hit_rate@5": {
+          "delta_B_minus_A": 0.003559,
+          "ci95_low": -0.02847,
+          "ci95_high": 0.032028,
+          "n_pairs": 281,
+          "significant": false
+        }
+      },
+      "verdict": "not separated"
+    },
+    {
+      "report_section": "3.2B",
+      "variant": "original",
+      "A": "BM25-okapi-stemmed",
+      "B": "BGE-M3",
+      "metrics": {
+        "retrieval.ndcg@5": {
+          "delta_B_minus_A": 0.067982,
+          "ci95_low": 0.031142,
+          "ci95_high": 0.105638,
+          "n_pairs": 281,
+          "significant": true
+        },
+        "retrieval.mrr@5": {
+          "delta_B_minus_A": 0.071946,
+          "ci95_low": 0.034159,
+          "ci95_high": 0.111036,
+          "n_pairs": 281,
+          "significant": true
+        },
+        "retrieval.hit_rate@1": {
+          "delta_B_minus_A": 0.078292,
+          "ci95_low": 0.032028,
+          "ci95_high": 0.128114,
+          "n_pairs": 281,
+          "significant": true
+        },
+        "retrieval.hit_rate@5": {
+          "delta_B_minus_A": 0.05694,
+          "ci95_low": 0.007117,
+          "ci95_high": 0.106762,
+          "n_pairs": 281,
+          "significant": true
+        }
+      },
+      "verdict": "significant"
+    },
+    {
+      "report_section": "3.2A",
+      "variant": "resolved",
+      "A": "e5-base-v2 (dense)",
+      "B": "BGE-M3 (sparse)",
+      "metrics": {
+        "retrieval.ndcg@5": {
+          "delta_B_minus_A": 0.16338,
+          "ci95_low": 0.123087,
+          "ci95_high": 0.208017,
+          "n_pairs": 281,
+          "significant": true
+        },
+        "retrieval.mrr@5": {
+          "delta_B_minus_A": 0.174379,
+          "ci95_low": 0.130781,
+          "ci95_high": 0.220943,
+          "n_pairs": 281,
+          "significant": true
+        },
+        "retrieval.hit_rate@1": {
+          "delta_B_minus_A": 0.199288,
+          "ci95_low": 0.149377,
+          "ci95_high": 0.263345,
+          "n_pairs": 281,
+          "significant": true
+        },
+        "retrieval.hit_rate@5": {
+          "delta_B_minus_A": 0.131673,
+          "ci95_low": 0.085409,
+          "ci95_high": 0.178025,
+          "n_pairs": 281,
+          "significant": true
+        }
+      },
+      "verdict": "significant"
+    },
+    {
+      "report_section": "3.2A",
+      "variant": "original",
+      "A": "e5-base-v2 (dense)",
+      "B": "BGE-M3 (sparse)",
+      "metrics": {
+        "retrieval.ndcg@5": {
+          "delta_B_minus_A": 0.19805,
+          "ci95_low": 0.15366,
+          "ci95_high": 0.242877,
+          "n_pairs": 281,
+          "significant": true
+        },
+        "retrieval.mrr@5": {
+          "delta_B_minus_A": 0.197805,
+          "ci95_low": 0.152722,
+          "ci95_high": 0.244546,
+          "n_pairs": 281,
+          "significant": true
+        },
+        "retrieval.hit_rate@1": {
+          "delta_B_minus_A": 0.192171,
+          "ci95_low": 0.142349,
+          "ci95_high": 0.242082,
+          "n_pairs": 281,
+          "significant": true
+        },
+        "retrieval.hit_rate@5": {
+          "delta_B_minus_A": 0.199288,
+          "ci95_low": 0.145907,
+          "ci95_high": 0.252669,
+          "n_pairs": 281,
+          "significant": true
+        }
+      },
+      "verdict": "significant"
+    }
+  ],
+  "reproducibility": {
+    "note": "same configuration, two runs (2026-09-05 and the resolved-winner rerun)",
+    "runs": {
+      "dense_intfloat_e5_base_v2": {
+        "retrieval.ndcg@5": {
+          "first_run": 0.6661,
+          "second_run": 0.668352,
+          "drift": 0.002252
+        },
+        "retrieval.mrr@5": {
+          "first_run": 0.6298,
+          "second_run": 0.631551,
+          "drift": 0.001751
+        },
+        "retrieval.hit_rate@1": {
+          "first_run": 0.5267,
+          "second_run": 0.52669,
+          "drift": -1e-05
+        },
+        "retrieval.hit_rate@5": {
+          "first_run": 0.7829,
+          "second_run": 0.786477,
+          "drift": 0.003577
+        }
+      },
+      "dense_baai_bge_small_en_v1_5": {
+        "retrieval.ndcg@5": {
+          "first_run": 0.6472,
+          "second_run": 0.658915,
+          "drift": 0.011715
+        },
+        "retrieval.mrr@5": {
+          "first_run": 0.6163,
+          "second_run": 0.628468,
+          "drift": 0.012168
+        },
+        "retrieval.hit_rate@1": {
+          "first_run": 0.5231,
+          "second_run": 0.537367,
+          "drift": 0.014267
+        },
+        "retrieval.hit_rate@5": {
+          "first_run": 0.7544,
+          "second_run": 0.765125,
+          "drift": 0.010725
+        }
+      },
+      "sparse_bge_m3_sparse": {
+        "retrieval.ndcg@5": {
+          "first_run": 0.8317,
+          "second_run": 0.831731,
+          "drift": 3.1e-05
+        },
+        "retrieval.mrr@5": {
+          "first_run": 0.8059,
+          "second_run": 0.80593,
+          "drift": 3e-05
+        },
+        "retrieval.hit_rate@1": {
+          "first_run": 0.726,
+          "second_run": 0.725979,
+          "drift": -2.1e-05
+        },
+        "retrieval.hit_rate@5": {
+          "first_run": 0.9181,
+          "second_run": 0.918149,
+          "drift": 4.9e-05
+        }
+      },
+      "sparse_bm25_okapi_stemmed": {
+        "retrieval.ndcg@5": {
+          "first_run": 0.8123,
+          "second_run": 0.812284,
+          "drift": -1.6e-05
+        },
+        "retrieval.mrr@5": {
+          "first_run": 0.7815,
+          "second_run": 0.781493,
+          "drift": -7e-06
+        },
+        "retrieval.hit_rate@1": {
+          "first_run": 0.694,
+          "second_run": 0.69395,
+          "drift": -5e-05
+        },
+        "retrieval.hit_rate@5": {
+          "first_run": 0.9146,
+          "second_run": 0.914591,
+          "drift": -9e-06
+        }
+      }
+    }
+  }
+}
