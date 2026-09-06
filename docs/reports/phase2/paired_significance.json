@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "method": "paired article-cluster percentile bootstrap over per-question scores",
+  "rule_source": "docs/Detailed Test Plans/phase_2_generation_tuning_plan.md section 7",
+  "samples": 2000,
+  "seed": 42,
+  "baseline": "p0_d5",
+  "n_questions": 281,
+  "n_articles": 50,
+  "winner": "p2_d5",
+  "runs": {
+    "p2_d3": {
+      "coverage": 1.0,
+      "guardrails": [
+        {
+          "metric": "Faithfulness",
+          "delta": -0.020029,
+          "tolerance": -0.02,
+          "passed": false
+        },
+        {
+          "metric": "Citation F1",
+          "delta": 0.035567,
+          "tolerance": -0.01,
+          "passed": true
+        },
+        {
+          "metric": "Citation Validity",
+          "delta": -0.014235,
+          "tolerance": -0.01,
+          "passed": false
+        }
+      ],
+      "eligible": false,
+      "answer_correctness": 0.771078,
+      "paired_vs_baseline": {
+        "Answer Correctness": {
+          "delta": 0.140323,
+          "ci95_low": 0.113123,
+          "ci95_high": 0.167379,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": true
+        },
+        "Exact Match": {
+          "delta": 0.263345,
+          "ci95_low": 0.211409,
+          "ci95_high": 0.31338,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": true
+        },
+        "Token F1": {
+          "delta": 0.290064,
+          "ci95_low": 0.255456,
+          "ci95_high": 0.324648,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": true
+        },
+        "Faithfulness": {
+          "delta": -0.020029,
+          "ci95_low": -0.037242,
+          "ci95_high": -0.004796,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": true
+        },
+        "Citation F1": {
+          "delta": 0.035567,
+          "ci95_low": -0.001149,
+          "ci95_high": 0.072982,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": false
+        },
+        "Citation Validity": {
+          "delta": -0.014235,
+          "ci95_low": -0.028169,
+          "ci95_high": -0.003436,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": true
+        },
+        "Answer Relevancy": {
+          "delta": -0.225565,
+          "ci95_low": -0.26788,
+          "ci95_high": -0.185711,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": true
+        }
+      }
+    },
+    "p2_d5": {
+      "coverage": 1.0,
+      "guardrails": [
+        {
+          "metric": "Faithfulness",
+          "delta": 0.003992,
+          "tolerance": -0.02,
+          "passed": true
+        },
+        {
+          "metric": "Citation F1",
+          "delta": 0.036635,
+          "tolerance": -0.01,
+          "passed": true
+        },
+        {
+          "metric": "Citation Validity",
+          "delta": -0.003559,
+          "tolerance": -0.01,
+          "passed": true
+        }
+      ],
+      "eligible": true,
+      "answer_correctness": 0.735047,
+      "paired_vs_baseline": {
+        "Answer Correctness": {
+          "delta": 0.104292,
+          "ci95_low": 0.084373,
+          "ci95_high": 0.124005,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": true
+        },
+        "Exact Match": {
+          "delta": 0.092527,
+          "ci95_low": 0.059649,
+          "ci95_high": 0.129568,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": true
+        },
+        "Token F1": {
+          "delta": 0.154247,
+          "ci95_low": 0.131698,
+          "ci95_high": 0.17859,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": true
+        },
+        "Faithfulness": {
+          "delta": 0.003992,
+          "ci95_low": -0.012697,
+          "ci95_high": 0.018901,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": false
+        },
+        "Citation F1": {
+          "delta": 0.036635,
+          "ci95_low": 0.01268,
+          "ci95_high": 0.061624,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": true
+        },
+        "Citation Validity": {
+          "delta": -0.003559,
+          "ci95_low": -0.011236,
+          "ci95_high": 0.0,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": false
+        },
+        "Answer Relevancy": {
+          "delta": -0.085769,
+          "ci95_low": -0.121307,
+          "ci95_high": -0.050759,
+          "n_pairs": 281,
+          "n_clusters": 50,
+          "significant": true
+        }
+      }
+    }
+  }
+}

@@ -1,13 +1,19 @@
 # Reports
 
-Thư mục lưu trữ các báo cáo thực nghiệm tổng hợp của dự án **NewsQA RAG**.
+Báo cáo thực nghiệm của dự án **NewsQA RAG**.
 
-**Bắt đầu từ đây:**
+**Đọc cái này trước:**
 
-- **[Báo cáo Tổng hợp Phase 1 + Phase 2](report.md)** — trạng thái toàn dự án trên một trang: cấu hình đã khóa, cái gì đã quyết, cái gì còn treo, và sợi chỉ nối EDA → Phase 1 → Phase 2.
+- **[Tóm tắt Phase 1 + Phase 2](report.md)** — một trang: hệ thống đang là gì, ba kết quả chính, còn thiếu gì.
 
-**Chi tiết từng phase:**
+**Khi cần số liệu và lập luận đầy đủ:**
 
-- **[Phase 1 — Retrieval Tournament & EDA](phase1/report.md)** — giải đấu 3 vòng sàng lọc mô hình truy xuất (Dense vs Sparse), đánh giá Cross-Encoder Reranker, kiểm chứng kích thước chunk, và phân tích động lực từ dữ liệu EDA.
+- **[Báo cáo chi tiết Phase 1 + Phase 2](report_detail.md)** — toàn bộ bảng số, kiểm định theo cặp, checklist nghiệm thu theo test plan, provenance.
+- **[Phase 1 — Retrieval Tournament & EDA](phase1/report.md)** — giải đấu 3 vòng, reranker, chunk size, và động lực từ EDA.
 - **[Phase 1 — bản tiếng Anh, gọn](../phase1_results.md)** — đã thử gì / chọn gì / vì sao.
 - **[EDA](../eda/eda_report.md)** — dữ liệu thực sự trông như thế nào.
+
+**Artifact:**
+
+- `phase1/` — CSV từng vòng, `winner_lock.jsonl`, kiểm định theo cặp.
+- `phase2/` — `report.json` của baseline và hai finalist, điểm theo từng câu, `paired_significance.json`.
