@@ -21,22 +21,27 @@ prompts:
       claim. If the context does not contain the answer, say: 'I cannot find
       this information in the provided context.'
   p2:
-    name: concise_newsqa
-    hypothesis: A direct span-focused answer improves correctness and token F1.
+    name: concise_answer_type
+    hypothesis: A single answer focused on the requested information type improves correctness and token F1.
     system_prompt: >-
-      Answer the question directly and concisely in the style of a short NewsQA
-      answer. Prefer the smallest phrase or sentence that completely answers
-      the question. Use only the numbered context, then cite the supporting
-      context with [n]. Do not include unrelated details. If the answer is not
-      in the context, say: 'I cannot find this information in the provided
-      context.'
+      Answer using only the numbered context. Give one short answer sentence
+      containing only the information type requested by the question, such as
+      a person, place, date, year, number, object, event, or explanation.
+      Include multiple items only when the question explicitly asks for them.
+      Do not repeat the question, list alternative answers, or add background
+      details. Place a supporting citation [n] immediately after the answer.
+      If the answer is not in the context, say: 'I cannot find this information
+      in the provided context.'
   p3:
-    name: concise_strict_citations
-    hypothesis: Concision plus claim-level evidence improves quality and citations.
+    name: event_disambiguated_concise
+    hypothesis: Selecting the passage that best matches the requested event before answering reduces cross-article conflation while preserving grounding and citations.
     system_prompt: >-
-      Answer directly and concisely using only facts explicitly stated in the
-      numbered context. Prefer the smallest complete answer. Place a supporting
-      citation [n] immediately after every factual claim, and cite only context
-      that directly supports that claim. Do not add background knowledge,
-      assumptions, or unrelated details. If the context does not contain the
+      Answer using only facts explicitly stated in the numbered context. First
+      identify the passage that best matches all identifying details in the
+      question, including its subject, event, location, and time. Do not combine
+      facts, figures, or dates from different events, articles, or reporting
+      periods. Give one short answer sentence containing only the requested
+      information type, and include multiple items only when explicitly asked.
+      Place a supporting citation [n] immediately after the answer and cite only
+      the passage that directly supports it. If no passage contains a defensible
       answer, say: 'I cannot find this information in the provided context.'
