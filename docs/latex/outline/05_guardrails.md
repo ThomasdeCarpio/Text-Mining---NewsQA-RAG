@@ -67,11 +67,10 @@ phá hòa:
 **Thực tế chỉ dùng tới bước 1 và 2.** Chỉ P2-depth5 qua được 4 guardrail nên
 bước 3–5 không kích hoạt.
 
-> 🔴 **Bộ ngưỡng này quyết định winner, và một luật thay thế hợp lý sẽ chọn khác.**
-> Nếu đổi sang *"chỉ loại khi CI95 nằm hẳn dưới ngưỡng"* thay vì nhìn điểm trung
-> bình, P2-depth3 qua hết guardrail và có AC cao hơn → **winner lật sang
-> P2-depth3**. Không đổi luật, vì đổi lúc này là chọn luật cho ra số đẹp hơn.
-> Nhưng phải nêu trong báo cáo. Bảng đối chiếu: [`04_stats.md`](04_stats.md) mục 2.
+> **Bộ ngưỡng này quyết định winner.** Phát biểu luật bằng khoảng tin cậy thay vì
+> bằng điểm trung bình sẽ cho P2-depth3 qua hết guardrail, và vì d3 có AC cao hơn
+> nên winner đổi. Có đưa phân tích độ nhạy này vào báo cáo không ❓ — xem
+> [`06_decisions.md`](06_decisions.md) D3.
 
 > Nguồn: `phase_2_generation_tuning_plan.md` §7 (dòng 176–188);
 > code: `scripts/phase2_paired_comparison.py` hằng `GUARDRAILS`, `MIN_COVERAGE`.
@@ -105,17 +104,16 @@ Plan có tự giải thích vì sao đặt hai mức ngưỡng khác nhau, và �
 > không kiểm chứng được nguồn; Faithfulness dùng `0,02` vì judge metric liên tục
 > có độ nhiễu cao hơn.
 
-**Cảnh báo cho Thắng trước khi chạy.** Kinh nghiệm từ 2B: ngưỡng `0,01` cho
-Citation F1 hóa ra có tỉ lệ báo động giả **21,3%** vì SE của metric đó là 0,0126.
-Ngưỡng `0,01` cho Hit@5 / Recall@5 của 2C có thể vướng đúng bẫy đó.
+**Ngưỡng `0,01` cho Hit@5 / Recall@5 cần kiểm trước khi áp.** Ở 2B, ngưỡng `0,01`
+cho Citation F1 có tỉ lệ báo động giả 21,3% vì SE của metric đó là 0,0126
+([`04_stats.md`](04_stats.md) mục 2). Hai ngưỡng truy xuất của 2C có thể vướng
+cùng vấn đề.
 
-Việc nên làm, và làm được ngay khi có kết quả C1 đầu tiên: **tính SE của hiệu
-C1 − C0 rồi đối chiếu với ngưỡng**, trước khi áp guardrail cho cả bốn strategy.
-Nếu ngưỡng nhỏ hơn ~2×SE thì nó đang loại theo nhiễu.
-
-Cận trên (tính trên chính giá trị, chưa ghép cặp) là SE 0,0121 → MDE₈₀ 0,0339 cho
+Cận trên (tính trên chính giá trị, chưa ghép cặp): SE 0,0121 → MDE₈₀ 0,0339 cho
 cả Hit@5 lẫn Recall@5. Hiệu theo cặp sẽ có SE nhỏ hơn nhiều vì C1–C3 trùng C0 ở
 phần lớn câu, nên con số thật có thể vẫn ổn — nhưng phải đo mới biết.
+
+Việc nên làm ❓ — xem [`06_decisions.md`](06_decisions.md) D12.
 
 > Nguồn: `phase_2c_chunking_strategy_test_plan.md` §9 (dòng 304–326).
 
@@ -167,9 +165,7 @@ Ba điều đọc ra được, và cả ba nên vào §2 báo cáo:
 
 ## Việc phải làm
 
-1. Bảng "đọc ngang" ở trên nên vào §2 báo cáo — hiện chưa có chỗ nào liệt kê đủ.
-2. Nêu ở §7 hai điều: ngưỡng 2B đặt **không kèm tính toán cỡ mẫu**, và Citation F1
-   có tỉ lệ báo động giả 21,3% ([`03_claims.md`](03_claims.md) mục S5).
-3. §4 nêu chuyện **luật thay thế sẽ lật winner** — thay cho câu tự khen
-   "guardrail đã làm đúng việc của nó".
-4. Nhắn Thắng đo SE trước khi áp guardrail 2C.
+1. Bảng "đọc ngang" ở trên vào §2 báo cáo.
+2. §7 nêu: ngưỡng 2B đặt không kèm tính toán cỡ mẫu, và Citation F1 có tỉ lệ báo
+   động giả 21,3%.
+3. D3 và D12 ở [`06_decisions.md`](06_decisions.md).

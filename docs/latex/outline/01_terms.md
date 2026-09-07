@@ -48,7 +48,7 @@ Mục ✅ đã có ở EDA §0, chỉ cần nhắc lại một dòng. Mục 🆕
 | Thuật ngữ | Nghĩa trong báo cáo này | |
 | :--- | :--- | :-: |
 | **Closed-world assumption** (giả định thế giới đóng) | Cách chấm điểm coi **đúng một** chunk là đúng, mọi chunk khác là sai — kể cả khi một chunk khác cũng trả lời được câu hỏi. | ✅ |
-| **Biên độ nhập nhằng 7,0% / 24,5%** | 🆕 **Bản hiện tại đang nói sai mục này, phải viết lại.** EDA lấy text đáp án của từng câu hỏi rồi đi tìm nó trong các chunk **không** được gán nhãn. Kết quả: **24,5%** số câu có ít nhất một chunk như vậy chứa nguyên văn đáp án. Nhưng chứa đáp án chưa chắc đã trả lời được câu hỏi, nên EDA lọc thêm: **7,0%** số câu có một chunk vừa chứa đáp án vừa dùng chung ít nhất 2 từ hiếm với câu hỏi — tức nhiều khả năng nó thật sự trả lời được, thường vì cùng một sự kiện được đưa tin ở bài thứ hai.<br><br>Hệ quả: nếu hệ thống trả về bài thứ hai đó, cách chấm gọi là **sai** dù người dùng vẫn hài lòng. Nên **mọi điểm tìm kiếm đều mang sẵn sai số 7,0–24,5%**, và hai hệ thống chênh nhau ít hơn thế thì không kết luận được gì.<br><br>Đây là **chỉ báo, không phải kết quả đọc tay** — EDA tự ghi rõ như vậy. | 🆕 |
+| **Biên độ nhập nhằng 7,0% / 24,5%** | EDA lấy text đáp án của từng câu hỏi rồi đi tìm nó trong các chunk **không** được gán nhãn. Kết quả: **24,5%** số câu có ít nhất một chunk như vậy chứa nguyên văn đáp án. Nhưng chứa đáp án chưa chắc đã trả lời được câu hỏi, nên EDA lọc thêm: **7,0%** số câu có một chunk vừa chứa đáp án vừa dùng chung ít nhất 2 từ hiếm với câu hỏi — tức nhiều khả năng nó thật sự trả lời được, thường vì cùng một sự kiện được đưa tin ở bài thứ hai.<br><br>Hệ quả: nếu hệ thống trả về bài thứ hai đó, cách chấm gọi là **sai** dù người dùng vẫn hài lòng. Nên **mọi điểm tìm kiếm đều mang sẵn sai số 7,0–24,5%**, và hai hệ thống chênh nhau ít hơn thế thì không kết luận được gì.<br><br>Đây là **chỉ báo, không phải kết quả đọc tay** — EDA tự ghi rõ như vậy. | 🆕 |
 | **False negative** | Hệ thống tìm ra một đáp án đúng nhưng bị chấm là sai, vì nó không phải đoạn được gán nhãn. | ✅ |
 | **RAGAS** | Thư viện chấm điểm bằng cách nhờ một LLM khác làm giám khảo. 🆕 Ở đây giám khảo là `glm-5p3-flash` chạy qua Fireworks, **khác hẳn** model sinh câu trả lời (`gemini-3.1-flash-lite` của Google) — vì có lần notebook cũ để model tự chấm bài của chính nó. | 🆕 |
 | **Answer Correctness**<br>*độ đúng của câu trả lời* | Giám khảo đọc câu trả lời và đáp án chuẩn rồi cho điểm xem hai bên khớp nhau đến đâu. Đây là **metric chính** của Phase 2. | 🆕 |
@@ -77,7 +77,7 @@ Mục ✅ đã có ở EDA §0, chỉ cần nhắc lại một dòng. Mục 🆕
 
 ## Việc còn phải làm cho §0
 
-1. **Đo trung vị độ dài đáp án chuẩn** (số token). Cần để thay câu ẩn dụ "khớp với hình dạng của nhãn" bằng một con số thật. Dữ liệu có sẵn, không tốn API.
-2. **Bỏ chữ "vết truy xuất đóng băng"** khỏi 6 file đang dùng nó — đây là chữ tự chế, không có trong code cũng không có trong test plan. Thay bằng cách diễn đạt ở mục *Truy xuất chạy một lần, dùng chung*.
-3. Quyết định §0 nằm trong thân bài hay phụ lục. Đề xuất: **thân bài, ngay sau phần mở đầu**, giống EDA — người đọc gặp `resolved` ở §1 thì lúc đó phải đã biết nó là gì.
-4. Rà chéo với EDA §0 để hai tài liệu không định nghĩa lệch nhau.
+1. **Đo trung vị độ dài đáp án chuẩn** (token) — cần để thay câu ẩn dụ "khớp với
+   hình dạng của nhãn" bằng một con số. Xem [`06_decisions.md`](06_decisions.md) D11.
+2. Vị trí của §0 trong báo cáo ❓ — xem [`06_decisions.md`](06_decisions.md) D5.
+3. Rà chéo với EDA §0 để hai tài liệu không định nghĩa lệch nhau.

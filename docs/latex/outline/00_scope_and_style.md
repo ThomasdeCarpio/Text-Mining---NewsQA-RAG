@@ -41,23 +41,22 @@ held-out, `heldout_final_summary.json`)" thì kiểm chứng được.
 
 Một biên độ đo trên **truy xuất** không được bê sang một metric của **tầng sinh**.
 Một tỉ lệ đếm trên **30 câu điểm thấp nhất** không được phát biểu như tỉ lệ của
-toàn tập. Xem [`03_claims.md`](03_claims.md) — đã có hai lỗi loại này trong bản
-hiện tại.
+toàn tập. Mức mạnh được phép nói cho từng phát biểu: [`03_claims.md`](03_claims.md).
 
 ### 4. Không dùng ẩn dụ ở chỗ đáng lẽ phải có số đo
 
-Đây là lỗi nhiều nhất của bản hiện tại. Ẩn dụ nghe như một kết luận nhưng không
-kiểm chứng được, và người đọc không biết nó dựa trên cái gì.
+Ẩn dụ nghe như một kết luận nhưng không kiểm chứng được, và người đọc không
+biết nó dựa trên cái gì.
 
-| Đang viết | Vấn đề | Viết lại thành |
+| Không viết thế này | Vấn đề | Viết thế này |
 | :--- | :--- | :--- |
 | "Hệ thống không bịa. Nó chỉ nói dài." | Hai mệnh đề, không mệnh đề nào có số | "Faithfulness 0,9761 nhưng Exact Match 0,0000: câu trả lời bám bằng chứng nhưng không câu nào trùng khớp span đáp án." |
 | "Prompt đúng dạng là **đòn bẩy lớn nhất** ở tầng sinh" | "lớn nhất" so với cái gì? Chưa đo | "Trong bốn prompt đã thử, P2 là prompt duy nhất vượt guardrail và tăng AC (+0,1043)." |
-| "Toàn bộ khoảng cách dev → held-out là **câu chuyện của truy xuất**" | Ẩn dụ thay cho số | "Trên nhóm `gold_in_top5`, held-out 0,7689 ≥ dev 0,7597; chênh lệch toàn tập đến từ việc nhóm `gold_not_in_top5` tăng từ 12/281 lên 35/284." |
+| "Toàn bộ khoảng cách dev → held-out là **câu chuyện của truy xuất**" | Ẩn dụ thay cho số | "Trên nhóm `gold_in_top5`, held-out 0,7689 (CI95 [0,7391; 0,7978]) không phân biệt được với dev 0,7597; chênh lệch toàn tập đến từ nhóm `gold_not_in_top5` tăng từ 12/281 lên 35/284." |
 | "**Trần** của tầng sinh nằm ở tầng truy xuất" | "Trần" chưa được định nghĩa | "Với 35/284 câu không có gold trong context, AC toàn tập bị chặn trên bởi tỉ lệ đó." |
 | "P2 khớp với **hình dạng của nhãn**" | Ẩn dụ | "Đáp án chuẩn NewsQA có trung vị *n* token; P2 yêu cầu một câu duy nhất." *(cần đo n)* |
 | "EDA **không phải bước trang trí**" | Tự khen, không thông tin | Bỏ. Để phần EDA tự chứng minh bằng việc nó dự báo đúng. |
-| "Guardrail **đã làm đúng việc của nó**" | Tự khen | "P2-depth3 có AC cao hơn 0,0361 nhưng trượt hai guardrail nên bị loại." |
+| "Guardrail **đã làm đúng việc của nó**" | Tự khen | "P2-depth3 có AC cao hơn 0,0360 nhưng trượt hai guardrail (Faithfulness và Citation Validity) nên bị loại." |
 | "**Thứ tự thời gian là bằng chứng**" | Khẩu hiệu | "Bản ghi quyết định ký 13:31:30Z, run bắt đầu 14:23:24Z; băm của bản ghi được nhúng trong `heldout_access.json`." |
 | "Báo cáo kết quả null **đúng như nó là**, thay vì tô thành chiến thắng" | Tự khen về đạo đức nghiên cứu | Bỏ. Chỉ cần nói khoảng cách 0,0469 dưới ngưỡng và ba CI chồng lấn. |
 
@@ -71,14 +70,14 @@ chỉ có trong văn mình vừa viết.
 
 | Chữ tự chế | Vấn đề | Viết lại |
 | :--- | :--- | :--- |
-| "**vết truy xuất đóng băng**" | Không có ở đâu trong dự án ngoài văn tôi viết; "vết" không gợi được gì; giải thích lại nén y hệt | "Bước tìm đoạn văn chỉ chạy **một lần**, kết quả được lưu lại và cả 12 cấu hình dùng chung, nên mọi cấu hình đọc đúng cùng 5 đoạn." |
+| "**vết truy xuất đóng băng**" | Không có trong code cũng không có trong test plan; "vết" không gợi được gì | "Bước tìm đoạn văn chỉ chạy **một lần**, kết quả được lưu lại và cả 12 cấu hình dùng chung, nên mọi cấu hình đọc đúng cùng 5 đoạn." |
 | "**luật phán quyết**" | Ngôn ngữ tòa án | "hai điều kiện để gọi là thắng" |
 | "**hiệu theo cặp**" | Dịch sát nhưng không gợi hình | "so sánh theo từng câu hỏi" |
 | "**cấu hình khóa**" | "khóa" là động từ bị danh từ hóa | "cấu hình đã chốt" |
 
-Và đừng thả thuật ngữ chưa giải thích *vào trong phần giải thích* — bản đầu định
-nghĩa "cấu hình khóa" bằng cụm "được băm SHA-256", tức là giải thích một chữ lạ
-bằng một chữ lạ khác.
+Và đừng thả thuật ngữ chưa giải thích *vào trong phần giải thích*: định nghĩa
+"cấu hình đã chốt" bằng cụm "được băm SHA-256" là giải thích một chữ lạ bằng một
+chữ lạ khác.
 
 ### 6. Bỏ thiết bị trình chiếu ra khỏi báo cáo
 
@@ -105,6 +104,6 @@ quả, không phải phần phụ lục xin lỗi.
 - [ ] Mọi thuật ngữ ở §0 đều được dùng; mọi thuật ngữ được dùng đều có ở §0
 - [ ] Mọi con số truy được về một artifact đã commit
 - [ ] Không con số nào bị phát biểu ngoài tập/metric đã đo nó
-- [ ] Không còn câu nào trong bảng "Đang viết" ở trên
+- [ ] Không còn câu nào thuộc cột "Không viết thế này" ở trên
 - [ ] Mọi phát biểu trong [`03_claims.md`](03_claims.md) đúng mức đã cho phép
 - [ ] Con số trong `.tex` đều là macro `\Num...`, không gõ tay

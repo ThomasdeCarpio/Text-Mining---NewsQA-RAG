@@ -81,13 +81,14 @@
 
   \vspace{0.5em}
   \begin{itemize}
-    \item Trên các câu truy xuất làm đúng việc, held-out (\NumHoHitAC) \textbf{cao
-          hơn} dev (\NumPtwodFiveHitAC) --- prompt tổng quát hóa được.
+    \item Trên các câu truy xuất làm đúng việc, held-out (\NumHoHitAC) \textbf{không
+          phân biệt được} với dev (\NumPtwodFiveHitAC) --- CI95 [0{,}7391; 0{,}7978]
+          chứa giá trị dev.
     \item Cái tụt là tỉ lệ truy xuất trượt: \NumNMiss{}/\NumNDev{} $\rightarrow$
           \NumHoNMiss{}/\NumNHeldout{}, gần \textbf{ba lần}.
     \item Citation F1 nhóm trượt $=$ \fail{\NumHoMissCitFone{}} theo định nghĩa ---
           không có đoạn đúng nào để mà trích dẫn.
   \end{itemize}
 
-  \takeaway{Toàn bộ khoảng cách dev $\rightarrow$ held-out là câu chuyện của truy xuất, không phải của prompt.}
+  \takeaway{Chênh lệch dev $\rightarrow$ held-out đến từ nhóm truy xuất trượt lớn hơn, không từ prompt.}
 \end{frame}

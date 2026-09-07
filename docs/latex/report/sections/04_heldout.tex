@@ -70,8 +70,9 @@ Held-out & \textbf{n} & \textbf{Answer Corr.} & \textbf{Citation F1} & \textbf{F
 \end{tabularx}
 \end{center}
 
-Trên các câu mà truy xuất làm đúng việc, held-out đạt \NumHoHitAC{} --- cao hơn
-chính development (\NumPtwodFiveHitAC{}). Tỉ lệ truy xuất trượt thì tăng gần ba
+Trên các câu mà truy xuất làm đúng việc, held-out đạt \NumHoHitAC{} với khoảng tin
+cậy 95\% là [0{,}7391; 0{,}7978] --- khoảng này chứa giá trị development
+(\NumPtwodFiveHitAC{}), nên hai bên không phân biệt được. Tỉ lệ truy xuất trượt thì tăng gần ba
 lần: \NumNMiss{}/\NumNDev{} $\rightarrow$ \NumHoNMiss{}/\NumNHeldout{}.
 
 Citation F1 trên nhóm trượt bằng \NumHoMissCitFone{}, đúng theo định nghĩa:
@@ -79,10 +80,9 @@ không có đoạn đúng nào trong context để mà trích dẫn, nên recall
 Faithfulness trên nhóm này cũng tụt xuống \NumHoMissFaith{} --- khi không có
 bằng chứng, model bám vào đoạn sai.
 
-\keypoint{\textbf{Toàn bộ khoảng cách development $\rightarrow$ held-out là câu
-chuyện của truy xuất, không phải của prompt.} Prompt \NumWinnerPrompt{} tổng
-quát hóa được sang dữ liệu chưa từng thấy; cái không tổng quát hóa được là độ
-dễ của việc tìm đoạn.}
+Chênh lệch giữa hai tập đến từ nhóm \texttt{gold\_not\_in\_top5} lớn hơn
+(\NumNMiss{}/\NumNDev{} $\rightarrow$ \NumHoNMiss{}/\NumNHeldout{}), không từ
+việc prompt kém tổng quát trên dữ liệu chưa từng thấy.
 
 \subsection{Trần của tầng sinh nằm ở tầng truy xuất}
 
