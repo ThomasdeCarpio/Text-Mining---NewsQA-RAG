@@ -23,12 +23,12 @@ embedding:
 # variants (MRR@5 0.880 vs 0.875 and 0.822). Shorter splits the evidence span
 # across chunks; longer dilutes it. Changing these invalidates every built index.
 chunking:
-  strategy: "recursive"       # "recursive" | "hierarchical" | "semantic" | "sentence"
+  strategy: "recursive"       # "recursive" | "sentence" | "paragraph" | "hierarchical"
   chunk_size: 512             # Target chunk size in tokens
   chunk_overlap: 64           # Overlap between consecutive chunks
-  # Sentence strategy only:
-  sentences_per_chunk: 8
-  sentence_overlap: 2
+  # Hierarchical strategy only; children are indexed, parents are delivered.
+  child_chunk_size: 256
+  child_chunk_overlap: 32
 
 # --- Database (ChromaDB) ---
 database:

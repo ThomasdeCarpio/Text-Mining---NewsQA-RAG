@@ -1,7 +1,10 @@
 import os
 import json
 import hashlib
+import re
 from typing import List, Dict, Any
+
+import tiktoken
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 class TextChunker:
@@ -25,6 +28,9 @@ class TextChunker:
             separators=["\n\n", "\n", " ", ""]
         )
 
+    def split_text(self, text: str) -> List[str]:
+        return self.text_splitter.split_text(text)
+
     def generate_article_id(self, url: str, filename: str) -> str:
         """
         Generates a unique, deterministic ID for an article based on its URL or filename.
@@ -44,7 +50,7 @@ class TextChunker:
         
         article_id = self.generate_article_id(base_metadata.get("url"), filename)
         
-        raw_chunks = self.text_splitter.split_text(text)
+        raw_chunks = self.split_text(text)
         
         formatted_chunks = []
         
@@ -100,6 +106,107 @@ class TextChunker:
         print(f"\n🎯 Total chunks generated across all files: {len(all_chunks)}")
 
         return all_chunks
+
+
+class BoundaryAwareChunker(TextChunker):
+    """Pack contiguous linguistic units without cutting normal-size units."""
+
+    strategy_name = "boundary"
+
+    def __init__(
+        self,
+        chunk_size: int = 512,
+        chunk_overlap: int = 64,
+        encoding_name: str = "cl100k_base",
+    ):
+        super().__init__(chunk_size, chunk_overlap, encoding_name)
+        self._encoding = tiktoken.get_encoding(encoding_name)
+
+    def _unit_spans(self, text: str) -> list[tuple[int, int]]:
+        raise NotImplementedError
+
+    def _tokens(self, text: str) -> int:
+        return len(self._encoding.encode(text, disallowed_special=()))
+
+    def split_text(self, text: str) -> List[str]:
+        spans = self._unit_spans(text)
+        if not spans:
+            return self.text_splitter.split_text(text)
+
+        chunks: list[str] = []
+        start_index = 0
+        while start_index < len(spans):
+            start, first_end = spans[start_index]
+            first = text[start:first_end].strip()
+            if self._tokens(first) > self.chunk_size:
+                chunks.extend(self.text_splitter.split_text(first))
+                start_index += 1
+                continue
+
+            end_index = start_index + 1
+            while end_index < len(spans):
+                candidate = text[start:spans[end_index][1]].strip()
+                if self._tokens(candidate) > self.chunk_size:
+                    break
+                end_index += 1
+
+            chunk = text[start:spans[end_index - 1][1]].strip()
+            if chunk:
+                chunks.append(chunk)
+            if end_index >= len(spans):
+                break
+
+            next_index = end_index
+            for overlap_start in range(end_index - 1, start_index, -1):
+                overlap = text[spans[overlap_start][0]:spans[end_index - 1][1]].strip()
+                if self._tokens(overlap) <= self.chunk_overlap:
+                    next_index = overlap_start
+                else:
+                    break
+            start_index = max(start_index + 1, next_index)
+
+        return chunks
+
+    def chunk_article(self, article_data: Dict[str, Any], filename: str) -> List[Dict[str, Any]]:
+        chunks = super().chunk_article(article_data, filename)
+        for chunk in chunks:
+            chunk["metadata"]["chunking_strategy"] = self.strategy_name
+        return chunks
+
+
+class SentenceChunker(BoundaryAwareChunker):
+    """Group complete sentence-like spans up to a token budget."""
+
+    strategy_name = "sentence"
+
+    def _unit_spans(self, text: str) -> list[tuple[int, int]]:
+        spans: list[tuple[int, int]] = []
+        cursor = 0
+        for match in re.finditer(r"[.!?][\"')\]]*\s+(?=\S)", text):
+            end = match.end()
+            if text[cursor:end].strip():
+                spans.append((cursor, end))
+            cursor = end
+        if text[cursor:].strip():
+            spans.append((cursor, len(text)))
+        return spans
+
+
+class ParagraphChunker(BoundaryAwareChunker):
+    """Group complete source paragraphs, recursively splitting oversized ones."""
+
+    strategy_name = "paragraph"
+
+    def _unit_spans(self, text: str) -> list[tuple[int, int]]:
+        spans: list[tuple[int, int]] = []
+        cursor = 0
+        for match in re.finditer(r"\n[ \t]*\n+", text):
+            if text[cursor:match.start()].strip():
+                spans.append((cursor, match.start()))
+            cursor = match.end()
+        if text[cursor:].strip():
+            spans.append((cursor, len(text)))
+        return spans
 
 
 # ---------------------------------------------------------------------------
@@ -166,6 +273,7 @@ class HierarchicalChunker(TextChunker):
                 formatted_chunks.append({
                     "id": f"{article_id}_chunk_{index}",
                     "text": chunk_text,
+                    "parent_text": parent_text,
                     "metadata": {
                         "article_id": article_id,
                         "chunk_index": index,
@@ -173,6 +281,7 @@ class HierarchicalChunker(TextChunker):
                         "parent_index": parent_index,
                         "parent_id": f"{article_id}_parent_{parent_index}",
                         "child_index": child_index,
+                        "chunking_strategy": "hierarchical",
                         "title": str(base_metadata.get("title", "")),
                         "url": str(base_metadata.get("url", "")),
                         "publish_date": str(base_metadata.get("publish_date", "")),
@@ -187,7 +296,7 @@ class HierarchicalChunker(TextChunker):
 def get_chunker(config: dict):
     """
     Factory. Reads config["chunking"].
-    Supported strategies: "recursive", "hierarchical".
+    Supported strategies: recursive, sentence, paragraph, hierarchical.
     """
     chunking_cfg = config.get("chunking", {})
     strategy = chunking_cfg.get("strategy", "recursive")
@@ -206,9 +315,21 @@ def get_chunker(config: dict):
             child_chunk_overlap=chunking_cfg.get("child_chunk_overlap"),
         )
 
+    if strategy == "sentence":
+        return SentenceChunker(
+            chunk_size=chunking_cfg.get("chunk_size", 512),
+            chunk_overlap=chunking_cfg.get("chunk_overlap", 64),
+        )
+
+    if strategy == "paragraph":
+        return ParagraphChunker(
+            chunk_size=chunking_cfg.get("chunk_size", 512),
+            chunk_overlap=chunking_cfg.get("chunk_overlap", 64),
+        )
+
     raise ValueError(
         f"Unknown chunking strategy: '{strategy}'. "
-        "Supported: 'recursive', 'hierarchical'."
+        "Supported: 'recursive', 'sentence', 'paragraph', 'hierarchical'."
     )
 
 
