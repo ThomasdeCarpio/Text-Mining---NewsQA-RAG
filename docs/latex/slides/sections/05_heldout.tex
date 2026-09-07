@@ -12,7 +12,7 @@
   \vfill
 \end{frame}
 
-\begin{frame}{Vì sao phải có tập held-out}
+\begin{frame}[shrink=20]{Vì sao phải có tập held-out}
   \small
   Mọi con số ở các slide trước đo trên \NumNDev{} câu development --- chính tập
   mà nhóm đã thử \textbf{4 prompt $\times$ 3 mức depth} rồi chọn cái điểm cao nhất.
@@ -37,7 +37,7 @@
   \takeaway{Thứ tự thời gian là bằng chứng: không thể chọn winner sau khi đã thấy điểm held-out.}
 \end{frame}
 
-\begin{frame}{Kết quả công bố --- \NumWinner{} trên \NumNHeldout{} câu held-out}
+\begin{frame}[shrink=20]{Kết quả công bố --- \NumWinner{} trên \NumNHeldout{} câu held-out}
   \small
   \begin{tabularx}{\textwidth}{@{}L N N N@{}}
     \toprule
@@ -64,7 +64,7 @@
   \takeaway{Chi phí toàn bộ run: \$\NumHoCost{}. Latency P50 \NumHoLatency{} ms.}
 \end{frame}
 
-\begin{frame}{Phát hiện quan trọng nhất: prompt \emph{không} bị overfit}
+\begin{frame}[shrink=20]{Phát hiện quan trọng nhất: prompt \emph{không} bị overfit}
   \small
   Tách \NumNHeldout{} câu held-out theo việc truy xuất có đưa được bằng chứng ra hay không:
 
@@ -79,21 +79,15 @@
     \bottomrule
   \end{tabularx}
 
-  \vspace{0.6em}
+  \vspace{0.5em}
   \begin{itemize}
-    \item Trên các câu \textbf{truy xuất làm đúng việc}, held-out đạt \NumHoHitAC{}
-          --- \textbf{cao hơn} dev (\NumPtwodFiveHitAC). Prompt tổng quát hóa được.
-    \item Tỉ lệ truy xuất trượt tăng gần \textbf{ba lần}: \NumNMiss{}/\NumNDev{}
-          $\rightarrow$ \NumHoNMiss{}/\NumNHeldout{}.
-    \item Citation F1 trên nhóm trượt bằng \fail{\NumHoMissCitFone{}} --- theo định
-          nghĩa: không có đoạn đúng nào trong context để mà trích dẫn.
+    \item Trên các câu truy xuất làm đúng việc, held-out (\NumHoHitAC) \textbf{cao
+          hơn} dev (\NumPtwodFiveHitAC) --- prompt tổng quát hóa được.
+    \item Cái tụt là tỉ lệ truy xuất trượt: \NumNMiss{}/\NumNDev{} $\rightarrow$
+          \NumHoNMiss{}/\NumNHeldout{}, gần \textbf{ba lần}.
+    \item Citation F1 nhóm trượt $=$ \fail{\NumHoMissCitFone{}} theo định nghĩa ---
+          không có đoạn đúng nào để mà trích dẫn.
   \end{itemize}
 
-  \begin{center}
-    \colorbox{brandrule}{\parbox{0.88\textwidth}{\centering\vspace{0.3em}
-      \textbf{Toàn bộ khoảng cách dev $\rightarrow$ held-out là câu chuyện của truy xuất,\\
-      không phải của prompt.}\vspace{0.3em}}}
-  \end{center}
-
-  \takeaway{Muốn cải thiện tiếp thì quay lại Phase 1, không phải viết lại prompt.}
+  \takeaway{Toàn bộ khoảng cách dev $\rightarrow$ held-out là câu chuyện của truy xuất, không phải của prompt.}
 \end{frame}

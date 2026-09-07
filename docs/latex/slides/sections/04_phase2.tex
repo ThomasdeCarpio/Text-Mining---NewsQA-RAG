@@ -14,7 +14,7 @@
   \vfill
 \end{frame}
 
-\begin{frame}{Baseline --- và chẩn đoán từ ba con số}
+\begin{frame}[shrink=20]{Baseline --- và chẩn đoán từ ba con số}
   \small
   P0 (prompt gốc), \NumWinnerDepth{} đoạn context, \NumNDev{} câu development:
 
@@ -44,7 +44,7 @@
   \takeaway{Vấn đề là \emph{hình dạng} câu trả lời, không phải độ trung thực của nó.}
 \end{frame}
 
-\begin{frame}{Bốn prompt, mỗi cái nhắm một nhóm lỗi đã đếm được}
+\begin{frame}[shrink=20]{Bốn prompt, mỗi cái nhắm một nhóm lỗi đã đếm được}
   \small
   Audit tay \textbf{30 câu} có Answer Correctness thấp nhất, phân loại lỗi,
   rồi mới viết prompt.
@@ -68,7 +68,7 @@
   \takeaway{Prompt phải nhắm vào nhóm lỗi có số đo. Trực giác ``siết chặt hơn thì tốt hơn'' là sai.}
 \end{frame}
 
-\begin{frame}{\texttt{context\_depth} là gì}{Thứ được tinh chỉnh song song với prompt}
+\begin{frame}[shrink=20]{\texttt{context\_depth} là gì}{Thứ được tinh chỉnh song song với prompt}
   \small
   Đúng một phép cắt danh sách trên vết đã xếp hạng sẵn:
   \begin{center}
@@ -97,7 +97,7 @@
   \takeaway{Cột bên phải \emph{không} đến từ ước lượng --- Phase 1 đã đo sẵn nó.}
 \end{frame}
 
-\begin{frame}{Quyết định winner --- guardrail chạy trước, điểm số chạy sau}
+\begin{frame}[shrink=20]{Quyết định winner --- guardrail chạy trước, điểm số chạy sau}
   \small
   \textbf{Bốn điều kiện khóa trước khi nhìn thấy bất kỳ kết quả nào:}
   Faithfulness $\geq -0{,}02$ \;\textbullet\; Citation F1 $\geq -0{,}01$
@@ -128,7 +128,7 @@
   \takeaway{Nới ngưỡng lúc này chính là hành vi mà việc đăng ký trước sinh ra để ngăn.}
 \end{frame}
 
-\begin{frame}{Winner: \NumWinner{}}
+\begin{frame}[shrink=20]{Winner: \NumWinner{}}
   \small
   \begin{tabularx}{\textwidth}{@{}L N N@{}}
     \toprule

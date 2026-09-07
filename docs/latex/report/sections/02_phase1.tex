@@ -89,11 +89,32 @@ không quá dài gây loãng và tốn token ở Phase~2 --- chứ không phải
 
 \subsection{Ablation bổ sung --- Contextual chunking}
 
-Vòng 3 kết luận kích thước chunk không quan trọng. Câu hỏi tiếp theo: nếu không
-phải cắt to hay cắt nhỏ, thì \emph{viết lại nội dung} chunk có quan trọng
-không? Ablation thêm \NumCtxChars{} ký tự ngữ cảnh của bài báo mẹ vào đầu mỗi
-chunk (\NumCtxContextualised{}/\NumCorpusChunks{} chunk được thêm; chunk đầu
-tiên bỏ qua vì đã tự mang ngữ cảnh).
+Ba vòng trên so sánh \textbf{retriever}, nhưng luôn trên \textbf{một cách biểu
+diễn dữ liệu duy nhất}: mọi chỉ mục đều dựng từ \texttt{chunk["text"]} và không
+gì khác. Nói cho chặt thì kết luận ``sparse thắng dense'' là ``sparse thắng
+dense \emph{trên cách biểu diễn này}''. Ablation đổi cách biểu diễn rồi đo lại.
+
+Giả thuyết đến từ phân bố ở mục trước: bài báo trung bình cắt thành 2{,}06
+chunk, và chunk đầu tiên mở đầu bằng chính bài báo nên tự nó có ngữ cảnh. Các
+chunk tiếp nối thì đến tay retriever mà không mang dấu hiệu nào cho biết chúng
+thuộc câu chuyện gì. Can thiệp: nối \NumCtxChars{} ký tự đầu bài báo vào trước
+mỗi chunk tiếp nối. Số chunk được sửa khớp chính xác với số chunk tiếp nối ---
+\NumCorpusChunks{} $-$ \NumCorpusArticles{} $=$ \NumCtxContextualised{} (51{,}4\%),
+nên không chunk đầu bài nào bị đụng tới.
+
+\keypoint{\textbf{Đây là \emph{contextual chunking}, không phải \emph{metadata
+indexing}.} Ý tưởng ban đầu là index thêm metadata, nhưng dataset này không có
+metadata thật: \texttt{url}, \texttt{author}, \texttt{publish\_date} đều rỗng do
+chunker gán mặc định, \texttt{publisher} là hằng số \texttt{"CNN"}, và
+\texttt{metadata.title} \textbf{không phải headline} --- nó là \NumCtxChars{} ký
+tự đầu của chính body, đã kiểm là tiền tố của body ở 200/200 bài. Thí nghiệm vì
+vậy trả lời được ``ngữ cảnh cấp bài báo có giúp không'', nhưng \emph{không} trả
+lời được ``metadata có giúp không'' --- dữ liệu không cho phép hỏi câu đó.}
+
+Một trục khác đã đúng sẵn từ trước: \texttt{embeddings.py:131-144} áp prefix
+chính tắc của từng mô hình (\texttt{query: }/\texttt{passage: } cho e5,
+instruction riêng của BGE cho \texttt{bge-*}, không prefix cho \texttt{bge-m3}
+đúng khuyến nghị). Nhánh dense chưa bao giờ ngây thơ ở trục prompt truy vấn.
 
 \begin{center}\small
 \begin{tabularx}{0.94\textwidth}{@{}L p{2cm} p{2cm} p{3.4cm}@{}}
@@ -119,13 +140,30 @@ trên cả hai kho, khoảng cách thu hẹp từ \NumCtxGapPlain{} xuống
 \NumCtxGapCtx{} nhưng không đảo ngược. Ngoài ra, cả \NumCtxEffectDense{} lẫn
 \NumCtxEffectSparse{} đều nhỏ hơn ngưỡng thực dụng \NumNoiseFloor{}.
 
-Hai điểm cần ghi nhận trung thực. Thứ nhất, đây là ablation chứ không phải một
-vòng của giải đấu: nó chạy trên harness riêng (\texttt{top\_k} 10, không
-reranker, dense dùng tích ma trận chính xác thay vì HNSW nên tái lập được), nên
-con số tuyệt đối không so trực tiếp với bảng vòng~1. Thứ hai, ablation chạy
-trên cả \NumCtxNSamples{} câu, tức \textbf{có chạm vào các câu held-out của
-Phase~2}; vì đây là chỉ số truy xuất thuần và không có quyết định cấu hình nào
-được rút ra từ nó, phần sinh trên held-out vẫn chưa bị nhìn thấy.
+Quan trọng: kết luận này \emph{mạnh hơn} bảng vòng~1 chứ không yếu hơn. Nhánh
+dense ở đây dùng \textbf{tìm kiếm chính xác} (nhân ma trận trên vector đã chuẩn
+hóa) thay vì Chroma/HNSW, và cả hai hệ quả đều nghiêng về phía dense: nó tái lập
+được (bỏ đúng nguồn nhiễu khiến số dense vòng~1 trôi $0{,}0143$), và nó không
+mất recall do xấp xỉ nên là một baseline dense mạnh hơn lần chạy giải đấu.
+Sparse vẫn thắng trong điều kiện đó.
+
+Ba điểm cần ghi nhận trung thực:
+
+\begin{enumerate}\small
+  \item Đây là ablation chứ không phải một vòng của giải đấu: harness riêng
+        (\texttt{top\_k} 10, không reranker), nên con số tuyệt đối không so trực
+        tiếp với bảng vòng~1 --- chỉ các hiệu số mới so được với nhau.
+  \item Khoảng tin cậy ở đây bootstrap theo \emph{câu hỏi}, không gom cụm theo
+        bài báo. Nó dùng đúng \texttt{paired\_comparison} của Phase~1 nên nhất
+        quán trong nội bộ phase, nhưng lỏng hơn chuẩn Phase~2 đã nâng lên. Gom
+        cụm sẽ làm khoảng tin cậy rộng ra; với khoảng cách sparse--dense
+        (\NumCtxGapPlain{}) điều đó không đổi kết luận, nhưng với hai hiệu ứng
+        nhỏ thì nên đọc là ``đo được'', đừng đọc là ``chắc chắn''.
+  \item Ablation chạy trên cả \NumCtxNSamples{} câu, tức \textbf{có chạm vào các
+        câu held-out của Phase~2}. Vì đây là chỉ số truy xuất thuần và không có
+        quyết định cấu hình nào được rút ra từ nó, phần sinh trên held-out vẫn
+        chưa bị nhìn thấy.
+\end{enumerate}
 
 \subsection{Cấu hình khóa}
 

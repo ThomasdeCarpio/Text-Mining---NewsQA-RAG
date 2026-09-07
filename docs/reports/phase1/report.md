@@ -334,9 +334,32 @@ Vòng 3 kiểm tra tính bền vững của Quán quân Vòng 2 trên 3 kích th
 
 ### 5.3. Ablation bổ sung: Contextual Chunking
 
-Vòng 3 kết luận "kích thước chunk không quan trọng". Câu hỏi tự nhiên tiếp theo: **nếu không phải cắt to hay cắt nhỏ, thì cách viết lại nội dung chunk có quan trọng không?** Ablation này thêm vào đầu mỗi chunk 160 ký tự ngữ cảnh của bài báo mẹ (bỏ qua chunk đầu tiên, vì nó đã tự mang ngữ cảnh) — 11.702 trong 22.766 chunk được thêm.
+Vòng 1–3 so sánh **retriever**, nhưng luôn trên **một cách biểu diễn dữ liệu duy nhất**: mọi chỉ mục đều dựng từ `chunk["text"]` và không gì khác. Nói cho chặt thì kết luận "sparse thắng dense" thực ra là "sparse thắng dense **trên cách biểu diễn này**". Ablation này đổi cách biểu diễn rồi đo lại.
 
-Kết quả (`docs/reports/phase1/contextual_chunking_ablation.json`, notebook [`16_contextual_chunking_ablation_kaggle.ipynb`](../../../notebooks/16_contextual_chunking_ablation_kaggle.ipynb)):
+**Giả thuyết.** Bài báo trung bình cắt thành 2,06 chunk. Chunk đầu tiên mở đầu bằng chính bài báo nên tự nó đã có ngữ cảnh; các chunk tiếp nối thì đến tay retriever mà **không mang dấu hiệu nào cho biết chúng thuộc câu chuyện gì**:
+
+```
+chunk 0  "LOS ANGELES (CNN) -- Natalie Cole's search for a new kidney ended..."
+chunk 1  "...she said. The transplant was performed Tuesday. Doctors said..."   <- thuộc bài nào?
+```
+
+**Can thiệp:** nối 160 ký tự đầu bài báo vào trước mỗi chunk tiếp nối. Số chunk được sửa khớp chính xác với số chunk tiếp nối:
+
+```
+22.766 chunk toàn kho − 11.064 chunk đầu bài = 11.702 = đúng số chunk được thêm ngữ cảnh (51,4%)
+```
+
+Không chunk đầu bài nào bị đụng tới, và bộ chặn trùng lặp trong notebook không phải kích hoạt lần nào.
+
+> [!IMPORTANT]
+> **Đây là *contextual chunking*, không phải *metadata indexing* — và phải gọi đúng tên.**
+> Ý tưởng ban đầu là index thêm metadata (title, tác giả, ngày đăng). Notebook kiểm và thấy **dataset này không có metadata thật**: `url`, `author`, `publish_date` đều rỗng do chunker gán mặc định; `publisher` là hằng số `"CNN"` cho cả 11.064 bài. Còn `metadata.title` **không phải headline** — nó là **160 ký tự đầu của chính body**, đã kiểm là tiền tố của body ở 200/200 bài đánh giá.
+>
+> Nên thứ duy nhất khai thác được trong trường đó là đoạn mở đầu bài báo. Thí nghiệm này vì vậy trả lời được câu "ngữ cảnh cấp bài báo có giúp không", nhưng **không** trả lời được câu "metadata có giúp không" — dữ liệu không cho phép hỏi câu đó.
+
+**Một trục đã đúng sẵn từ trước.** Câu hỏi hiển nhiên "thế đã dùng prompt prefix đúng cho từng embedding model chưa?" — rồi: `common/newsqa_rag/embeddings.py:131-144` áp prefix chính tắc của từng mô hình (`query: ` / `passage: ` cho e5, instruction riêng của BGE cho `bge-*`, và không prefix nào cho `bge-m3` đúng như khuyến nghị). Nhánh dense **chưa bao giờ ngây thơ** ở trục này.
+
+Kết quả (`docs/reports/phase1/contextual_chunking_ablation.json`, notebook [`16_contextual_chunking_ablation_kaggle.ipynb`](../../../notebooks/16_contextual_chunking_ablation_kaggle.ipynb), repo pin `2735bdc6`, HF revision `b81c8db6`):
 
 | Retriever | Corpus | nDCG@5 (`resolved`) | Δ so với plain | CI95 |
 | :--- | :--- | ---: | ---: | :--- |
@@ -361,10 +384,18 @@ Contextual chunking **thu hẹp** khoảng cách (0,1143 → 0,0641) nhưng khô
 
 **Đọc theo quy tắc biên độ nhiễu 7,0%:** cả +0,0293 lẫn −0,0208 đều **nhỏ hơn ngưỡng thực dụng 7,0%**. Chúng là hiệu ứng *đo được* (CI95 không chứa 0) nhưng *không đủ lớn để đổi cấu hình* — cùng một tình huống đã ghi ở Phụ lục A: có ý nghĩa thống kê và vượt ngưỡng thực dụng là hai điều kiện khác nhau.
 
-**Hai điểm cần ghi nhận trung thực:**
+**Vì sao kết luận này *mạnh hơn* bảng Vòng 1, chứ không yếu hơn.** Nhánh dense ở đây dùng **tìm kiếm chính xác** (nhân ma trận trên vector đã chuẩn hóa), không dùng Chroma/HNSW. Hai hệ quả, và cả hai đều nghiêng về phía dense:
 
-1. **Đây là ablation, không phải một vòng của giải đấu.** Nó chạy trên harness riêng: top_k 10 (không phải 20), **không có reranker**, dense dùng tích ma trận chính xác thay vì HNSW (nên tái lập được — chính là thứ vòng 1 còn thiếu). Vì vậy con số tuyệt đối không so trực tiếp được với bảng Vòng 1.
-2. **Ablation chạy trên cả 1.152 câu** = 281 development + 284 held-out + 587 held-out reserve. Tức là nó **có chạm vào các câu held-out của Phase 2**. Vì đây là chỉ số retrieval thuần và **không có quyết định cấu hình nào được rút ra từ nó** (cấu hình khóa giữ nguyên), phần sinh trên held-out vẫn chưa bị nhìn thấy. Ghi lại ở đây như một sai lệch có kiểm soát, không phải để bỏ qua.
+1. **Tái lập được.** HNSW là chỉ mục *xấp xỉ* và không được truyền seed — đúng nguồn nhiễu khiến số dense của Vòng 1 trôi 0,0143 giữa hai lần chạy (§8). Ở đây không có nguồn nhiễu đó.
+2. **Công bằng hơn với dense.** Tìm kiếm chính xác không mất recall do xấp xỉ, nên đây là một baseline dense **mạnh hơn** so với lần chạy giải đấu.
+
+Sparse vẫn thắng trong điều kiện đó. Đây là bằng chứng độc lập củng cố cấu hình khóa, không phải một phép đo lặp lại.
+
+**Ba điểm cần ghi nhận trung thực:**
+
+1. **Đây là ablation, không phải một vòng của giải đấu.** Harness riêng: `top_k` 10 (không phải 20), **không có reranker**, dense dùng `e5-base-v2` với tìm kiếm chính xác. Vì vậy con số tuyệt đối không so trực tiếp được với bảng Vòng 1 — chỉ các hiệu số trong bảng trên mới so được với nhau.
+2. **Khoảng tin cậy ở đây là bootstrap theo *câu hỏi*, không gom cụm theo bài báo.** Nó dùng đúng `paired_comparison` của §1.2 (1.000 mẫu, seed 42), nên **nhất quán với toàn bộ Phase 1** — nhưng lỏng hơn chuẩn Phase 2 đã nâng lên (gom cụm theo bài, 2.000 mẫu). Gom cụm sẽ làm khoảng tin cậy rộng ra. Với khoảng cách sparse–dense (+0,1143) điều đó không đổi kết luận; với hai hiệu ứng nhỏ (+0,0293 và −0,0208) thì **nên đọc là "đo được", đừng đọc là "chắc chắn"** — nhất là khi cả hai vốn đã nằm dưới ngưỡng thực dụng 7,0%.
+3. **Ablation chạy trên cả 1.152 câu** = 281 development + 284 held-out + 587 held-out reserve. Tức là nó **có chạm vào các câu held-out của Phase 2**. Vì đây là chỉ số retrieval thuần và **không có quyết định cấu hình nào được rút ra từ nó** (cấu hình khóa giữ nguyên), phần sinh trên held-out vẫn chưa bị nhìn thấy. Ghi lại như một sai lệch có kiểm soát, không phải để bỏ qua.
 
 ---
 
