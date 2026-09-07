@@ -359,7 +359,7 @@ Không chunk đầu bài nào bị đụng tới, và bộ chặn trùng lặp t
 
 **Một trục đã đúng sẵn từ trước.** Câu hỏi hiển nhiên "thế đã dùng prompt prefix đúng cho từng embedding model chưa?" — rồi: `common/newsqa_rag/embeddings.py:131-144` áp prefix chính tắc của từng mô hình (`query: ` / `passage: ` cho e5, instruction riêng của BGE cho `bge-*`, và không prefix nào cho `bge-m3` đúng như khuyến nghị). Nhánh dense **chưa bao giờ ngây thơ** ở trục này.
 
-Kết quả (`docs/reports/phase1/contextual_chunking_ablation.json`, notebook [`16_contextual_chunking_ablation_kaggle.ipynb`](../../../notebooks/16_contextual_chunking_ablation_kaggle.ipynb), repo pin `2735bdc6`, HF revision `b81c8db6`):
+Kết quả (`docs/reports/phase1/contextual_chunking_ablation.json`, notebook [`16_contextual_chunking_ablation_kaggle.ipynb`](../../../notebooks/Tests/phase1/16_contextual_chunking_ablation_kaggle.ipynb), repo pin `2735bdc6`, HF revision `b81c8db6`):
 
 | Retriever | Corpus | nDCG@5 (`resolved`) | Δ so với plain | CI95 |
 | :--- | :--- | ---: | ---: | :--- |

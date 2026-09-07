@@ -39,7 +39,7 @@ Chỉ số `[1]`, `[2]`, `[3]` ở đây **chính là** chỉ số mà model dù
 
 `context_depth` là **số đoạn văn được dán vào khối trên**, lấy từ đầu danh sách 5 đoạn mà reranker của Phase 1 đã xếp hạng.
 
-`common/newsqa_rag/agents/rag_agent.py:82`:
+`common/newsqa_rag/agents/rag_agent.py:89`:
 
 ```python
 generation_chunks = ranked_chunks[:context_depth]
