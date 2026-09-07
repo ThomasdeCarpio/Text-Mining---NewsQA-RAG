@@ -94,6 +94,7 @@ Ba số này đọc cùng nhau ra một chẩn đoán: **hệ thống không b�
 | Token F1 | 0,4191 | 0,4313 | 0,4370 |
 | Faithfulness | 0,9801 | 0,9249 | 0,9318 |
 | Citation F1 | 0,8391 | 0,7289 | 0,7315 |
+| Citation Validity | 0,9858 | 0,9437 | 0,9483 |
 | **Hit@5** (truy xuất) | 0,9573 | **0,8768** | — |
 
 Chi phí toàn bộ run: **0,94 USD**. Latency P50 1.958 ms. Micro và macro lệch dưới 0,008 ở mọi metric.
