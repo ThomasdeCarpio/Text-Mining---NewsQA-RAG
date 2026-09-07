@@ -1,0 +1,109 @@
+\section{Held-out --- con số được phép công bố}
+
+Mọi con số ở hai mục trước đo trên \NumNDev{} câu development --- chính tập mà
+nhóm đã thử 4 prompt $\times$ 3 mức depth rồi chọn cấu hình điểm cao nhất. Chọn
+ra cái tốt nhất trong 12 lần thử rồi báo cáo điểm của nó trên chính tập đã dùng
+để chọn là \textbf{lệch lạc quan theo cấu trúc}. Vì vậy chúng không phải số
+công bố.
+
+\subsection{Quy trình, và dấu vết kiểm chứng được}
+
+\begin{itemize}\small
+  \item Tập held-out \NumNHeldout{} câu / \NumNArticles{} bài được chốt từ đầu
+        bằng lấy mẫu theo bài có seed \NumHeldoutSeed{}; danh sách id được băm
+        và ghi vào manifest chuẩn bị.
+  \item Bản ghi quyết định winner ký duyệt lúc \NumWinnerApprovedAt{}, băm
+        \texttt{\NumHoDecisionSha\ldots}.
+  \item Run held-out bắt đầu \NumHoStartedAt{} --- \textbf{sau} khi bản ghi
+        quyết định đã đóng băng, và tham chiếu đúng băm đó.
+  \item Chạy \textbf{đúng một lần}. Coverage \NumNHeldout{}/\NumNHeldout{}, 0 lỗi.
+  \item Bốn trong năm băm artifact (quyết định, danh sách id, predictions,
+        judge results) kiểm lại khớp. Băm \texttt{retrievals.jsonl} khớp với bản
+        lưu trong \texttt{heldout\_trace/}; bản sao thứ hai dưới \texttt{runs/}
+        là một lần tuần tự hóa lại và không khớp --- không ảnh hưởng kết quả,
+        nhưng ghi lại để khỏi hiểu nhầm về sau.
+\end{itemize}
+
+Thứ tự thời gian ở đây chính là bằng chứng: không thể chọn winner sau khi đã
+thấy điểm held-out.
+
+\subsection{Kết quả}
+
+\begin{center}\small
+\begin{tabularx}{0.94\textwidth}{@{}L p{2.4cm} p{2.6cm} p{2.2cm}@{}}
+\toprule
+\NumWinner{} & \textbf{Dev (\NumNDev)} & \textbf{Held-out (\NumNHeldout)} & \textbf{macro} \\
+\midrule
+Answer Correctness & \NumDevAC & \textbf{\NumHoAC} & \NumHoACMacro \\
+Exact Match & \NumDevEM & \NumHoEM & --- \\
+Token F1 & \NumDevFone & \NumHoFone & \NumHoFoneMacro \\
+Faithfulness & \NumDevFaith & \NumHoFaith & \NumHoFaithMacro \\
+Citation F1 & \NumDevCitFone & \NumHoCitFone & \NumHoCitFoneMacro \\
+Citation Validity & \NumDevCitVal & \NumHoCitVal & \NumHoCitValMacro \\
+Answer Relevancy & \NumDevAnsRel & \NumHoAnsRel & \NumHoAnsRelMacro \\
+\midrule
+\textbf{Hit@5} (truy xuất) & \NumDevHitFive & \NumHoHitFive & --- \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Toàn bộ run tốn \$\NumHoCost{}; latency tổng P50 \NumHoLatency{} ms. Micro và
+macro lệch nhau dưới $0{,}008$ ở mọi metric, nên không bài báo nào chi phối con
+số công bố.
+
+Điểm cần chú ý: Answer Correctness chỉ tụt $0{,}0193$, nhưng Hit@5 tụt
+\NumHoHitFiveDrop{}. \textbf{Tập held-out khó hơn hẳn ở tầng truy xuất}, chứ
+không phải ở tầng sinh.
+
+\subsection{Phát hiện quan trọng nhất: prompt không bị overfit}
+
+Tách \NumNHeldout{} câu held-out theo cùng tiêu chí đã dùng ở development:
+
+\begin{center}\small
+\begin{tabularx}{0.94\textwidth}{@{}L p{1.2cm} p{2.2cm} p{2cm} p{2cm}@{}}
+\toprule
+Held-out & \textbf{n} & \textbf{Answer Corr.} & \textbf{Citation F1} & \textbf{Faithfulness} \\
+\midrule
+\texttt{gold\_in\_top5} & \NumHoNHit & \NumHoHitAC & \NumHoHitCitFone & \NumHoHitFaith \\
+\texttt{gold\_not\_in\_top5} & \NumHoNMiss & \NumHoMissAC & \NumHoMissCitFone & \NumHoMissFaith \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Trên các câu mà truy xuất làm đúng việc, held-out đạt \NumHoHitAC{} --- cao hơn
+chính development (\NumPtwodFiveHitAC{}). Tỉ lệ truy xuất trượt thì tăng gần ba
+lần: \NumNMiss{}/\NumNDev{} $\rightarrow$ \NumHoNMiss{}/\NumNHeldout{}.
+
+Citation F1 trên nhóm trượt bằng \NumHoMissCitFone{}, đúng theo định nghĩa:
+không có đoạn đúng nào trong context để mà trích dẫn, nên recall bằng 0.
+Faithfulness trên nhóm này cũng tụt xuống \NumHoMissFaith{} --- khi không có
+bằng chứng, model bám vào đoạn sai.
+
+\keypoint{\textbf{Toàn bộ khoảng cách development $\rightarrow$ held-out là câu
+chuyện của truy xuất, không phải của prompt.} Prompt \NumWinnerPrompt{} tổng
+quát hóa được sang dữ liệu chưa từng thấy; cái không tổng quát hóa được là độ
+dễ của việc tìm đoạn.}
+
+\subsection{Trần của tầng sinh nằm ở tầng truy xuất}
+
+Cùng một hiện tượng đo được ở cả hai tập:
+
+\begin{center}\small
+\begin{tabularx}{0.94\textwidth}{@{}L p{3cm} p{3.4cm}@{}}
+\toprule
+Answer Correctness của \NumWinner{} & \texttt{gold\_in\_top5} & \texttt{gold\_not\_in\_top5} \\
+\midrule
+Development (\NumNDev{} câu) & \NumPtwodFiveHitAC & \NumPtwodFiveMissAC \\
+Held-out (\NumNHeldout{} câu) & \NumHoHitAC & \NumHoMissAC \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Với Hit@5 $=$ \NumHoHitFive{} trên held-out, khoảng 12\% số câu không có đường
+nào để trả lời đúng, bất kể prompt viết thế nào. Đầu tư tiếp vào prompt
+engineering sẽ cho lợi ích giảm dần; đòn bẩy còn lại nằm ở \textbf{query
+rewriting} và ở chính tầng truy xuất.
+
+Kết luận này rút ra được \emph{chỉ vì} hai phase dùng chung một vết truy xuất
+đóng băng và mọi điểm số đều truy ngược được về từng câu hỏi. Đây là lợi ích
+trực tiếp của quyết định thiết kế ở mục 1.

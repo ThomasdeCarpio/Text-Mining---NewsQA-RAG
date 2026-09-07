@@ -1,0 +1,77 @@
+\section{Giới hạn}
+
+\begin{frame}{Chưa được phép kết luận gì}
+  \small
+  \textbf{Phase 1}
+  \begin{itemize}\small
+    \item Không phân định được mô hình dense nào tốt nhất (CI95 chồng lấn).
+    \item Dense \textbf{chưa tái lập được} giữa các lần chạy: độ trôi $0{,}0143$
+          \emph{lớn hơn} khoảng cách giữa các mô hình $0{,}0094$. Thiếu seed HNSW
+          và seed torch.
+    \item Chunk size là kết quả \textbf{null}. Hybrid là ``không chứng minh được
+          có lợi'', \emph{không phải} ``đã chứng minh có hại''.
+  \end{itemize}
+
+  \vspace{0.4em}
+  \textbf{Phase 2}
+  \begin{itemize}\small
+    \item Answer Correctness \NumHoAC{} là \textbf{cận dưới}: EDA đo được
+          \NumNoiseFloor{}--\NumNoiseCeiling{} câu bị chấm sai oan; người duyệt
+          thấy \textbf{23/30} câu điểm thấp thực ra đúng.
+    \item Judge cũng là một LLM. Đã tách sang nhà cung cấp khác generator, nhưng
+          \textbf{chưa hiệu chuẩn với nhãn người}.
+    \item Answer Relevancy giảm (\NumDevAnsRel{} $\rightarrow$ \NumHoAnsRel{}) là
+          \textbf{hệ quả có chủ đích} của P2, không phải suy thoái --- metric đó
+          thưởng câu trả lời dài, dữ liệu này thưởng câu trả lời cụt.
+    \item Giải đấu phân tầng \textbf{không phát hiện được tương tác} giữa các
+          lựa chọn ở hai vòng khác nhau.
+  \end{itemize}
+
+  \takeaway{Nói rõ cái chưa chứng minh được cũng là một phần của kết quả.}
+\end{frame}
+
+\begin{frame}{Còn thiếu gì}
+  \small
+  \begin{tabularx}{\textwidth}{@{}p{0.6cm} L p{1.2cm} p{2.6cm}@{}}
+    \toprule
+    \textbf{\#} & \textbf{Việc} & \textbf{Phase} & \textbf{Ghi chú} \\
+    \midrule
+    1 & Audit mù 30 cặp P0 $\leftrightarrow$ winner, hai người chấm độc lập & 2 & Cần chia việc \\
+    2 & Lặp 25 câu $\times$ 2 cấu hình đo độ ổn định API & 2 & \\
+    3 & Chạy held-out 150 bài final-test & 1 & Nghiệm thu Phase 1 \\
+    4 & Chạy lại vòng 1 trên chỉ mục đã đóng gói & 1 & Cố định số dense \\
+    5 & Bốn biểu đồ 300 DPI theo test plan §6 & 1 & Chưa có cái nào \\
+    6 & Duyệt tay dataset abstention 200 case & 3 & 3 loại cần reviewer thứ hai \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.8em}
+  \textbf{Đã xong trong đợt này:} phân tầng \texttt{gold\_in\_top5}, article-level
+  macro, bản ghi quyết định winner, ablation contextual chunking, và
+  \textbf{run held-out \NumNHeldout{} câu}.
+
+  \takeaway{Phase 3 --- dạy hệ thống biết từ chối trả lời --- là bước tiếp theo.}
+\end{frame}
+
+\begin{frame}[plain]
+  \vfill
+  \begin{center}
+    {\Large\textbf{Tóm lại}}\\[1.2em]
+    \begin{minipage}{0.86\textwidth}\small
+      \begin{enumerate}
+        \item \textbf{Sparse thắng dense} vì câu hỏi NewsQA neo vào tên riêng,
+              ngày tháng, con số --- EDA dự báo trước, thực nghiệm xác nhận.
+        \item \textbf{Prompt đúng \emph{dạng} là đòn bẩy lớn nhất ở tầng sinh}
+              --- không phải vì khéo, mà vì nó khớp hình dạng của nhãn.
+        \item \textbf{Guardrail đăng ký trước đã loại một cấu hình điểm cao hơn}
+              --- và đó chính là việc của nó.
+        \item \textbf{Prompt không bị overfit}: khoảng cách dev $\rightarrow$
+              held-out là câu chuyện của truy xuất.
+      \end{enumerate}
+    \end{minipage}
+    \\[1.5em]
+    {\small\color{brandmuted}
+     Số công bố: Answer Correctness \textbf{\NumHoAC{}} trên \NumNHeldout{} câu held-out.}
+  \end{center}
+  \vfill
+\end{frame}

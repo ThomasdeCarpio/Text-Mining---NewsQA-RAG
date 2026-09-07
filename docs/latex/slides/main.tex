@@ -1,0 +1,89 @@
+% Slide deck -- NewsQA RAG, Phase 1 + Phase 2.
+% Build:  latexmk -xelatex main.tex        (from this directory)
+% Numbers come from ../common/numbers.tex; never type a figure here by hand.
+
+\documentclass[aspectratio=169, 11pt]{beamer}
+
+\input{../common/preamble.tex}
+
+% A deliberately plain theme: no navigation bars, no shadows, nothing that
+% competes with a table of results for the audience's attention.
+\usetheme{default}
+\usefonttheme{professionalfonts}
+\setbeamertemplate{navigation symbols}{}
+\setbeamercolor{structure}{fg=brandaccent}
+\setbeamercolor{normal text}{fg=brandink}
+\setbeamercolor{frametitle}{fg=brandink}
+\setbeamerfont{frametitle}{series=\bfseries, size=\large}
+\setbeamerfont{framesubtitle}{size=\small, shape=\itshape}
+\setbeamercolor{framesubtitle}{fg=brandmuted}
+\setbeamertemplate{frametitle}{%
+  \vspace{0.6em}%
+  \usebeamerfont{frametitle}\usebeamercolor[fg]{frametitle}\insertframetitle\par
+  \ifx\insertframesubtitle\@empty\else
+    \usebeamerfont{framesubtitle}\usebeamercolor[fg]{framesubtitle}\insertframesubtitle\par
+  \fi
+  \vspace{-0.2em}{\color{brandrule}\rule{\textwidth}{0.6pt}}\par\vspace{0.2em}%
+}
+\setbeamertemplate{footline}{%
+  \hfill\usebeamerfont{footline}\color{brandmuted}\scriptsize
+  \insertframenumber\hspace{1.2em}\vspace{0.6em}%
+}
+\setbeamertemplate{itemize item}{\color{brandaccent}\textbullet}
+\setbeamertemplate{itemize subitem}{\color{brandmuted}--}
+\setlength{\parskip}{0.4em}
+
+% A one-line takeaway strip. Every results frame ends with one, because a table
+% the audience has to interpret unaided is a table that says nothing.
+\newcommand{\takeaway}[1]{%
+  \vspace{0.4em}%
+  \begin{beamercolorbox}[wd=\textwidth, sep=0.5em]{takeaway}%
+    \color{brandaccent}\small\textbf{#1}%
+  \end{beamercolorbox}%
+}
+
+\title{\textbf{NewsQA RAG}}
+\subtitle{Chọn cách lấy đoạn văn, và chọn cách hỏi LLM}
+\author{Nhóm Text Mining}
+\date{Học kỳ 3 -- Năm 3}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+  \vfill
+  {\footnotesize\color{brandmuted}
+   Mọi con số trong bộ slide này sinh tự động từ artifact đã commit\\
+   (\texttt{scripts/build\_latex\_numbers.py}).}
+\end{frame}
+
+\begin{frame}{Nội dung}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{enumerate}
+        \item Bài toán và cách chia việc
+        \item Dữ liệu: cái EDA phát hiện
+        \item \textbf{Phase 1} --- chọn cách lấy đoạn văn
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{enumerate}
+        \setcounter{enumi}{3}
+        \item \textbf{Phase 2} --- chọn cách hỏi LLM
+        \item Chỗ Phase 1 giúp Phase 2
+        \item Chưa được phép kết luận gì
+      \end{enumerate}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\input{sections/01_problem.tex}
+\input{sections/02_eda.tex}
+\input{sections/03_phase1.tex}
+\input{sections/04_phase2.tex}
+\input{sections/05_heldout.tex}
+\input{sections/06_crossphase.tex}
+\input{sections/07_limits.tex}
+
+\end{document}

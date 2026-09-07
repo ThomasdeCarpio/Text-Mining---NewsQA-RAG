@@ -1,0 +1,44 @@
+% Shared by slides/main.tex and report/main.tex.
+% Compile with XeLaTeX: the fonts below are chosen for Vietnamese diacritics,
+% which the default Computer Modern encoding does not cover cleanly.
+
+\usepackage{fontspec}
+% Windows system fonts: full Vietnamese diacritic coverage and always present on
+% the machine this is built on. TeX Gyre Termes / Heros / Cursor are the drop-in
+% replacements if you ever build on Overleaf or Linux -- see ../README.md.
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setmonofont{Consolas}[Scale=MatchLowercase]
+
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{ifthen}
+
+% One palette for both documents so a table looks the same on a slide and on
+% the page. Colour carries the verdict, never decoration.
+\definecolor{brandink}{HTML}{1F2933}
+\definecolor{brandaccent}{HTML}{1D6F8C}
+\definecolor{brandmuted}{HTML}{6B7A86}
+\definecolor{brandpass}{HTML}{1F7A4D}
+\definecolor{brandfail}{HTML}{B3261E}
+\definecolor{brandrule}{HTML}{D6DDE3}
+
+\newcommand{\pass}[1]{\textcolor{brandpass}{\textbf{#1}}}
+\newcommand{\fail}[1]{\textcolor{brandfail}{\textbf{#1}}}
+\newcommand{\muted}[1]{\textcolor{brandmuted}{#1}}
+\newcommand{\win}[1]{\textcolor{brandaccent}{\textbf{#1}}}
+
+% Verdict shorthands, so a guardrail row cannot say PASS while the number fails.
+\newcommand{\verdict}[1]{\ifthenelse{\equal{#1}{PASS}}{\pass{PASS}}{\fail{FAIL}}}
+
+% Numeric columns that align on the decimal comma.
+\newcolumntype{N}{>{\raggedleft\arraybackslash}p{1.9cm}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+\input{../common/numbers.tex}

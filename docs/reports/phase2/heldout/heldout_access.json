@@ -1,0 +1,19 @@
+{
+  "article_count": 50,
+  "artifact_sha256": "fc5d67b7acf6e8be0205ce00b8069b3b6c8dcce853f8671f2feb3887b2707a24",
+  "completed_at": "2026-09-06T18:08:53Z",
+  "decision_sha256": "e2fa5915c45a77228398a053445facb2b13eeb74d9f1a213399c4f1da90c6d42",
+  "heldout_ids_sha256": "09a04e574999b07bb165ccce9d2c685a71a641561af4cc05683ca880bed0d6a4",
+  "judge_results_sha256": "bcb2f5770ca2fe6aa976eef79ecd0ad3a2811758a1c3b636413fa036e8e4e689",
+  "predictions_sha256": "4cfe6a469b61ea27fd7d929bdac4594cb3acf9cdddab2133ba0de5bf04ab5bed",
+  "preparation_sha256": "0b2ab8388d6ab679970519bc35ba574936a063b32406ce5cee4b6ec5c166073c",
+  "question_count": 284,
+  "retrievals_sha256": "7ff3d204cc2f40059b4b8c71effce76a5c496d1b96d4e836348d10ddca257a57",
+  "schema_version": 1,
+  "started_at": "2026-09-06T14:23:24Z",
+  "status": "complete",
+  "winner": {
+    "context_depth": 5,
+    "prompt_id": "p2"
+  }
+}

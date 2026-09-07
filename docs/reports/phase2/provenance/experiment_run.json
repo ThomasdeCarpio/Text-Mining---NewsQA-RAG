@@ -1,0 +1,29 @@
+{
+  "experiment_id": "phase2-e2e-baseline-dedup-v2-reasoning",
+  "parameters": {
+    "generator_model": "gemini-3.1-flash-lite",
+    "index": "bge_m3_bge_large",
+    "partition": "development",
+    "rerank_top_n": 5,
+    "reranker": "cross-encoder",
+    "reranker_model": "BAAI/bge-reranker-large",
+    "retrieval_only": false,
+    "retriever": "sparse",
+    "top_k": 20,
+    "variant": "resolved"
+  },
+  "pricing": {
+    "currency": "USD",
+    "input_per_million": 0.25,
+    "judge": {
+      "input_per_million": 0.15,
+      "model": "accounts/fireworks/models/glm-5p3-flash",
+      "output_per_million": 0.5,
+      "provider": "fireworks"
+    },
+    "output_per_million": 1.5,
+    "provider": "gemini"
+  },
+  "run_id": "resolved-development-sparse-cross-encoder-fae846db02",
+  "schema_version": 1
+}

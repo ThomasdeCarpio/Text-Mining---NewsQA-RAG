@@ -1,0 +1,44 @@
+\section{Bài toán}
+
+\begin{frame}{Bài toán}{Hỏi--đáp có trích dẫn trên \NumCorpusArticles{} bài báo CNN}
+  \vspace{0.5em}
+  \begin{center}
+    \small
+    \begin{tabular}{c c c c c}
+      \textbf{Câu hỏi} & $\rightarrow$ &
+      \fbox{\parbox{3.4cm}{\centering tìm đoạn văn\\[-0.2em]{\scriptsize\color{brandaccent}\textbf{PHASE 1}}}} &
+      $\rightarrow$ &
+      \fbox{\parbox{3.4cm}{\centering viết đáp án\\[-0.2em]{\scriptsize\color{brandaccent}\textbf{PHASE 2}}}} \\
+    \end{tabular}
+    \\[0.8em]
+    $\rightarrow$\quad đáp án ngắn \textbf{kèm số trích dẫn} \texttt{[n]}
+  \end{center}
+
+  \vspace{0.8em}
+  Người dùng hỏi một câu. Hệ thống phải tìm đúng đoạn văn chứa câu trả lời
+  trong \NumCorpusChunks{} đoạn, rồi để LLM viết đáp án \emph{chỉ dựa trên} các
+  đoạn đó và chỉ ra nó lấy từ đoạn nào.
+
+  \takeaway{Hai việc, hai kiểu hỏng, hai loại thước đo --- nên tách làm hai phase.}
+\end{frame}
+
+\begin{frame}{Vì sao phải tách hai phase}
+  \vspace{0.3em}
+  \small
+  \begin{tabularx}{\textwidth}{@{}p{2.6cm} L L@{}}
+    \toprule
+     & \textbf{Phase 1 --- lấy đoạn văn} & \textbf{Phase 2 --- hỏi LLM} \\
+    \midrule
+    Hỏng kiểu gì & Không tìm ra đoạn chứa đáp án & Tìm ra rồi nhưng trả lời sai, hoặc bịa \\
+    Đo bằng gì & Hit@k, nDCG@5, MRR@5 & Answer Correctness, Faithfulness, Citation \\
+    Chi phí & GPU, \textbf{không gọi API} & \textbf{Tốn tiền API} mỗi lần chạy \\
+    Tái lập & Có (chỉ mục cố định) & Chỉ trong giới hạn nhiễu của LLM \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.8em}
+  \textbf{Thứ tự bắt buộc:} khóa Phase 1 trước. Nếu vừa đổi cách lấy đoạn vừa
+  đổi cách hỏi, không cách nào biết được cải thiện đến từ đâu.
+
+  \takeaway{Phase 2 chạy trên một vết truy xuất \emph{đóng băng}: mọi khác biệt quy hết về tầng sinh.}
+\end{frame}

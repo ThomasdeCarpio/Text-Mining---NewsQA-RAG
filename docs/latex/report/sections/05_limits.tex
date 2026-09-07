@@ -1,0 +1,89 @@
+\section{Giới hạn và việc còn lại}
+
+\subsection{Những gì chưa được phép kết luận}
+
+\paragraph{Phase 1.}
+Không phân định được mô hình dense nào tốt nhất --- các khoảng tin cậy chồng
+lấn. Nghiêm trọng hơn, nhánh dense \textbf{chưa tái lập được} giữa các lần
+chạy: độ trôi đo được $0{,}0143$ nDCG@5, \emph{lớn hơn} khoảng cách $0{,}0094$
+giữa hai mô hình dense đang so sánh. Nguyên nhân đã xác định được trong mã
+nguồn: không đặt seed cho HNSW, không cố định \texttt{batch\_size} khi tính
+embedding, không gọi \texttt{torch.manual\_seed}. Chừng nào chưa sửa, mọi xếp
+hạng nội bộ giữa các mô hình dense đều không có ý nghĩa. Kết quả chunk size là
+null; hybrid là ``không chứng minh được có lợi'', không phải ``đã chứng minh có
+hại''.
+
+\paragraph{Phase 2.}
+Answer Correctness \NumHoAC{} là một \textbf{cận dưới}. EDA ước lượng
+\NumNoiseFloor{}--\NumNoiseCeiling{} số câu mang nhãn có vấn đề, và audit tay
+thấy 23/30 câu điểm thấp thực ra đúng về ngữ nghĩa. Con số thực nằm đâu đó
+trong dải giữa \NumHoAC{} và một trần cao hơn đáng kể mà thí nghiệm này không
+đo được.
+
+Judge cũng là một LLM. Nó đã được tách sang nhà cung cấp khác generator --- một
+sửa lỗi trực tiếp từ phát hiện của EDA rằng notebook cũ chấm bài bằng chính mô
+hình sinh --- nhưng \textbf{chưa được hiệu chuẩn với nhãn người}. Tập 20 câu
+dành cho việc hiệu chuẩn đã chuẩn bị nhưng chưa dùng.
+
+Answer Relevancy giảm từ \NumDevAnsRel{} xuống \NumHoAnsRel{}. Đây là hệ quả có
+chủ đích của P2, không phải suy thoái: metric ấy thưởng câu trả lời đầy đủ ngữ
+cảnh, còn dữ liệu này thưởng câu trả lời cụt. Nêu ra vì nó là một đánh đổi thật,
+không phải để giấu.
+
+Cuối cùng, giải đấu phân tầng ở cả hai phase \textbf{không phát hiện được tương
+tác} giữa các lựa chọn ở những vòng khác nhau.
+
+\subsection{Việc còn lại}
+
+\begin{center}\small
+\begin{tabularx}{0.94\textwidth}{@{}p{0.7cm} L p{1.2cm} p{3.2cm}@{}}
+\toprule
+\textbf{\#} & \textbf{Việc} & \textbf{Phase} & \textbf{Ghi chú} \\
+\midrule
+1 & Audit mù 30 cặp P0 $\leftrightarrow$ winner, hai người chấm độc lập & 2 & Cần chia việc giữa hai người \\
+2 & Lặp 25 câu $\times$ 2 cấu hình để đo độ ổn định API & 2 & \\
+3 & Hiệu chuẩn judge trên 20 câu đã dành sẵn & 2 & Tập đã chuẩn bị \\
+4 & Chạy held-out trên 150 bài final-test & 1 & Nghiệm thu Phase 1 \\
+5 & Chạy lại vòng 1 trên chỉ mục đã đóng gói & 1 & Cố định lại số dense \\
+6 & Bốn biểu đồ 300 DPI theo test plan Phase 1 §6 & 1 & Chưa có cái nào \\
+7 & Duyệt tay dataset abstention 200 case & 3 & 3 loại cần reviewer thứ hai \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Phase 3 --- dạy hệ thống biết từ chối trả lời khi bằng chứng không đủ --- là
+bước tiếp theo, và phân tầng ở mục 4 cho thấy vì sao nó đáng làm:
+\NumHoNMiss{}/\NumNHeldout{} câu held-out không có bằng chứng nào để trả lời
+đúng, nhưng hệ thống vẫn trả lời chúng.
+
+\subsection{Tổng kết}
+
+\begin{enumerate}\small
+  \item \textbf{Sparse thắng dense} (\NumSparseVsDense{} nDCG@5,
+        \NumSparseVsDenseCI{}) vì câu hỏi NewsQA neo vào tên riêng, ngày tháng
+        và con số. EDA dự báo trước, thực nghiệm xác nhận.
+  \item \textbf{Prompt đúng \emph{dạng} là đòn bẩy lớn nhất ở tầng sinh} ---
+        không phải vì kỹ thuật viết prompt khéo, mà vì nó khớp với hình dạng
+        của nhãn.
+  \item \textbf{Guardrail đăng ký trước đã loại một cấu hình có điểm cao hơn},
+        và đó chính xác là việc nó sinh ra để làm.
+  \item \textbf{Prompt không bị overfit}: khoảng cách development $\rightarrow$
+        held-out quy về việc truy xuất khó hơn, không phải prompt kém tổng quát.
+\end{enumerate}
+
+Số công bố: Answer Correctness \textbf{\NumHoAC{}} trên \NumNHeldout{} câu
+held-out, cấu hình \NumWinner{}, chạy đúng một lần.
+
+\subsection*{Tài liệu và mã nguồn liên quan}
+
+\begin{itemize}\small
+  \item Prompt nguyên văn và cách một request được ghép: \texttt{docs/prompts.md}
+  \item Báo cáo chi tiết từng phase: \texttt{docs/reports/phase1/report.md},
+        \texttt{docs/reports/phase2/report.md}
+  \item Kế hoạch đăng ký trước: \texttt{docs/Detailed Test Plans/}
+  \item Quyết định winner và bằng chứng held-out:
+        \texttt{docs/reports/phase2/phase2b\_winner\_decision.json},
+        \texttt{docs/reports/phase2/heldout/}
+  \item Sinh lại toàn bộ con số trong tài liệu này:
+        \texttt{python scripts/build\_latex\_numbers.py}
+\end{itemize}

@@ -1,0 +1,58 @@
+\section{Nối hai phase}
+
+\begin{frame}{Chỗ Phase 1 trả lời sẵn một câu hỏi của Phase 2}
+  \small
+  Phase 2 cần biết: \emph{cắt bớt context thì mất gì?} Đường cong Hit@k mà
+  Phase 1 đã đo trả lời chính xác điều đó --- \textbf{miễn phí}, trước khi tiêu
+  một đồng API nào.
+
+  \begin{center}
+    \begin{tabular}{@{}c c c@{}}
+      \toprule
+      \textbf{Số context} & \textbf{Hit@k} & \textbf{Số câu mất sạch bằng chứng} \\
+      \midrule
+      1 & \NumPoneHitOne & \fail{\NumLostAtDepthOne} \\
+      3 & \NumPoneHitThree & \fail{\NumLostAtDepthThree} \\
+      5 & \NumPoneHitFive & \pass{0} \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+
+  \vspace{0.5em}
+  Phase 2 quan sát được \textbf{đúng \NumLostAtDepthThree{} câu} trả về
+  \emph{``không tìm thấy thông tin''} ở depth~3 --- 2 trong đó có bằng chứng ở
+  hạng 4, bị cắt mất. Con số dự báo và con số quan sát khớp nhau.
+
+  \takeaway{Đọc Hit@k trước, rồi mới chọn depth để thử. Đỡ được cả một vòng chi tiền API.}
+\end{frame}
+
+\begin{frame}{Trần của tầng sinh nằm ở tầng truy xuất}
+  \small
+  Cùng một hiện tượng, đo được ở cả hai tập:
+
+  \begin{tabularx}{\textwidth}{@{}L N N@{}}
+    \toprule
+    Answer Correctness của \NumWinner{} & \texttt{gold\_in\_top5} & \texttt{gold\_not\_in\_top5} \\
+    \midrule
+    Development (\NumNDev{} câu) & \NumPtwodFiveHitAC & \fail{\NumPtwodFiveMissAC} \\
+    Held-out (\NumNHeldout{} câu) & \NumHoHitAC & \fail{\NumHoMissAC} \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.7em}
+  \begin{itemize}
+    \item Khi truy xuất trượt, đổi prompt gần như \textbf{không cứu được gì}:
+          trên dev, cả 4 prompt đều loanh quanh 0{,}15--0{,}19.
+    \item Nghĩa là Answer Correctness bị chặn trên bởi Hit@5. Trên held-out,
+          Hit@5 $=$ \NumHoHitFive{} $\rightarrow$ khoảng 12\% số câu không có
+          đường nào để trả lời đúng.
+  \end{itemize}
+
+  \begin{center}
+    \colorbox{brandrule}{\parbox{0.88\textwidth}{\centering\vspace{0.3em}
+      Đầu tư tiếp vào prompt sẽ cho lợi ích giảm dần.\\
+      Đòn bẩy còn lại nằm ở \textbf{query rewriting} và \textbf{truy xuất}.\vspace{0.3em}}}
+  \end{center}
+
+  \takeaway{Kết luận này rút ra được vì hai phase dùng chung một vết truy xuất đóng băng.}
+\end{frame}

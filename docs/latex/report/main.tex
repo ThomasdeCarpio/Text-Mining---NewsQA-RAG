@@ -1,0 +1,58 @@
+% Written report -- NewsQA RAG, Phase 1 + Phase 2.
+% Build:  latexmk -xelatex main.tex        (from this directory)
+% Numbers come from ../common/numbers.tex; never type a figure here by hand.
+
+\documentclass[11pt, a4paper]{article}
+
+\usepackage[margin=2.4cm]{geometry}
+\input{../common/preamble.tex}
+
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{caption}
+
+\setlist{itemsep=0.2em, topsep=0.3em}
+\captionsetup{font=small, labelfont=bf}
+\titleformat{\section}{\large\bfseries\color{brandink}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalsize\bfseries\color{brandink}}{\thesubsection}{0.6em}{}
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{0pt}
+
+% A boxed statement for the handful of claims the whole report turns on.
+\newcommand{\keypoint}[1]{%
+  \begin{center}\vspace{0.2em}%
+    \colorbox{brandrule}{\parbox{0.93\textwidth}{\vspace{0.4em}\small #1\vspace{0.4em}}}%
+  \vspace{0.2em}\end{center}}
+
+\title{\textbf{Hệ thống hỏi--đáp có trích dẫn trên kho tin NewsQA}\\[0.3em]
+       \large Báo cáo thực nghiệm Phase 1 và Phase 2}
+\author{Nhóm Text Mining}
+\date{Học kỳ 3 --- Năm 3}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}\small
+\noindent
+Báo cáo trình bày quá trình xây dựng và tinh chỉnh một hệ thống RAG hỏi--đáp có
+trích dẫn trên \NumCorpusArticles{} bài báo CNN. Công việc chia làm hai giai
+đoạn tách bạch: Phase~1 chọn cách truy xuất đoạn văn bằng một giải đấu phân tầng
+23 cấu hình, Phase~2 chọn cách ra lệnh cho LLM sinh câu trả lời bằng một quy
+trình đăng ký trước có guardrail. Cấu hình cuối cùng ---
+BGE-M3 sparse $\rightarrow$ bge-reranker-large $\rightarrow$ prompt
+\NumWinnerPrompt{} với \NumWinnerDepth{} đoạn context --- đạt Answer Correctness
+\textbf{\NumHoAC{}} trên \NumNHeldout{} câu held-out chưa từng bị chạm tới, chạy
+đúng một lần. Điểm phương pháp trọng tâm của báo cáo không nằm ở con số đó mà ở
+việc phân tách được \emph{lỗi truy xuất} khỏi \emph{lỗi sinh}: toàn bộ khoảng
+cách giữa tập tinh chỉnh và tập held-out quy về việc truy xuất khó hơn, không
+phải prompt bị overfit.
+\end{abstract}
+
+\input{sections/01_intro.tex}
+\input{sections/02_phase1.tex}
+\input{sections/03_phase2.tex}
+\input{sections/04_heldout.tex}
+\input{sections/05_limits.tex}
+
+\end{document}

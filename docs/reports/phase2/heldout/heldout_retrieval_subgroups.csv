@@ -1,0 +1,4 @@
+retrieval_group,qa_f1,qa_f1,citation_f1,citation_f1,citation_validity,citation_validity,answer_correctness,answer_correctness,faithfulness,faithfulness,answer_relevancy,answer_relevancy
+,count,mean,count,mean,count,mean,count,mean,count,mean,count,mean
+gold_in_top5,249,0.46938273092369476,249,0.8313277108433734,249,0.9839357429718876,249,0.7689088353413654,249,0.9551542168674699,249,0.6673983935742972
+gold_not_in_top5,35,0.16017142857142858,35,0.0,35,0.6571428571428571,35,0.3375057142857143,35,0.7095257142857143,35,0.51388

@@ -1,0 +1,35 @@
+{
+  "finalist_configs": [
+    {
+      "context_depth": 5,
+      "prompt_id": "p2"
+    },
+    {
+      "context_depth": 3,
+      "prompt_id": "p2"
+    }
+  ],
+  "finalist_result_artifacts": [
+    {
+      "name": "finalist_1_p2_d5",
+      "sha256": "fec391b8c9582f7fe0487af983e53725d2eb15d6db7bc52949e6118469eda6e6"
+    },
+    {
+      "name": "finalist_2_p2_d3",
+      "sha256": "ba91fb962d3d7d661f86150f734b3d269711881d1700990081420658c0964e2c"
+    }
+  ],
+  "heldout_outputs_accessed_for_selection": false,
+  "review": {
+    "approved_at": "2026-09-06T13:31:30Z",
+    "notes": "P2-depth5 selected on development: it improves correctness over P0 while passing all preregistered faithfulness and citation guardrails.",
+    "reviewer_id": "thomas200905"
+  },
+  "schema_version": 1,
+  "selected_on_partition": "development",
+  "status": "approved",
+  "winner": {
+    "context_depth": 5,
+    "prompt_id": "p2"
+  }
+}

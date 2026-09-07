@@ -1,0 +1,85 @@
+=== Benchmark Report ===
+Timestamp  : 2026-09-06T18:08:53.782795+00:00
+Retriever  : sparse | Reranker: cross-encoder
+top_k=20 | rerank_top_n=5 | n_eval=284
+Collection : newsqa_val200_s42_7e16e8_309058
+Embedding  : sentence-transformers / all-MiniLM-L6-v2
+
+--- Coverage ---
+  expected: 284
+  recorded: 284
+  successful: 284
+  failed: 0
+  missing: 0
+  success_rate: 1.0
+
+--- Initial Retrieval ---
+  hit_rate@1: 0.6549
+  mrr@1: 0.6549
+  recall@1: 0.6496
+  ndcg@1: 0.6549
+  hit_rate@3: 0.831
+  mrr@3: 0.7347
+  recall@3: 0.8275
+  ndcg@3: 0.7568
+  hit_rate@5: 0.8627
+  mrr@5: 0.7423
+  recall@5: 0.8609
+  ndcg@5: 0.7711
+  hit_rate@7: 0.8732
+  mrr@7: 0.744
+  recall@7: 0.8715
+  ndcg@7: 0.7748
+  hit_rate@10: 0.8979
+  mrr@10: 0.7468
+  recall@10: 0.8961
+  ndcg@10: 0.7822
+  n_samples: 284
+
+--- Retrieval ---
+  hit_rate@1: 0.7148
+  mrr@1: 0.7148
+  recall@1: 0.7095
+  ndcg@1: 0.7148
+  hit_rate@3: 0.8451
+  mrr@3: 0.7746
+  recall@3: 0.8415
+  ndcg@3: 0.7901
+  hit_rate@5: 0.8768
+  mrr@5: 0.782
+  recall@5: 0.875
+  ndcg@5: 0.8042
+  n_samples: 284
+
+--- QA ---
+  exact_match: 0.1092
+  f1: 0.4313
+  n_samples: 284
+
+--- RAGAS ---
+  answer_correctness: 0.7157
+  answer_relevancy: 0.6485
+  context_precision: 0.8785
+  context_recall: 0.9366
+  faithfulness: 0.9249
+  n_samples: 284
+  coverage: 1.0
+
+--- Citations ---
+  citation_validity: 0.9437
+  citation_precision: 0.7112
+  citation_recall: 0.7817
+  citation_f1: 0.7289
+  answer_citation_coverage: 0.9437
+  n_samples: 284
+
+--- Latency ---
+  total: {'mean_ms': 2229.8, 'p50_ms': 1957.5, 'p90_ms': 3498.2, 'p95_ms': 4220.0, 'max_ms': 8754.1, 'n_samples': 284}
+  retrieve_ms: {'mean_ms': 69.0, 'p50_ms': 69.6, 'p90_ms': 77.7, 'p95_ms': 80.2, 'max_ms': 110.7, 'n_samples': 284}
+  rerank_ms: {'mean_ms': 421.2, 'p50_ms': 420.8, 'p90_ms': 441.7, 'p95_ms': 445.0, 'max_ms': 460.0, 'n_samples': 284}
+  llm_ms: {'mean_ms': 1739.6, 'p50_ms': 1485.0, 'p90_ms': 2999.9, 'p95_ms': 3743.4, 'max_ms': 8265.6, 'n_samples': 284}
+  embed_ms: {'n_samples': 0}
+  db_query_ms: {'n_samples': 0}
+  dense_ms: {'n_samples': 0}
+  sparse_ms: {'n_samples': 0}
+  fusion_ms: {'n_samples': 0}

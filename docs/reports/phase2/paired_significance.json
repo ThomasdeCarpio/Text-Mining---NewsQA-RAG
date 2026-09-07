@@ -7,6 +7,12 @@
   "baseline": "p0_d5",
   "n_questions": 281,
   "n_articles": 50,
+  "strata_sizes": {
+    "gold_in_top5": 269,
+    "gold_not_in_top5": 12
+  },
+  "baseline_answer_correctness": 0.630755,
+  "baseline_answer_correctness_article_macro": 0.63435,
   "winner": "p2_d5",
   "runs": {
     "p2_d3": {
@@ -33,6 +39,7 @@
       ],
       "eligible": false,
       "answer_correctness": 0.771078,
+      "answer_correctness_article_macro": 0.770931,
       "paired_vs_baseline": {
         "Answer Correctness": {
           "delta": 0.140323,
@@ -90,6 +97,18 @@
           "n_clusters": 50,
           "significant": true
         }
+      },
+      "by_stratum": {
+        "gold_in_top5": {
+          "n": 269,
+          "baseline": 0.652182,
+          "candidate": 0.797068
+        },
+        "gold_not_in_top5": {
+          "n": 12,
+          "baseline": 0.150425,
+          "candidate": 0.188483
+        }
       }
     },
     "p2_d5": {
@@ -116,6 +135,7 @@
       ],
       "eligible": true,
       "answer_correctness": 0.735047,
+      "answer_correctness_article_macro": 0.731854,
       "paired_vs_baseline": {
         "Answer Correctness": {
           "delta": 0.104292,
@@ -172,6 +192,18 @@
           "n_pairs": 281,
           "n_clusters": 50,
           "significant": true
+        }
+      },
+      "by_stratum": {
+        "gold_in_top5": {
+          "n": 269,
+          "baseline": 0.652182,
+          "candidate": 0.759678
+        },
+        "gold_not_in_top5": {
+          "n": 12,
+          "baseline": 0.150425,
+          "candidate": 0.182892
         }
       }
     }

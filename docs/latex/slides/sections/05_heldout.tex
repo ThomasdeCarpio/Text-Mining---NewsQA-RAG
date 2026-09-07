@@ -1,0 +1,99 @@
+\section{Held-out}
+
+\begin{frame}[plain]
+  \vfill
+  \begin{center}
+    {\color{brandaccent}\Large\textbf{HELD-OUT}}\\[0.4em]
+    {\Large \NumNHeldout{} câu chưa từng bị chạm tới}\\[1em]
+    {\small\color{brandmuted}
+     Chạy \textbf{đúng một lần}, bằng cấu hình đã khóa từ trước.\\
+     Đây --- và chỉ đây --- là con số được phép công bố.}
+  \end{center}
+  \vfill
+\end{frame}
+
+\begin{frame}{Vì sao phải có tập held-out}
+  \small
+  Mọi con số ở các slide trước đo trên \NumNDev{} câu development --- chính tập
+  mà nhóm đã thử \textbf{4 prompt $\times$ 3 mức depth} rồi chọn cái điểm cao nhất.
+
+  \begin{center}
+    \colorbox{brandrule}{\parbox{0.88\textwidth}{\centering\vspace{0.3em}
+      Chọn ra cái tốt nhất trong 12 lần thử, rồi báo cáo điểm của nó\\
+      trên chính tập đã dùng để chọn, là \textbf{lệch lạc quan theo cấu trúc}.\vspace{0.3em}}}
+  \end{center}
+
+  \vspace{0.5em}
+  \textbf{Quy trình đã tuân thủ, có dấu vết kiểm chứng được:}
+  \begin{itemize}\small
+    \item Tập \NumNHeldout{} câu / \NumNArticles{} bài chốt từ đầu bằng seed \NumHeldoutSeed{},
+          băm lại khớp.
+    \item Quyết định winner ký duyệt lúc \NumWinnerApprovedAt{}
+          (\texttt{\NumHoDecisionSha\ldots}).
+    \item Run held-out bắt đầu \NumHoStartedAt{} --- \textbf{sau} khi quyết định đã đóng băng.
+    \item Coverage 100\%: \NumNHeldout{}/\NumNHeldout{} câu, 0 lỗi.
+  \end{itemize}
+
+  \takeaway{Thứ tự thời gian là bằng chứng: không thể chọn winner sau khi đã thấy điểm held-out.}
+\end{frame}
+
+\begin{frame}{Kết quả công bố --- \NumWinner{} trên \NumNHeldout{} câu held-out}
+  \small
+  \begin{tabularx}{\textwidth}{@{}L N N N@{}}
+    \toprule
+    & \textbf{Dev (\NumNDev)} & \textbf{Held-out (\NumNHeldout)} & \textbf{macro} \\
+    \midrule
+    Answer Correctness & \NumDevAC & \win{\NumHoAC} & \NumHoACMacro \\
+    Exact Match & \NumDevEM & \pass{\NumHoEM} & --- \\
+    Token F1 & \NumDevFone & \pass{\NumHoFone} & \NumHoFoneMacro \\
+    Faithfulness & \NumDevFaith & \NumHoFaith & \NumHoFaithMacro \\
+    Citation F1 & \NumDevCitFone & \NumHoCitFone & \NumHoCitFoneMacro \\
+    Citation Validity & \NumDevCitVal & \NumHoCitVal & \NumHoCitValMacro \\
+    \midrule
+    \textbf{Hit@5} (truy xuất) & \NumDevHitFive & \fail{\NumHoHitFive} & --- \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.5em}
+  Correctness chỉ tụt \textbf{0{,}0193}. Nhưng Hit@5 tụt \fail{\NumHoHitFiveDrop{}} ---
+  tập held-out \textbf{khó hơn hẳn} ở tầng truy xuất.
+
+  \vspace{0.3em}
+  Micro và macro lệch nhau dưới 0{,}008 ở mọi metric $\rightarrow$ không bài báo nào chi phối.
+
+  \takeaway{Chi phí toàn bộ run: \$\NumHoCost{}. Latency P50 \NumHoLatency{} ms.}
+\end{frame}
+
+\begin{frame}{Phát hiện quan trọng nhất: prompt \emph{không} bị overfit}
+  \small
+  Tách \NumNHeldout{} câu held-out theo việc truy xuất có đưa được bằng chứng ra hay không:
+
+  \begin{tabularx}{\textwidth}{@{}L N N N@{}}
+    \toprule
+    & \textbf{n} & \textbf{Answer Corr.} & \textbf{Citation F1} \\
+    \midrule
+    Held-out, \texttt{gold\_in\_top5} & \NumHoNHit & \win{\NumHoHitAC} & \NumHoHitCitFone \\
+    Held-out, \texttt{gold\_not\_in\_top5} & \NumHoNMiss & \fail{\NumHoMissAC} & \fail{\NumHoMissCitFone} \\
+    \midrule
+    \muted{Dev, \texttt{gold\_in\_top5}} & \muted{\NumNHit} & \muted{\NumPtwodFiveHitAC} & \muted{---} \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.6em}
+  \begin{itemize}
+    \item Trên các câu \textbf{truy xuất làm đúng việc}, held-out đạt \NumHoHitAC{}
+          --- \textbf{cao hơn} dev (\NumPtwodFiveHitAC). Prompt tổng quát hóa được.
+    \item Tỉ lệ truy xuất trượt tăng gần \textbf{ba lần}: \NumNMiss{}/\NumNDev{}
+          $\rightarrow$ \NumHoNMiss{}/\NumNHeldout{}.
+    \item Citation F1 trên nhóm trượt bằng \fail{\NumHoMissCitFone{}} --- theo định
+          nghĩa: không có đoạn đúng nào trong context để mà trích dẫn.
+  \end{itemize}
+
+  \begin{center}
+    \colorbox{brandrule}{\parbox{0.88\textwidth}{\centering\vspace{0.3em}
+      \textbf{Toàn bộ khoảng cách dev $\rightarrow$ held-out là câu chuyện của truy xuất,\\
+      không phải của prompt.}\vspace{0.3em}}}
+  \end{center}
+
+  \takeaway{Muốn cải thiện tiếp thì quay lại Phase 1, không phải viết lại prompt.}
+\end{frame}

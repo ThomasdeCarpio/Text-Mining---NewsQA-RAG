@@ -6,6 +6,8 @@ Báo cáo thực nghiệm của dự án **NewsQA RAG**.
 
 - **[Tóm tắt](report.md)** — hệ thống là gì, Phase 1 làm gì, Phase 2 làm gì, chốt được gì, còn thiếu gì. Chia rõ theo từng phase.
 
+**Bản nộp:** [`docs/latex/`](../latex/) — slide beamer 27 trang và báo cáo A4 9 trang. Mọi con số sinh tự động từ artifact bằng `scripts/build_latex_numbers.py`, nên hai bản không lệch nhau được.
+
 **Báo cáo chi tiết từng phase:**
 
 | Báo cáo | Nội dung | Kế hoạch đăng ký trước |
@@ -13,6 +15,7 @@ Báo cáo thực nghiệm của dự án **NewsQA RAG**.
 | [EDA](../eda/eda_report.md) | Dữ liệu thực sự trông như thế nào | — |
 | [Phase 1](phase1/report.md) | Giải đấu 23 cấu hình truy xuất, 3 vòng | [`phase_1_retrieval_test_plan.md`](../Detailed%20Test%20Plans/phase_1_retrieval_test_plan.md) |
 | [Phase 2](phase2/report.md) | Baseline end-to-end và tối ưu generation | [`phase_2_baseline_test_plan.md`](../Detailed%20Test%20Plans/phase_2_baseline_test_plan.md), [`phase_2_generation_tuning_plan.md`](../Detailed%20Test%20Plans/phase_2_generation_tuning_plan.md) |
+| [Prompt nguyên văn](../prompts.md) | Bốn system prompt, cách ghép request, `context_depth`, hash đối chiếu | — |
 | Phase 3 | Abstention — chưa chạy | [`phase_3_abstention_test_plan.md`](../Detailed%20Test%20Plans/phase_3_abstention_test_plan.md) |
 
 **Nội dung nằm giữa hai phase:**
@@ -23,4 +26,6 @@ Báo cáo thực nghiệm của dự án **NewsQA RAG**.
 **Artifact:**
 
 - `phase1/` — CSV từng vòng, `winner_lock.jsonl`, `paired_significance.json`.
-- `phase2/` — `report.json` của baseline và hai finalist, điểm theo từng câu, `paired_significance.json`.
+- `phase2/` — `report.json` của baseline và hai finalist, điểm theo từng câu, `paired_significance.json`, `phase2b_winner_decision.json`.
+- `phase2/heldout/` — **bằng chứng của con số công bố**: access record kèm chuỗi hash, summary micro + article macro, phân tầng theo truy xuất, điểm theo từng câu và từng bài.
+- `phase2/provenance/` — manifest chuẩn bị, danh sách id từng partition, `retrieval_lock.json`, cấu hình judge.

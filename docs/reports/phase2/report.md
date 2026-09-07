@@ -210,7 +210,9 @@ Người duyệt đánh giá **23/30 câu đúng về ngữ nghĩa**, điểm t�
 
 ### 7.1. Bốn prompt là gì
 
-Nội dung chính xác ở `configs/experiments/phase2_generation_prompts.yaml`. Mỗi prompt là một giả thuyết nhắm vào một nhóm lỗi có số đo từ §6.
+**Nội dung nguyên văn cả bốn prompt: [`docs/prompts.md`](../../prompts.md)** — kèm cách một request được ghép, giải thích `context_depth`, và bảng SHA-256 chứng minh prompt trong repo đúng là prompt đã chạy. Nguồn duy nhất: `configs/experiments/phase2_generation_prompts.yaml`.
+
+Mỗi prompt là một giả thuyết nhắm vào một nhóm lỗi có số đo từ §6.
 
 | ID | Tên | Nội dung cốt lõi | Nhắm nhóm lỗi | Cỡ nhóm |
 | :--- | :--- | :--- | :--- | ---: |
@@ -362,6 +364,33 @@ Depth 5 tốn input token cao hơn depth 3 **60%** (640.752 so với 400.241) v�
 
 Quy tắc 3 và 4 (ưu tiên chi phí, rồi latency) **không được kích hoạt** vì chỉ có một cấu hình hợp lệ. Nếu về sau có hai cấu hình cùng hợp lệ mà chênh AC dưới 0,01, depth 3 sẽ thắng nhờ chi phí — nhưng đó không phải tình huống hiện tại.
 
+### 9.5. Phân tầng theo retrieval, và macro theo bài báo
+
+Cả hai test plan yêu cầu hai lát cắt bổ sung. Không lát nào tốn thêm một lệnh gọi API — retrieval bị đóng băng nên `hit_rate@5` từng câu đã nằm sẵn trong `scores/*.jsonl`.
+
+**Phân tầng `gold_in_top5`.** Retrieval đưa được bằng chứng ra trước mặt model ở **269/281** câu; **12 câu còn lại thì không**.
+
+| | n | P0 (gốc) | P2-depth3 | **P2-depth5 (winner)** |
+| :--- | ---: | ---: | ---: | ---: |
+| `gold_in_top5` | 269 | 0,6522 | 0,7971 | **0,7597** |
+| `gold_not_in_top5` | **12** | 0,1504 | 0,1885 | **0,1829** |
+
+Đây là kết quả có ý nghĩa phương pháp rõ nhất của §9: **prompt không cứu được một lần truy xuất trượt.** Trên 12 câu không có gold trong context, đổi prompt chỉ nhích Answer Correctness từ 0,1504 lên 0,1829 — và mức 0,18 đó gần như hoàn toàn là điểm ngữ nghĩa cho một câu trả lời từ chối đúng cách, không phải câu trả lời đúng. Ngược lại, trên 269 câu có gold, cùng thay đổi prompt đó tăng **+0,1075**.
+
+Hệ quả cho việc chọn ưu tiên: **trần của tầng sinh bị chặn bởi Hit@5 = 0,9573 của Phase 1.** Muốn vượt qua trần đó thì phải quay lại sửa retrieval, không phải viết lại prompt.
+
+**Macro theo bài báo.** Micro (trung bình theo câu) để một bài đóng góp 12 câu lấn át một bài đóng góp 2 câu. Macro trung bình theo bài trước, rồi trung bình theo 50 bài:
+
+| Cấu hình | Answer Correctness (micro) | (article macro) | Chênh |
+| :--- | ---: | ---: | ---: |
+| P0 | 0,6308 | 0,6344 | +0,0036 |
+| P2-depth3 | 0,7711 | 0,7709 | −0,0002 |
+| **P2-depth5** | **0,7350** | **0,7319** | −0,0031 |
+
+Ba mức chênh đều dưới 0,004 — **không có bài báo nào chi phối kết quả**. Winner không đổi dù đọc theo cách nào. Đây là kiểm tra vững chắc, không phải một chỉ số bổ sung.
+
+Số sinh ra từ `scripts/phase2_paired_comparison.py`, ghi vào `paired_significance.json` (`by_stratum`, `answer_correctness_article_macro`).
+
 ---
 
 ## 10. Đối chiếu với kế hoạch đăng ký trước
@@ -380,15 +409,16 @@ Quy tắc 3 và 4 (ưu tiên chi phí, rồi latency) **không được kích ho
 | 8 | Hai finalist đủ coverage deterministic + RAGAS | 2B §10 | ✅ |
 | 9 | Winner chọn đúng quy tắc đăng ký, không dùng held-out | 2B §10 | ✅ §9.2 |
 | 10 | Dùng thuật ngữ "tối ưu prompt/cấu hình sinh", không tuyên bố fine-tune | 2B §10 | ✅ §1 |
-| 11 | **`phase2b_winner_decision.json`** — winner, hash hai finalist, người duyệt | 2B §5.2 | ⏳ **cần tạo** |
-| 12 | **Chạy winner một lần trên 284 câu held-out** | 2B §10 | ❌ **chưa làm** |
+| 11 | `phase2b_winner_decision.json` — winner, hash hai finalist, người duyệt | 2B §5.2 | ✅ `phase2b_winner_decision.json` |
+| 12 | Chạy winner một lần trên 284 câu held-out | 2B §10 | ✅ **§11** |
 | 13 | **Audit mù 30 cặp P0 ↔ winner, hai reviewer, báo cáo đồng thuận** | 2B §8 | ❌ **chưa làm** |
 | 14 | **Lặp 25 câu cố định cho P0 và winner để đo độ ổn định API** | 2B §8 | ❌ **chưa làm** |
-| 15 | **Báo cáo phân tầng `gold_in_top5` / `gold_not_in_top5`** | 2A §3.3, 2B §6 | ❌ **chưa làm** |
-| 16 | **Báo cáo article-level macro bên cạnh micro** | 2A §3.3 | ❌ **chưa làm** |
-| 17 | Đóng gói winner để app và benchmark nạp cùng một artifact | 2B §10 | ⏳ sau held-out |
+| 15 | Báo cáo phân tầng `gold_in_top5` / `gold_not_in_top5` | 2A §3.3, 2B §6 | ✅ §9.5, §11.3 |
+| 16 | Báo cáo article-level macro bên cạnh micro | 2A §3.3 | ✅ §9.5, §11.2 |
+| 17 | Đóng gói winner để app và benchmark nạp cùng một artifact | 2B §10 | ⏳ còn lại |
+| 18 | **Hiệu chuẩn judge trên 20 câu `judge_calibration`** | 2A §4 | ❌ **tập đã có, chưa dùng** |
 
-**Việc 15 và 16 nên làm trước** — chúng không tốn một lệnh gọi API nào. Mọi thứ cần thiết đã nằm trong `scores/*.jsonl` (có sẵn `article_key` và điểm retrieval theo từng câu).
+Còn lại 3 việc: 13, 14, 18. Cả ba đều không chặn con số công bố, nhưng 18 là việc quyết định xem AC 0,7157 đáng tin đến đâu.
 
 ### 10.2. Chỗ thực tế lệch với kế hoạch
 
@@ -405,7 +435,76 @@ Bản đã chạy là bản trong YAML. Việc sửa **có cơ sở** — nó nh
 
 ---
 
-## 11. Kết luận
+## 11. Held-out — con số công bố
+
+Chạy ngày 2026-09-06, cấu hình **P2-depth5**, **đúng một lần**, trên 284 câu / 50 bài chưa từng bị chạm tới.
+
+### 11.1. Bằng chứng đăng ký trước
+
+Điều khiến con số này dùng được không phải là bản thân nó, mà là dấu vết chứng minh nó không bị chọn lại sau khi nhìn thấy kết quả:
+
+| Mốc | Thời điểm | Bằng chứng |
+| :--- | :--- | :--- |
+| Chốt danh sách 284 id (seed 46) | trước cả Phase 2B | `heldout_ids_sha256 = 09a04e57…` |
+| Ký duyệt winner | **2026-09-06 13:31:30Z** | `decision_sha256 = e2fa5915…`, reviewer `thomas200905` |
+| Bắt đầu run held-out | **2026-09-06 14:23:24Z** | `heldout_access.json` |
+| Hoàn tất | 2026-09-06 18:08:53Z | coverage 284/284, 0 lỗi |
+
+Quyết định đóng băng **trước run 52 phút**. Kiểm lại 5 hash trong `heldout_access.json`: `decision`, `heldout_ids`, `predictions`, `judge_results` đều khớp. `retrievals_sha256` khớp với bản trong `heldout_trace/` — bản sao thứ hai dưới `runs/` là một lần tuần tự hóa lại, lệch 26 KB; không ảnh hưởng kết quả nhưng ghi lại để khỏi hiểu nhầm.
+
+Bản ghi quyết định cũng tự khai `"heldout_outputs_accessed_for_selection": false`.
+
+### 11.2. Kết quả
+
+| | Dev (281) | **Held-out (284)** | article macro |
+| :--- | ---: | ---: | ---: |
+| **Answer Correctness** | 0,7350 | **0,7157** | 0,7230 |
+| Exact Match | 0,0925 | 0,1092 | — |
+| Token F1 | 0,4191 | 0,4313 | 0,4370 |
+| Faithfulness | 0,9801 | 0,9249 | 0,9318 |
+| Citation F1 | 0,8391 | 0,7289 | 0,7315 |
+| Citation Validity | 0,9858 | 0,9437 | 0,9483 |
+| Answer Relevancy | 0,7092 | 0,6485 | 0,6477 |
+| **Hit@5** (truy xuất) | 0,9573 | **0,8768** | — |
+
+Chi phí: 0,169 USD sinh + 0,768 USD chấm = **0,937 USD**. Latency tổng P50 1.957,5 ms (so với 2.770,8 ms của baseline P0 — P2 sinh câu ngắn hơn nên nhanh hơn).
+
+Micro và macro lệch dưới 0,008 ở mọi metric → **không bài báo nào chi phối số công bố**.
+
+Điểm cần chú ý ngay: Answer Correctness chỉ tụt **0,0193**, nhưng Hit@5 tụt **0,0805**. Tập held-out khó hơn hẳn ở tầng truy xuất — không phải ở tầng sinh.
+
+### 11.3. Phân tầng — và phát hiện quan trọng nhất
+
+| Held-out | n | Answer Corr. | Token F1 | Citation F1 | Citation Validity | Faithfulness |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `gold_in_top5` | 249 | **0,7689** | 0,4694 | 0,8313 | 0,9839 | 0,9552 |
+| `gold_not_in_top5` | 35 | 0,3375 | 0,1602 | **0,0000** | 0,6571 | 0,7095 |
+
+Ba điều đọc ra được:
+
+1. **Trên các câu truy xuất làm đúng việc, held-out (0,7689) *cao hơn* development (0,7597).** Prompt P2 tổng quát hóa được sang dữ liệu chưa từng thấy. Không có dấu hiệu overfit.
+2. **Tỉ lệ truy xuất trượt tăng gần ba lần:** 12/281 (4,3%) → 35/284 (12,3%). Đây là toàn bộ nguyên nhân của khoảng cách dev → held-out.
+3. **Citation F1 trên nhóm trượt bằng đúng 0,0000** — theo định nghĩa, vì không có đoạn đúng nào trong context để mà trích dẫn nên recall bằng 0. Faithfulness cũng tụt xuống 0,7095: không có bằng chứng thì model bám vào đoạn sai.
+
+> **Toàn bộ khoảng cách development → held-out là câu chuyện của truy xuất, không phải của prompt.**
+
+Kết luận này chỉ rút ra được vì hai phase dùng chung một vết truy xuất đóng băng và mọi điểm số đều truy ngược được về từng câu hỏi (§1).
+
+### 11.4. Hệ quả cho việc chọn ưu tiên
+
+Với Hit@5 = 0,8768, khoảng **12% số câu held-out không có đường nào để trả lời đúng**, bất kể prompt viết thế nào. Đầu tư tiếp vào prompt engineering sẽ cho lợi ích giảm dần.
+
+Đòn bẩy còn lại, theo thứ tự:
+
+1. **Query rewriting** — RAG path hiện chưa có bước này, mà EDA cho thấy 11,3% câu hỏi vẫn phụ thuộc ngữ cảnh ngay cả sau khi resolve.
+2. **Truy xuất** — contextual chunking đã bị loại có bằng chứng (§5.3 Phase 1), nhưng hướng dense + reranker mạnh hơn chưa được thử lại sau khi sửa lỗi tái lập.
+3. **Abstention (Phase 3)** — 35 câu ở nhóm trượt là ca dùng trực tiếp: hệ thống vẫn trả lời chúng thay vì nói không biết.
+
+**Artifact:** `docs/reports/phase2/heldout/` (access record, summary micro+macro, subgroups, per-question và per-article scores) · `docs/reports/phase2/scores/p2_d5_heldout.jsonl`.
+
+---
+
+## 12. Kết luận
 
 1. **Winner Phase 2B là P2-depth5**, Answer Correctness 0,7350 (+0,1043 so với baseline, CI95 [+0,0844; +0,1240]), không làm giảm grounding hay citation validity.
 2. **Prompt đúng dạng là đòn bẩy lớn nhất ở tầng sinh.** Không phải vì prompt engineering khéo, mà vì gold NewsQA là span ngắn — P2 khớp với hình dạng của nhãn.

@@ -1,0 +1,149 @@
+\section{Phase 1 --- Chọn cách lấy đoạn văn}
+
+\subsection{Thiết kế: giải đấu phân tầng}
+
+Lưới đầy đủ của các lựa chọn (retriever $\times$ reranker $\times$ kích thước
+chunk) là 72 tổ hợp. Thay vào đó, dự án chạy một giải đấu ba vòng, mỗi vòng chỉ
+đưa quán quân đi tiếp --- tổng cộng 23 cấu hình.
+
+\begin{center}\small
+\begin{tabularx}{0.94\textwidth}{@{}p{1.4cm} p{5.6cm} L@{}}
+\toprule
+\textbf{Vòng} & \textbf{Thử gì} & \textbf{Thắng} \\
+\midrule
+1 & 4 mô hình dense $\times$ 4 mô hình sparse & BGE-M3 learned sparse \\
+2 & 3 retriever $\times$ 3 reranker & $+$ \texttt{BAAI/bge-reranker-large} \\
+3 & 3 kích thước chunk (256/512/1024) & 512/64 --- \emph{không ai thắng rõ} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Đây là một đánh đổi có ý thức và cần nêu rõ: cách này rẻ hơn nhiều lần, nhưng
+\textbf{không phát hiện được tương tác} giữa các lựa chọn ở hai vòng khác nhau.
+Ví dụ, khả năng một mô hình dense nào đó phối hợp đặc biệt tốt với chunk 1024
+sẽ không bao giờ được kiểm tra, vì dense đã bị loại từ vòng~1.
+
+\subsection{Vòng 1 --- Sparse áp đảo dense}
+
+\begin{center}\small
+\begin{tabularx}{0.94\textwidth}{@{}L p{2.2cm} p{3.4cm}@{}}
+\toprule
+\textbf{So sánh} (nDCG@5, \texttt{resolved}, \NumNDev{} câu) & \textbf{$\Delta$} & \textbf{CI95} \\
+\midrule
+BGE-M3 sparse \emph{vs} e5-base-v2 dense & \NumSparseVsDense & \NumSparseVsDenseCI \\
+BGE-M3 \emph{vs} BM25-okapi-stemmed & \NumBgeMThreeVsBmTwoFive & \NumBgeMThreeVsBmTwoFiveCI \\
+e5-base-v2 \emph{vs} bge-small-en-v1.5 & \NumDenseVsDense & \NumDenseVsDenseCI \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Chỉ dòng đầu vượt được cả hai điều kiện phán quyết. Khoảng cách
+\NumSparseVsDense{} lớn hơn biên độ nhiễu \NumNoiseFloor{} và khoảng tin cậy
+không chứa 0. EDA đã giải thích trước vì sao: câu hỏi NewsQA bám vào tên riêng,
+ngày tháng và con số --- đúng thứ mà khớp từ vựng bắt được chính xác, còn
+embedding dày đặc thì làm nhòe đi thành ``ý nghĩa gần giống''.
+
+Hai dòng sau có khoảng tin cậy \textbf{chứa 0}. Không phân định được BGE-M3 với
+BM25 đã stem, và cũng không phân định được hai mô hình dense với nhau.
+
+\keypoint{\textbf{Không tồn tại ``mô hình dense tốt nhất'' trong thí nghiệm này},
+và đó tự nó là một kết quả cần báo cáo. Xếp hạng chúng theo số thập phân thứ ba
+sẽ là đọc nhiễu thành tín hiệu.}
+
+\subsection{Vòng 2 --- Reranker, và một kết quả phủ định}
+
+Reranker cross-encoder thêm $+0{,}0659$ nDCG@5, lọc top~\NumPoneTopK{} xuống
+top~\NumPoneRerankTopN{}. Mức cải thiện này được EDA dự báo trước: với trung vị
+\NumDistractorMedian{} đoạn đối thủ cùng chủ đề cho mỗi câu hỏi, việc xếp hạng
+lại bằng một mô hình đọc được cả cặp (câu hỏi, đoạn) là bắt buộc.
+
+Hybrid dung hợp dense và sparse \textbf{không chứng minh được là có lợi}. Cần
+phát biểu chính xác: kết quả là ``không chứng minh được có lợi'', \emph{không
+phải} ``đã chứng minh có hại''. Trong điều kiện dense yếu hơn sparse tới
+\NumSparseVsDense{} nDCG@5, việc trộn một tín hiệu yếu vào một tín hiệu mạnh
+khó có đường tạo ra lợi ích.
+
+\subsection{Vòng 3 --- Một kết quả null}
+
+\begin{center}\small
+\begin{tabular}{@{}l r@{}}
+\toprule
+Chunk 512 / 64 & \NumChunkFiveOneTwoNdcg \\
+Chunk 1024 / 128 & \NumChunkOneZeroTwoFourNdcg \\
+Chunk 256 / 32 & \NumChunkTwoFiveSixNdcg \\
+\midrule
+Khoảng cách cao nhất -- thấp nhất & \NumChunkSpread \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\NumChunkSpread{} nằm dưới biên độ nhiễu \NumNoiseFloor{}, và cả ba khoảng tin
+cậy chồng lấn nhau. Không có cơ sở thống kê để xếp hạng ba cấu hình này.
+
+Lý do nằm ở phân bố độ dài bài báo: sau khi phục hồi, trung vị vẫn là 724 token
+mỗi bài và \textbf{75{,}9\% số bài vẫn chỉ có tối đa 2 chunk}. Với ba phần tư
+kho ngữ liệu, bài toán tìm đúng chunk gần như đồng nhất với bài toán tìm đúng
+bài báo, nên dư địa để chiến lược chunking tạo khác biệt là rất hẹp. Việc chọn
+512/64 dựa trên lý do vận hành --- không quá ngắn khiến câu trả lời bị cắt đôi,
+không quá dài gây loãng và tốn token ở Phase~2 --- chứ không phải vì nó thắng.
+
+\subsection{Ablation bổ sung --- Contextual chunking}
+
+Vòng 3 kết luận kích thước chunk không quan trọng. Câu hỏi tiếp theo: nếu không
+phải cắt to hay cắt nhỏ, thì \emph{viết lại nội dung} chunk có quan trọng
+không? Ablation thêm \NumCtxChars{} ký tự ngữ cảnh của bài báo mẹ vào đầu mỗi
+chunk (\NumCtxContextualised{}/\NumCorpusChunks{} chunk được thêm; chunk đầu
+tiên bỏ qua vì đã tự mang ngữ cảnh).
+
+\begin{center}\small
+\begin{tabularx}{0.94\textwidth}{@{}L p{2cm} p{2cm} p{3.4cm}@{}}
+\toprule
+nDCG@5 (\texttt{resolved}, \NumCtxNSamples{} câu) & \textbf{plain} & \textbf{contextual} & \textbf{$\Delta$ và CI95} \\
+\midrule
+Dense (e5-base-v2) & \NumCtxDensePlain & \NumCtxDenseCtx & \NumCtxEffectDense{} \NumCtxEffectDenseCI \\
+Sparse (BGE-M3) & \NumCtxSparsePlain & \NumCtxSparseCtx & \NumCtxEffectSparse{} \NumCtxEffectSparseCI \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Hai hiệu ứng ngược chiều, cả hai đều có ý nghĩa thống kê. Contextual chunking
+\textbf{giúp dense} và \textbf{hại sparse} --- và cả hai đều nhất quán với phát
+hiện của EDA. Với dense, \NumCtxChars{} ký tự ngữ cảnh là thông tin embedding
+trước đó không có: nó giúp phân biệt hai đoạn gần giống nhau đến từ hai bài
+khác nhau. Với sparse, chính \NumCtxChars{} ký tự đó lặp lại trên mọi chunk của
+cùng một bài, \textbf{làm loãng tần suất của những từ hiếm} vốn là thứ giúp
+BGE-M3 tìm đúng đoạn.
+
+Kết quả này \textbf{không đổi quyết định của Phase~1}: sparse vẫn thắng dense
+trên cả hai kho, khoảng cách thu hẹp từ \NumCtxGapPlain{} xuống
+\NumCtxGapCtx{} nhưng không đảo ngược. Ngoài ra, cả \NumCtxEffectDense{} lẫn
+\NumCtxEffectSparse{} đều nhỏ hơn ngưỡng thực dụng \NumNoiseFloor{}.
+
+Hai điểm cần ghi nhận trung thực. Thứ nhất, đây là ablation chứ không phải một
+vòng của giải đấu: nó chạy trên harness riêng (\texttt{top\_k} 10, không
+reranker, dense dùng tích ma trận chính xác thay vì HNSW nên tái lập được), nên
+con số tuyệt đối không so trực tiếp với bảng vòng~1. Thứ hai, ablation chạy
+trên cả \NumCtxNSamples{} câu, tức \textbf{có chạm vào các câu held-out của
+Phase~2}; vì đây là chỉ số truy xuất thuần và không có quyết định cấu hình nào
+được rút ra từ nó, phần sinh trên held-out vẫn chưa bị nhìn thấy.
+
+\subsection{Cấu hình khóa}
+
+\begin{center}\small
+BGE-M3 learned sparse (\texttt{top\_k=\NumPoneTopK}) $\rightarrow$
+\texttt{BAAI/bge-reranker-large} (top \NumPoneRerankTopN{}) $\rightarrow$ chunk 512/64
+\end{center}
+
+\begin{center}\small
+\begin{tabular}{@{}c c c c c@{}}
+\toprule
+\textbf{Hit@1} & \textbf{Hit@3} & \textbf{Hit@5} & \textbf{nDCG@5} & \textbf{Latency P50} \\
+\midrule
+\NumPoneHitOne & \NumPoneHitThree & \NumPoneHitFive & \NumPoneNdcgFive & \NumPoneLatency{} ms \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Chỉ mục được đóng gói và băm (\texttt{\NumLockedIndexSha\ldots}). Con số cần
+giữ lại cho phần sau: \textbf{Hit@5 $=$ \NumPoneHitFive{}}. Nó sẽ trở thành
+trần của Phase~2.

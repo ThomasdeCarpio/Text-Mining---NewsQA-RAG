@@ -1,0 +1,181 @@
+\section{Phase 2 --- Chọn cách hỏi LLM}
+
+Phase 2 nhận \NumPoneRerankTopN{} đoạn văn Phase 1 đưa sang và trả lời một câu
+hỏi duy nhất: ra lệnh cho Gemini thế nào để nó trả lời đúng mà không bịa. Cần
+nói rõ phạm vi --- \textbf{không có huấn luyện lại hay fine-tune nào cả}. Chỉ
+hai thứ được thay đổi: nội dung system prompt, và số đoạn context đưa vào.
+
+\subsection{Baseline, và chẩn đoán từ ba con số}
+
+Chạy prompt gốc P0 với \NumWinnerDepth{} đoạn context trên \NumNDev{} câu
+development:
+
+\begin{center}\small
+\begin{tabular}{@{}c c c c@{}}
+\toprule
+\textbf{Answer Correctness} & \textbf{Exact Match} & \textbf{Token F1} & \textbf{Faithfulness} \\
+\midrule
+\NumPzeroAC & \NumPzeroEM & \NumPzeroFone & \NumPzeroFaith \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Ba con số này đọc cùng nhau cho một chẩn đoán duy nhất. Faithfulness
+\NumPzeroFaith{} nghĩa là gần như mọi khẳng định đều bám vào bằng chứng đã lấy
+được --- hệ thống \emph{không} bịa. Nhưng Exact Match \NumPzeroEM{} nghĩa là
+không một câu trả lời nào trùng khớp đáp án chuẩn.
+
+\keypoint{\textbf{Hệ thống không bịa. Nó chỉ nói dài.} Model biết đáp án nhưng
+gói nó trong một đoạn văn, trong khi đáp án chuẩn của NewsQA là một span rất
+ngắn: một cái tên, một mốc thời gian, một con số. Vấn đề nằm ở \emph{hình dạng}
+câu trả lời, không phải ở độ trung thực của nó.}
+
+Chẩn đoán này đến từ một audit tay \textbf{30 câu} có Answer Correctness thấp
+nhất, phân loại theo nguyên nhân. Đáng chú ý: người duyệt thấy \textbf{23/30}
+câu điểm thấp thực ra \emph{đúng về mặt ngữ nghĩa} --- điểm thấp vì cách diễn
+đạt, hoặc vì nhãn có vấn đề.
+
+\subsection{Bốn prompt, mỗi cái nhắm một nhóm lỗi đã đếm được}
+
+Prompt không được viết theo trực giác mà theo bảng phân loại lỗi từ audit. Nội
+dung nguyên văn cả bốn prompt nằm ở \texttt{docs/prompts.md}.
+
+\begin{center}\small
+\begin{tabularx}{0.94\textwidth}{@{}p{0.9cm} p{3.4cm} L p{1.2cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Ý tưởng} & \textbf{Nhắm nhóm lỗi} & \textbf{Cỡ nhóm} \\
+\midrule
+P0 & Prompt RAG có citation & \emph{control} & --- \\
+P1 & Siết grounding tường minh & Hallucination & $\sim$0 \\
+P2 & Trả lời ngắn, đúng answer type & Đúng nhưng quá dài & 11/30 \\
+P3 & Chọn đúng đoạn trước khi trả lời & Trộn bài, trộn mốc thời gian & 3/30 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\paragraph{P1 thất bại, và đó là bài học đắt nhất.}
+P1 siết ràng buộc bằng chứng để tăng faithfulness. Nhưng baseline đã đạt
+\NumPzeroFaith{} --- không còn dư địa. P1 nhắm vào một vấn đề không tồn tại và
+\emph{mất} correctness khi làm vậy. Trực giác ``siết chặt hơn thì tốt hơn'' là
+sai khi chưa đo xem nhóm lỗi ấy có bao nhiêu ca.
+
+\paragraph{P2 thắng vì nó khớp với hình dạng của nhãn.}
+P2 yêu cầu một câu trả lời ngắn chứa đúng loại thông tin được hỏi. Đây cũng là
+lý do Answer Relevancy \emph{giảm} --- metric ấy thưởng câu trả lời đầy đủ ngữ
+cảnh, còn dữ liệu này thưởng câu trả lời cụt. Sự giảm đó là hệ quả có chủ đích,
+không phải suy thoái.
+
+\subsection{\texttt{context\_depth} --- thứ được tinh chỉnh song song}
+
+\texttt{context\_depth} là số đoạn được dán vào khối context, lấy từ đầu danh
+sách đã xếp hạng. Trong mã nguồn nó đúng là một phép cắt danh sách:
+
+\begin{center}
+\texttt{generation\_chunks = ranked\_chunks[:context\_depth]}
+\end{center}
+
+Không truy xuất lại, không xếp hạng lại --- nên chênh lệch giữa các mức depth
+quy hết được cho tầng sinh. Model nhận khối context đánh số \texttt{[1] [2]
+[3]\ldots}, và chính các chỉ số này là số nó dùng khi trích dẫn.
+
+\begin{center}\small
+\begin{tabularx}{0.94\textwidth}{@{}p{1.4cm} p{2.6cm} L@{}}
+\toprule
+\textbf{depth} & \textbf{Model thấy} & \textbf{Đánh đổi} \\
+\midrule
+1 & \texttt{[1]} & Ít token nhất --- nhưng \NumLostAtDepthOne{}/\NumNDev{} câu mất sạch bằng chứng \\
+3 & \texttt{[1] [2] [3]} & Cân bằng --- nhưng \NumLostAtDepthThree{}/\NumNDev{} câu mất sạch bằng chứng \\
+5 & \texttt{[1]}\ldots\texttt{[5]} & Không mất bằng chứng --- tốn token nhất \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Cột bên phải không đến từ ước lượng. Nó đọc thẳng ra từ đường cong Hit@k mà
+Phase~1 đã đo: Hit@1 \NumPoneHitOne{}, Hit@3 \NumPoneHitThree{}, Hit@5
+\NumPoneHitFive{}. Đây là chỗ Phase~1 định giá sẵn một quyết định của Phase~2
+mà không tốn thêm một lệnh gọi API nào.
+
+\subsection{Quyết định winner: guardrail chạy trước, điểm số chạy sau}
+
+Bốn điều kiện được khóa \emph{trước khi nhìn thấy bất kỳ kết quả nào}:
+Faithfulness không tụt quá $0{,}02$; Citation F1 không tụt quá $0{,}01$;
+Citation Validity không tụt quá $0{,}01$; coverage $\geq 95\%$. Chỉ những cấu
+hình qua cả bốn mới được xét, và trong số đó mới chọn Answer Correctness cao
+nhất.
+
+\begin{center}\small
+\begin{tabularx}{0.94\textwidth}{@{}L p{2cm} p{2.4cm} p{2.4cm}@{}}
+\toprule
+ & \textbf{P0} & \textbf{P2-depth3} & \textbf{P2-depth5} \\
+\midrule
+Answer Correctness & \NumPzeroAC & \emph{\NumPtwodThreeAC} & \NumPtwodFiveAC \\
+Exact Match & \NumPzeroEM & \emph{\NumPtwodThreeDeltaEM} & \NumPtwodFiveDeltaEM \\
+\midrule
+Faithfulness $\Delta$ & --- & \NumPtwodThreeGuardFaith{} (\fail{FAIL}) & \NumPtwodFiveGuardFaith{} (\pass{PASS}) \\
+Citation F1 $\Delta$ & --- & \NumPtwodThreeGuardCitFone{} (\pass{PASS}) & \NumPtwodFiveGuardCitFone{} (\pass{PASS}) \\
+Citation Validity $\Delta$ & --- & \NumPtwodThreeGuardCitVal{} (\fail{FAIL}) & \NumPtwodFiveGuardCitVal{} (\pass{PASS}) \\
+\midrule
+\textbf{Phán quyết} & --- & \fail{LOẠI} & \win{CHỌN} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+P2-depth3 đạt Answer Correctness \emph{cao hơn} (\NumPtwodThreeAC{} so với
+\NumPtwodFiveAC{}) nhưng trượt 2 trong 4 guardrail. Kiểm định theo cặp xác nhận
+cả hai mức tụt đều là thật, không phải nhiễu đo: Faithfulness
+\NumPtwodThreeDeltaFaith{} với CI95 \NumPtwodThreeDeltaFaithCI{} --- không chứa 0.
+
+\keypoint{Nới ngưỡng ở đúng thời điểm này --- sau khi đã thấy rằng cấu hình bị
+loại có điểm cao hơn --- chính là hành vi mà việc đăng ký trước sinh ra để
+ngăn. Bộ guardrail đã làm đúng việc của nó.}
+
+\subsection{Winner: \NumWinner{}}
+
+\begin{center}\small
+\begin{tabularx}{0.94\textwidth}{@{}L p{2.2cm} p{3.4cm}@{}}
+\toprule
+So với baseline P0 (\NumNDev{} câu development) & \textbf{$\Delta$} & \textbf{CI95} \\
+\midrule
+Answer Correctness & \NumPtwodFiveDeltaAC & \NumPtwodFiveDeltaACCI \\
+Exact Match & \NumPtwodFiveDeltaEM & \NumPtwodFiveDeltaEMCI \\
+Token F1 & \NumPtwodFiveDeltaFone & \NumPtwodFiveDeltaFoneCI \\
+Faithfulness & \NumPtwodFiveDeltaFaith & \NumPtwodFiveDeltaFaithCI \\
+Citation F1 & \NumPtwodFiveDeltaCitFone & \NumPtwodFiveDeltaCitFoneCI \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Correctness tăng \NumPtwodFiveDeltaAC{} với khoảng tin cậy không chứa 0.
+Faithfulness \NumPtwodFiveDeltaFaith{} với CI95 \NumPtwodFiveDeltaFaithCI{}
+--- \emph{không tách được khỏi 0}, và đây là kết quả tốt: cải thiện correctness
+mà không đánh đổi grounding. Cái giá phải trả là chi phí input token cao hơn
+depth~3 khoảng 60\%.
+
+\subsection{Hai lát cắt kiểm tra}
+
+\paragraph{Phân tầng theo truy xuất.}
+Truy xuất đưa được bằng chứng ra trước mặt model ở \NumNHit{}/\NumNDev{} câu;
+\NumNMiss{} câu còn lại thì không.
+
+\begin{center}\small
+\begin{tabularx}{0.94\textwidth}{@{}L p{1.2cm} p{1.8cm} p{2cm} p{2.4cm}@{}}
+\toprule
+Answer Correctness & \textbf{n} & \textbf{P0} & \textbf{P2-depth3} & \textbf{P2-depth5} \\
+\midrule
+\texttt{gold\_in\_top5} & \NumNHit & \NumPzeroHitAC & \NumPtwodThreeHitAC & \NumPtwodFiveHitAC \\
+\texttt{gold\_not\_in\_top5} & \NumNMiss & \NumPzeroMissAC & \NumPtwodThreeMissAC & \NumPtwodFiveMissAC \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Trên \NumNMiss{} câu không có gold trong context, đổi prompt chỉ nhích Answer
+Correctness từ \NumPzeroMissAC{} lên \NumPtwodFiveMissAC{} --- và phần lớn mức
+đó là điểm ngữ nghĩa cho một câu từ chối đúng cách, không phải câu trả lời
+đúng. Trên \NumNHit{} câu có gold, cùng thay đổi prompt ấy tăng hơn $0{,}10$.
+
+\paragraph{Macro theo bài báo.}
+Trung bình theo câu để một bài đóng góp nhiều câu lấn át bài đóng góp ít câu.
+Đọc theo macro (trung bình theo bài trước, rồi trung bình theo \NumNArticles{}
+bài): P0 \NumPzeroACMacro{}, P2-depth3 \NumPtwodThreeACMacro{}, P2-depth5
+\NumPtwodFiveACMacro{}. Cả ba mức chênh so với micro đều dưới $0{,}004$ ---
+không bài báo nào chi phối kết quả, và winner không đổi dù đọc theo cách nào.

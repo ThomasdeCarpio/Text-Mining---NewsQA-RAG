@@ -1,0 +1,2 @@
+model,reasoning_effort,max_tokens,questions,complete_rows,partial_rows,latency_seconds,input_tokens,output_tokens,total_tokens,successful_requests,estimated_cost_usd,faithfulness_coverage,faithfulness_mean,answer_relevancy_coverage,answer_relevancy_mean,context_precision_coverage,context_precision_mean,context_recall_coverage,context_recall_mean,answer_correctness_coverage,answer_correctness_mean
+accounts/fireworks/models/glm-5p3-flash,low,2048,281,281,0,19126.1,4425044,252516,4677560,3372,0.790015,1.0,0.9761,1.0,0.795,1.0,0.898,1.0,0.9644,1.0,0.6308

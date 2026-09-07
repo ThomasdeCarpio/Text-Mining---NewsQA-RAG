@@ -1,0 +1,90 @@
+{
+  "articles": 50,
+  "completed_at": "2026-09-06T18:08:54Z",
+  "cost_usd": {
+    "generation": 0.169324,
+    "judge": 0.767564,
+    "pricing_assumption_per_million_tokens": {
+      "generator_input": 0.25,
+      "generator_output": 1.5,
+      "judge_input": 0.15,
+      "judge_output": 0.5
+    },
+    "total": 0.936888
+  },
+  "coverage": {
+    "expected": 284,
+    "failed": 0,
+    "missing": 0,
+    "recorded": 284,
+    "success_rate": 1.0,
+    "successful": 284
+  },
+  "decision_sha256": "e2fa5915c45a77228398a053445facb2b13eeb74d9f1a213399c4f1da90c6d42",
+  "generator": {
+    "max_tokens": 512,
+    "model": "gemini-3.1-flash-lite",
+    "reasoning_effort": "minimal"
+  },
+  "judge": {
+    "max_tokens": 2048,
+    "model": "accounts/fireworks/models/glm-5p3-flash",
+    "provider": "fireworks",
+    "reasoning_effort": "low"
+  },
+  "latency": {
+    "generation_p50_ms": 1485.0,
+    "generation_p95_ms": 3743.4,
+    "total_p50_ms": 1957.5,
+    "total_p95_ms": 4220.0
+  },
+  "metrics_article_macro": {
+    "answer_correctness": 0.723,
+    "answer_relevancy": 0.6477,
+    "citation_f1": 0.7315,
+    "citation_validity": 0.9483,
+    "faithfulness": 0.9318,
+    "qa_f1": 0.437
+  },
+  "metrics_question_micro": {
+    "answer_correctness": 0.7157,
+    "answer_relevancy": 0.6485,
+    "citation_f1": 0.7289,
+    "citation_validity": 0.9437,
+    "faithfulness": 0.9249,
+    "qa_exact_match": 0.1092,
+    "qa_f1": 0.4313
+  },
+  "partition": "heldout",
+  "provenance": {
+    "collector_run_fingerprint": "3f84a1fef62b63e4997f568e7ab0581498f533a0690f4ee4cfc76638e5f2274f",
+    "heldout_ids_sha256": "09a04e574999b07bb165ccce9d2c685a71a641561af4cc05683ca880bed0d6a4",
+    "locked_artifact_repo": "ThomasAnderson2009/newsqa-rag-phase2-locked-v2",
+    "locked_artifact_revision": "locked-bge-m3-512-64-deduplicated-v2",
+    "locked_artifact_sha256": "fc5d67b7acf6e8be0205ce00b8069b3b6c8dcce853f8671f2feb3887b2707a24",
+    "preparation_repo": "ThomasAnderson2009/newsqa-rag-phase2-experiments",
+    "preparation_revision": "771fee6e19e3e836c9ba0b15874fe0bd5199b2a5",
+    "preparation_sha256": "0b2ab8388d6ab679970519bc35ba574936a063b32406ce5cee4b6ec5c166073c",
+    "prompt_sha256": "09b2508dbf7af601027d889ccb23cfb8ce736c02a8f7f1e6d5888e6c4fec8ef1",
+    "repo_commit": "611542a7b8647d0af0355ac937fe261d8d99e384"
+  },
+  "questions": 284,
+  "retrieval": {
+    "method": "bge-m3-sparse",
+    "rerank_top_n": 5,
+    "reranker": "BAAI/bge-reranker-large",
+    "top_k": 20
+  },
+  "schema_version": 1,
+  "usage": {
+    "generation_input_tokens": 647987,
+    "generation_output_tokens": 4885,
+    "judge_input_tokens": 4436251,
+    "judge_output_tokens": 204252,
+    "judge_successful_requests": 3408
+  },
+  "winner": {
+    "context_depth": 5,
+    "prompt_id": "p2"
+  }
+}

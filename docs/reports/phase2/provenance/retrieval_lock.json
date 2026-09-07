@@ -1,0 +1,41 @@
+{
+  "chunk_overlap": 64,
+  "chunk_size": 512,
+  "rerank_top_n": 5,
+  "reranker_model": "BAAI/bge-reranker-large",
+  "retriever": "sparse",
+  "round3_candidates": [
+    {
+      "index": "chunk_256_32",
+      "latency.total.p50_ms": 322.6,
+      "retrieval.hit_rate@5.mean": 0.939502,
+      "retrieval.mrr@5.mean": 0.822418,
+      "retrieval.ndcg@5.mean": 0.850685
+    },
+    {
+      "index": "chunk_512_64",
+      "latency.total.p50_ms": 512.7,
+      "retrieval.hit_rate@5.mean": 0.957295,
+      "retrieval.mrr@5.mean": 0.879715,
+      "retrieval.ndcg@5.mean": 0.89763
+    },
+    {
+      "index": "chunk_1024_128",
+      "latency.total.p50_ms": 512.2,
+      "retrieval.hit_rate@5.mean": 0.925267,
+      "retrieval.mrr@5.mean": 0.874673,
+      "retrieval.ndcg@5.mean": 0.886183
+    }
+  ],
+  "selected_index": "chunk_512_64",
+  "selection_metrics": {
+    "latency.total.p50_ms": 512.7,
+    "retrieval.hit_rate@5.mean": 0.957295,
+    "retrieval.mrr@5.mean": 0.879715,
+    "retrieval.ndcg@5.mean": 0.89763
+  },
+  "source_artifact": "results/phase1/round3.csv",
+  "source_scope": "resolved BGE-large rows transcribed after Phase 1 completion",
+  "sparse_model": "BAAI/bge-m3",
+  "top_k": 20
+}

@@ -1,0 +1,145 @@
+\section{Phase 1}
+
+\begin{frame}[plain]
+  \vfill
+  \begin{center}
+    {\color{brandaccent}\Large\textbf{PHASE 1}}\\[0.4em]
+    {\Large Chọn cách lấy đoạn văn}\\[1em]
+    {\small\color{brandmuted}
+     Trong \NumCorpusChunks{} đoạn, tìm \NumPoneRerankTopN{} đoạn nhiều khả năng chứa đáp án nhất.\\
+     Không gọi LLM. Không tốn tiền API.}
+  \end{center}
+  \vfill
+\end{frame}
+
+\begin{frame}{Thiết kế: giải đấu phân tầng}{23 cấu hình thay vì 72 tổ hợp}
+  \small
+  \begin{tabularx}{\textwidth}{@{}p{1.3cm} p{4.4cm} L@{}}
+    \toprule
+    \textbf{Vòng} & \textbf{Thử gì} & \textbf{Thắng} \\
+    \midrule
+    1 & 4 mô hình dense $\times$ 4 mô hình sparse & \win{BGE-M3 sparse} \\
+    2 & 3 retriever $\times$ 3 reranker & \win{$+$ bge-reranker-large} \\
+    3 & 3 kích thước chunk (256 / 512 / 1024) & \muted{512/64 --- không ai thắng rõ} \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.6em}
+  Quán quân mỗi vòng mới được đi tiếp. Đây là đánh đổi có ý thức: rẻ hơn nhiều
+  lần so với lưới đầy đủ, nhưng \textbf{không phát hiện được tương tác} giữa
+  các lựa chọn ở hai vòng khác nhau.
+
+  \vspace{0.4em}
+  \textbf{Luật phán quyết khóa trước:} chênh lệch phải (1)~vượt biên độ nhiễu
+  \NumNoiseFloor{}, \emph{và} (2)~có CI95 của hiệu theo cặp không chứa 0.
+
+  \takeaway{Hai điều kiện, không phải một. Có ý nghĩa thống kê chưa đủ để đổi cấu hình.}
+\end{frame}
+
+\begin{frame}{Vòng 1 --- Sparse áp đảo dense}
+  \small
+  \begin{tabularx}{\textwidth}{@{}L N N@{}}
+    \toprule
+    \textbf{So sánh} (nDCG@5, \texttt{resolved}) & \textbf{$\Delta$} & \textbf{CI95} \\
+    \midrule
+    BGE-M3 sparse \emph{vs} e5-base-v2 dense & \win{\NumSparseVsDense} & \multicolumn{1}{r}{\NumSparseVsDenseCI} \\
+    BGE-M3 \emph{vs} BM25-okapi-stemmed & \NumBgeMThreeVsBmTwoFive & \multicolumn{1}{r}{\NumBgeMThreeVsBmTwoFiveCI} \\
+    e5-base-v2 \emph{vs} bge-small-en-v1.5 & \NumDenseVsDense & \multicolumn{1}{r}{\NumDenseVsDenseCI} \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.8em}
+  \begin{itemize}
+    \item \textbf{Chỉ dòng đầu vượt được cả hai điều kiện.} Khoảng cách
+          \NumSparseVsDense{} lớn hơn biên độ nhiễu \NumNoiseFloor{} và CI95 không chứa 0.
+    \item Hai dòng sau: CI95 \textbf{chứa 0} $\rightarrow$ không phân định được.
+          Không có ``mô hình dense tốt nhất'', và \emph{đó cũng là một kết quả}.
+    \item \textbf{Vì sao sparse thắng:} EDA đã dự báo --- câu hỏi bám vào tên
+          riêng, ngày tháng, con số. Khớp từ vựng bắt được đúng thứ đó; embedding
+          làm nhòe nó đi.
+  \end{itemize}
+
+  \takeaway{Giả thuyết từ EDA, kiểm bằng bootstrap theo cặp, kết luận khớp dự báo.}
+\end{frame}
+
+\begin{frame}{Vòng 2 và 3 --- Reranker cần, chunk size thì không}
+  \small
+  \textbf{Vòng 2 --- reranker thêm $+0{,}0659$ nDCG@5.}
+  EDA đã đo trung vị \NumDistractorMedian{} đoạn đối thủ cùng chủ đề cho mỗi câu
+  hỏi, nên việc lọc lại top~\NumPoneTopK{} xuống top~\NumPoneRerankTopN{} là bắt
+  buộc. \muted{Hybrid dense+sparse: không chứng minh được có lợi.}
+
+  \vspace{0.6em}
+  \textbf{Vòng 3 --- kết quả null, và nó trung thực.}
+  \begin{center}
+    \begin{tabular}{@{}l r@{}}
+      \toprule
+      Chunk 512 / 64 & \NumChunkFiveOneTwoNdcg \\
+      Chunk 1024 / 128 & \NumChunkOneZeroTwoFourNdcg \\
+      Chunk 256 / 32 & \NumChunkTwoFiveSixNdcg \\
+      \midrule
+      Khoảng cách cao nhất -- thấp nhất & \NumChunkSpread \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+
+  \NumChunkSpread{} nằm \textbf{dưới} biên độ nhiễu \NumNoiseFloor{}, và cả ba
+  khoảng CI95 chồng lấn nhau. Chọn 512/64 vì \textbf{lý do vận hành}, không
+  phải vì nó thắng.
+
+  \takeaway{Báo cáo một kết quả null đúng như nó là, thay vì tô nó thành chiến thắng.}
+\end{frame}
+
+\begin{frame}{Ablation bổ sung --- Contextual chunking}{Nếu không phải cắt to hay nhỏ, thì viết lại nội dung chunk?}
+  \small
+  Thêm \NumCtxChars{} ký tự ngữ cảnh bài báo mẹ vào đầu mỗi chunk
+  (\NumCtxContextualised{}/\NumCorpusChunks{} chunk được thêm).
+
+  \begin{tabularx}{\textwidth}{@{}L N N@{}}
+    \toprule
+    nDCG@5 (\texttt{resolved}, \NumCtxNSamples{} câu) & \textbf{plain} & \textbf{contextual} \\
+    \midrule
+    Dense (e5-base-v2) & \NumCtxDensePlain & \win{\NumCtxDenseCtx} \\
+    Sparse (BGE-M3) & \win{\NumCtxSparsePlain} & \NumCtxSparseCtx \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{0.5em}
+  \begin{itemize}
+    \item Dense \pass{\NumCtxEffectDense} \muted{\NumCtxEffectDenseCI} ---
+          ngữ cảnh cho embedding thứ nó thiếu: biết chunk này thuộc bài nào.
+    \item Sparse \fail{\NumCtxEffectSparse} \muted{\NumCtxEffectSparseCI} ---
+          chính \NumCtxChars{} ký tự đó lặp trên mọi chunk cùng bài, \textbf{làm
+          loãng tần suất từ hiếm}.
+    \item Khoảng cách sparse--dense thu hẹp \NumCtxGapPlain{} $\rightarrow$
+          \NumCtxGapCtx{}, nhưng \textbf{không đảo ngược}.
+  \end{itemize}
+
+  \takeaway{Hai hiệu ứng đều có ý nghĩa thống kê, đều dưới ngưỡng \NumNoiseFloor{} --- không đổi quyết định.}
+\end{frame}
+
+\begin{frame}{Cấu hình khóa}
+  \small
+  \begin{center}
+    BGE-M3 learned sparse, \texttt{top\_k=\NumPoneTopK}\quad$\rightarrow$\quad
+    \texttt{BAAI/bge-reranker-large}, top~\NumPoneRerankTopN\quad$\rightarrow$\quad
+    chunk 512/64
+  \end{center}
+
+  \vspace{0.6em}
+  \begin{center}
+    \begin{tabular}{@{}c c c c c@{}}
+      \toprule
+      \textbf{Hit@1} & \textbf{Hit@3} & \textbf{Hit@5} & \textbf{nDCG@5} & \textbf{Latency P50} \\
+      \midrule
+      \NumPoneHitOne & \NumPoneHitThree & \win{\NumPoneHitFive} & \NumPoneNdcgFive & \NumPoneLatency{} ms \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+
+  \vspace{0.6em}
+  Chỉ mục được đóng băng và băm (\texttt{\NumLockedIndexSha\ldots}). Toàn bộ
+  Phase 2 chạy lại đúng vết truy xuất này --- \textbf{không truy xuất lại lần nào}.
+
+  \takeaway{Hit@5 $=$ \NumPoneHitFive{} sẽ trở thành \emph{trần} của Phase 2. Giữ con số này trong đầu.}
+\end{frame}

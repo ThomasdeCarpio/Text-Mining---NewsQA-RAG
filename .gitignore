@@ -48,3 +48,15 @@ outputs/retrieval/
 *.egg-info/
 
 *node_modules/
+
+# LaTeX build artifacts (docs/latex) -- keep the .tex and the PDFs
+*.aux
+*.fdb_latexmk
+*.fls
+*.nav
+*.snm
+*.toc
+*.out
+*.synctex.gz
+docs/latex/**/*.log
+*.xdv

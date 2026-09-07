@@ -332,6 +332,42 @@ Vòng 3 kiểm tra tính bền vững của Quán quân Vòng 2 trên 3 kích th
 
 ---
 
+### 5.3. Ablation bổ sung: Contextual Chunking
+
+Vòng 3 kết luận "kích thước chunk không quan trọng". Câu hỏi tự nhiên tiếp theo: **nếu không phải cắt to hay cắt nhỏ, thì cách viết lại nội dung chunk có quan trọng không?** Ablation này thêm vào đầu mỗi chunk 160 ký tự ngữ cảnh của bài báo mẹ (bỏ qua chunk đầu tiên, vì nó đã tự mang ngữ cảnh) — 11.702 trong 22.766 chunk được thêm.
+
+Kết quả (`docs/reports/phase1/contextual_chunking_ablation.json`, notebook [`16_contextual_chunking_ablation_kaggle.ipynb`](../../../notebooks/16_contextual_chunking_ablation_kaggle.ipynb)):
+
+| Retriever | Corpus | nDCG@5 (`resolved`) | Δ so với plain | CI95 |
+| :--- | :--- | ---: | ---: | :--- |
+| Dense (e5-base-v2) | plain | 0,6598 | — | — |
+| Dense (e5-base-v2) | **contextual** | **0,6891** | **+0,0293** | [+0,0184; +0,0406] |
+| Sparse (BGE-M3) | plain | **0,7741** | — | — |
+| Sparse (BGE-M3) | contextual | 0,7533 | **−0,0208** | [−0,0288; −0,0136] |
+
+**Hai hiệu ứng ngược chiều, cả hai đều có ý nghĩa thống kê.** Contextual chunking **giúp dense** và **hại sparse**. Đây chính là dự đoán của EDA §1: câu hỏi NewsQA neo vào tên riêng, ngày tháng, con số.
+
+- Với **dense**, 160 ký tự ngữ cảnh bài báo là thông tin mà embedding trước đó không có — nó giúp phân biệt hai chunk gần giống nhau đến từ hai bài khác nhau, đúng vấn đề "distractor collision" mà EDA §7 đo được (trung vị 25 đoạn đối thủ mỗi câu hỏi).
+- Với **sparse**, chính 160 ký tự đó là nhiễu từ vựng: nó lặp lại trên mọi chunk của cùng một bài, làm **loãng tần suất của những từ hiếm** vốn là thứ giúp BGE-M3 tìm đúng đoạn.
+
+**Điều này không đổi quyết định của Phase 1.** Sparse vẫn thắng dense trên **cả hai** kho ngữ liệu, và cả hai khoảng cách đều có ý nghĩa:
+
+| Corpus | Khoảng cách sparse − dense (nDCG@5, `resolved`) | CI95 |
+| :--- | ---: | :--- |
+| plain | +0,1143 | [+0,0939; +0,1346] |
+| contextual | +0,0641 | [+0,0445; +0,0833] |
+
+Contextual chunking **thu hẹp** khoảng cách (0,1143 → 0,0641) nhưng không đảo ngược nó. Nếu dự án đã chọn dense, đây sẽ là một nâng cấp đáng làm; vì đã chọn sparse, nó là một hướng bị loại có bằng chứng.
+
+**Đọc theo quy tắc biên độ nhiễu 7,0%:** cả +0,0293 lẫn −0,0208 đều **nhỏ hơn ngưỡng thực dụng 7,0%**. Chúng là hiệu ứng *đo được* (CI95 không chứa 0) nhưng *không đủ lớn để đổi cấu hình* — cùng một tình huống đã ghi ở Phụ lục A: có ý nghĩa thống kê và vượt ngưỡng thực dụng là hai điều kiện khác nhau.
+
+**Hai điểm cần ghi nhận trung thực:**
+
+1. **Đây là ablation, không phải một vòng của giải đấu.** Nó chạy trên harness riêng: top_k 10 (không phải 20), **không có reranker**, dense dùng tích ma trận chính xác thay vì HNSW (nên tái lập được — chính là thứ vòng 1 còn thiếu). Vì vậy con số tuyệt đối không so trực tiếp được với bảng Vòng 1.
+2. **Ablation chạy trên cả 1.152 câu** = 281 development + 284 held-out + 587 held-out reserve. Tức là nó **có chạm vào các câu held-out của Phase 2**. Vì đây là chỉ số retrieval thuần và **không có quyết định cấu hình nào được rút ra từ nó** (cấu hình khóa giữ nguyên), phần sinh trên held-out vẫn chưa bị nhìn thấy. Ghi lại ở đây như một sai lệch có kiểm soát, không phải để bỏ qua.
+
+---
+
 ## 6. Cấu hình Khóa Chính thức (The Locked Configuration)
 
 Cấu hình chiến thắng tuyệt đối được cố định tại `docs/reports/phase1/winner_lock.jsonl` và dùng làm nền tảng cho toàn bộ Phase 2:

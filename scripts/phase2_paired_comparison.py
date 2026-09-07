@@ -99,6 +99,32 @@ def mean(scores: dict, metric: str) -> float:
     return sum(values) / len(values)
 
 
+def article_macro(scores: dict, clusters: dict[str, list[str]], metric: str) -> float:
+    """Mean over articles of the per-article mean.
+
+    The plain mean lets an article that contributed twelve questions outvote one
+    that contributed two. Both test plans ask for this alongside it.
+    """
+    per_article = [sum(value(scores[q], metric) for q in qs) / len(qs)
+                   for qs in clusters.values()]
+    return sum(per_article) / len(per_article)
+
+
+def strata(base: dict) -> dict[str, list[str]]:
+    """Split the questions by whether retrieval put gold in front of the model.
+
+    Retrieval is frozen across every Phase 2 run, so this split is a property of
+    the question set, not of the configuration being scored. It separates a
+    generation failure from a retrieval failure the generator could not recover
+    from.
+    """
+    hit = lambda qid: base[qid]["retrieval"]["hit_rate@5"] == 1.0
+    return {
+        "gold_in_top5": [q for q in base if hit(q)],
+        "gold_not_in_top5": [q for q in base if not hit(q)],
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -107,9 +133,14 @@ def main() -> None:
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
 
-    files = sorted(args.scores_dir.glob("*.jsonl"))
-    runs = {path.stem.replace("_development", ""): read_scores(path) for path in files}
-    base_name = Path(args.baseline).stem.replace("_development", "")
+    # Compare within one partition only. The held-out run has no paired baseline
+    # by design -- it is allowed exactly one execution -- so sweeping its score
+    # file in here would fail the pairing check for the right reason but the
+    # wrong cause.
+    partition = "_" + Path(args.baseline).stem.rsplit("_", 1)[-1]
+    files = sorted(args.scores_dir.glob(f"*{partition}.jsonl"))
+    runs = {path.stem.replace(partition, ""): read_scores(path) for path in files}
+    base_name = Path(args.baseline).stem.replace(partition, "")
     if base_name not in runs:
         parser.error(f"baseline {base_name} not among {sorted(runs)}")
     base = runs[base_name]
@@ -123,7 +154,10 @@ def main() -> None:
     for qid, row in base.items():
         clusters[row["article_key"]].append(qid)
 
-    print(f"{len(base)} questions across {len(clusters)} articles; baseline = {base_name}\n")
+    groups = strata(base)
+    print(f"{len(base)} questions across {len(clusters)} articles; baseline = {base_name}")
+    print("   strata: " + ", ".join(f"{k}={len(v)}" for k, v in groups.items()))
+    print()
 
     candidates = [name for name in runs if name != base_name]
     results, eligible = {}, []
@@ -144,7 +178,16 @@ def main() -> None:
             "guardrails": checks,
             "eligible": passed,
             "answer_correctness": round(mean(cand, PRIMARY), 6),
+            "answer_correctness_article_macro": round(article_macro(cand, clusters, PRIMARY), 6),
             "paired_vs_baseline": comparisons,
+            "by_stratum": {
+                stratum: {
+                    "n": len(qids),
+                    "baseline": round(sum(value(base[q], PRIMARY) for q in qids) / len(qids), 6),
+                    "candidate": round(sum(value(cand[q], PRIMARY) for q in qids) / len(qids), 6),
+                }
+                for stratum, qids in groups.items() if qids
+            },
         }
         if passed:
             eligible.append(name)
@@ -157,7 +200,12 @@ def main() -> None:
         print(f"   {'coverage':20} {coverage:.2%}  "
               f"{'PASS' if coverage >= MIN_COVERAGE else 'FAIL'}")
         print(f"   => {'ELIGIBLE' if passed else 'DISQUALIFIED'}, "
-              f"Answer Correctness {mean(cand, PRIMARY):.4f}\n")
+              f"Answer Correctness {mean(cand, PRIMARY):.4f} "
+              f"(article macro {article_macro(cand, clusters, PRIMARY):.4f})")
+        for stratum, stats in results[name]["by_stratum"].items():
+            print(f"   {stratum:20} n={stats['n']:3}  "
+                  f"{stats['baseline']:.4f} -> {stats['candidate']:.4f}")
+        print()
 
     winner = max(eligible, key=lambda name: results[name]["answer_correctness"], default=None)
     print(f"Winner: {winner or 'none eligible - keep the baseline'}")
@@ -178,6 +226,9 @@ def main() -> None:
         "baseline": base_name,
         "n_questions": len(base),
         "n_articles": len(clusters),
+        "strata_sizes": {k: len(v) for k, v in groups.items()},
+        "baseline_answer_correctness": round(mean(base, PRIMARY), 6),
+        "baseline_answer_correctness_article_macro": round(article_macro(base, clusters, PRIMARY), 6),
         "winner": winner,
         "runs": results,
     }
