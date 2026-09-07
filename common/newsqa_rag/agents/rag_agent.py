@@ -21,12 +21,18 @@ class RAGAgent:
         llm: OpenAILLM | None,
         top_k: int = 10,
         rerank_top_n: int = 5,
+        rerank_candidate_n: int | None = None,
     ):
         self.retriever = retriever
         self.reranker = reranker
         self.llm = llm
         self.top_k = top_k
         self.rerank_top_n = rerank_top_n
+        self.rerank_candidate_n = (
+            rerank_top_n if rerank_candidate_n is None else rerank_candidate_n
+        )
+        if self.rerank_candidate_n < self.rerank_top_n:
+            raise ValueError("rerank_candidate_n cannot be smaller than rerank_top_n")
 
     def retrieve(self, question: str) -> dict:
         """Retrieve candidates without reranking so the result can be shared."""
@@ -48,7 +54,7 @@ class RAGAgent:
         question = retrieval_trace["question"]
         retrieved = retrieval_trace["retrieved_chunks"]
         t0 = time.perf_counter()
-        reranked = self.reranker.rerank(question, retrieved, self.rerank_top_n)
+        reranked = self.reranker.rerank(question, retrieved, self.rerank_candidate_n)
         rerank_ms = (time.perf_counter() - t0) * 1000
 
         timing = dict(retrieval_trace.get("timing_ms", {}))

@@ -76,6 +76,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bm25-path", default=None)
     parser.add_argument("--top-k", type=int, default=None)
     parser.add_argument("--rerank-top-n", type=int, default=None)
+    parser.add_argument(
+        "--rerank-candidate-n",
+        type=int,
+        default=None,
+        help=(
+            "Retain this many reranked candidates in the frozen trace before a "
+            "downstream expansion stage. Defaults to --rerank-top-n."
+        ),
+    )
     parser.add_argument("--generator-model", default=None)
     parser.add_argument(
         "--prompt-id",
@@ -230,6 +239,13 @@ def main() -> None:
     top_n = args.rerank_top_n or int(
         retrieval_config.get("reranker", {}).get("top_n", 5)
     )
+    rerank_candidate_n = (
+        top_n if args.rerank_candidate_n is None else args.rerank_candidate_n
+    )
+    if rerank_candidate_n < top_n:
+        raise SystemExit("--rerank-candidate-n cannot be smaller than --rerank-top-n")
+    if rerank_candidate_n > top_k:
+        raise SystemExit("--rerank-candidate-n cannot exceed --top-k")
     context_depth = args.context_depth or top_n
     if context_depth > top_n:
         raise SystemExit("--context-depth cannot exceed --rerank-top-n")
@@ -297,6 +313,7 @@ def main() -> None:
         ),
         "top_k": top_k,
         "rerank_top_n": top_n,
+        "rerank_candidate_n": rerank_candidate_n,
         "retrieval_only": args.retrieval_only,
         "embedding": original_config.get("embedding", {}),
         "sparse": config.get("retrieval", {}).get("sparse", {}),
@@ -351,7 +368,14 @@ def main() -> None:
     source_cache = None
     if args.source_retrievals:
         source_cache = load_source_retrievals(args.source_retrievals, entries)
-        agent = RAGAgent(None, None, llm, top_k=top_k, rerank_top_n=top_n)
+        agent = RAGAgent(
+            None,
+            None,
+            llm,
+            top_k=top_k,
+            rerank_top_n=top_n,
+            rerank_candidate_n=rerank_candidate_n,
+        )
     else:
         store = None
         if args.retriever in {"dense", "hybrid"}:
@@ -369,7 +393,14 @@ def main() -> None:
             bm25_path=args.bm25_path,
         )
         reranker = get_reranker(config)
-        agent = RAGAgent(retriever, reranker, llm, top_k=top_k, rerank_top_n=top_n)
+        agent = RAGAgent(
+            retriever,
+            reranker,
+            llm,
+            top_k=top_k,
+            rerank_top_n=top_n,
+            rerank_candidate_n=rerank_candidate_n,
+        )
     generation_limiter = MinimumIntervalLimiter(
         args.generation_min_interval_seconds
     )

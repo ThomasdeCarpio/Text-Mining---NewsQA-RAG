@@ -32,7 +32,7 @@ def test_baseline_prompt_is_exactly_preserved():
 
 
 def test_split_notebooks_have_fixed_assignments_and_shared_subset_checks():
-    notebook_root = Path(PROJECT_ROOT) / "notebooks/Tests"
+    notebook_root = Path(PROJECT_ROOT) / "notebooks/Tests/phase2"
     assert len(VARIANTS) == 9
     for filename, stage, platform, options in VARIANTS:
         notebook = json.loads((notebook_root / filename).read_text(encoding="utf-8"))

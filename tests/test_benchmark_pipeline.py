@@ -56,6 +56,15 @@ class _CrossEncoderModel:
         return [0.1, 0.9]
 
 
+class _RecordingReranker(NoOpReranker):
+    def __init__(self):
+        self.top_n = None
+
+    def rerank(self, query: str, results: list[dict], top_n: int) -> list[dict]:
+        self.top_n = top_n
+        return super().rerank(query, results, top_n)
+
+
 class BenchmarkTraceTests(unittest.TestCase):
     def test_agent_reuses_trace_and_maps_numbered_citations(self):
         agent = RAGAgent(_Retriever(), NoOpReranker(), _LLM(), top_k=2, rerank_top_n=2)
@@ -97,12 +106,41 @@ class BenchmarkTraceTests(unittest.TestCase):
         self.assertEqual(result["citation_chunk_ids"], ["a"])
         self.assertEqual(result["invalid_citation_indices"], [2])
 
+    def test_agent_can_retain_more_reranked_candidates_than_delivery_depth(self):
+        reranker = _RecordingReranker()
+        agent = RAGAgent(
+            _Retriever(),
+            reranker,
+            _LLM(),
+            top_k=2,
+            rerank_top_n=1,
+            rerank_candidate_n=2,
+        )
+
+        trace = agent.retrieve_and_rerank("Question?")
+        result = agent.generate_from_trace(trace, context_depth=1)
+
+        self.assertEqual(reranker.top_n, 2)
+        self.assertEqual([row["id"] for row in trace["reranked_chunks"]], ["a", "b"])
+        self.assertEqual(result["generation_context_chunk_ids"], ["a"])
+
     def test_agent_rejects_zero_generation_context_depth(self):
         agent = RAGAgent(_Retriever(), NoOpReranker(), _LLM(), top_k=2, rerank_top_n=2)
         trace = agent.retrieve_and_rerank("Question?")
 
         with self.assertRaisesRegex(ValueError, "context_depth"):
             agent.generate_from_trace(trace, context_depth=0)
+
+    def test_agent_rejects_candidate_count_below_delivery_count(self):
+        with self.assertRaisesRegex(ValueError, "rerank_candidate_n"):
+            RAGAgent(
+                _Retriever(),
+                NoOpReranker(),
+                _LLM(),
+                top_k=2,
+                rerank_top_n=2,
+                rerank_candidate_n=1,
+            )
 
     def test_cross_encoder_preserves_retrieval_score_and_reorders(self):
         reranker = CrossEncoderReranker("test-model")
