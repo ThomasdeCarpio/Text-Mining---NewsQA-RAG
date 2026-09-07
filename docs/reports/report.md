@@ -14,7 +14,7 @@ Dự án chia hai giai đoạn vì hai việc đó hỏng theo hai cách khác n
 
 | | Trạng thái | Chốt được gì |
 | :--- | :--- | :--- |
-| EDA — khảo sát dữ liệu | ✅ | Ngưỡng nhiễu nhãn 7,0–24,5%; phục hồi 4.603 bài bị cắt |
+| EDA — khảo sát dữ liệu | ✅ | Biên độ nhập nhằng nhãn chunk 7,0–24,5%; phục hồi 4.603 bài bị cắt |
 | **Phase 1** — chọn cách lấy đoạn văn | ✅ khóa | BGE-M3 sparse + bge-reranker-large + chunk 512/64 |
 | **Phase 2** — chọn cách hỏi LLM | ✅ chọn xong | Prompt P2, 5 đoạn context |
 | **Phase 2 — held-out** | ✅ **đã chạy** | **AC 0,7157 trên 284 câu — số công bố** |
@@ -67,8 +67,8 @@ Ba số này đọc cùng nhau ra một chẩn đoán: **hệ thống không b�
 | Prompt | Nhắm nhóm lỗi | Cỡ nhóm | Kết quả |
 | :--- | :--- | ---: | :--- |
 | P1 — siết grounding | Hallucination | ~0 | ❌ nhắm vào vấn đề không tồn tại |
-| **P2 — trả lời ngắn, đúng answer type** | Đúng nhưng quá dài | **11/30** | ✅ thắng |
-| P3 — chọn đúng đoạn trước khi trả lời | Trộn bài, trộn mốc thời gian | 3/30 | ⚠️ đúng hướng, chưa đủ mạnh |
+| **P2 — trả lời ngắn, đúng answer type** | Đúng nhưng quá dài (10) + sai answer type (1) | **11/30** | ✅ thắng |
+| P3 — chọn đúng đoạn trước khi trả lời | *(không nhắm nhóm lỗi nào của audit; xuất phát từ phát hiện distractor collision của EDA §7)* | — | ⚠️ đúng hướng, chưa đủ mạnh |
 
 **Chọn:** prompt **P2** với **5 đoạn context**.
 
@@ -106,9 +106,9 @@ Chi phí toàn bộ run: **0,94 USD**. Latency P50 1.958 ms. Micro và macro l�
 | `gold_in_top5` | 249 | **0,7689** | 0,8313 |
 | `gold_not_in_top5` | 35 | 0,3375 | **0,0000** |
 
-Trên các câu **truy xuất làm đúng việc**, held-out đạt 0,7689 — **cao hơn** development (0,7597). Cái tụt là tỉ lệ truy xuất trượt: 12/281 → 35/284, gần ba lần.
+Trên các câu **truy xuất làm đúng việc**, held-out đạt 0,7689 (CI95 [0,7391; 0,7978]) — khoảng này **chứa** giá trị development 0,7597, tức hai bên **không phân biệt được**. Cái thay đổi là tỉ lệ truy xuất trượt: 12/281 → 35/284, gần ba lần.
 
-> **Toàn bộ khoảng cách dev → held-out là câu chuyện của truy xuất, không phải của prompt.**
+> Chênh lệch giữa development và held-out đến từ nhóm `gold_not_in_top5` lớn hơn, không từ việc prompt kém tổng quát.
 
 ---
 
@@ -132,7 +132,7 @@ Held-out xác nhận cùng cơ chế ở quy mô lớn hơn: với Hit@5 = 0,876
 
 **Phase 1** — không phân định được mô hình dense nào tốt nhất, và dense chưa tái lập được giữa các lần chạy (trôi 0,0143 > khoảng cách giữa các mô hình 0,0094). Chunk size là kết quả null; hybrid là "không chứng minh được có lợi", không phải "đã chứng minh có hại".
 
-**Phase 2** — AC 0,7157 là **cận dưới**: EDA cho thấy 7,0–24,5% câu bị chấm sai oan, người duyệt thấy 23/30 câu điểm thấp thực ra đúng. Judge cũng là một LLM, đã tách khỏi generator nhưng **chưa hiệu chuẩn với nhãn người**. Answer Relevancy giảm (0,7092 → 0,6485) là hệ quả có chủ đích của P2, không phải suy thoái.
+**Phase 2** — AC 0,7157 là **cận dưới**: audit 30 câu điểm thấp nhất thấy 23/30 thực ra đúng về ngữ nghĩa, và giám khảo bất đồng với người duyệt ở 18/30 câu. (Biên độ 7,0–24,5% của EDA là sai số của việc chấm điểm theo **nhãn chunk** — nó áp cho Hit@k, nDCG và Citation F1, không áp cho Answer Correctness.) Judge cũng là một LLM, đã tách khỏi generator nhưng **chưa hiệu chuẩn với nhãn người**. Answer Relevancy giảm (0,7092 → 0,6485) là hệ quả có chủ đích của P2, không phải suy thoái.
 
 ---
 

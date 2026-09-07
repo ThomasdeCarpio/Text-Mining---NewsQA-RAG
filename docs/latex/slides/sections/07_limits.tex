@@ -15,9 +15,9 @@
   \vspace{0.4em}
   \textbf{Phase 2}
   \begin{itemize}\small
-    \item Answer Correctness \NumHoAC{} là \textbf{cận dưới}: EDA đo được
-          \NumNoiseFloor{}--\NumNoiseCeiling{} câu bị chấm sai oan; người duyệt
-          thấy \textbf{23/30} câu điểm thấp thực ra đúng.
+    \item Answer Correctness \NumHoAC{} là \textbf{cận dưới}: audit 30 câu điểm
+          thấp nhất thấy \textbf{23/30} thực ra đúng về ngữ nghĩa, và giám khảo
+          bất đồng với người duyệt ở \textbf{18/30} câu.
     \item Judge cũng là một LLM. Đã tách sang nhà cung cấp khác generator, nhưng
           \textbf{chưa hiệu chuẩn với nhãn người}.
     \item Answer Relevancy giảm (\NumDevAnsRel{} $\rightarrow$ \NumHoAnsRel{}) là

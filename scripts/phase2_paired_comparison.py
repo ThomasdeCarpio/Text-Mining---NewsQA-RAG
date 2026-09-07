@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import statistics
 from collections import defaultdict
 from pathlib import Path
 
@@ -84,6 +85,15 @@ def paired_delta(base: dict, cand: dict, clusters: dict[str, list[str]], metric:
     means.sort()
     low = means[int(0.025 * BOOTSTRAP_SAMPLES)]
     high = means[int(0.975 * BOOTSTRAP_SAMPLES) - 1]
+
+    # How fine a difference this design can actually resolve. The cluster
+    # bootstrap's spread is the honest standard error; comparing it against the
+    # question-level one says how much the article clustering costs us, and the
+    # minimum detectable effect says which guardrail thresholds are even
+    # measurable at this sample size.
+    se_cluster = statistics.pstdev(means)
+    se_question = statistics.pstdev(_question_bootstrap(flat))
+    design_effect = (se_cluster / se_question) ** 2 if se_question else float("nan")
     return {
         "delta": round(observed, 6),
         "ci95_low": round(low, 6),
@@ -91,7 +101,28 @@ def paired_delta(base: dict, cand: dict, clusters: dict[str, list[str]], metric:
         "n_pairs": len(flat),
         "n_clusters": len(keys),
         "significant": low > 0 or high < 0,
+        "resolution": {
+            "se_cluster_bootstrap": round(se_cluster, 6),
+            "se_question_bootstrap": round(se_question, 6),
+            "design_effect": round(design_effect, 3),
+            "effective_n": round(len(flat) / design_effect, 1),
+            "ci95_half_width": round((high - low) / 2, 6),
+            # Two-sided alpha 0.05, power 0.80: |delta| must exceed 2.802 SE.
+            "min_detectable_effect": round(2.802 * se_cluster, 6),
+        },
     }
+
+
+def _question_bootstrap(deltas: list[float]) -> list[float]:
+    """The same bootstrap ignoring article structure, for comparison only.
+
+    Phase 1 and the chunking ablation resample this way. Running both makes the
+    cost of that choice a number instead of an assertion.
+    """
+    rng = random.Random(SEED)
+    n = len(deltas)
+    return [sum(rng.choice(deltas) for _ in range(n)) / n
+            for _ in range(BOOTSTRAP_SAMPLES)]
 
 
 def mean(scores: dict, metric: str) -> float:
