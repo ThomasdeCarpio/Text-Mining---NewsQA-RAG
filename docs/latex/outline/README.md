@@ -28,9 +28,14 @@ Nguyên tắc: thứ chưa được quyết thì không xuất hiện dưới d�
 
 1. ✅ Chốt người đọc, độ dài, phạm vi
 2. ✅ Thuật ngữ, dàn ý, sổ phát biểu, phân tích thống kê, bảng guardrail
-3. ⬜ Giải quyết [`06_decisions.md`](06_decisions.md)
-4. ⬜ Viết `report/main.tex` theo [`02_outline.md`](02_outline.md)
-5. ⬜ Chỉnh slide cho khớp báo cáo mới
+3. ⬜ **Quyết D1–D4** ở [`06_decisions.md`](06_decisions.md) — bốn cái này chặn
+   việc bắt đầu viết. D5–D8 ảnh hưởng bố cục, nên quyết cùng lúc.
+4. ⬜ Viết `report/main.tex` theo [`02_outline.md`](02_outline.md), mục nào tra
+   file nấy. §0 và §2 viết trước vì các mục sau trỏ ngược về chúng.
+5. ⬜ Chỉnh slide cho khớp báo cáo mới.
+
+Việc kỹ thuật không chặn viết, làm xen kẽ được: D9 (`.gitattributes` cho hash
+khớp lại), D11 (đo trung vị độ dài đáp án), D12 (báo Thắng về ngưỡng 2C).
 
 ## Thư mục này không sinh ra file build
 

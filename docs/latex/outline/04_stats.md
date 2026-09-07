@@ -45,9 +45,37 @@ Trong các cấu hình hợp lệ, chọn $\arg\max$ Answer Correctness.
 **Về hình thức:** luật so **ước lượng điểm của hiệu trung bình** với $-T$. Nó
 không dùng khoảng tin cậy ở bất kỳ đâu.
 
-### So sánh bội ❓
+### So sánh bội 📌 *(số đo)*
 
-Chưa quyết cách xử lý — xem [`06_decisions.md`](06_decisions.md) D2.
+Chạy càng nhiều phép kiểm, càng dễ vớ phải một kết quả "có ý nghĩa" hoàn toàn do
+may. `paired_significance.json` chứa **14 phép** (2 finalist × 7 metric). Nếu cả
+14 đều thật sự không có khác biệt, xác suất ít nhất một cái trông có ý nghĩa là
+**51%**.
+
+Bonferroni siết $\alpha$ từ 0,05 xuống $0{,}05/14$, tức ngưỡng $z$ từ 1,960 lên
+**2,914**. Áp vào dữ liệu thật thì **đúng hai kết luận đổi**:
+
+| Phép so sánh | Δ | $|\Delta|/SE$ | $\alpha=0{,}05$ | Bonferroni |
+| :--- | ---: | ---: | :--- | :--- |
+| p2_d5 Answer Correctness | +0,1043 | 10,09 | có ý nghĩa | giữ |
+| p2_d5 Citation F1 | +0,0366 | 2,91 | có ý nghĩa | giữ (sát) |
+| **p2_d3 Faithfulness** | **−0,0200** | **2,37** | có ý nghĩa | 🔴 **mất** |
+| **p2_d3 Citation Validity** | **−0,0142** | **2,11** | có ý nghĩa | 🔴 **mất** |
+
+Mười hai phép còn lại không đổi.
+
+Hai phép bị mất đúng là hai phép đã loại P2-depth3. Cộng với công suất 66% / 56%
+và hệ số thổi phồng ×1,23 / ×1,33 ở dưới, có **ba đường độc lập** cùng chỉ ra
+rằng phân định d3 với d5 là mắt xích yếu nhất.
+
+**Không lật winner:** guardrail là phép so ngưỡng, không phải kiểm định, nên d3
+vẫn trượt vì điểm trung bình −0,0200 và −0,0142 nằm dưới ngưỡng. Cái bị ảnh
+hưởng là **câu chống lưng** trong báo cáo, không phải phán quyết.
+
+Bonferroni cũng quá thận trọng ở đây: 7 metric không độc lập (AC, EM, Token F1
+đo những thứ liên quan nhau), và metric chính đã được đăng ký trước đúng một cái.
+
+Cách xử lý ❓ — xem [`06_decisions.md`](06_decisions.md) D2.
 
 ---
 
