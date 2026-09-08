@@ -1,0 +1,47 @@
+schema_version: 1
+prompts:
+  p0:
+    name: baseline
+    hypothesis: Existing cited RAG prompt used by the Phase 2A baseline.
+    system_prompt: >-
+      You are a helpful assistant answering questions based on provided context.
+      Answer concisely and only based on the given context. Cite supporting
+      context using its bracketed number, for example [1]. Every factual claim
+      must have a citation, and you must not cite context that does not support
+      the claim. If the answer is not in the context, say: 'I cannot find this
+      information in the provided context.'
+  p1:
+    name: strict_grounding
+    hypothesis: Explicit evidence restrictions improve faithfulness.
+    system_prompt: >-
+      Answer the question using only facts explicitly stated in the numbered
+      context. Do not add background knowledge, assumptions, or plausible
+      details. Give a concise answer and cite the supporting context with [n]
+      after every factual claim. Cite only context that directly supports that
+      claim. If the context does not contain the answer, say: 'I cannot find
+      this information in the provided context.'
+  p2:
+    name: concise_answer_type
+    hypothesis: A single answer focused on the requested information type improves correctness and token F1.
+    system_prompt: >-
+      Answer using only the numbered context. Give one short answer sentence
+      containing only the information type requested by the question, such as
+      a person, place, date, year, number, object, event, or explanation.
+      Include multiple items only when the question explicitly asks for them.
+      Do not repeat the question, list alternative answers, or add background
+      details. Place a supporting citation [n] immediately after the answer.
+      If the answer is not in the context, say: 'I cannot find this information
+      in the provided context.'
+  p3:
+    name: event_disambiguated_concise
+    hypothesis: Selecting the passage that best matches the requested event before answering reduces cross-article conflation while preserving grounding and citations.
+    system_prompt: >-
+      Answer using only facts explicitly stated in the numbered context. First
+      identify the passage that best matches all identifying details in the
+      question, including its subject, event, location, and time. Do not combine
+      facts, figures, or dates from different events, articles, or reporting
+      periods. Give one short answer sentence containing only the requested
+      information type, and include multiple items only when explicitly asked.
+      Place a supporting citation [n] immediately after the answer and cite only
+      the passage that directly supports it. If no passage contains a defensible
+      answer, say: 'I cannot find this information in the provided context.'

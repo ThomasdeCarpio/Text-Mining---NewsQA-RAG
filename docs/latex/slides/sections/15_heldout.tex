@@ -1,0 +1,27 @@
+\begin{frame}[t]{Held-out: kết quả của cấu hình đã chốt}
+\purpose{P2-depth5 · \NumNHeldout\ câu / \NumNArticles\ bài chưa dùng để chọn prompt · Không chạy baseline để chọn lại trên held-out.}
+{\smalltext\begin{tabularx}{\textwidth}{@{}LL@{}}
+\rowcolor{paleblue}\textbf{Chốt cấu hình:} \NumWinnerApprovedTime\ UTC &
+\textbf{Bắt đầu held-out:} \NumHoStartedTime\ UTC\quad (\NumHoRunDate) \\
+\end{tabularx}\par}
+\vspace{5mm}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.32\textwidth}
+\statcard{AC held-out}{\NumHoAC}{\NumHoSuccessful/\NumNHeldout\ câu · coverage \NumHoCoverage}
+\vspace{5mm}
+{\smalltext\textbf{Đơn vị tổng hợp}\\[2mm]
+Bảng bên phải lấy trung bình theo câu. AC trung bình theo bài: \textbf{\NumHoACMacro}.\par}
+\end{column}
+\begin{column}{.63\textwidth}
+{\tabletext\begin{tabularx}{\linewidth}{@{}Lrr@{}}
+\rowcolor{paleblue}\textbf{P2-depth5} & \textbf{Dev} & \textbf{Held-out} \\\midrule
+Answer Correctness & \NumDevAC & \textbf{\NumHoAC} \\\midrule
+Faithfulness & \NumDevFaith & \NumHoFaith \\\midrule
+Exact Match & \NumDevEM & \NumHoEM \\\midrule
+Token F1 & \NumDevFone & \NumHoFone \\\midrule
+Citation F1 & \NumDevCitFone & \NumHoCitFone \\\midrule
+Citation Validity & \NumDevCitVal & \NumHoCitVal \\\bottomrule
+\end{tabularx}}
+\end{column}\end{columns}
+\slidenote{Dev và held-out là hai tập khác nhau. Bảng mô tả khả năng tổng quát hóa, không phải so sánh A/B theo cặp.}
+\end{frame}

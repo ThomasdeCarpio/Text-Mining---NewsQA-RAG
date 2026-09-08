@@ -1,0 +1,15 @@
+# Credentials are supplied through the environment or a hidden notebook prompt.
+.env
+.venv/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+runs/
+__pycache__/
+*.pyc
+*.pkl
+# Keep the small experiment settings/reasons despite the root's broad *.json rule.
+!local_config.json
+!revision_config.json
+!review_decisions.json

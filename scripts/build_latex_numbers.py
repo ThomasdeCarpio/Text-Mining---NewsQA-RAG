@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -45,8 +46,19 @@ def collect() -> dict[str, str]:
     # ---- Corpus and question sets -------------------------------------------
     subsets = load_json("docs/reports/phase2/provenance/subset_manifest.json")
     counts = subsets["counts"]
-    n["CorpusArticles"] = "11.064"
-    n["CorpusChunks"] = "22.766"
+    # Corpus/article totals are recorded in the committed Phase 2 report;
+    # question totals come from the subset manifest, chunk count from the run.
+    report = (ROOT / "docs/reports/phase2/report.md").read_text(encoding="utf-8")
+    corpus = re.search(r"\| Corpus \| ([\d.]+) bài báo, ([\d.]+) chunks \|", report)
+    reserve = re.search(r"\| Held-out reserve \| (\d+) \| (\d+) \|", report)
+    assert corpus and reserve, "Phase 2 corpus/split table is missing"
+    n["CorpusArticles"] = corpus[1]
+    chunks = load_json("docs/reports/phase1/contextual_chunking_ablation.json")["config"]["n_chunks"]
+    assert chunks == int(corpus[2].replace(".", ""))
+    n["CorpusChunks"] = f"{chunks:,}".replace(",", ".")
+    n["NResolved"] = f"{sum(counts[k] for k in ('development', 'heldout', 'heldout_reserve')):,}".replace(",", ".")
+    n["NReserveArticles"] = reserve[1]
+    assert int(reserve[2]) == counts["heldout_reserve"]
     n["CorpusChunksVone"] = "19.263"
     n["CorpusRestored"] = "4.603"
     n["NDev"] = str(counts["development"])
@@ -63,14 +75,16 @@ def collect() -> dict[str, str]:
     n["DistractorMedian"] = "25"
 
     # ---- Phase 1: locked configuration --------------------------------------
-    lock = load_json("docs/reports/phase1/winner_lock.jsonl")
-    sel = load_json("docs/reports/phase2/provenance/retrieval_lock.json")["selection_metrics"]
+    retrieval_lock = load_json("docs/reports/phase2/provenance/retrieval_lock.json")
+    sel = retrieval_lock["selection_metrics"]
+    n["ChunkSize"] = str(retrieval_lock["chunk_size"])
+    n["ChunkOverlap"] = str(retrieval_lock["chunk_overlap"])
     n["PoneHitFive"] = vn(sel["retrieval.hit_rate@5.mean"])
     n["PoneNdcgFive"] = vn(sel["retrieval.ndcg@5.mean"])
     n["PoneMrrFive"] = vn(sel["retrieval.mrr@5.mean"])
     n["PoneLatency"] = vn(sel["latency.total.p50_ms"], 1)
-    n["PoneTopK"] = str(lock.get("top_k", 20))
-    n["PoneRerankTopN"] = str(lock.get("rerank_top_n", 5))
+    n["PoneTopK"] = str(retrieval_lock["top_k"])
+    n["PoneRerankTopN"] = str(retrieval_lock["rerank_top_n"])
 
     # Hit@k per question from the frozen Phase 2 baseline: the same retrieval
     # trace every generation run reused, so these are the depth-cut costs.
@@ -144,6 +158,23 @@ def collect() -> dict[str, str]:
                      ("AnsRel", "ragas.answer_relevancy.mean")]:
         n["Pzero" + tag] = vn(float(base[col]))
     n["JudgeCost"] = vn(float(base["estimated_generation_cost_usd"]), 4)
+    baseline = load_json("docs/reports/phase2/report_baseline_p0_d5.json")
+    for tag, section, metric in [
+        ("AC", "ragas", "answer_correctness"), ("Faith", "ragas", "faithfulness"),
+        ("EM", "qa", "exact_match"), ("Fone", "qa", "f1"),
+        ("CitFone", "citations", "citation_f1"),
+        ("CitVal", "citations", "citation_validity"),
+    ]:
+        value = vn(baseline[section][metric])
+        assert value == n["Pzero" + tag], f"Baseline report/CSV mismatch: {metric}"
+        n["Pzero" + tag] = value
+    n["BaselineSuccessful"] = str(baseline["coverage"]["successful"])
+    n["BaselineExpected"] = str(baseline["coverage"]["expected"])
+    n["BaselineCoverage"] = vn(baseline["coverage"]["success_rate"] * 100, 0) + r"\%"
+    n["BaselineJudged"] = str(baseline["ragas"]["n_samples"])
+    n["GeneratorModel"] = baseline["config"]["generator_model"]
+    run = load_json("docs/reports/phase2/provenance/experiment_run.json")
+    n["JudgeModel"] = run["pricing"]["judge"]["model"].rsplit("/", 1)[-1]
 
     # ---- Phase 2: the tournament and its verdict ----------------------------
     sig = load_json("docs/reports/phase2/paired_significance.json")
@@ -154,9 +185,67 @@ def collect() -> dict[str, str]:
     n["WinnerApprovedAt"] = decision["review"]["approved_at"].replace("T", " ")
     n["PzeroACMacro"] = vn(sig["baseline_answer_correctness_article_macro"])
     n["BootstrapSamples"] = f"{sig['samples']:,}".replace(",", ".")
+    n["NDevArticles"] = str(sig["n_articles"])
+    phase1_sig = load_json("docs/reports/phase1/paired_significance.json")
+    n["PoneBootstrapSamples"] = f"{phase1_sig['samples']:,}".replace(",", ".")
+    for guard in sig["runs"]["p2_d5"]["guardrails"]:
+        tag = {"Faithfulness": "Faith", "Citation F1": "CitFone", "Citation Validity": "CitVal"}[guard["metric"]]
+        n["Guard" + tag + "Threshold"] = signed(guard["tolerance"], 2)
+    baseline_plan = (ROOT / "docs/Detailed Test Plans/phase_2_baseline_test_plan.md").read_text(encoding="utf-8")
+    generation_min = re.search(r"Generation coverage tối thiểu (\d+)%;", baseline_plan)
+    judge_min = re.search(r"RAGAS coverage tối thiểu (\d+)%", baseline_plan)
+    assert generation_min and judge_min and generation_min[1] == judge_min[1]
+    n["CoverageThreshold"] = generation_min[1] + r"\%"
+    n["NJudgeScreening"] = str(counts["judge_calibration"])
+    screening_text = report.split("### 7.2.", 1)[1].split("### 7.3.", 1)[0]
+    for prompt, tag in [("P0", "Pzero"), ("P1", "Pone"), ("P2", "Ptwo"), ("P3", "Pthree")]:
+        cells = next([c.strip().replace("**", "") for c in line.strip("|").split("|")]
+                     for line in screening_text.splitlines()
+                     if line.startswith("|") and line.split("|")[1].strip().replace("**", "") == prompt)
+        n["Screen" + tag + "AC"] = vn(float(cells[2].replace(",", ".")))
+
+    # Presentation comparisons: values and bar lengths share the same source.
+    round1 = list(csv.DictReader((ROOT / "docs/reports/phase1/round1.csv").open(encoding="utf-8-sig")))
+    retrievers = {
+        "SparseBge": "sparse_bge_m3_sparse", "BmStem": "sparse_bm25_okapi_stemmed",
+        "BmPlus": "sparse_bm25_plus_simple", "BmSimple": "sparse_bm25_okapi_simple",
+        "DenseEfive": "dense_intfloat_e5_base_v2", "DenseSmall": "dense_baai_bge_small_en_v1.5",
+        "DenseLarge": "dense_baai_bge_large_en_v1.5", "DenseMini": "dense_all_minilm_l6_v2",
+    }
+    for tag, index in retrievers.items():
+        for variant, suffix in [("resolved", ""), ("original", "Original")]:
+            row = next(r for r in round1 if r["index"] == index and r["variant"] == variant)
+            value = float(row["retrieval.ndcg@5.mean"])
+            n["Rone" + tag + suffix] = vn(value)
+            n["Rone" + tag + suffix + "Plot"] = str(value)
+    round2 = list(csv.DictReader((ROOT / "docs/reports/phase1/round2.csv").open(encoding="utf-8-sig")))
+    for family in ("dense", "sparse", "hybrid"):
+        for tag, model in [("None", ""), ("Mini", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
+                           ("Large", "BAAI/bge-reranker-large")]:
+            row = next(r for r in round2 if r["variant"] == "resolved" and r["retriever"] == family
+                       and r["reranker_model"] == model)
+            prefix = "Rtwo" + family.title() + tag
+            n[prefix] = vn(float(row["retrieval.ndcg@5.mean"]))
+            n[prefix + "Latency"] = vn(float(row["latency.total.p50_ms"]), 1)
+    sparse_rows = [r for r in round2 if r["variant"] == "resolved" and r["retriever"] == "sparse"]
+    sparse_before = next(r for r in sparse_rows if r["reranker"] == "noop")
+    sparse_after = next(r for r in sparse_rows if r["reranker_model"] == "BAAI/bge-reranker-large")
+    n["RerankerNdcgGain"] = signed(float(sparse_after["retrieval.ndcg@5.mean"]) - float(sparse_before["retrieval.ndcg@5.mean"]))
+    final_retrieval = load_json("docs/reports/phase1/heldout/heldout_significance.json")
+    final_scores = final_retrieval["partitions"]["final_test"]
+    n["RetrievalFinalQuestions"] = str(final_scores["hit_rate@5"]["n_questions"])
+    n["RetrievalFinalArticles"] = str(final_scores["hit_rate@5"]["n_articles"])
+    for tag, metric in [("HitFive", "hit_rate@5"), ("NdcgFive", "ndcg@5"),
+                        ("MrrFive", "mrr@5"), ("RecallFive", "recall@5")]:
+        n["RetrievalFinal" + tag] = vn(final_scores[metric]["value"])
+    n["RetrievalFinalMissing"] = str(final_retrieval["evidence_missing_at_5"]["final_test"]["n"])
+    gain = final_retrieval["reranker_gain_final_test"]["ndcg@5"]
+    n["RetrievalFinalRerankerGain"] = signed(gain["delta"])
+    n["RetrievalFinalRerankerCI"] = ci(gain["ci95_low"], gain["ci95_high"])
 
     for name, tag in [("p2_d5", "PtwodFive"), ("p2_d3", "PtwodThree")]:
         run = sig["runs"][name]
+        n[tag + "Coverage"] = vn(run["coverage"] * 100, 0) + r"\%"
         n[tag + "AC"] = vn(run["answer_correctness"])
         n[tag + "ACMacro"] = vn(run["answer_correctness_article_macro"])
         for label, key in [("Answer Correctness", "AC"), ("Exact Match", "EM"),
@@ -170,6 +259,7 @@ def collect() -> dict[str, str]:
             key = {"Faithfulness": "Faith", "Citation F1": "CitFone",
                    "Citation Validity": "CitVal"}[guard["metric"]]
             n[f"{tag}Guard{key}"] = signed(guard["delta"])
+            n[f"{tag}Guard{key}Exact"] = signed(guard["delta"], 6)
             n[f"{tag}Guard{key}Verdict"] = "PASS" if guard["passed"] else "FAIL"
         for stratum, short in [("gold_in_top5", "Hit"), ("gold_not_in_top5", "Miss")]:
             s = run["by_stratum"][stratum]
@@ -206,6 +296,11 @@ def collect() -> dict[str, str]:
     n["HoCost"] = vn(ho["cost_usd"]["total"], 2)
     n["HoLatency"] = vn(ho["latency"]["total_p50_ms"], 1)
     n["HoStartedAt"] = access["started_at"].replace("T", " ").replace("Z", " UTC")
+    n["WinnerApprovedTime"] = decision["review"]["approved_at"].split("T")[1].removesuffix("Z")
+    n["HoStartedTime"] = access["started_at"].split("T")[1].removesuffix("Z")
+    n["HoRunDate"] = access["started_at"].split("T")[0]
+    n["HoSuccessful"] = str(ho["coverage"]["successful"])
+    n["HoCoverage"] = vn(ho["coverage"]["success_rate"] * 100, 0) + r"\%"
     n["HoDecisionSha"] = access["decision_sha256"][:16]
 
     # Held-out retrieval: an out-of-sample reading of the locked Phase 1 config.

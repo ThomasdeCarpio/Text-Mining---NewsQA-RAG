@@ -1,0 +1,15 @@
+\begin{frame}[t]{Đo độ đúng, bằng chứng và trích dẫn}
+\modelstrip
+{\tabletext\begin{tabularx}{\textwidth}{@{}p{37mm}p{85mm}L@{}}
+\rowcolor{paleblue}\textbf{Nhóm} & \textbf{Thước đo} & \textbf{Câu hỏi cần trả lời} \\\midrule
+\textbf{Đáp án} & Answer Correctness — \textbf{AC} & Nội dung có khớp đáp án chuẩn? \\\midrule
+& Exact Match — \textbf{EM} & Khớp hoàn toàn sau chuẩn hóa? \\\midrule
+& Token F1 & Các từ trong đáp án khớp đúng và đủ đến đâu? \\\midrule
+\rowcolor{palegreen}\textbf{Bằng chứng} & Faithfulness & Các khẳng định có được context hỗ trợ? \\\midrule
+\textbf{Trích dẫn} & Citation F1 & Trích đúng và đủ đoạn bằng chứng? \\\midrule
+& Citation Validity & Chỉ số trích dẫn có hợp lệ trong context? \\\bottomrule
+\end{tabularx}\par}
+\takeaway{\textbf{RAGAS} dùng mô hình giám khảo để chấm AC và Faithfulness.\\[1mm]
+\textbf{Coverage} là tỷ lệ câu chạy thành công hoặc được chấm trong tập cần đánh giá.}
+\slidenote{Context: các đoạn cung cấp cho mô hình sinh. Các điểm chất lượng có thang 0–1; cao hơn tốt hơn.}
+\end{frame}

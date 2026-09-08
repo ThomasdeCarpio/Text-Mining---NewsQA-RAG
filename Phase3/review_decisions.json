@@ -1,0 +1,1034 @@
+{
+  "schema_version": 1,
+  "method": "AI source-text review of the actual Phase3 bundle; no human approval. Runtime scope verification is separate.",
+  "base_repairs": [
+    {
+      "base_question_id": "409da2ac9b274f3ca50de2b2fcf4d564",
+      "reason": "The question asks for the interviewer, not the singer.",
+      "patch": {
+        "ground_truth": "Alina Cho",
+        "accepted_answers": [
+          "Alina Cho"
+        ]
+      },
+      "evidence_chunk_id": "a12b845b2973_chunk_0",
+      "evidence_quote": "Alina Cho talked to the singer about efforts to help other orphans in Malawi."
+    },
+    {
+      "base_question_id": "293d474acb924ae2af1cf26af60c1cd1",
+      "reason": "The article marks 25 years of Tetris, not 35; remove punctuation from the answer span.",
+      "patch": {
+        "question": "What puzzle video game is described as turning 25 years old?",
+        "ground_truth": "Tetris",
+        "accepted_answers": [
+          "Tetris"
+        ]
+      },
+      "evidence_chunk_id": "d12f0e5e05a3_chunk_0",
+      "evidence_quote": "Tetris, the simple puzzle video game, has been addicting players for 25 years."
+    },
+    {
+      "base_question_id": "d042832ba94a4e10a544d91ee12fa061",
+      "reason": "Distinguish the civilian from State Department employee Farley and attribute the department relationship to this report; another article identifies the civilian's direct employer as BAE Systems.",
+      "patch": {
+        "question": "Which U.S. department did the Sadr City municipal-building bombing report say the unnamed American civilian killed alongside Steve Farley worked for?"
+      },
+      "evidence_chunk_id": "ec0d4285e973_chunk_0",
+      "evidence_quote": "Four Americans -- two soldiers and two civilians from the Defense and State departments -- were killed Tuesday"
+    },
+    {
+      "base_question_id": "1cb0b177021d4e22aba08856e9a81ee3",
+      "reason": "The article commemorates independence already gained, not an ongoing independence bid.",
+      "patch": {
+        "question": "From which country did Afghanistan gain the independence commemorated by its 89th observance in the article?",
+        "ground_truth": "Great Britain",
+        "accepted_answers": [
+          "Great Britain"
+        ]
+      },
+      "evidence_chunk_id": "8d988ea05fe4_chunk_0",
+      "evidence_quote": "Monday's 89th observance of Afghanistan's independence from Great Britain."
+    },
+    {
+      "case_id": "abs_natural_retrieval_miss_88822e683bcce60c3c36",
+      "base_question_id": "d8b81a14273744e48c1737ac742f6a65",
+      "patch": {
+        "question": "What length of prison sentence did Fredric Alm say could effectively be a death sentence for Swedish journalists Johan Persson and Martin Schibbye in Ethiopia?",
+        "ground_truth": "11 years",
+        "accepted_answers": [
+          "11 years",
+          "an 11-year sentence"
+        ]
+      },
+      "evidence_chunk_id": "2f4f587ab388_chunk_0",
+      "evidence_quote": "could effectively be a death sentence for them",
+      "reason": "Name the speaker, prisoners and country so the question has a resolvable event. The revised question must be reretrieved before assigning natural-miss status."
+    },
+    {
+      "case_id": "abs_natural_retrieval_miss_9013792919749b974636",
+      "base_question_id": "2761f819ecb5477f91696a9510a7c2d8",
+      "patch": {
+        "question": "Who scored Schalke's second-minute goal in the 1-0 away win over Hamburg?"
+      },
+      "evidence_chunk_id": "28b825af37b2_chunk_0",
+      "evidence_quote": "after just two minutes",
+      "reason": "Identify the match instead of asking who ever scored against Hamburg; fresh natural-miss retrieval is necessary."
+    },
+    {
+      "case_id": "abs_natural_retrieval_miss_c6fe9729de7fcfd53581",
+      "base_question_id": "cca9e488f0104c7fb0c2e2d384b34e5c",
+      "patch": {
+        "question": "What did attorney John Broadley say had happened to John Demjanjuk's health in the four years since his deportation was ordered?",
+        "ground_truth": "his health has seriously deteriorated",
+        "accepted_answers": [
+          "his health has seriously deteriorated",
+          "has seriously deteriorated"
+        ]
+      },
+      "evidence_chunk_id": "c78b58ba8a95_chunk_0",
+      "evidence_quote": "his health has seriously deteriorated",
+      "reason": "Resolve unnamed attorney/client and remove quote punctuation from the source answer; fresh natural-miss retrieval is necessary."
+    },
+    {
+      "case_id": "abs_natural_retrieval_miss_dabe1db631b4b8ab0361",
+      "base_question_id": "fbfd988c52a043089ff4af3593d77131",
+      "patch": {
+        "question": "What was Rick Steves visiting Iran for during his 12-day trip?",
+        "ground_truth": "to film a public-television show",
+        "accepted_answers": [
+          "to film a public-television show",
+          "film a public-television show"
+        ]
+      },
+      "evidence_chunk_id": "0b3bb8389a84_chunk_0",
+      "evidence_quote": "12-day trip to Iran to film a public-television show",
+      "reason": "Ask the supported purpose of the visit; the supplied passage does not name a television series. Fresh natural-miss retrieval is necessary."
+    },
+    {
+      "case_id": "abs_natural_retrieval_miss_e6311a660398f753167e",
+      "base_question_id": "604c65f6b6044a8bb7c85d5c6fe63ff9",
+      "patch": {
+        "question": "Where did the Baghdad bombing that killed State Department employee Steve Farley strike?",
+        "ground_truth": "a municipal building in Baghdad's Sadr City",
+        "accepted_answers": [
+          "a municipal building in Baghdad's Sadr City"
+        ]
+      },
+      "evidence_chunk_id": "ec0d4285e973_chunk_0",
+      "evidence_quote": "identified the slain State Department employee as Steve Farley",
+      "reason": "Identify the particular Baghdad attack, rather than refer to an unspecified report; fresh natural-miss retrieval is necessary."
+    },
+    {
+      "case_id": "abs_natural_retrieval_miss_0323899b729f2277cd92",
+      "base_question_id": "e5d337300d344dc5878baeb061f7a4d7",
+      "patch": {
+        "question": "What Darfur death toll did CNN report when 18 student protesters were arrested at the White House on Global Day for Darfur during President Bush's last seven months in office?",
+        "ground_truth": "more than 200,000 people",
+        "accepted_answers": [
+          "more than 200,000 people",
+          "more than 200,000"
+        ]
+      },
+      "evidence_chunk_id": "7bed4478cd7f_chunk_0",
+      "evidence_quote": "The conflict has killed more than 200,000 people",
+      "reason": "Anchor the reported estimate to the documented protest, not a timeless or current Darfur death toll; fresh natural-miss retrieval is necessary."
+    },
+    {
+      "case_id": "abs_natural_retrieval_miss_47ebba99eeea2e98098b",
+      "base_question_id": "e65e84946d1d4f99819210a08cf3fd8b",
+      "patch": {
+        "question": "How did Father Alberto Cutie describe the difficulty he and the woman had experienced in their relationship during his CBS interview?",
+        "ground_truth": "they had both struggled with the relationship",
+        "accepted_answers": [
+          "they had both struggled with the relationship",
+          "they had both struggled",
+          "it hasn't been easy"
+        ]
+      },
+      "evidence_chunk_id": "c2d4236a9e09_chunk_1",
+      "evidence_quote": "both struggled",
+      "reason": "Ask about the supported description of difficulty, rather than a partner's identity absent from the source answer; fresh natural-miss retrieval is necessary."
+    },
+    {
+      "base_question_id": "409da2ac9b274f3ca50de2b2fcf4d564",
+      "patch": {
+        "question": "Who interviewed Madonna about her efforts to help other orphans in Malawi?"
+      },
+      "evidence_chunk_id": "a12b845b2973_chunk_0",
+      "evidence_quote": "Alina Cho talked to the singer",
+      "reason": "Identify the interviewee as Madonna; the requested interviewer is Alina Cho."
+    },
+    {
+      "base_question_id": "29cf64bece6c424f80f4a55c46fc523f",
+      "patch": {
+        "question": "Which polo club was preparing to host the match before which 14 horses died in Florida?",
+        "ground_truth": "International Polo Club Palm Beach",
+        "accepted_answers": [
+          "International Polo Club Palm Beach",
+          "International Polo Club Palm Beach in Wellington, Florida"
+        ]
+      },
+      "evidence_chunk_id": "74fd8a0366fb_chunk_0",
+      "evidence_quote": "before a polo match",
+      "reason": "The horses died before the match, not during a completed match."
+    },
+    {
+      "base_question_id": "16d9f9f1862c42aeb427231e3a5ba863",
+      "patch": {
+        "question": "How many days does Haiti's traditional Carnival celebration last, according to the report about its cancellation?"
+      },
+      "evidence_chunk_id": "0e318a62480c_chunk_0",
+      "evidence_quote": "this year, the three-day festival has been canceled",
+      "reason": "Do not presuppose an upcoming festival when this year's festival was cancelled."
+    },
+    {
+      "base_question_id": "fc2454ca01d44e4e9965d90d5b9f024d",
+      "patch": {
+        "question": "What was the name of the DARPA-funded project that Siri was originally part of?",
+        "ground_truth": "CALO",
+        "accepted_answers": [
+          "CALO",
+          "Cognitive Assistant that Learns and Organizes",
+          "CALO (Cognitive Assistant that Learns and Organizes)"
+        ]
+      },
+      "evidence_chunk_id": "80024e136b72_chunk_1",
+      "evidence_quote": "CALO, for Cognitive Assistant that Learns and Organizes",
+      "reason": "The old technical-foundation question had a misparsed demos answer. A demos-assessment rewrite still leaks through the weak context. Ask an explicit source-backed technical-origin fact absent from that context."
+    },
+    {
+      "base_question_id": "109740b4edfa49c5961632436d1df48c",
+      "patch": {
+        "question": "What fine could the speed-racing violation command, according to the report about six sports cars stopped on Highway 18?",
+        "ground_truth": "$627",
+        "accepted_answers": [
+          "$627",
+          "627 dollars"
+        ]
+      },
+      "evidence_chunk_id": "be2218734417_chunk_0",
+      "evidence_quote": "can command a fine of $627",
+      "reason": "Distinguish a possible statutory penalty from a fine actually imposed."
+    },
+    {
+      "base_question_id": "dc1bcf2ea7d34043b9337438ed4acbf4",
+      "patch": {
+        "question": "In which country did Pope Benedict XVI preach the Sunday Mass attended by about 1 million people on his first trip to Africa?"
+      },
+      "evidence_chunk_id": "d5b108be083c_chunk_0",
+      "evidence_quote": "the last major event of his first trip to Africa",
+      "reason": "Name the Pope and define what first trip means."
+    },
+    {
+      "base_question_id": "fc702af4678a4967bd9d8200f35b5df3",
+      "patch": {
+        "question": "Which Nirvana frontman died by suicide at age 27, as recalled in the report about tributes near his Seattle home?"
+      },
+      "evidence_chunk_id": "9949e46d32c8_chunk_0",
+      "evidence_quote": "The Nirvana frontman, 27, had committed suicide",
+      "reason": "Remove the unanchored relative date '15 years ago'; preserve an evidenced identity question."
+    },
+    {
+      "base_question_id": "e59c51ab66a74987991669ef16dec043",
+      "patch": {
+        "question": "What U.S. government position did Condoleezza Rice hold when she discussed the Mumbai attacks on CNN's Late Edition?"
+      },
+      "evidence_chunk_id": "8e3829c4437b_chunk_0",
+      "evidence_quote": "Secretary of State Condoleezza Rice",
+      "reason": "Make the historical role explicit rather than asking what position she holds now."
+    },
+    {
+      "base_question_id": "8c87c6cbfac04e7b9b1cc82b5ba7c679",
+      "patch": {
+        "question": "Which team did Schalke draw level with on 54 points after its 1-0 win in Hamburg?"
+      },
+      "evidence_chunk_id": "28b825af37b2_chunk_0",
+      "evidence_quote": "go level on 54 points with Werder Bremen",
+      "reason": "Anchor the standings to the reported match and points, not an unqualified 'now'."
+    },
+    {
+      "base_question_id": "4931a582bfb048e29b40c732b2e994ce",
+      "patch": {
+        "question": "Which Peruvian court found former president Alberto Fujimori guilty of human-rights abuses and sentenced him to 25 years in prison?"
+      },
+      "evidence_chunk_id": "68721fdeab81_chunk_0",
+      "evidence_quote": "The Peruvian Supreme Court found him guilty",
+      "reason": "Ask for the court, not a broad location that can be answered merely with Peru or confused with Chilean extradition."
+    },
+    {
+      "base_question_id": "58224fe8e4ed454f9c42ea3331a9a46f",
+      "patch": {
+        "question": "What did activist Jasmin Singer say a good vegan cupcake has the power to do?",
+        "ground_truth": "transform everything for the better",
+        "accepted_answers": [
+          "transform everything for the better"
+        ]
+      },
+      "evidence_chunk_id": "ff5bba2ad341_chunk_0",
+      "evidence_quote": "A good vegan cupcake has the power to transform everything for the better",
+      "reason": "Ask the specific sourced quotation rather than anything the named person ever said."
+    },
+    {
+      "base_question_id": "6803dc0693214791b3058a87480b15d6",
+      "patch": {
+        "question": "Which fuel's price was to be frozen under Felipe Calderon's recovery measures that also cut natural-gas prices by 10 percent?"
+      },
+      "evidence_chunk_id": "046b47c6c2b2_chunk_0",
+      "evidence_quote": "freezing gasoline prices for the rest of the year",
+      "reason": "Name the policy and distinguish frozen gasoline prices from reduced natural-gas prices."
+    },
+    {
+      "base_question_id": "dd9d78ffa4134b8a8a45c017e9706bd5",
+      "patch": {
+        "question": "Which country singer announced in Las Vegas that he was stepping out of retirement after nine years?"
+      },
+      "evidence_chunk_id": "c12add1363e7_chunk_0",
+      "evidence_quote": "officially step out of retirement after nine years",
+      "reason": "Replace the unanchored question 'Who is coming out of retirement?' with its source event."
+    },
+    {
+      "base_question_id": "6bc25fd1669d435fbb8b7d5fb1f08bb0",
+      "patch": {
+        "question": "What minimum death toll did the Indian military report after five days of gunbattles in Kashmir's Shamsbhari forests?",
+        "ground_truth": "at least 25 dead",
+        "accepted_answers": [
+          "at least 25 dead",
+          "at least 25 people",
+          "25"
+        ]
+      },
+      "evidence_chunk_id": "981d5bfac83e_chunk_0",
+      "evidence_quote": "at least 25 dead",
+      "reason": "Preserve the source's lower-bound qualifier and anchor the gunbattle location."
+    },
+    {
+      "base_question_id": "a40f6724f3804b098d5497661da35619",
+      "patch": {
+        "question": "In what year was France's World Cup semifinal defeat by England that it avenged with a 19-12 victory in Auckland?"
+      },
+      "evidence_chunk_id": "9ce2148457ea_chunk_0",
+      "evidence_quote": "avenged their 2007 semi defeat",
+      "reason": "Ask for the sourced earlier match year, not a temporally unbounded 'last' defeat."
+    },
+    {
+      "base_question_id": "c7c4dbc9ee8445f9b784291cd63d7f6e",
+      "patch": {
+        "question": "According to the article, around what ages was the cervical cancer vaccine recommended for girls?",
+        "ground_truth": "11 or 12",
+        "accepted_answers": [
+          "11 or 12",
+          "around 11 or 12"
+        ]
+      },
+      "evidence_chunk_id": "e836664f7158_chunk_0",
+      "evidence_quote": "recommended for girls around 11 or 12",
+      "reason": "Frame historical source-based QA, not present-day medical advice."
+    },
+    {
+      "base_question_id": "d34861cb019d4deaaeaa08250ca1b4fc",
+      "patch": {
+        "question": "Which two comic-book characters does the Mental Floss feature credit with affecting real-life events?"
+      },
+      "evidence_chunk_id": "786d20df0b7c_chunk_0",
+      "evidence_quote": "For starters, Superman brought down the Ku Klux Klan, and Donald Duck raised ships from the ocean floor.",
+      "reason": "The retrieved set includes several other comic-book stories. Anchor the question to the Mental Floss feature and ask for its two examples so the Superman/Donald Duck reference is not treated as an exhaustive answer to an open-ended question."
+    }
+  ],
+  "counterfactual_repairs": [
+    {
+      "row": 5,
+      "question": "Where in Chile was Alberto Fujimori tried for the death-squad killings carried out during his presidency in Peru?",
+      "changed_field": "location",
+      "reason": "Move the false location into the trial itself instead of using a correctable presidential-nationality descriptor.",
+      "evidence_chunk_id": "68721fdeab81_chunk_0",
+      "evidence_quote": "The Peruvian Supreme Court found him guilty of egregious human rights abuses"
+    },
+    {
+      "row": 13,
+      "question": "Which Miami polo club was preparing to host the match before which 14 horses died?",
+      "changed_field": "location",
+      "reason": "Ask for the club, not a location already supplied in the question; preserve that the deaths preceded the match and alter only the club's city.",
+      "evidence_chunk_id": "74fd8a0366fb_chunk_0",
+      "evidence_quote": "International Polo Club Palm Beach in Wellington, Florida"
+    },
+    {
+      "row": 17,
+      "question": "What prison sentence was imposed for speed racing on the six exotic sports-car drivers stopped on Highway 18 near Grand Ronde, Oregon?",
+      "changed_field": "event",
+      "reason": "Replace the sanction with imprisonment for an anchored incident; changing the highway alone did not change the general fine being asked about.",
+      "evidence_chunk_id": "be2218734417_chunk_0",
+      "evidence_quote": "were cited with speed racing, a class A traffic violation that can command a fine of $627"
+    },
+    {
+      "row": 18,
+      "question": "What organ did singer Natalie Cole donate after discussing her own need for an organ on CNN?",
+      "changed_field": "event",
+      "reason": "Change receiving to donating in the requested event; the earlier heart-need descriptor left the later received organ answerable.",
+      "evidence_chunk_id": "2ccd48310afc_chunk_0",
+      "evidence_quote": "Natalie Cole received a kidney transplant Tuesday in Los Angeles."
+    },
+    {
+      "row": 21,
+      "question": "Where did Pope Benedict XVI preach the Sunday Mass attended by about 1 million people during his second trip to Africa?",
+      "changed_field": "date",
+      "reason": "Identify the Pope and the source event, preserving the first-to-second-visit mutation.",
+      "evidence_chunk_id": "d5b108be083c_chunk_0",
+      "evidence_quote": "An estimated 1 million people turned out to hear Pope Benedict XVI preach a Mass in Angola on Sunday, the last major event of his first trip to Africa."
+    },
+    {
+      "base_question_id": "78bc788e403442bb8ab8024f85ae1619",
+      "question": "What did Tiger Woods say about Adam Scott's racially tinged remark at the Annual Caddy Awards dinner in Shanghai?",
+      "changed_field": "subject",
+      "evidence_chunk_id": "849bfc746c68_chunk_0",
+      "evidence_quote": "Annual Caddy Awards",
+      "reason": "Anchor the actual awards incident and change the speaker from Steve Williams to Adam Scott; do not leave an unnamed former coach. Full-corpus checking remains required."
+    },
+    {
+      "base_question_id": "daa4cf0cb9dd4a64892c8decb071a087",
+      "question": "Where was the FAA facility whose computer glitch caused radar outages while flight-plan processing was diverted to Salt Lake City?",
+      "changed_field": "event",
+      "evidence_chunk_id": "5e36f51c8825_chunk_0",
+      "evidence_quote": "there were no radar outages",
+      "reason": "Replace the unanchored weekday swap with a radar-outage premise explicitly contradicted by this flight-plan-processing incident."
+    },
+    {
+      "base_question_id": "891aa475e0f64276bbcec79f79a8d50e",
+      "question": "What was found in a canyon east of San Francisco in the path of the Harris Fire?",
+      "changed_field": "location",
+      "evidence_chunk_id": "0a39cd0d1263_chunk_0",
+      "evidence_quote": "Harris Fire",
+      "reason": "Anchor the fire and canyon finding, changing only San Diego to San Francisco."
+    },
+    {
+      "base_question_id": "a36a9969dee14e6f90fc1785e4d8151a",
+      "question": "How many American tourists were injured when their Aswan tour bus collided with a train?",
+      "changed_field": "event",
+      "evidence_chunk_id": "377f719a9276_chunk_0",
+      "evidence_quote": "dump truck",
+      "reason": "The source collision was with a parked dump truck, not a train. Replace the nationality swap, which risked making zero Canadian injuries a reasonable answer."
+    },
+    {
+      "base_question_id": "6803dc0693214791b3058a87480b15d6",
+      "question": "What prices would be frozen for the rest of the year under Brazil's recovery package that allocated 570 billion pesos to the National Infrastructure Program?",
+      "changed_field": "location",
+      "evidence_chunk_id": "046b47c6c2b2_chunk_0",
+      "evidence_quote": "570 billion pesos",
+      "reason": "Anchor the source package by its budget and program; only its country changes from Mexico to Brazil, with no invented calendar year."
+    },
+    {
+      "base_question_id": "6bc25fd1669d435fbb8b7d5fb1f08bb0",
+      "question": "What death toll did the Indian military report after ten days of gunbattles in the Shamsbhari forests of Kashmir's Kupwara district?",
+      "changed_field": "quantity",
+      "evidence_chunk_id": "981d5bfac83e_chunk_0",
+      "evidence_quote": "Shamsbhari",
+      "reason": "Anchor the gunbattle location and reporting authority while retaining only the five-to-ten-day mutation."
+    },
+    {
+      "base_question_id": "94b1187d3e5c4282983df4ab44d3d46b",
+      "question": "What happened to the Americanos bus carrying about 40 people to Matamoros, Mexico, when it crashed near Austin, Texas?",
+      "changed_field": "location",
+      "evidence_chunk_id": "1b7efa60a78a_chunk_0",
+      "evidence_quote": "Matamoros",
+      "reason": "Anchor the bus operator, passenger count and route; only the source crash location near Campbellton changes to Austin, Texas."
+    }
+  ],
+  "ablation_repairs": [
+    {
+      "row": 61,
+      "remove_chunk_ids": [
+        "9c0085af9fe6_chunk_0",
+        "9c0085af9fe6_chunk_2"
+      ],
+      "reason": "Both chunks express Omar's wish to end or change his father's violence. The remaining Somalia report does not state Omar bin Laden's wish. Removing only the original gold ID was insufficient."
+    },
+    {
+      "case_id": "abs_controlled_context_ablation_3b3fe3517ee8b6aafa4b",
+      "remove_chunk_ids": [
+        "3bf88ec8cf4b_chunk_1"
+      ],
+      "evidence_chunk_id": "3bf88ec8cf4b_chunk_1",
+      "evidence_quote": "Asiri",
+      "reason": "The overlapping source chunk still identifies Asiri in the assassination account. Keep three unrelated non-answering contexts."
+    },
+    {
+      "case_id": "abs_controlled_context_ablation_ea7784376a2e8f6a1973",
+      "remove_chunk_ids": [
+        "599a60d41b7d_chunk_0",
+        "68721fdeab81_chunk_1",
+        "68721fdeab81_chunk_2"
+      ],
+      "evidence_chunk_id": "68721fdeab81_chunk_2",
+      "evidence_quote": "Supreme Court",
+      "reason": "Remove the remaining Fujimori trial, appeal and extradition evidence, including Peru as an answer to the broad where question; retain the unrelated Knox-trial context."
+    },
+    {
+      "case_id": "abs_controlled_context_ablation_2d49170f2d66ea1445ad",
+      "remove_chunk_ids": [
+        "427ee3c05963_chunk_0",
+        "e3238110fae0_chunk_0"
+      ],
+      "evidence_chunk_id": "427ee3c05963_chunk_0",
+      "evidence_quote": "million",
+      "reason": "Remove the repeated Times Square million-attendee fact and the inauguration crowd analogy. Remaining ball/history and population contexts do not state the requested attendance estimate."
+    },
+    {
+      "row": 137,
+      "remove_chunk_ids": [
+        "5904f89522e7_chunk_0"
+      ],
+      "reason": "The retained account describes the prior England-France semifinal defeat and England defending its 2003 title, allowing a 2007 inference. Retain only the later group-stage report."
+    }
+  ],
+  "weak_replacements": [
+    {
+      "retired_case_id": "abs_partial_weak_evidence_0c428ec6323d608d8a57",
+      "control_case_id": "abs_answerable_control_2ae12a5b7899b634c84c",
+      "provided_chunk_id": "2f4f587ab388_chunk_0",
+      "evidence_chunk_id": "2f4f587ab388_chunk_1",
+      "evidence_quote": "Reporters Without Borders",
+      "provided_quote": "Two Swedish journalists",
+      "reason": "The supplied context reports the same journalists, conviction and sentence, but names officials and lawyers rather than the press-freedom group criticizing the verdict. The withheld source continuation identifies Reporters Without Borders."
+    },
+    {
+      "retired_case_id": "abs_partial_weak_evidence_490d4d91b649c80e3d39",
+      "control_case_id": "abs_answerable_control_837e5543753236ac4eb8",
+      "provided_chunk_id": "556fc6ea0897_chunk_1",
+      "evidence_chunk_id": "556fc6ea0897_chunk_0",
+      "evidence_quote": "effort to malign the ISI",
+      "provided_quote": "Wajid Shamsul Hasan",
+      "reason": "The supplied continuation covers the same ISI allegations and other named denials, but neither Athar Abbas nor the requested malign-the-ISI quotation. The quote's speaker is identified only in the withheld source chunk."
+    },
+    {
+      "retired_case_id": "abs_partial_weak_evidence_c8079434f8eb53f1019d",
+      "control_case_id": "abs_answerable_control_1e7e9608ee59bf7dfd0b",
+      "provided_chunk_id": "02bc7af2dd4b_chunk_1",
+      "evidence_chunk_id": "02bc7af2dd4b_chunk_0",
+      "evidence_quote": "to Islamabad for a 10-day retreat",
+      "provided_quote": "the girls at the learning retreat will return home to the Swat Valley",
+      "reason": "The continuation describes the same girls' retreat, activities and planned return home to Swat Valley, but never states the retreat's host city. Islamabad appears only in the withheld source chunk; Swat Valley is the origin/return destination, not a supported host-city answer."
+    },
+    {
+      "retired_case_id": "abs_partial_weak_evidence_b92941a1c30423a933b7",
+      "control_case_id": "abs_answerable_control_692de578863c9092db4f",
+      "provided_chunk_id": "d87896d7ebac_chunk_0",
+      "evidence_chunk_id": "d87896d7ebac_chunk_1",
+      "evidence_quote": "walls around us",
+      "provided_quote": "Pun-loving Kenneth Cole",
+      "reason": "The supplied opening covers Cole's puns, social causes and book, but not his answer about humor breaking through walls around people. That interview answer is in the withheld continuation."
+    },
+    {
+      "retired_case_id": "abs_partial_weak_evidence_dd4bf6faa1673c3b1b76",
+      "control_case_id": "abs_answerable_control_bae62bc69f1b08674c8f",
+      "provided_chunk_id": "9ce2148457ea_chunk_1",
+      "evidence_chunk_id": "9ce2148457ea_chunk_0",
+      "evidence_quote": "avenged their 2007 semi defeat",
+      "provided_quote": "The French will take on Wales",
+      "reason": "The supplied continuation concerns the same rugby World Cup and France's upcoming semifinal, but reports Wales-Ireland rather than France's previous loss to England. Its 1987 reference concerns Wales, not the requested French defeat; 2007 is supported only by the withheld source chunk."
+    }
+  ],
+  "authored_notes": [
+    {
+      "row": 1,
+      "finding": "Source charges Richardson, not Burruss, after Jewell's death. Plausible subject swap; full-corpus evidence check remains unavailable.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 2,
+      "finding": "Source target is Prince Mohammed bin Naif, not King Salman. Plausible target swap; do not infer full-corpus absence.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 3,
+      "finding": "Former coach is unnamed and could refer to a real Woods coach; the original event concerns his former caddie. Anchor the particular comments/event.",
+      "original_assessment": "hold_wording"
+    },
+    {
+      "row": 4,
+      "finding": "Changing Tuesday to Wednesday without a calendar/event anchor can refer to another FAA outage; source-relative day swap is not proof of absence.",
+      "original_assessment": "hold_wording"
+    },
+    {
+      "row": 5,
+      "finding": "Changing Fujimori's presidential nationality may merely introduce a correctable descriptor while leaving the trial-location fact answerable. Avoid as a strict negative.",
+      "original_assessment": "hold_label"
+    },
+    {
+      "row": 6,
+      "finding": "Praised reverses the source's criticism of the Ethiopian verdict. Plausible predicate counterfactual under the strict-premise contract.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 7,
+      "finding": "Robert Park's quoted mission concerns North Korea, not South Korea. The distinctive quote anchors the intended event.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 8,
+      "finding": "Broad wildfire question with San Francisco substituted for San Diego may match another fire; identify the particular event before calling it negative.",
+      "original_assessment": "hold_wording"
+    },
+    {
+      "row": 9,
+      "finding": "The source victim at Hebron High School is a student, not a teacher. Plausible victim-role swap; full-corpus verification remains open.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 10,
+      "finding": "The source prime-minister selection concerns Nepal, not Bhutan. Plausible country swap; fresh retrieval still required.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 11,
+      "finding": "Expand reverses Omar's wish that his father abandon violence. Do not answer violence by silently correcting that premise.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 12,
+      "finding": "Source project is Orbiting Carbon Observatory, not Orbiting Ocean Observatory. Plausible named-project swap.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 13,
+      "finding": "The source describes horses dying before a match in Wellington; the query both embeds Miami and asks where. Avoid answer-in-question and event-timing ambiguity.",
+      "original_assessment": "hold_wording"
+    },
+    {
+      "row": 14,
+      "finding": "Source Picasso sale is $106,482,500, not $206,482,500. Exact altered amount is a plausible quantity counterfactual.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 15,
+      "finding": "Source bus casualties in Aswan are American tourists, not Canadian tourists. Plausible nationality swap for an anchored incident.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 16,
+      "finding": "Brazil replaces Mexico, but rest of the year has no calendar anchor and economic measures recur; refine before labeling.",
+      "original_assessment": "hold_wording"
+    },
+    {
+      "row": 17,
+      "finding": "The source's $627 fine is a general can-command penalty, not clearly an event-specific paid fine. Highway 18 to 19 may leave that penalty answerable.",
+      "original_assessment": "hold_label"
+    },
+    {
+      "row": 18,
+      "finding": "Cole later received a kidney; changing the organ she needed earlier to heart need not change the requested later organ. Avoid this as a clean negative.",
+      "original_assessment": "hold_label"
+    },
+    {
+      "row": 19,
+      "finding": "Five to ten days changes a duration but leaves the Kashmir gunbattle unanchored in time; other incidents could satisfy it.",
+      "original_assessment": "hold_wording"
+    },
+    {
+      "row": 20,
+      "finding": "Campbellton to Austin, Texas needs a unique crash anchor. Austin, Minnesota reports are not proof of an Austin, Texas answer.",
+      "original_assessment": "hold_wording"
+    },
+    {
+      "row": 21,
+      "finding": "Name Benedict XVI and the intended visit before changing first to second; the Pope and an ordinal alone are time-dependent and ambiguous.",
+      "original_assessment": "hold_wording"
+    },
+    {
+      "row": 22,
+      "finding": "The source attendance estimate concerns the Times Square New Year's ball celebration, not a parade. Plausible event swap, subject to strict-premise review.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 23,
+      "finding": "The original metadata is intelligible, but the actual supplied Phase3 corpus gives the answer alias Barney in f9479dd49bd3_chunk_0. Hold the external-unanswerable label.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 24,
+      "finding": "Maguire title and motherless-cub/Elphaba answer are plausible from retained metadata; full passage and full-scope verification are absent.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 25,
+      "finding": "Hidary's Cash for Clunkers benefits form a multi-part answer; preserve all supported components. Related corpus articles could still contain these facts.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 26,
+      "finding": "Golden City quote anchors Petra Nemcova's Prague tour; source-span evidence is not full-source verification.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 27,
+      "finding": "The retained target-group span is intelligible. A full local phrase scan found One Laptop Per Child in ef55e6f86c1e_chunk_0 only, describing a planned inexpensive tablet, not its target children. Promising negative candidate, pending selected-retrieval inspection; no claim of proven semantic absence.",
+      "original_assessment": "hold_scope"
+    },
+    {
+      "row": 28,
+      "finding": "Much of its unwanted baggage from the 80s does not name the reputation asked for. Do not invent a replacement answer without the missing passage.",
+      "original_assessment": "hold_gold"
+    },
+    {
+      "row": 29,
+      "finding": "The election discussed in the article points to an external article not supplied to the model; add an evidenced year/event anchor, currently unavailable.",
+      "original_assessment": "hold_wording"
+    },
+    {
+      "row": 30,
+      "finding": "Green Party/Naples reward and 2,000 euros are a plausible specific pair, but full source and retrieval evidence remain missing.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 31,
+      "finding": "2009 CNN Hero helping homeless veterans anchors Roy Foster; same fact may recur in other CNN articles.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 32,
+      "finding": "Bloomberg museum delay and Port Authority disagreements are plausible; full-source and temporal verification remain open.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 33,
+      "finding": "Paul Ryan opposed SOPA according to retained metadata; verify the specific statement rather than treating its external article ID as proof of absence.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 34,
+      "finding": "Sylt and the Berlin travel description are intelligible; article-level and corpus-level verification remain open.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 35,
+      "finding": "The unnamed Mother's Day article/poem is not supplied; little feet along the floor alone cannot resolve that reference reliably.",
+      "original_assessment": "hold_wording"
+    },
+    {
+      "row": 36,
+      "finding": "Modric/Birmingham and right-fibula injury are a plausible event pair; full evidence and corpus absence remain unverified.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 37,
+      "finding": "Woodward and fusion teams form a plausible specific pair; retained answer metadata does not certify the withheld passage.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 38,
+      "finding": "Ford's conservation video/chest waxing pair is intelligible; full-scope unanswerability remains unverified.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 39,
+      "finding": "Radcliffe at 18 and his reported 20-million-pound fortune are plausible; specify currency in any answer rubric and verify recurring reports.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 40,
+      "finding": "Kitty Kelley and Oprah: A Biography form a clear title question; the title could occur elsewhere in the corpus.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 41,
+      "finding": "Uploaded 65f82bcfe56a_chunk_1 explicitly describes William landing an Army helicopter in his girlfriend's parents' field. This is a strong conflict, not harmless background; this is evidence from the actual supplied Phase3 corpus.",
+      "original_assessment": "hold_evidence"
+    },
+    {
+      "row": 42,
+      "finding": "Jacob's 11 consecutive years requires an as-of year; the missing external source is needed to anchor the statistic.",
+      "original_assessment": "hold_wording"
+    },
+    {
+      "row": 43,
+      "finding": "Lavau and the 500-foot embankment are a plausible anchored event pair; full-source verification and corpus screening remain open.",
+      "original_assessment": "plausible_candidate"
+    },
+    {
+      "row": 44,
+      "finding": "BMW Oracle's victory and Golden Gate Yacht Club are intelligible; verify the same fact is absent elsewhere before assigning a negative label.",
+      "original_assessment": "plausible_candidate"
+    }
+  ],
+  "case_repairs": [
+    {
+      "row": 88,
+      "patch": {
+        "question": "What warning about his car did Bryant Purvis allegedly give the student he choked at Hebron High School?",
+        "ground_truth": "Don't you ever mess with my car again",
+        "accepted_answers": [
+          "Don't you ever mess with my car again"
+        ]
+      },
+      "evidence_chunk_id": "bfbcb42c9a0e_chunk_0",
+      "evidence_quote": "Don't you ever mess with my car again",
+      "reason": "The one-sentence weak context names Purvis but does not give the alleged warning; avoid a surname-only identity answer."
+    },
+    {
+      "row": 91,
+      "patch": {
+        "question": "At which death camp was John Demjanjuk accused in the German arrest warrant of being a guard from March to September 1943?",
+        "ground_truth": "Sobibor",
+        "accepted_answers": [
+          "Sobibor",
+          "Sobibor death camp"
+        ]
+      },
+      "evidence_chunk_id": "c78b58ba8a95_chunk_0",
+      "evidence_quote": "at the Sobibor death camp from March to September 1943",
+      "reason": "The weak continuation and Nazi/war-crimes tags partly answer the original broad identity question. Ask the specific camp in the German warrant; distinguish the overturned Treblinka conviction."
+    },
+    {
+      "row": 93,
+      "patch": {
+        "question": "What degree of murder was Timothy Masters originally convicted of?",
+        "ground_truth": "first-degree murder",
+        "accepted_answers": [
+          "first-degree murder",
+          "first degree"
+        ]
+      },
+      "evidence_chunk_id": "6f923b8e780f_chunk_0",
+      "evidence_quote": "first-degree murder",
+      "reason": "The continuation suggests a killing but does not state the degree; ask the precise missing fact."
+    }
+  ],
+  "external_repairs": [
+    {
+      "row": 28,
+      "question": "What nickname did the Miami travel feature use for the drug smugglers the city had largely driven out by the mid-1990s?",
+      "source_expected_answer": "the cocaine cowboys",
+      "reason": "The full travel feature now establishes the specific cocaine-smuggling reputation behind the original vague wording. Ask its nickname, not the 1980s decade: another active corpus article explicitly dates Miami Vice to the 1980s and could make that earlier proposed repair inferable.",
+      "source_quote": "But by the mid 90s, Miami had largely driven the cocaine cowboys out of town"
+    },
+    {
+      "row": 35,
+      "question": "In Robert Louis Stevenson's poem 'To My Mother', what is described as being 'along the floor'?",
+      "source_expected_answer": "the little feet",
+      "reason": "Use the retained distinctive quotation to anchor the verse instead of an unavailable Mother's Day article. Full-source recovery now also permits an explicit poem-title anchor.",
+      "source_quote": "\"To My Mother\" by Robert Louis Stevenson"
+    },
+    {
+      "row": 24,
+      "question": "Which character is the protagonist of Gregory Maguire's novel 'A Lion Among Men'?",
+      "source_expected_answer": "Brrr, the Cowardly Lion",
+      "source_quote": "Brrr is the name that I've given to the cowardly lion who is the main character",
+      "reason": "The recovered full interview gives several themes for the broad 'about' question. Ask the explicitly named protagonist instead of treating a secondary descriptive span as the only answer."
+    },
+    {
+      "row": 30,
+      "question": "How much did Italy's Green Party offer to help identify the suspects in the videotaped May 11 killing in Naples?",
+      "source_expected_answer": "2,000 euros ($2,963)",
+      "source_quote": "Italy's Green Party is offering 2,000 euros ($2,963) to whoever helps investigators identify the suspects.",
+      "reason": "Anchor the specific recorded killing and ask about identifying suspects, matching the full source rather than assuming the reward was specifically for their whereabouts."
+    },
+    {
+      "row": 32,
+      "question": "What did Mayor Michael Bloomberg blame for delaying the National September 11 Memorial Museum's planned opening on the attacks' 11th anniversary?",
+      "source_expected_answer": "disagreements with the Port Authority of New York and New Jersey",
+      "source_quote": "Bloomberg blamed the holdup on \"disagreements\" with the Port Authority of New York and New Jersey",
+      "reason": "The recovered article distinguishes the museum's planned 11th-anniversary opening from the memorial's already-completed 10th-anniversary opening. Add that anchor to avoid conflating separate delays."
+    },
+    {
+      "row": 37,
+      "question": "During Michael Ware's CNN discussion of Bob Woodward's Iraq book, what were the new interagency teams called?",
+      "source_expected_answer": "fusion teams",
+      "source_quote": "Michael Ware: Let's say that these \"fusion teams,\" as they're being called, have come into effect.",
+      "reason": "Full-source recovery shows 'fusion teams' is Michael Ware's wording while he disputes Woodward's causal claim. Correct the attribution and ask for the term instead of attributing this exact wording to Woodward."
+    }
+  ],
+  "holds": [
+    {
+      "row": 99,
+      "reason": "Rice's Secretary of State identity recurs outside the excluded source. Removing that article does not establish this broad fact as unavailable."
+    },
+    {
+      "row": 108,
+      "reason": "Other embedded articles 1ebe5938acbc_chunk_0 and d759aba7858d_chunk_0 identify Roethlisberger. Broad quarterback identity is unsafe as removed-article."
+    },
+    {
+      "row": 153,
+      "reason": "Father Oprah/Alberto Cutie identity and relationship recur in 829b2a5a8d68_chunk_0. The exact considering-options predicate is not clearly repeated; unresolved semantic label, not a proven full match."
+    },
+    {
+      "row": 154,
+      "reason": "4822a8523dbc_chunk_1 places the same Pope's Mass in Angola outside the excluded source."
+    }
+  ],
+  "external_holds": [
+    {
+      "row": 29,
+      "reason": "No election year/event anchor is retained. Cannot invent it from the single-word Justicialist span."
+    },
+    {
+      "row": 41,
+      "reason": "Phase3/chunks.jsonl contains 65f82bcfe56a_chunk_1 describing William landing a helicopter at his girlfriend's parents' field. This conflicts with the negative label; source says RAF, this passage says Army, so do not silently reconcile the branch discrepancy."
+    },
+    {
+      "row": 42,
+      "reason": "The 11-year baby-name streak lacks an as-of year. No retained evidence supplies that year."
+    },
+    {
+      "row": 23,
+      "reason": "NEW direct counterexample in the actual Phase3 corpus: f9479dd49bd3_chunk_0 says 'Neil Patrick Harris as Barney'. Barney is a valid shortened character answer; missing 'Stinson' does not make the question unanswerable."
+    }
+  ],
+  "removed_replacements": [
+    {
+      "row": 99,
+      "control_row": 16,
+      "reason": "The original Rice-role question remains answerable across many articles. Replace this removed-article slot with Jasmin Singer's specific vegan-cupcake quotation, whose source is the only local matching account.",
+      "scan_pattern": "\\bJasmin Singer\\b|\\bvegan cupcake\\b",
+      "evidence_chunk_id": "ff5bba2ad341_chunk_0",
+      "evidence_quote": "A good vegan cupcake has the power to transform everything for the better"
+    },
+    {
+      "row": 108,
+      "control_row": 34,
+      "reason": "Roethlisberger's identity recurs outside the removed source. The Jason Grant/Zac Fitzgerald crocodile-egg incident has a unique supplied source; preserve removed-article subtype and development split.",
+      "scan_pattern": "\\bJason Grant\\b|\\bZac Fitzgerald\\b",
+      "evidence_chunk_id": "6c9e2d3b6259_chunk_0",
+      "evidence_quote": "collecting crocodile eggs"
+    },
+    {
+      "row": 153,
+      "control_row": 131,
+      "reason": "The Father Oprah identity question is not a clean removed-article negative. Replace it with Jet Republic's ClimateCare partnership, retaining the final split and a source-backed specific relation.",
+      "scan_pattern": "\\bJet Republic\\b|\\bClimateCare\\b",
+      "evidence_chunk_id": "0a3aac668034_chunk_1",
+      "evidence_quote": "partnered with ClimateCare"
+    },
+    {
+      "row": 154,
+      "control_row": 118,
+      "reason": "The Pope's Mass in Angola is reported elsewhere. Use Kenneth Cole's specific explanation of humor breaking through walls around people; the source is locally available and can be removed completely.",
+      "scan_pattern": "\\bKenneth Cole\\b|\\bwalls around us\\b",
+      "evidence_chunk_id": "d87896d7ebac_chunk_1",
+      "evidence_quote": "walls around us"
+    },
+    {
+      "row": 96,
+      "control_row": 20,
+      "reason": "The repaired civilian question has a related report in 618e4d3cdd42_chunk_0 identifying Nicole Suveges, BAE Systems and her military assignment. Avoid an employer/department inference dispute in this negative; use the source-specific Alina Cho/Madonna interview instead.",
+      "scan_pattern": "\\bAlina Cho\\b.{0,120}\\b(Madonna|singer)\\b|\\b(Madonna|singer)\\b.{0,120}\\bAlina Cho\\b",
+      "evidence_chunk_id": "a12b845b2973_chunk_0",
+      "evidence_quote": "Alina Cho talked to the singer"
+    },
+    {
+      "row": 151,
+      "control_row": 124,
+      "reason": "Another supplied article describes England's previous semifinal defeat of France and its 2003 title defense, permitting a 2007 inference. Replace this removed-article slot with Bishop Kenneth Spears' source-specific natural-gas account.",
+      "scan_pattern": "\\bKenneth Spears\\b",
+      "evidence_chunk_id": "b8c453e0266e_chunk_0",
+      "evidence_quote": "natural gas has saved his church"
+    },
+    {
+      "row": 152,
+      "control_row": 121,
+      "reason": "The unanchored WFP-escort question also fits the supplied Canadian-frigate report e909bea558f6_chunk_0. Use the uniquely named Al Nisr Al Saudi/Garacad report for a cleaner removed-article negative, retaining the final split.",
+      "scan_pattern": "\\bAl Nisr Al Saudi\\b|\\bGaracad\\b",
+      "evidence_chunk_id": "d426fe02cc43_chunk_0",
+      "evidence_quote": "near Garacad, Somalia"
+    },
+    {
+      "row": 101,
+      "control_row": 42,
+      "scan_pattern": "\\bSeasons of My Heart\\b",
+      "reason": "Fresh removed-source retrieval returned a90d96a0db78_chunk_0, which explicitly says the Nazi-gold dig had been stopped and later resumed. The unanchored 'called off' question can therefore still be answered from another article. Replace this slot with the same-partition Seasons of My Heart cooking-school question and remove that complete source article."
+    }
+  ],
+  "external_replacements": [
+    {
+      "row": 23,
+      "chunk_id": "009176efbcb7_chunk_0",
+      "question": "What month and year were shown on the wall calendar in the untouched Leipzig apartment discovered by architect Mark Aretz?",
+      "source_expected_answer": "August 1988",
+      "evidence_quote": "A wall calendar showed August 1988",
+      "scan_pattern": "\\bAretz\\b|untouched.{0,80}Berlin Wall",
+      "reason": "The Harris/Barney question is answerable in the supplied corpus. Replace it with a precise calendar detail supported by a complete local source, withheld globally for this Phase3 experiment."
+    },
+    {
+      "row": 29,
+      "chunk_id": "0118cdeae3e3_chunk_0",
+      "question": "How much did retired U.S. Army colonel Levonda Selph promise to repay the government under her bribery plea agreement?",
+      "source_expected_answer": "$9,000",
+      "evidence_quote": "She promised to repay the government $9,000",
+      "scan_pattern": "\\bSelph\\b",
+      "reason": "The Argentina election year cannot be recovered from its single-word span. Replace that ambiguous slot with a specific repayment amount from a complete local source, withheld globally."
+    },
+    {
+      "row": 41,
+      "chunk_id": "02c4e16e9418_chunk_0",
+      "question": "Who was the deputy chief of an Energy Regional Customs division detained in the case associated with the Ukrainian Security Service's raid on Naftogaz?",
+      "source_expected_answer": "Taras Shepitko",
+      "evidence_quote": "Taras Shepitko, a deputy chief of an Energy Regional Customs division",
+      "scan_pattern": "\\bShepitko\\b",
+      "reason": "William's helicopter visit appears in the supplied corpus, with conflicting Army/RAF descriptions. Replace this unsafe negative with the named customs official from a complete local source, withheld globally."
+    },
+    {
+      "row": 42,
+      "chunk_id": "0272b344b1cb_chunk_0",
+      "question": "For how many years did Donto James play drums in his mother Etta James' Roots band?",
+      "source_expected_answer": "15 years",
+      "evidence_quote": "Donto James, who played drums in his mother's Roots band for 15 years",
+      "scan_pattern": "\\bDonto\\b|\\bRoots band\\b",
+      "reason": "The Jacob-name streak has no retained as-of year. Replace it with an explicitly sourced duration anchored to Donto James and the Roots band, withholding its complete local source globally."
+    }
+  ],
+  "retrieved_control_misses": [
+    {
+      "row": 33,
+      "source_chunk_id": "5d574141dec9_chunk_1",
+      "source_quote": "I make sure they hear everything from me before they hear it on the stage and maybe hear it even a little more aggressively so they can be prepared.",
+      "reason": "Development evidence-label correction after 153 successful responses, before any final generation: Barnett's name and general debate-preparation role occur in retrieved chunk 0, but the requested statement about preparing candidates aggressively is in uploaded chunk 1, absent from all five retrieved passages. The older embedded chunk 0 was longer than the actual uploaded chunk. Reclassify as a natural retrieval miss under strict statement-support criteria; do not inject chunk 1, change the question, or treat the model's correct abstention as a control failure. Preserve the original case ID and reuse only byte-identical API requests. The topic/name overlap makes this a descriptive boundary case, not proof of universal unanswerability."
+    }
+  ],
+  "retrieval_reclassifications": [
+    {
+      "row": 73,
+      "evidence_chunk_id": "2f4f587ab388_chunk_0",
+      "evidence_quote": "were sentenced to 11 years in jail",
+      "reason": "Actual selected local BGE-M3/top-20/BGE-large/top-5 retrieval includes the quoted answer. Reclassify this proposed natural miss as an answerable control before generation; do not preserve a false negative or engineer a failure to meet the original quota."
+    },
+    {
+      "row": 74,
+      "evidence_chunk_id": "28b825af37b2_chunk_0",
+      "evidence_quote": "Kuranyi's 15th league goal of the season -- after just two minutes",
+      "reason": "Actual selected local BGE-M3/top-20/BGE-large/top-5 retrieval includes the quoted answer. Reclassify this proposed natural miss as an answerable control before generation; do not preserve a false negative or engineer a failure to meet the original quota."
+    },
+    {
+      "row": 75,
+      "evidence_chunk_id": "0a39cd0d1263_chunk_0",
+      "evidence_quote": "We're not going to forget you in Washington, D.C.",
+      "reason": "Actual selected local BGE-M3/top-20/BGE-large/top-5 retrieval includes the quoted answer. Reclassify this proposed natural miss as an answerable control before generation; do not preserve a false negative or engineer a failure to meet the original quota."
+    },
+    {
+      "row": 76,
+      "evidence_chunk_id": "c78b58ba8a95_chunk_0",
+      "evidence_quote": "his health has seriously deteriorated",
+      "reason": "Actual selected local BGE-M3/top-20/BGE-large/top-5 retrieval includes the quoted answer. Reclassify this proposed natural miss as an answerable control before generation; do not preserve a false negative or engineer a failure to meet the original quota."
+    },
+    {
+      "row": 77,
+      "evidence_chunk_id": "0b3bb8389a84_chunk_0",
+      "evidence_quote": "12-day trip to Iran to film a public-television show",
+      "reason": "Actual selected local BGE-M3/top-20/BGE-large/top-5 retrieval includes the quoted answer. Reclassify this proposed natural miss as an answerable control before generation; do not preserve a false negative or engineer a failure to meet the original quota."
+    },
+    {
+      "row": 78,
+      "evidence_chunk_id": "ec0d4285e973_chunk_0",
+      "evidence_quote": "blast that rocked a municipal building in Baghdad's Sadr City",
+      "reason": "Actual selected local BGE-M3/top-20/BGE-large/top-5 retrieval includes the quoted answer. Reclassify this proposed natural miss as an answerable control before generation; do not preserve a false negative or engineer a failure to meet the original quota."
+    },
+    {
+      "row": 141,
+      "evidence_chunk_id": "7bed4478cd7f_chunk_0",
+      "evidence_quote": "The conflict has killed more than 200,000 people",
+      "reason": "Actual selected local BGE-M3/top-20/BGE-large/top-5 retrieval includes the quoted answer. Reclassify this proposed natural miss as an answerable control before generation; do not preserve a false negative or engineer a failure to meet the original quota."
+    },
+    {
+      "row": 142,
+      "evidence_chunk_id": "c2d4236a9e09_chunk_1",
+      "evidence_quote": "They have \"both struggled\" with the relationship",
+      "reason": "Actual selected local BGE-M3/top-20/BGE-large/top-5 retrieval includes the quoted answer. Reclassify this proposed natural miss as an answerable control before generation; do not preserve a false negative or engineer a failure to meet the original quota."
+    }
+  ]
+}

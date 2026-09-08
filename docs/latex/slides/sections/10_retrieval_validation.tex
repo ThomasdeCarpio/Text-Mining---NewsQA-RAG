@@ -1,0 +1,16 @@
+\begin{frame}[t]{Truy xuất đã chốt: kiểm tra trên bài chưa thấy}
+\purpose{Final-test chỉ đánh giá retrieval: \NumRetrievalFinalQuestions\ câu / \NumRetrievalFinalArticles\ bài; không sinh đáp án, không chọn lại cấu hình.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.31\textwidth}\statcard{Hit@5 final-test}{\NumRetrievalFinalHitFive}{Tỷ lệ câu có gold trong top 5}\end{column}
+\begin{column}{.31\textwidth}\statcard{nDCG@5 final-test}{\NumRetrievalFinalNdcgFive}{Ưu tiên gold ở đầu danh sách}\end{column}
+\begin{column}{.31\textwidth}\statcard{MRR@5 final-test}{\NumRetrievalFinalMrrFive}{Trung bình nghịch đảo hạng}\end{column}
+\end{columns}
+\vspace{6mm}
+{\tabletext\begin{tabularx}{\textwidth}{@{}Lrr@{}}
+\rowcolor{paleblue}\textbf{Chẩn đoán} & \textbf{Development} & \textbf{Final-test truy xuất} \\\midrule
+Hit@5 & \NumPoneHitFive & \NumRetrievalFinalHitFive \\\midrule
+Câu không có gold trong top 5 & \NumGoldNotInTopFive/\NumNDev & \NumRetrievalFinalMissing/\NumRetrievalFinalQuestions \\\bottomrule
+\end{tabularx}}
+\takeaway{Reranker vẫn tăng nDCG@5 trên final-test: \textbf{\NumRetrievalFinalRerankerGain}, CI95 \NumRetrievalFinalRerankerCI.}
+\slidenote{Hai tập khác bài nên không ghép cặp dev–final. Held-out hỏi đáp \NumNHeldout\ câu là tập con của final-test retrieval này.}
+\end{frame}

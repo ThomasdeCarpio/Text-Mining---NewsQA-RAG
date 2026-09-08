@@ -1,0 +1,19 @@
+\begin{frame}[t]{Baseline end-to-end: P0, depth \NumPoneRerankTopN}
+\modelstrip
+{\smalltext\textbf{BGE-M3 sparse $\rightarrow$ bge-reranker-large $\rightarrow$ P0 + \NumPoneRerankTopN\ đoạn context}\par
+Recursive \NumChunkSize/\NumChunkOverlap\quad ·\quad Truy xuất \NumPoneTopK\ ứng viên\quad ·\quad Development: \NumNDev\ câu / \NumNDevArticles\ bài\par}
+\vspace{4mm}
+\begin{center}\begin{minipage}{.82\textwidth}
+{\tabletext\renewcommand{\arraystretch}{1.15}\begin{tabularx}{\linewidth}{@{}Lr@{}}
+\rowcolor{paleblue}\textbf{Thước đo} & \textbf{Baseline} \\\midrule
+\rowcolor{paleblue}\textbf{Answer Correctness} & \textbf{\NumPzeroAC} \\\midrule
+Faithfulness & \NumPzeroFaith \\\midrule
+Exact Match & \NumPzeroEM \\\midrule
+Token F1 & \NumPzeroFone \\\midrule
+Citation F1 & \NumPzeroCitFone \\\midrule
+Citation Validity & \NumPzeroCitVal \\\bottomrule
+\end{tabularx}}
+\end{minipage}\end{center}
+{\smalltext\textbf{Coverage: \NumBaselineSuccessful/\NumBaselineExpected\ câu — \NumBaselineCoverage.}\quad RAGAS chấm đủ \NumBaselineJudged\ câu.\par}
+\takeaway{Faithfulness cao nhưng EM bằng \NumPzeroEM: cần thử prompt giúp đáp án khớp dạng thông tin được hỏi.}
+\end{frame}

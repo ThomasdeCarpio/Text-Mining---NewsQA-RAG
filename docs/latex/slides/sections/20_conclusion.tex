@@ -1,0 +1,15 @@
+\begin{frame}[t]{NewsLens: kết quả chốt và bước đưa vào sử dụng}
+\purpose{Truy xuất bằng chứng, sinh đáp án có citation, rồi kiểm tra từng tầng trước khi đưa cấu hình vào ứng dụng.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.31\textwidth}\statcard{Truy xuất · Hit@5}{\NumRetrievalFinalHitFive}{\NumRetrievalFinalQuestions\ câu final-test}\end{column}
+\begin{column}{.31\textwidth}\statcard{Hỏi đáp · AC}{\NumHoAC}{\NumNHeldout\ câu held-out}\end{column}
+\begin{column}{.31\textwidth}\statcard{P2 so với P0 · $\Delta$ AC}{\NumPtwodFiveDeltaAC}{\NumNDev\ câu development}\end{column}
+\end{columns}
+\takeaway{\centering\textbf{BGE-M3 sparse $\rightarrow$ bge-reranker-large $\rightarrow$ P2 + depth \NumWinnerDepth\ $\rightarrow$ Gemini}}
+\vspace{4mm}
+{\tabletext\begin{tabularx}{\textwidth}{@{}p{48mm}L@{}}
+\rowcolor{paleblue}\textbf{Đưa vào sử dụng} & Đồng bộ P2 và Gemini trong chat; nghiệm thu câu hỏi $\rightarrow$ đáp án $\rightarrow$ nguồn. \\\midrule
+\textbf{Giới hạn cần nhớ} & Benchmark dùng câu resolved và nhãn gold hữu hạn; điểm RAGAS phụ thuộc giám khảo. \\\midrule
+\textbf{Kiểm tra tiếp} & Audit mù đáp án, đo độ ổn định API, và thử câu hỏi người dùng chưa bổ sung ngữ cảnh. \\\bottomrule
+\end{tabularx}\par}
+\end{frame}

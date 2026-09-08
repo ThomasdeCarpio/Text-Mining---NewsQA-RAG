@@ -1,0 +1,20 @@
+\begin{frame}[t]{Thực nghiệm dẫn tới cấu hình ứng dụng}
+\purpose{Mỗi vòng chỉ thay đổi một tầng; cấu hình được chọn phải qua đánh giá trên tập chưa dùng để tinh chỉnh.}
+\begin{center}\begin{tikzpicture}[node distance=5mm]
+\node[stage,text width=46mm] (r) {\textbf{GĐ1: truy xuất}\\Retriever\\+ reranker};
+\node[stage,text width=47mm,right=of r] (b) {\textbf{Baseline}\\Kết quả GĐ1\\+ P0, depth \NumPoneRerankTopN};
+\node[stage,text width=48mm,right=of b] (g) {\textbf{GĐ2: sinh}\\Prompt\\+ context depth};
+\node[stage,text width=42mm,right=of g] (h) {\textbf{Held-out}\\Đánh giá\\cấu hình chốt};
+\node[stage,text width=44mm,right=of h,fill=brandaccent,text=white] (a) {\textbf{Ứng dụng}\\Cấu hình đích};
+\foreach \a/\b in {r/b,b/g,g/h,h/a}\draw[flow](\a)--(\b);
+\end{tikzpicture}\end{center}
+\vspace{4mm}
+{\tabletext\begin{tabularx}{\textwidth}{@{}p{62mm}LL@{}}
+\rowcolor{paleblue}\textbf{Quyết định} & \textbf{Giữ cố định} & \textbf{Đầu ra cần có} \\\midrule
+Retriever / reranker & Dữ liệu và câu hỏi đánh giá & Danh sách context có thứ tự \\\midrule
+Prompt / depth & Kết quả truy xuất đã lưu & Đáp án đúng, qua guardrail \\\midrule
+Đưa vào ứng dụng & Cấu hình thực nghiệm đã chốt & Chat, trích dẫn và truy xuất nguồn \\\bottomrule
+\end{tabularx}}
+\takeaway{\textbf{P0} là system prompt đối chứng. \textbf{Baseline} là cấu hình tham chiếu để đo tác động ở tầng sinh.}
+\slidenote{Phần phụ: ablation về chunking và từ chối trả lời; kết quả không thay cấu hình chốt. Phase 2C được thiết kế sau held-out hỏi đáp.}
+\end{frame}

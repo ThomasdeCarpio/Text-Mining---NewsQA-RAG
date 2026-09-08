@@ -1,0 +1,13 @@
+\begin{frame}[t]{Từ thực nghiệm đến cấu hình đích của NewsLens}
+\purpose{Đây là cấu hình đã được đánh giá. Khi đưa vào ứng dụng, cần giữ đúng cả retrieval, prompt và generator.}
+{\tabletext\begin{tabularx}{\textwidth}{@{}p{40mm}p{113mm}L@{}}
+\rowcolor{paleblue}\textbf{Tầng} & \textbf{Lựa chọn chốt} & \textbf{Căn cứ thực nghiệm} \\\midrule
+Chia đoạn & Recursive \NumChunkSize/\NumChunkOverlap & Giữ cấu hình sau khảo sát chunking \\\midrule
+Truy xuất & BGE-M3 sparse · top-k \NumPoneTopK & Đưa ứng viên chứa bằng chứng vào vòng rerank \\\midrule
+Xếp hạng lại & bge-reranker-large & Cải thiện nDCG trên dev và final-test \\\midrule
+Context & Top \NumWinnerDepth\ đoạn đã rerank & Giữ bằng chứng; qua guardrail \\\midrule
+Sinh đáp án & P2 + \texttt{\NumGeneratorModel} & Câu ngắn, đúng loại thông tin, citation [n] \\\bottomrule
+\end{tabularx}\par}
+\takeaway{\textbf{Kết quả đích:} AC held-out \NumHoAC\ trên \NumNHeldout\ câu. Điểm này gắn với cấu hình trên; đổi model hoặc prompt cần đánh giá lại.}
+\slidenote{Giám khảo \NumJudgeModel\ phục vụ đánh giá ngoại tuyến, không phải một tầng bắt buộc trong mỗi lượt chat.}
+\end{frame}

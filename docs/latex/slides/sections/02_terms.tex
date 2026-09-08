@@ -1,0 +1,26 @@
+\begin{frame}[t]{Thuật ngữ: dữ liệu và bằng chứng}
+\purpose{Phân biệt văn bản được tìm kiếm, bằng chứng được gán nhãn và câu hỏi dùng để đánh giá.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.70\textwidth}
+{\tabletext\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash\bfseries}p{55mm}L@{}}
+\rowcolor{paleblue}Thuật ngữ & \textbf{Nghĩa trong dự án} \\\midrule
+Corpus / distractor & Kho bài báo để tìm kiếm / bài không được gán bằng chứng cho bộ câu hỏi đánh giá. \\\midrule
+Chunk & Đoạn văn cắt từ bài báo để lập chỉ mục và truy xuất. \\\midrule
+Evidence span & Vị trí đoạn bằng chứng trong văn bản gốc. \\\midrule
+Gold chunk & Chunk được gán nhãn chứa bằng chứng trả lời câu hỏi. \\\midrule
+Đáp án chuẩn & Câu trả lời tham chiếu dùng để chấm điểm. \\\midrule
+Original / resolved & Câu hỏi gốc / câu hỏi được bổ sung ngữ cảnh để hiểu độc lập. \\\bottomrule
+\end{tabularx}}
+\end{column}
+\begin{column}{.26\textwidth}\centering
+\begin{tikzpicture}
+\node[stage,text width=56mm] (a) {\textbf{Bài báo}\\Văn bản gốc};
+\node[stage,text width=56mm,below=8mm of a] (c) {\textbf{Chunk}\\Đoạn được lập chỉ mục};
+\node[stage,text width=56mm,fill=palegreen,below=8mm of c] (e) {\textbf{Bằng chứng}\\Evidence span\\trong gold chunk};
+\draw[flow] (a)--(c);\draw[flow] (c)--(e);
+\end{tikzpicture}
+\end{column}\end{columns}
+\takeaway{\textbf{Original:} “Ai thắng?”\quad $\longrightarrow$\quad
+\textbf{Resolved:} “Ai thắng cuộc bầu cử tổng thống Gabon?”}
+\slidenote{Ví dụ minh họa cách bổ sung ngữ cảnh; không phải kết quả thực nghiệm.}
+\end{frame}

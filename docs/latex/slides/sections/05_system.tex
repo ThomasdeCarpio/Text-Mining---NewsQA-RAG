@@ -1,0 +1,22 @@
+\begin{frame}[t]{Bài toán và pipeline hệ thống}
+\purpose{Đầu vào là câu hỏi; đầu ra là đáp án kèm trích dẫn để người dùng kiểm tra bằng chứng.}
+\begin{center}\begin{tikzpicture}[node distance=5mm]
+\node[stage,text width=31mm] (q) {Câu hỏi};
+\node[stage,text width=41mm,right=of q] (r) {Truy xuất\\đoạn văn};
+\node[stage,text width=35mm,right=of r] (k) {Xếp hạng lại};
+\node[stage,text width=29mm,right=of k] (c) {Context};
+\node[stage,text width=33mm,right=of c] (g) {Sinh đáp án};
+\node[stage,text width=42mm,right=of g,fill=brandaccent,text=white] (a) {Đáp án\\+ trích dẫn};
+\foreach \a/\b in {q/r,r/k,k/c,c/g,g/a}\draw[flow](\a)--(\b);
+\end{tikzpicture}\end{center}
+{\smalltext\textbf{Context depth:} số đoạn lấy từ đầu danh sách sau xếp hạng lại.\par}
+\takeaway{\centering\textbf{\NumCorpusArticles\ bài báo CNN\quad ·\quad \NumCorpusChunks\ chunk\quad ·\quad \NumNResolved\ câu hỏi resolved}}
+\vspace{3mm}
+{\tabletext\begin{tabularx}{\textwidth}{@{}p{65mm}rrL@{}}
+\rowcolor{paleblue}\textbf{Tập} & \textbf{Số câu} & \textbf{Số bài} & \textbf{Vai trò} \\\midrule
+\textbf{Development} & \NumNDev & \NumNDevArticles & Thử và chọn cấu hình \\\midrule
+\textbf{Held-out hỏi đáp} & \NumNHeldout & \NumNArticles & Đánh giá cấu hình đã chốt \\\midrule
+\textbf{Phần dự trữ} & \NumNReserve & \NumNReserveArticles & Dành cho đánh giá bổ sung \\\bottomrule
+\end{tabularx}}
+\slidenote{Chia tập theo bài báo để các câu cùng bài không lọt sang cả hai phía. Số chunk ứng với recursive \NumChunkSize/\NumChunkOverlap.}
+\end{frame}

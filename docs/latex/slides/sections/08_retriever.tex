@@ -1,0 +1,17 @@
+\begin{frame}[t]{Chọn retriever: BGE-M3 sparse đi tiếp}
+\purpose{nDCG@5 đo mức ưu tiên gold chunk ở đầu danh sách; cao hơn tốt hơn. Vòng này chưa dùng reranker.}
+{\tabletext\renewcommand{\arraystretch}{1.05}\begin{tabularx}{\textwidth}{@{}p{94mm}rL@{}}
+\rowcolor{paleblue}\textbf{Retriever} & \textbf{Original} & \textbf{Resolved — nDCG@5 (0–1)} \\\midrule
+\textbf{BGE-M3 sparse} & \NumRoneSparseBgeOriginal & \scorebar{\NumRoneSparseBgePlot}{\NumRoneSparseBge}{brandaccent} \\\midrule
+BM25 Okapi + stemming & \NumRoneBmStemOriginal & \scorebar{\NumRoneBmStemPlot}{\NumRoneBmStem}{brandaccent} \\\midrule
+BM25+ & \NumRoneBmPlusOriginal & \scorebar{\NumRoneBmPlusPlot}{\NumRoneBmPlus}{brandaccent} \\\midrule
+BM25 Okapi & \NumRoneBmSimpleOriginal & \scorebar{\NumRoneBmSimplePlot}{\NumRoneBmSimple}{brandaccent} \\\midrule
+Dense · e5-base-v2 & \NumRoneDenseEfiveOriginal & \scorebar{\NumRoneDenseEfivePlot}{\NumRoneDenseEfive}{brandmuted} \\\midrule
+Dense · bge-small-en-v1.5 & \NumRoneDenseSmallOriginal & \scorebar{\NumRoneDenseSmallPlot}{\NumRoneDenseSmall}{brandmuted} \\\midrule
+Dense · bge-large-en-v1.5 & \NumRoneDenseLargeOriginal & \scorebar{\NumRoneDenseLargePlot}{\NumRoneDenseLarge}{brandmuted} \\\midrule
+Dense · all-MiniLM-L6-v2 & \NumRoneDenseMiniOriginal & \scorebar{\NumRoneDenseMiniPlot}{\NumRoneDenseMini}{brandmuted} \\\bottomrule
+\end{tabularx}\par}
+\takeaway{Sparse hơn e5-base: $\Delta$ \NumSparseVsDense, CI95 \NumSparseVsDenseCI.\\
+BGE-M3 hơn BM25-stemmed trên original; trên resolved chưa phân định được.}
+\slidenote{Development: \NumNDev\ câu / \NumNDevArticles\ bài. Không suy ra thứ hạng ổn định giữa các mô hình dense.}
+\end{frame}

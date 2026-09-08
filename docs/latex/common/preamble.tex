@@ -3,12 +3,10 @@
 % which the default Computer Modern encoding does not cover cleanly.
 
 \usepackage{fontspec}
-% Windows system fonts: full Vietnamese diacritic coverage and always present on
-% the machine this is built on. TeX Gyre Termes / Heros / Cursor are the drop-in
-% replacements if you ever build on Overleaf or Linux -- see ../README.md.
-\setmainfont{Times New Roman}
-\setsansfont{Arial}
-\setmonofont{Consolas}[Scale=MatchLowercase]
+% Preserve Windows typography; use Vietnamese-capable TeX fonts on Linux.
+\IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{\setmainfont{TeX Gyre Termes}}
+\IfFontExistsTF{Arial}{\setsansfont{Arial}}{\setsansfont{TeX Gyre Heros}}
+\IfFontExistsTF{Consolas}{\setmonofont{Consolas}[Scale=MatchLowercase]}{\setmonofont{TeX Gyre Cursor}[Scale=MatchLowercase]}
 
 \usepackage{xcolor}
 \usepackage{booktabs}

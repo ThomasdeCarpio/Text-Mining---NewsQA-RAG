@@ -1,0 +1,30 @@
+\begin{frame}[t]{Kiểm định và điều kiện chọn cấu hình}
+\purpose{Tách hai câu hỏi: chênh lệch có phân định được, và cấu hình có được phép chọn?}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.47\textwidth}
+\heading{Kiểm định chênh lệch}
+\vspace{-5mm}
+\[d_i=m(B,q_i)-m(A,q_i)\]
+\vspace{-5mm}
+\[H_0:\mathbb{E}[d]=0\qquad H_1:\mathbb{E}[d]\ne0\]
+{\smalltext\begin{tabularx}{\linewidth}{@{}p{36mm}L@{}}
+\textbf{Bootstrap} & Lấy mẫu lại có hoàn lại để ước lượng CI95. \\\midrule
+\textbf{Bác bỏ $H_0$} & CI95 không chứa 0; mức ý nghĩa $0{,}05$. \\\midrule
+\textbf{Phase 1} & Theo câu, \NumPoneBootstrapSamples\ mẫu. \\\midrule
+\textbf{Phase 2} & Theo bài, \NumBootstrapSamples\ mẫu; giữ các câu cùng bài trong một cụm. \\\bottomrule
+\end{tabularx}}
+\end{column}
+\begin{column}{.48\textwidth}
+\heading{Guardrail: điều kiện phải đạt}
+{\smalltext Dùng $\Delta$ trung bình, không dùng CI.\par}\vspace{2mm}
+{\tabletext\begin{tabularx}{\linewidth}{@{}Lr@{}}
+\rowcolor{paleblue}\textbf{Điều kiện Phase 2} & \textbf{Ngưỡng} \\\midrule
+$\Delta$ Faithfulness & $\geq$ \NumGuardFaithThreshold \\\midrule
+$\Delta$ Citation F1 & $\geq$ \NumGuardCitFoneThreshold \\\midrule
+$\Delta$ Citation Validity & $\geq$ \NumGuardCitValThreshold \\\midrule
+Coverage sinh và chấm & $\geq$ \NumCoverageThreshold \\\bottomrule
+\end{tabularx}}
+\takeaway{\textbf{Qua guardrail}\ $\longrightarrow$\ chọn AC cao nhất trong các ứng viên hợp lệ.}
+\end{column}\end{columns}
+\slidenote{$A$: đối chứng; $B$: ứng viên; $m$: thước đo; $q_i$: câu hỏi.}
+\end{frame}

@@ -1,0 +1,20 @@
+\begin{frame}[t]{Ứng dụng: hỏi đáp và mở bằng chứng}
+\purpose{Luồng tương tác đã có trong code; phần cần hoàn thiện là đồng bộ cấu hình sinh với winner thực nghiệm.}
+\begin{center}\begin{tikzpicture}[node distance=6mm]
+\node[stage,text width=44mm] (q) {Người dùng\\\textbf{nhập câu hỏi}};
+\node[stage,text width=48mm,right=of q] (r) {RAG\\\textbf{tìm và rerank}};
+\node[stage,text width=48mm,right=of r,fill=brandaccent,text=white] (a) {\textbf{Đáp án [n]}\\trong hội thoại};
+\node[stage,text width=48mm,right=of a] (s) {\textbf{View Sources}\\mở nguồn};
+\node[stage,text width=44mm,right=of s] (e) {Đọc đoạn trích\\và đường dẫn};
+\foreach \a/\b in {q/r,r/a,a/s,s/e}\draw[flow](\a)--(\b);
+\end{tikzpicture}\end{center}
+\vspace{5mm}
+{\tabletext\begin{tabularx}{\textwidth}{@{}p{62mm}LL@{}}
+\rowcolor{paleblue}\textbf{Thành phần} & \textbf{Hiện trạng code} & \textbf{Để khớp benchmark} \\\midrule
+Retrieval và nguồn & Có nhánh sparse + reranker; có mở citation & Nạp đúng bộ chỉ mục đã chốt \\\midrule
+Prompt sinh & Chat đang dùng prompt mặc định P0 & Nối prompt P2 vào luồng chat \\\midrule
+Model sinh & Chọn qua runtime; mặc định gpt-4o-mini & Chọn \texttt{\NumGeneratorModel} \\\midrule
+Chế độ trả lời & Có fallback sang chat trực tiếp khi RAG không sẵn sàng & Xác nhận lượt demo thực sự dùng RAG \\\bottomrule
+\end{tabularx}\par}
+\slidenote{Sơ đồ chức năng đối chiếu từ code, không phải ảnh chụp một phiên demo. Chưa có nghiệm thu end-to-end của app với cấu hình winner.}
+\end{frame}

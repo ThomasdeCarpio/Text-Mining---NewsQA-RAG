@@ -1,0 +1,20 @@
+\begin{frame}[t]{Context depth: bớt đoạn, mất bằng chứng nào?}
+\purpose{Cắt từ đầu cùng danh sách đã rerank. Đọc Hit@k trước để thấy chi phí của việc giảm context.}
+{\tabletext\begin{tabularx}{\textwidth}{@{}p{36mm}rL@{}}
+\rowcolor{paleblue}\textbf{Depth} & \textbf{Hit@k} & \textbf{Số câu mất gold so với depth 5} \\\midrule
+1 đoạn & \NumPoneHitOne & \NumLostAtDepthOne\ câu \\\midrule
+3 đoạn & \NumPoneHitThree & \NumLostAtDepthThree\ câu \\\midrule
+\rowcolor{paleblue}5 đoạn & \NumPoneHitFive & Mốc đối chứng: giữ toàn bộ top 5 \\\bottomrule
+\end{tabularx}\par}
+\vspace{6mm}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.31\textwidth}\statcard{P2 · depth 3}{\NumPtwodThreeAC}{AC trên toàn bộ development}\end{column}
+\begin{column}{.31\textwidth}\statcard{P2 · depth 5}{\NumPtwodFiveAC}{AC trên toàn bộ development}\end{column}
+\begin{column}{.31\textwidth}
+\heading{Hai ứng viên chung kết}
+{\smalltext Depth 1 dừng ở sàng lọc.\\[4mm]
+P2-depth3 và P2-depth5 được chạy đủ \NumNDev\ câu.\\[4mm]
+\textbf{AC cao chưa đủ: bước tiếp theo là kiểm tra guardrail.}\par}
+\end{column}\end{columns}
+\slidenote{Hit@k tính trên \NumNDev\ câu development từ trace retrieval dùng chung; không phải một lần truy xuất mới cho mỗi depth.}
+\end{frame}

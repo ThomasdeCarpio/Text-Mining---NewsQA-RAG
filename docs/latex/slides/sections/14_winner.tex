@@ -1,0 +1,23 @@
+\begin{frame}[t]{P2-depth5 cải thiện đáp án trên development}
+\purpose{So sánh cùng \NumNDev\ câu / \NumNDevArticles\ bài, cùng retrieval, cùng generator; chỉ thay prompt P0 thành P2.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.62\textwidth}
+{\tabletext\begin{tabularx}{\linewidth}{@{}Lrr@{}}
+\rowcolor{paleblue}\textbf{Thước đo} & \textbf{P0-depth5} & \textbf{P2-depth5} \\\midrule
+\textbf{Answer Correctness} & \NumPzeroAC & \textbf{\NumDevAC} \\\midrule
+Exact Match & \NumPzeroEM & \NumDevEM \\\midrule
+Token F1 & \NumPzeroFone & \NumDevFone \\\midrule
+Faithfulness & \NumPzeroFaith & \NumDevFaith \\\midrule
+Citation F1 & \NumPzeroCitFone & \NumDevCitFone \\\midrule
+Citation Validity & \NumPzeroCitVal & \NumDevCitVal \\\bottomrule
+\end{tabularx}}
+\end{column}
+\begin{column}{.33\textwidth}
+\statcard{Cải thiện AC}{\NumPtwodFiveDeltaAC}{CI95 \NumPtwodFiveDeltaACCI}
+\vspace{6mm}
+{\smalltext\textbf{Điều thay đổi trong đáp án}\\[3mm]
+P2 yêu cầu một câu ngắn, đúng loại thông tin được hỏi, kèm citation ngay sau đáp án.\par}
+\end{column}\end{columns}
+\takeaway{AC, EM và Token F1 tăng. Faithfulness qua guardrail nhưng CI của chênh lệch chứa 0: chưa chứng minh được bám bằng chứng tốt hơn.}
+\slidenote{Kết quả trên development dùng để chọn cấu hình; held-out ở slide sau mới dùng để đánh giá cấu hình đã chốt.}
+\end{frame}

@@ -1,0 +1,77 @@
+% The blue is sampled from the original supplied logo; the image is unmodified.
+\definecolor{brandaccent}{HTML}{003F88}
+\definecolor{brandink}{HTML}{152B45}
+\definecolor{brandmuted}{HTML}{536579}
+\definecolor{brandrule}{HTML}{DCE5EE}
+\definecolor{paleblue}{HTML}{EFF5FB}
+\definecolor{palegreen}{HTML}{EFF6F3}
+\definecolor{paleslate}{HTML}{F3F5F8}
+\setbeamercolor{normal text}{fg=brandink,bg=white}
+\setbeamercolor{frametitle}{fg=brandaccent,bg=white}
+\setbeamercolor{structure}{fg=brandaccent}
+\setbeamercolor{footline}{fg=brandmuted,bg=white}
+\setbeamercolor{takeaway}{fg=brandaccent,bg=paleblue}
+\setbeamerfont{normal text}{size=\fontsize{18}{23}\selectfont}
+\setbeamerfont{frametitle}{size=\fontsize{27}{33}\selectfont,series=\bfseries}
+\setbeamersize{text margin left=14mm,text margin right=14mm}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{}
+\setbeamertemplate{frametitle}{%
+  \vspace{6mm}\begin{minipage}[t][15mm][t]{.88\textwidth}
+    \usebeamerfont{frametitle}\insertframetitle
+  \end{minipage}\par\vspace{4mm}}
+\setbeamertemplate{background}{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north east,inner sep=0] at ([xshift=-10mm,yshift=-5mm]current page.north east)
+      {\includegraphics[width=20mm,keepaspectratio]{../figures/hcmus-logo.png}};
+  \end{tikzpicture}}
+\setbeamertemplate{footline}{%
+  \hspace{14mm}\begin{minipage}{\dimexpr\paperwidth-28mm\relax}
+    {\color{brandrule}\hrule height .5pt}\vspace{2.5mm}
+    {\fontsize{11}{13}\selectfont NewsLens · Nhóm 9\hfill\insertframenumber}\vspace{3mm}
+  \end{minipage}}
+\AtBeginDocument{\usebeamerfont{normal text}}
+\renewcommand{\arraystretch}{1.35}
+\setlength{\tabcolsep}{8pt}
+\newcommand{\tabletext}{\fontsize{16}{20}\selectfont}
+\newcommand{\smalltext}{\fontsize{15}{20}\selectfont}
+\newcommand{\heading}[1]{{\color{brandaccent}\bfseries #1}\par\vspace{3mm}}
+\newcommand{\takeaway}[1]{%
+  \par\vspace{4mm}\begin{beamercolorbox}[wd=\linewidth,sep=3mm]{takeaway}
+    \fontsize{16}{21}\selectfont #1
+  \end{beamercolorbox}}
+\tikzset{stage/.style={draw=brandrule,fill=paleblue,rounded corners=2mm,
+  align=center,minimum height=20mm,inner sep=3mm,font=\fontsize{16}{20}\selectfont},
+  flow/.style={-{Stealth[length=2.5mm]},line width=1pt,draw=brandaccent}}
+
+% Shared alignment and separators for the complete deck.
+\arrayrulecolor{brandrule}
+\setlength{\lightrulewidth}{.35pt}
+\setlength{\heavyrulewidth}{.6pt}
+\setlength{\aboverulesep}{1.5pt}
+\setlength{\belowrulesep}{1.5pt}
+\newcommand{\purpose}[1]{{\fontsize{15}{20}\selectfont\color{brandmuted}#1\par}\vspace{4mm}}
+\newcommand{\slidenote}[1]{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=south west,inner sep=0,text width=292mm,align=left,
+      font=\fontsize{12}{15}\selectfont,text=brandmuted]
+      at ([xshift=14mm,yshift=15mm]current page.south west) {#1};
+  \end{tikzpicture}}
+\newcommand{\statcard}[3]{%
+  \begingroup\setlength{\fboxsep}{4mm}\setlength{\fboxrule}{.4pt}%
+  \fcolorbox{brandrule}{paleblue}{\begin{minipage}[c][34mm][c]{\dimexpr\linewidth-8mm-.8pt\relax}
+    \centering{\fontsize{15}{20}\selectfont #1\par}\vspace{2mm}
+    {\fontsize{32}{37}\selectfont\bfseries\color{brandaccent}#2\par}\vspace{2mm}
+    {\fontsize{13}{17}\selectfont\color{brandmuted}#3\par}
+  \end{minipage}}\endgroup\par}
+\newcommand{\scorebar}[3]{%
+  \begin{tikzpicture}[baseline=-.6ex]
+    \fill[brandrule] (0,0) rectangle (8.5,.19);
+    \fill[#3] (0,0) rectangle ({8.5*#1},.19);
+    \node[anchor=west,font=\fontsize{15}{19}\selectfont,text=brandink] at (8.65,.10) {#2};
+  \end{tikzpicture}}
+\newcommand{\modelstrip}{%
+  {\smalltext\begin{tabularx}{\textwidth}{@{}LL@{}}
+    \rowcolor{paleblue}\textbf{Mô hình sinh}\quad\textbf{\NumGeneratorModel} &
+    \textbf{Giám khảo}\quad\textbf{\NumJudgeModel}
+  \end{tabularx}\par}\vspace{4mm}}

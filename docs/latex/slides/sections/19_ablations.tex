@@ -1,0 +1,12 @@
+\begin{frame}[t]{Khảo sát phụ: vì sao giữ cấu hình đã chốt?}
+\purpose{Các thay đổi không được áp dụng; vai trò là kiểm tra lựa chọn chính, không mở thêm một vòng chọn trên held-out.}
+{\smalltext\renewcommand{\arraystretch}{1.3}\begin{tabularx}{\textwidth}{@{}p{57mm}p{69mm}L@{}}
+\rowcolor{paleslate}\textbf{Khảo sát} & \textbf{Thay đổi được thử} & \textbf{Kết quả và quyết định} \\\midrule
+Kích thước chunk\newline Development: \NumNDev\ câu & Chunk ngắn / vừa / dài & Spread nDCG@5: \NumChunkSpread; chưa phân định được. Giữ \NumChunkSize/\NumChunkOverlap. \\\midrule
+Contextual chunking\newline Resolved: \NumCtxNSamples\ câu & Thêm ngữ cảnh bài báo trước chunk & Dense tăng \NumCtxEffectDense; sparse giảm \NumCtxEffectSparse\ nDCG@5. Không thêm vào nhánh sparse. \\\midrule
+Phase 2C\newline Development: \NumNDev\ câu & Theo câu, đoạn; child–parent & C3-depth3 tăng AC \NumPtwocCthreeDthreeDeltaAC\ nhưng trượt Citation F1, Hit@5, Recall@5. Không đổi winner. \\\midrule
+Chính sách từ chối\newline Development: \NumPthreeNDev\ case & Schema answerability; cổng theo reranker & Token F1 ở câu có bằng chứng giảm \NumPthreeBoneDeltaTokenFoneDev. Giữ B0 (chính prompt P2). \\\bottomrule
+\end{tabularx}\par}
+\takeaway{Không thay cấu hình chính chỉ vì một điểm tăng: kiểm tra bằng chứng, trích dẫn và phạm vi mẫu trước khi áp dụng.}
+\slidenote{Phase 2C là khảo sát sau held-out. Thử từ chối đồng thời đổi schema và chỉ thị đáp án, nên chưa tách được tác động của từng yếu tố.}
+\end{frame}

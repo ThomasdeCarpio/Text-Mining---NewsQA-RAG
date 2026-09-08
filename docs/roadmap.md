@@ -136,6 +136,21 @@ Full detail: [`Detailed Test Plans/phase_2_generation_tuning_plan.md`](Detailed%
 
 ## Presentation
 
+**NewsLens deck — 09/09/2026: complete, ready for review.** The 20-slide PDF
+and Beamer source are in `docs/latex/slides/`. Revised 1–7 and continued through
+retrieval, generation, held-out, application, one subordinate ablation slide,
+and conclusions. Removed visible artifact paths, promoted model/configuration
+details, added light table rules, aligned cards and visual comparisons. Original
+HCMUS logo preserved. Numbers/bar lengths are generated; six-digit guardrail
+deltas preserve the depth-3 boundary failure. Source mapping/build instructions:
+`docs/latex/README.md`. Code inspection found chat does not pass P2 and its model
+is runtime-configurable (default gpt-4o-mini); slides state the integration gap
+without changing application code. Verified with Tectonic 0.17.0 and PyMuPDF:
+20 pages at 320 × 180 mm, all pages visually reviewed, no source paths, clipping,
+overfull boxes, missing glyphs or body/note collisions. Four macro tests pass;
+`scripts/check_latex_slides.py` makes PDF validation reproducible. Next: user
+review; application integration and the report remain separate tasks.
+
 A deck already exists — 15 slides, fully offline. The refactor moved it to
 `docs/archive/`, and its test has been quietly skipping ever since.
 

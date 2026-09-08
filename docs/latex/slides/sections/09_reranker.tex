@@ -1,0 +1,21 @@
+\begin{frame}[t]{Reranker cải thiện thứ tự bằng chứng}
+\purpose{Giữ các retriever đi tiếp, so sánh không xếp hạng lại, MiniLM và bge-reranker-large trên development.}
+{\tabletext\begin{tabularx}{\textwidth}{@{}Lrrr@{}}
+\rowcolor{paleblue}\textbf{nDCG@5 — resolved} & \textbf{Không rerank} & \textbf{MiniLM-L6} & \textbf{BGE-large} \\\midrule
+\textbf{BGE-M3 sparse} & \NumRtwoSparseNone & \NumRtwoSparseMini & \cellcolor{paleblue}\textbf{\NumRtwoSparseLarge} \\\midrule
+Dense · e5-base-v2 & \NumRtwoDenseNone & \NumRtwoDenseMini & \NumRtwoDenseLarge \\\midrule
+Hybrid · sparse + dense & \NumRtwoHybridNone & \NumRtwoHybridMini & \NumRtwoHybridLarge \\\bottomrule
+\end{tabularx}\par}
+\vspace{6mm}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.30\textwidth}\statcard{Sparse + BGE-large}{\NumRerankerNdcgGain}{$\Delta$ nDCG@5 so với không rerank}\end{column}
+\begin{column}{.65\textwidth}
+\heading{Cái giá: thêm thời gian xếp hạng lại}
+{\tabletext\begin{tabularx}{\linewidth}{@{}Lrrr@{}}
+\rowcolor{paleblue}Sparse & Không rerank & MiniLM & BGE-large \\\midrule
+P50 tổng (ms) & \NumRtwoSparseNoneLatency & \NumRtwoSparseMiniLatency & \NumRtwoSparseLargeLatency \\\bottomrule
+\end{tabularx}}
+\takeaway{Chọn \textbf{sparse + BGE-large}. Hybrid không chứng minh được lợi ích trong thiết lập đã thử.}
+\end{column}\end{columns}
+\slidenote{P50 là trung vị latency. So sánh trên \NumNDev\ câu cùng môi trường; độ trễ thực tế phụ thuộc phần cứng và model đã được nạp.}
+\end{frame}

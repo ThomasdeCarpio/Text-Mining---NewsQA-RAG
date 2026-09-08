@@ -1,0 +1,12 @@
+# Retrieval + notebook execution only; no app/backend/RAGAS dependencies.
+# Install CUDA-enabled torch separately as documented in LOCAL_RUN.md.
+torch==2.7.1
+FlagEmbedding==1.3.5
+transformers==4.51.3
+sentence-transformers==4.1.0
+peft==0.15.2
+accelerate==1.6.0
+numpy==2.2.5
+huggingface-hub>=0.30,<1
+ipykernel>=6,<7
+nbclient>=0.10,<1

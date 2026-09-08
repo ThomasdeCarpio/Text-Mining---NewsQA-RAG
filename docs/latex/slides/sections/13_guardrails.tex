@@ -1,0 +1,14 @@
+\begin{frame}[t]{Chốt P2-depth5: qua guardrail trước khi so AC}
+\purpose{Chênh lệch so với baseline P0-depth5 trên cùng \NumNDev\ câu. Đỏ là không đạt ngưỡng đã đăng ký.}
+{\tabletext\begin{tabularx}{\textwidth}{@{}Lrrr@{}}
+\rowcolor{paleblue}\textbf{Điều kiện} & \textbf{Ngưỡng} & \textbf{P2-depth3} & \textbf{P2-depth5} \\\midrule
+$\Delta$ Faithfulness & $\geq$ \NumGuardFaithThreshold & \fail{\NumPtwodThreeGuardFaithExact} & \pass{\NumPtwodFiveGuardFaithExact} \\\midrule
+$\Delta$ Citation F1 & $\geq$ \NumGuardCitFoneThreshold & \pass{\NumPtwodThreeGuardCitFoneExact} & \pass{\NumPtwodFiveGuardCitFoneExact} \\\midrule
+$\Delta$ Citation Validity & $\geq$ \NumGuardCitValThreshold & \fail{\NumPtwodThreeGuardCitValExact} & \pass{\NumPtwodFiveGuardCitValExact} \\\midrule
+Coverage & $\geq$ \NumCoverageThreshold & \NumPtwodThreeCoverage & \NumPtwodFiveCoverage \\\midrule
+\textbf{Answer Correctness} & Cao nhất trong nhóm hợp lệ & \NumPtwodThreeAC & \textbf{\NumPtwodFiveAC} \\\midrule
+\textbf{Quyết định} & & \fail{Loại} & \pass{Chọn} \\\bottomrule
+\end{tabularx}\par}
+\takeaway{\textbf{P2-depth3 có AC cao hơn nhưng trượt hai guardrail.} P2-depth5 được chọn để giữ chất lượng bằng chứng và trích dẫn trong ngưỡng cho phép.}
+\slidenote{Hiển thị sáu chữ số ở các delta để thấy Faithfulness của depth 3 vượt ngưỡng; không quyết định bằng số đã làm tròn.}
+\end{frame}

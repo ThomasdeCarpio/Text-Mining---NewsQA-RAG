@@ -1,0 +1,21 @@
+\begin{frame}[t]{Có bằng chứng trong context thì kết quả khác gì?}
+\purpose{Tách các câu có và không có gold trong top 5 để tránh quy mọi lỗi cho mô hình sinh. Cùng cấu hình P2-depth5.}
+{\tabletext\begin{tabularx}{\textwidth}{@{}Lrrrr@{}}
+\rowcolor{paleblue}\textbf{Nhóm câu hỏi} & \textbf{Dev: số câu} & \textbf{AC dev} & \textbf{Held-out: số câu} & \textbf{AC held-out} \\\midrule
+Có gold trong context & \NumGoldInTopFive & \NumPtwodFiveHitAC & \NumHoNHit & \NumHoHitAC \\\midrule
+Không có gold trong context & \NumGoldNotInTopFive & \NumPtwodFiveMissAC & \NumHoNMiss & \NumHoMissAC \\\bottomrule
+\end{tabularx}\par}
+\vspace{6mm}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.47\textwidth}
+\heading{Khi có gold}
+{\smalltext AC ở mức cao hơn trên cả hai tập. Tầng sinh có thể khai thác bằng chứng đã được đưa vào context.\par}
+\takeaway{Dev: \NumGoldInTopFive/\NumNDev\ câu\qquad Held-out: \NumHoNHit/\NumNHeldout\ câu}
+\end{column}
+\begin{column}{.47\textwidth}
+\heading{Khi không có gold}
+{\smalltext Cần kiểm tra truy xuất và nhãn bằng chứng. Đổi prompt không tự bổ sung được đoạn bị thiếu.\par}
+\takeaway{Dev: \NumGoldNotInTopFive/\NumNDev\ câu\qquad Held-out: \NumHoNMiss/\NumNHeldout\ câu}
+\end{column}\end{columns}
+\slidenote{Không có gold theo nhãn không đồng nghĩa không có đáp án hợp lý. Phân tầng này là chẩn đoán, không chứng minh nguyên nhân duy nhất.}
+\end{frame}
