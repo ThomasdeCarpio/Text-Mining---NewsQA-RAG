@@ -6,6 +6,20 @@ nhét gì vào.
 
 Ngân sách trang là để giữ tỉ lệ, không phải để đếm chính xác.
 
+## Quy ước: mỗi mục kết bằng một đoạn **Chốt lại**
+
+Từ §3 trở đi, mỗi mục kết bằng **2–3 câu** theo đúng ba ý này, không thêm:
+
+1. **Mục này đã chốt được gì** — một câu, có số.
+2. **Phải trả giá bằng gì** — cái bị loại, cái không phân định được, hoặc cái
+   chưa đo. Không có mục nào không phải trả giá gì.
+3. **Nó đưa sang mục sau cái gì** — một câu bắc cầu.
+
+Ba ý này đã ghi sẵn ở cuối mỗi mục bên dưới, mục nào tra mục đó.
+
+**Cấm:** tóm tắt lại toàn bộ mục, lặp lại bảng, hoặc tự khen. Nếu đoạn Chốt lại
+chỉ nói lại những gì vừa đọc thì bỏ nó đi.
+
 ---
 
 ## §0 — Thuật ngữ · ~1 trang
@@ -19,21 +33,79 @@ Ngân sách trang là để giữ tỉ lệ, không phải để đếm chính x
 
 ---
 
-## §1 — Bài toán, dữ liệu, và cách chia việc · ~1,5 trang
+## §1 — Mở đầu: mục tiêu và cách chia việc · ~2 trang
 
-**Phải làm được:**
-1. Hệ thống nhận gì, trả gì (câu hỏi → 5 đoạn → đáp án ngắn + citation `[n]`).
-2. Dữ liệu là gì: 11.064 bài, 200 bài đánh giá, 1.152 câu sau khử trùng lặp.
-3. Vì sao tách phase — hai kiểu hỏng khác nhau, hai loại thước đo khác nhau.
-4. `original` vs `resolved`, và vì sao báo cáo theo `resolved`.
+> Đây là mục **duy nhất** người đọc chắc chắn đọc hết. Nó phải trả lời được
+> *"đồ án này định làm gì, và làm thế nào để biết là đã làm được"* — trước khi
+> có bất kỳ con số nào.
 
-**Bằng chứng:** EDA §1, §6; `subset_manifest.json`.
+**Phải làm được, theo đúng thứ tự này:**
+
+### 1.1 Bối cảnh — vì sao bài toán này khó
+
+Hệ thống nhận gì, trả gì: câu hỏi → 5 đoạn văn → đáp án ngắn kèm trích dẫn `[n]`.
+Cái khó không nằm ở việc gọi LLM, mà ở chỗ có **hai tầng hỏng độc lập**: truy xuất
+lấy nhầm đoạn, và sinh viết sai dù đoạn đúng đã nằm trong tay. Một điểm số cuối
+cùng không phân biệt được hai thứ đó.
+
+### 1.2 Mục tiêu đồ án ❓ *(cần bạn điền — xem [`06_decisions.md`](06_decisions.md) D14)*
+
+Chưa có tài liệu nào trong repo phát biểu mục tiêu đồ án theo lời của đề bài.
+`master_test_plan.md` mở đầu bằng *kế hoạch thực nghiệm*, không bằng *mục tiêu*.
+Cần hai thứ, và cả hai phải lấy từ đề bài chứ không suy ra:
+
+- **Mục tiêu chung** — một câu, dạng "xây dựng và đánh giá …".
+- **Tiêu chí chấm của môn học** — thầy chấm cái gì: hệ thống chạy được, hay quy
+  trình thực nghiệm, hay cả hai, tỉ lệ ra sao.
+
+*Cho tới khi có, mục này để trống chứ không được đoán.*
+
+### 1.3 Mục tiêu cụ thể — bốn câu hỏi đồ án đặt ra
+
+Bốn câu này **suy ra được từ bốn phase đã chạy**, nên viết được ngay:
+
+| | Câu hỏi | Trả lời ở |
+| :-- | :--- | :-- |
+| Q1 | Cách truy xuất nào lấy được đoạn chứa đáp án tốt nhất? | §3 |
+| Q2 | Cách ra lệnh cho LLM thế nào để nó trả lời đúng mà không bịa? | §4 |
+| Q3 | Cách **cắt** văn bản thành đoạn có ảnh hưởng tới kết quả cuối không? | §5 |
+| Q4 | Hệ thống có biết im lặng khi không đủ bằng chứng không? | §7 |
+
+Và một câu hỏi xuyên suốt, quan trọng hơn cả bốn câu trên: **làm sao biết một cải
+tiến là thật, chứ không phải là nhiễu đo hoặc là hệ quả của việc thử quá nhiều
+lần?** Đó là nội dung §2, và là phần đóng góp phương pháp của đồ án.
+
+### 1.4 Thế nào là đạt
+
+Ba tiêu chí, và cả ba đều **đã chốt trước khi chạy**, không phải đặt ra sau khi
+nhìn kết quả:
+
+1. Mọi quyết định chọn cấu hình phải dựa trên **luật đăng ký trước**, không phải
+   trên điểm số nhìn thấy sau.
+2. Con số công bố phải đo trên tập **chưa từng dùng để tinh chỉnh**.
+3. Mỗi cải tiến phải nói rõ **có phân định được với nhiễu hay không**.
+
+Đây cũng chính là ba thứ §2 định nghĩa và §3–§7 thi hành.
+
+### 1.5 Dữ liệu
+
+11.064 bài báo CNN (200 bài có câu hỏi, 10.864 bài làm nhiễu); 1.152 câu sau khử
+trùng lặp ngữ nghĩa; chia 50 bài development / 50 bài held-out / 100 bài dự trữ.
+`original` vs `resolved` là gì, và vì sao báo cáo theo `resolved`.
+
+### 1.6 Cách chia việc
+
+Vì sao tách phase: hai tầng hỏng ở 1.1 cần hai loại thước đo khác nhau. Sơ đồ một
+dòng: `EDA → Phase 1 (truy xuất) → Phase 2 (sinh) → Phase 2C (chia đoạn) → held-out → Phase 3 (từ chối)`.
+
+**Bằng chứng:** EDA §1, §6; `subset_manifest.json`; `master_test_plan.md` §1.
 
 **Cần cho mục sau:** §3 và §4 đều dựa vào việc người đọc hiểu tại sao truy xuất
-và sinh được đo tách nhau.
+và sinh được đo tách nhau. §8 sẽ đối chiếu ngược lại với 1.4.
 
-**Không nhét vào:** chi tiết EDA. Chỉ lấy đúng phần cần để hiểu thiết kế thí
-nghiệm; phần còn lại trỏ sang báo cáo EDA.
+**Không nhét vào:** chi tiết EDA; kết quả; và **không được liệt kê công nghệ
+dùng** (BGE-M3, Gemini…) như một mục "công nghệ sử dụng" — chúng là *kết quả* của
+§3 và §4, không phải tiền đề.
 
 ---
 
@@ -96,6 +168,16 @@ mỗi chỗ giải thích lại.
 biểu diễn chunk có quan trọng không?"*. **Đề xuất: giữ ở §3 và có một câu bắc
 cầu sang §5** — vì nó chạy trước, trên harness khác, và nó là cái mở ra 2C.
 
+### Chốt lại §3
+
+1. Truy xuất chốt ở BGE-M3 sparse + bge-reranker-large + chunk 512/64, Hit@5
+   0,9573 trên 281 câu development.
+2. Trả giá: chỉ **hai** trong nhiều so sánh phân định được (sparse ↔ dense,
+   thêm reranker); kích thước chunk và lựa chọn giữa các mô hình dense là kết
+   quả null, và dense chưa tái lập được giữa hai lần chạy.
+3. Bàn giao sang §4: một tập 5 đoạn **đóng băng**, cộng một bảng Hit@k sẽ được
+   dùng lại để định giá chi phí của việc cắt bớt context.
+
 ---
 
 ## §4 — Phase 2: chọn cách hỏi LLM · ~3 trang
@@ -149,38 +231,81 @@ chính là cái làm bản hiện tại đọc lủng củng.
 
 **Không nhét vào:** nguyên văn prompt (trỏ sang `docs/prompts.md`).
 
+### Chốt lại §4
+
+1. Prompt P2 với 5 đoạn context tăng Answer Correctness +0,1043 so với P0
+   (CI95 [+0,0844; +0,1240]) và qua cả bốn guardrail.
+2. Trả giá: cấu hình điểm cao hơn (P2-depth3, +0,0360 AC) bị loại vì trượt hai
+   guardrail; và P2-depth5 **không** trung thực hơn P0 — chỉ là không tệ đi.
+3. Bàn giao sang §5: prompt và depth đã khóa, nên biến duy nhất còn lại để thử
+   là **cách cắt văn bản thành đoạn**.
+
 ---
 
-## §5 — Phase 2C: chiến lược chia đoạn · ~2 trang · **CHỜ SỐ**
-
-> Khung dựng sẵn, bảng để trống, điền khi Thắng có kết quả. Notebook đã có ở
-> `notebooks/Tests/phase2c/`; kế hoạch ở `phase_2c_chunking_strategy_test_plan.md`.
+## §5 — Phase 2C: chiến lược chia đoạn · ~2 trang 📌 *(đã có số)*
 
 **Phải làm được:**
 1. **Vì sao có 2C:** Vòng 3 nói *kích thước* chunk không quan trọng; ablation gợi
    ý *cấu trúc* chunk thì có. 2C thử trục đó cho tử tế.
-2. **Ma trận bốn chiến lược:**
+2. **Nói ngay từ câu đầu rằng 2C là phần mở rộng khám phá hậu kiểm** — thiết kế
+   sau khi held-out đã mở. Không được trình bày như thể nó nằm trong đăng ký
+   trước ban đầu. Đây là điều `notes_thang.md` §9 tự yêu cầu, và nó đúng.
+3. **Ma trận bốn chiến lược:**
 
-   | ID | Chiến lược | Đơn vị retrieve | Context đưa cho generator |
-   | :-- | :--- | :--- | :--- |
-   | `C0` | Recursive 512/64 (control) | chunk 512 | chính chunk đó |
-   | `C1` | Theo câu | nhóm câu ≤512 | chính nhóm đó |
-   | `C2` | Theo đoạn văn | nhóm đoạn ≤512 | chính nhóm đó |
-   | `C3` | Phân cấp | child 256/32 | **parent 512/64** chứa child |
+   | ID | Chiến lược | Đơn vị retrieve | Context đưa cho generator | Số đơn vị | Index |
+   | :-- | :--- | :--- | :--- | ---: | ---: |
+   | `C0` | Recursive 512/64 (control) | chunk 512 | chính chunk đó | 22.766 | 64,90 MiB |
+   | `C1` | Theo câu | nhóm câu ≤512 | chính nhóm đó | 22.014 | 63,38 MiB |
+   | `C2` | Theo đoạn văn | nhóm đoạn ≤512 | chính nhóm đó | 22.018 | 63,23 MiB |
+   | `C3` | Phân cấp | child 256/32 | **parent 512/64** chứa child | 49.218 + 22.766 | 76,58 MiB |
 
-3. **Vì sao C3 cần hai tầng đánh giá:** nó retrieve *child* nhưng generator đọc
+4. **Vì sao C3 cần hai tầng đánh giá:** nó retrieve *child* nhưng generator đọc
    *parent*, nên phải đo cả *retrieval relevance* lẫn *delivered-context
    relevance*. Đây là điểm phương pháp thú vị nhất của 2C — nên viết kỹ.
-4. **Guardrail của 2C** khác Phase 2B: thêm ràng buộc **Hit@5 và Recall@5 không
-   tụt quá 0,01**, vì 2C được phép đụng vào truy xuất còn 2B thì không.
-5. **Kết quả** — *(để trống)*
-6. **Winner và vì sao** — *(để trống)*
+5. **Quy trình ba vòng thu hẹp dần**, và nêu thẳng cỡ mẫu từng vòng vì chúng rất
+   khác nhau:
 
-**Bằng chứng cần có khi điền:** `phase2c_comparison.csv`, per-question scores,
-bản ghi quyết định winner.
+   | Vòng | Chạy gì | n | Kết quả |
+   | :--- | :--- | ---: | :--- |
+   | Sàng lọc truy xuất | C0–C3, chỉ retrieval | 281 | cả bốn qua, margin loại sớm 0,02 |
+   | Sàng lọc sinh | C1, C2, C3 với P2-D5 | 80 *(RAGAS 20)* | chỉ C3 đi tiếp |
+   | Sàng lọc depth | C3 với D1/D3/D5 | 80 *(RAGAS 20)* | D1 loại; D3 và D5 vào chung kết |
+   | Chung kết | C3-D3, C3-D5 trên development đầy đủ | 281 | cả hai bị loại |
+
+6. **Guardrail của 2C** khác Phase 2B: thêm ràng buộc **Hit@5 và Recall@5 không
+   tụt quá 0,01**, vì 2C được phép đụng vào truy xuất còn 2B thì không.
+7. **Kết quả:** C3-D3 là cấu hình **cao điểm nhất toàn dự án** trên development
+   (AC 0,7730, cao hơn production +0,0380, CI95 [+0,0183; +0,0575]), và nó **bị
+   loại**. Trượt ba guardrail: Citation F1 −0,0284, Hit@5 −0,0107, Recall@5
+   −0,0125. Winner giữ nguyên **C0-P2-D5**.
+8. **Cơ chế Citation F1 tụt:** không phải đánh số citation sai — Citation Validity
+   của C3 vẫn khoảng 0,98. Là parent được trích dẫn khớp gold context kém hơn
+   chunk recursive, nên precision/recall của citation giảm. Chi tiết ở
+   [`03_claims.md`](03_claims.md) 4.8.
+
+### 🔒 Ràng buộc cách viết cho §5
+
+1. **Cấm viết "C3 truy xuất kém hơn C0".** CI95 của cả Hit@5 lẫn Recall@5 đều
+   **chứa 0**. Chỉ được viết *"tụt quá ngưỡng đã đăng ký trước"* — đó là áp luật,
+   không phải kết luận thống kê. Xem [`03_claims.md`](03_claims.md) 4.6.
+2. **Cấm viết C1/C2 "kém hơn".** Chúng bị loại trên 80 câu, RAGAS chỉ chấm 20.
+   Phải nêu kèm n.
+3. **Cấm viết 2C đã chạy trên reserve 587 câu.** Chưa chạy.
+
+**Bằng chứng:** `docs/reports/phase2c/paired_significance.json`,
+`phase2c_retrieval_screening.csv`, `screening/*.json`, `notes_thang.md`.
 
 **Không nhét vào:** C4 semantic chunking — kế hoạch xếp nó là exploratory và
-**không được dùng để thay winner**.
+**không được dùng để thay winner**; và nó không được chạy.
+
+### Chốt lại §5
+
+1. Không chiến lược chunking nào qua hết sáu guardrail; winner giữ nguyên
+   C0-P2-D5.
+2. Trả giá: C3-D3 là cấu hình cao điểm nhất toàn dự án (+0,0380 AC so với
+   production) và vẫn bị loại — lần thứ hai trong đồ án luật thắng điểm số.
+3. Bàn giao sang §6: cấu hình production không đổi sau 2C, nên con số held-out
+   đã chạy vẫn là kết quả tổng quát hóa cuối cùng, không phải chạy lại.
 
 ---
 
@@ -201,9 +326,78 @@ bản ghi quyết định winner.
 **Không nhét vào:** so sánh A/B trên held-out — không có baseline held-out, và
 theo thiết kế thì không được chạy thêm.
 
+### Chốt lại §6
+
+1. Con số công bố: Answer Correctness 0,7157 trên 284 câu chưa từng bị chạm tới,
+   chạy đúng một lần sau khi quyết định đã đóng băng.
+2. Trả giá: Hit@5 tụt xuống 0,8768, tức khoảng 12% số câu không có đường nào để
+   trả lời đúng — trần của tầng sinh nằm ở tầng truy xuất, không ở prompt.
+3. Bàn giao sang §7: hệ thống trả lời tốt khi có bằng chứng; câu còn lại là nó
+   làm gì **khi không có**.
+
 ---
 
-## §7 — Giới hạn và việc còn lại · ~1,5 trang
+## §7 — Phase 3: dạy hệ thống biết từ chối · ~1,5 trang 📌 *(đã có số)*
+
+> Mục này có tồn tại hay không phụ thuộc **D7** ở
+> [`06_decisions.md`](06_decisions.md). Phương án còn lại là gói thành một đoạn
+> trong §8.
+
+**Phải làm được:**
+1. **Bài toán đảo trục:** ba phase trước hỏi *"trả lời đúng tới đâu"*. Phase 3
+   hỏi *"có im lặng được khi không đủ bằng chứng không"*. Metric chính đổi từ
+   Answer Correctness sang **false-answer rate**, và ngưỡng coverage siết từ 95%
+   lên 98%.
+2. **Bộ dữ liệu không tự nhiên có sẵn** — phải dựng: 200 case, 140 development /
+   60 final-test, gồm 87 câu trả lời được làm control và 6 loại câu *không* trả
+   lời được. Nêu bảng loại case, và nêu thẳng rằng `natural_retrieval_miss` chỉ
+   có 2 + 1 case nên ô đó không mang thông tin.
+3. **Ba chính sách:** B0 (chính prompt P2 của Phase 2, không sửa) · B1 (bắt trả
+   JSON có trường `answerability`) · B2 (B1 + cổng chặn theo điểm reranker).
+4. **Kết quả — B0 thắng, không đổi gì:** B1 giảm false-answer rate 5,06% → 1,27%
+   (4 lỗi → 1 lỗi trên 79 câu) nhưng làm token F1 của các câu trả lời được tụt
+   **−0,1070**, gấp hơn năm lần ngưỡng 0,02.
+5. **Cơ chế, và đây là chỗ đáng viết nhất:** prompt B1 bỏ mất câu lệnh quy định
+   *hình dạng đáp án* của P2 và chỉ còn "concise answer". Đáp án dài trở lại —
+   trung bình 12,5 → 16,3 từ — tức **đúng nhóm lỗi mà Phase 2 đã chữa** quay về.
+   Ví dụ cụ thể: đáp án `Robert Park [1].` (F1 1,00) thành một câu 24 từ kể lại
+   cả bối cảnh (F1 0,15).
+6. **B2 là kết quả null theo đúng nghĩa:** hiệu chuẩn quét 107 ngưỡng, và điểm
+   tốt nhất chính là ngưỡng thấp nhất — tức **tắt cổng**. Không ngưỡng nào hạ
+   được false-answer rate mà vẫn giữ false-abstention ≤ 10%. Điểm reranker không
+   mang đủ thông tin để làm cổng.
+7. **Final-test 60 câu, chạy sau khi đã khóa:** B0 abstention F1 0,9697,
+   false-abstention 0,0%, citation validity 1,0000. Mã từ chối hiệu chuẩn trên
+   tập final — trích một dòng để chứng minh.
+
+### 🔒 Ràng buộc cách viết cho §7
+
+1. **Phải nêu confound.** B1 đổi hai thứ cùng lúc: thêm schema *và* bỏ ràng buộc
+   hình dạng đáp án. Thí nghiệm này **không** tách được "schema có hại" khỏi
+   "mất câu lệnh hình dạng có hại". Viết B1 thất bại mà giấu chuyện đó là nói quá.
+2. **Cấm gọi Phase 3 là "chưa xong".** Nó xong rồi, và cho kết quả âm. Kết quả âm
+   có kiểm soát là kết quả.
+3. **Phải nêu lần sửa dữ liệu sau duyệt** (3 dòng, một câu hỏi mơ hồ về cháy rừng).
+
+**Bằng chứng:** `docs/reports/phase3/policy_comparison.csv`,
+`policy_significance.json`, `phase3_final_results.json`,
+`docs/Detailed Test Plans/phase_3_abstention_test_plan.md`.
+
+**Không nhét vào:** so sánh Phase 3 với Phase 2 bằng điểm số — hai bộ dữ liệu
+khác nhau, hai metric chính khác nhau.
+
+### Chốt lại §7
+
+1. Không chính sách abstention nào được nhận: B0 — chính prompt của Phase 2 —
+   thắng, với false-answer rate 5,88% trên final-test.
+2. Trả giá: B1 hạ được false-answer rate xuống gần bốn lần nhưng phá hỏng hình
+   dạng đáp án (−0,1070 token F1), và thí nghiệm không tách được hai nguyên nhân.
+3. Bàn giao sang §8: ba phase liên tiếp cùng cho một dạng kết quả, và đó là thứ
+   đáng nói nhất của đồ án.
+
+---
+
+## §8 — Giới hạn và việc còn lại · ~1,5 trang
 
 **Phải làm được:**
 
@@ -211,8 +405,17 @@ theo thiết kế thì không được chạy thêm.
 - Dense **chưa tái lập được**: trôi 0,0143 > khoảng cách giữa các mô hình 0,0094.
   Nêu nguyên nhân trong mã: thiếu seed HNSW, `batch_size`, `torch.manual_seed`.
 - Giải đấu phân tầng không phát hiện được tương tác giữa các vòng.
-- Bootstrap không đồng nhất: Phase 1 và ablation theo câu, Phase 2 gom cụm theo bài.
+- Bootstrap không đồng nhất: Phase 1, ablation và Phase 3 bốc theo câu; Phase 2
+  và 2C gom cụm theo bài.
 - Biên độ nhập nhằng là **chỉ báo**, chưa ai đọc tay xác nhận.
+- **Ngưỡng guardrail đặt không kèm tính cỡ mẫu, ở cả 2B lẫn 2C.** Ở 2B, ngưỡng
+  Citation F1 có tỉ lệ báo động giả 21,3%; ở 2C, ba trong năm ngưỡng số nằm dưới
+  tầm phân giải (13,3% / 12,8% / 23,8%). Chi tiết:
+  [`04_stats.md`](04_stats.md) mục 2.
+- **2C là phần mở rộng khám phá hậu kiểm**, không phải phần đăng ký trước; và
+  development 281 câu đã bị dùng qua nhiều vòng nên vẫn có thể overfit thích nghi.
+- **Phase 3 có confound trong thiết kế B1** — xem §7, ràng buộc 1.
+- Tập reserve 587 câu của 2C và final-test 150 bài của Phase 1 đều **chưa chạy**.
 
 *Giới hạn của bộ đo*
 - Giám khảo là LLM, đã tách khỏi generator nhưng **chưa hiệu chuẩn với nhãn người**
@@ -225,13 +428,76 @@ theo thiết kế thì không được chạy thêm.
 
 **Không nhét vào:** phần tự khen về việc đã trung thực nêu giới hạn.
 
+### Chốt lại §8
+
+Một câu duy nhất: giới hạn lớn nhất của đồ án không phải là điểm số, mà là
+**bộ đo** — giám khảo là LLM chưa hiệu chuẩn với nhãn người, nên mọi con số
+tuyệt đối đều là ước lượng, còn mọi con số **so sánh** thì vững hơn vì cùng một
+giám khảo chấm cả hai phía.
+
+---
+
+## §9 — Kết luận · ~1 trang
+
+> Không phải bản tóm tắt báo cáo. Người đọc vừa đọc xong tám mục; đừng kể lại.
+
+**Phải làm được, đúng bốn ý, theo thứ tự:**
+
+### 9.1 Trả lời thẳng bốn câu hỏi ở §1.3
+
+Mỗi câu **một dòng**, có số, không giải thích lại:
+
+| | Câu hỏi | Trả lời |
+| :-- | :--- | :--- |
+| Q1 | Truy xuất thế nào? | BGE-M3 sparse + bge-reranker-large, Hit@5 0,9573 — sparse hơn dense +0,1634 nDCG@5 |
+| Q2 | Ra lệnh cho LLM thế nào? | Prompt P2, 5 đoạn context, AC +0,1043 so với baseline |
+| Q3 | Cách cắt đoạn có quan trọng không? | **Không đủ để đổi cấu hình** — không chiến lược nào qua hết guardrail |
+| Q4 | Có biết im lặng không? | Biết sẵn: false-answer rate 5,88%; **không** chính sách bổ sung nào được nhận |
+
+### 9.2 Kết quả công bố
+
+Answer Correctness **0,7157** trên 284 câu held-out, chạy đúng một lần. Kèm dải
+sàn–trần: đây là **cận dưới**, vì audit 30 câu điểm thấp thấy 23/30 thực ra đúng
+về ngữ nghĩa và giám khảo bất đồng với người duyệt ở 18/30 câu.
+
+### 9.3 Phát hiện phương pháp — phần đáng nói nhất
+
+Ba phase liên tiếp cùng cho một dạng kết quả:
+
+| Phase | Cấu hình cao điểm nhất | Cấu hình được nhận | Vì sao |
+| :--- | :--- | :--- | :--- |
+| 2B | P2-depth3 | P2-depth5 | trượt 2 guardrail |
+| 2C | C3-depth3 | C0-depth5 *(không đổi)* | trượt 3 guardrail |
+| 3 | B1 / B2 | B0 *(không đổi)* | trượt guardrail token F1 |
+
+**Ba lần liên tiếp, cấu hình ăn điểm ở metric chính bị loại vì đánh đổi một thứ
+đã khóa từ trước.** Nếu đồ án chỉ chọn theo điểm cao nhất thì cả ba lần đều chọn
+sai. Đây là lập luận cho việc đăng ký trước, và nó là **kết quả đo được**, không
+phải là quan điểm.
+
+Nói thẳng cả mặt kia: ba lần đó, hai lần phán quyết nằm sát biên độ đo được
+(§8), và một lần thì không. Không được viết như thể cả ba đều chắc như nhau.
+
+### 9.4 Việc tiếp theo, và nó đi từ đâu ra
+
+Đúng **ba** việc, mỗi việc trỏ về một con số trong báo cáo — không phải danh sách
+mong muốn:
+
+1. **Query rewriting**, vì §6 cho thấy trần nằm ở Hit@5 chứ không ở prompt.
+2. **Hiệu chuẩn giám khảo với nhãn người**, vì §8 cho thấy đó là giới hạn lớn nhất.
+3. **Tách lại thí nghiệm B1**, vì §7 có confound chưa gỡ được.
+
+**Không nhét vào:** con số mới; lời cảm ơn; câu "hướng phát triển trong tương lai"
+không gắn với số nào.
+
 ---
 
 ## Những chỗ chưa quyết
 
 | # | Câu hỏi | Ghi chú |
 | ---: | :--- | :--- |
-| 1 | §5 (2C) chờ số tới bao giờ? Nếu Thắng chưa xong thì nộp bản có khung rỗng hay bỏ hẳn §5? | Cần hỏi Thắng |
+| 1 | ~~§5 (2C) chờ số tới bao giờ?~~ | ✅ số đã về ngày 08/09 |
 | 2 | Có cần 4 biểu đồ 300 DPI mà test plan Phase 1 §6 yêu cầu không? | Hiện chưa có cái nào. 10–15 trang thì có chỗ cho 2–3 hình |
-| 3 | Phase 3 chỉ nhắc một đoạn ở §7, hay có mục riêng? | Đề xuất: một đoạn ở §7, vì chưa có kết quả |
+| 3 | Phase 3: mục riêng (§7) hay một đoạn trong §8? | Đã có kết quả final-test nên **D7** phải quyết lại. Để mục riêng thì báo cáo dài thêm khoảng 1,5 trang |
 | 4 | Trung vị độ dài đáp án chuẩn — chưa đo | Cần cho §4.2, không tốn API |
+| 5 | Mã Phase 3 nằm ngoài repo | Bản chạy thật là `phase3_run.py` / `phase3_metrics.py` của Thắng, khác `scripts/run_phase3_abstention.py` đang có. Xem **D13** |

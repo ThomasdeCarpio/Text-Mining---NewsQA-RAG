@@ -5,6 +5,10 @@ Mỗi mục là **một câu hỏi**, kèm phương án và hệ quả. Quyết 
 
 Xếp theo thứ tự nên giải quyết: chặn việc viết báo cáo trước, chi tiết sau.
 
+**Cập nhật 08/09/2026:** số Phase 2C và Phase 3 đã về, D4 và D12 đóng lại. Thêm
+**D13** (mã Phase 3 ở đâu) và **D14** (mục tiêu đồ án theo đề bài) — D14 chặn §1
+và §9.
+
 ---
 
 ## Nhóm A — Chặn việc bắt đầu viết
@@ -95,16 +99,17 @@ tốt hơn mà không dùng", nếu viết không khéo.
 
 ---
 
-### D4. §5 Phase 2C — chờ số của Thắng tới bao giờ?
+### D4. §5 Phase 2C ✅ *(đã đóng — số về ngày 08/09/2026)*
 
-Khung đã dựng theo test plan (C0–C3, 6 guardrail). Chưa có số.
+Thắng đã giao đủ: retrieval screening 4 nhánh, generation screening C1/C2/C3,
+depth screening D1/D3, và hai finalist C3-D3 / C3-D5 chạy đủ 281 câu.
 
-**Phương án:**
-- **(a)** Chờ. Nếu tới hạn chưa có thì nộp bản có khung + ghi "đang chạy".
-- **(b)** Nộp không có §5, để 2C thành phần mở rộng sau.
-- **(c)** Hỏi Thắng xem bao giờ xong rồi quyết.
+Bằng chứng đã đưa vào repo tại `docs/reports/phase2c/`, và so sánh theo cặp đã
+chạy lại bằng chính script của dự án — **kết luận của Thắng đúng**, với một chỗ
+phải nói rõ hơn: C3 trượt **ba** guardrail chứ không phải một. Xem
+[`05_guardrails.md`](05_guardrails.md).
 
-> **Quyết:** ⬜ *(chưa)*
+Không còn gì phải quyết ở mục này.
 
 ---
 
@@ -130,10 +135,20 @@ Nó và Phase 2C cùng hỏi *"cách biểu diễn chunk có quan trọng không
 
 > **Quyết:** ⬜ *(chưa)*
 
-### D7. Phase 3 — mục riêng hay một đoạn?
+### D7. Phase 3 — mục riêng hay một đoạn? *(tiền đề đã đổi)*
 
-- **(a)** Một đoạn trong §7, vì chưa có kết quả.
-- **(b)** Mục riêng mô tả kế hoạch.
+Trước đây câu hỏi này dựa trên "Phase 3 chưa có kết quả". **Không còn đúng.**
+Phase 3 đã chạy xong cả development 140 câu lẫn final-test 60 câu, và cho ba kết
+quả âm có kiểm soát (B0 thắng · confound trong B1 · cổng reranker là null).
+
+- **(a)** Mục riêng, khoảng 1,5 trang — đã dựng sẵn là §7 ở
+  [`02_outline.md`](02_outline.md).
+  *(nghiêng về cái này — có final-test riêng, có ba phát hiện, và nó là mảnh thứ
+  ba của lập luận "guardrail thắng điểm số" ở §9.3; gói vào một đoạn thì mất)*
+- **(b)** Một đoạn trong §8, giữ báo cáo ngắn. Mất khoảng 1,5 trang nội dung.
+
+*Hệ quả nếu chọn (a):* báo cáo lên khoảng 14–15 trang, tức chạm trần ngân sách.
+Cần bù bằng cách cắt §3 xuống 2,5 trang.
 
 > **Quyết:** ⬜ *(chưa)*
 
@@ -186,14 +201,60 @@ Không còn gì phải quyết ở mục này.
 
 > **Quyết:** ⬜ *(chưa)*
 
-### D12. Đo SE trước khi áp guardrail Phase 2C
+### D12. SE của guardrail Phase 2C ✅ *(đã đo — dự đoán đúng)*
 
-Kinh nghiệm 2B: ngưỡng 0,01 cho Citation F1 có tỉ lệ báo động giả 21,3%. Ngưỡng
-0,01 cho Hit@5 / Recall@5 của 2C có thể vướng đúng bẫy đó. 2C **chưa chạy xong**
-nên vẫn kịp.
+Lo ngại đặt ra trước khi có số: ngưỡng `0,01` cho Hit@5 / Recall@5 của 2C có thể
+vướng đúng bẫy của Citation F1 ở 2B. Giờ đo được, và **đúng là vướng**:
 
-- **(a)** Báo cho Thắng ngay, trước khi 2C chốt kết quả.
-- **(b)** Chờ có kết quả C1 rồi tính.
+| Guardrail | Ngưỡng | SE | Báo động giả |
+| :--- | ---: | ---: | ---: |
+| Hit@5 | 0,010 | 0,0090 | **13,3%** |
+| Recall@5 | 0,010 | 0,0088 | **12,8%** |
+| Citation F1 | 0,010 | 0,0140 | **23,8%** |
+
+Không kịp sửa trước khi chạy, nên việc còn lại **không phải là quyết định mà là
+cách viết**: §8 phải nêu rằng hai phán quyết truy xuất loại C3 là *áp luật*, và
+CI95 của cả hai đều chứa 0. Đã ghi vào [`03_claims.md`](03_claims.md) 4.6 dưới
+dạng ràng buộc khóa.
+
+Không còn gì phải quyết ở mục này.
+
+### D13. Mã Phase 3 nằm ngoài repo
+
+Bản chạy ra kết quả là `phase3_run.py`, `phase3_metrics.py`, `phase3_api.py`,
+`phase3_revision.py`, `review_phase3.py` (khoảng 1.370 dòng) trong zip của Thắng.
+Repo đang có một bản khác: `scripts/run_phase3_abstention.py` và các script
+`*_abstention_*.py` đi kèm.
+
+Hai bản này **không phải một**. Báo cáo trích mã Phase 3 (ví dụ ở §7 ý 7, chứng
+minh tập final không tự hiệu chuẩn) thì phải trích đúng bản đã chạy.
+
+- **(a)** Đưa mã của Thắng vào repo, ví dụ `scripts/phase3/`, và ghi rõ quan hệ
+  với bản cũ. *(nghiêng về cái này — 112 KB, và nó là thứ sinh ra số công bố)*
+- **(b)** Chỉ dẫn nguồn trong báo cáo, không đưa mã vào.
+- **(c)** Hỏi Thắng xem bản nào là bản chính thức.
+
+> **Quyết:** ⬜ *(chưa)*
+
+### D14. Mục tiêu đồ án — theo lời đề bài là gì?
+
+[`02_outline.md`](02_outline.md) §1.2 đang để trống, vì **không tài liệu nào
+trong repo phát biểu mục tiêu đồ án theo lời đề bài**. `master_test_plan.md` mở
+đầu bằng kế hoạch thực nghiệm, không bằng mục tiêu; `roadmap.md` là danh sách
+việc.
+
+Cần hai câu, và cả hai phải lấy từ đề bài chứ không suy ra:
+
+1. **Mục tiêu chung** — dạng "xây dựng và đánh giá …".
+2. **Tiêu chí chấm của môn học** — thầy chấm hệ thống chạy được, hay quy trình
+   thực nghiệm, hay cả hai và tỉ lệ ra sao.
+
+Điều này ảnh hưởng **§1 và §9**: §9.1 trả lời bốn câu hỏi của §1.3, còn §1.4
+("thế nào là đạt") phải khớp với tiêu chí chấm chứ không phải với tiêu chí do
+nhóm tự đặt.
+
+- **(a)** Bạn dán đề bài vào, tôi viết §1.2 và chỉnh §1.4 theo.
+- **(b)** Viết §1.2 theo mục tiêu kỹ thuật nhóm tự đặt, ghi rõ là của nhóm.
 
 > **Quyết:** ⬜ *(chưa)*
 
@@ -209,3 +270,6 @@ nên vẫn kịp.
 | ✅ | $H_0$, $H_1$ hai phía, $\alpha = 0{,}05$, bác bỏ khi CI95 không chứa 0 | bạn duyệt |
 | ✅ | Toàn bộ luật viết ở [`00_scope_and_style.md`](00_scope_and_style.md) | bạn duyệt sau khi tự sửa |
 | ✅ | Đoạn chốt §4 về lý do chọn P2-depth5 + ba ràng buộc cách viết | bạn duyệt |
+| ✅ | Báo cáo có §9 Kết luận, và mỗi mục kết bằng đoạn *Chốt lại* ba ý | bạn yêu cầu 08/09 |
+| ✅ | §1 là mục mở đầu có mục tiêu, không còn là "bài toán và dữ liệu" | bạn yêu cầu 08/09 |
+| ✅ | Phase 3 có chỗ trong báo cáo (mục riêng hay đoạn thì xem D7) | bạn yêu cầu 08/09 |

@@ -76,11 +76,52 @@ Mức mạnh — *cách phân loại này chờ quyết, xem [`06_decisions.md`]
 > 3.4 và 3.7 là hai phát biểu quan trọng nhất của báo cáo, và cả hai đều là **C**.
 > Dev với held-out là hai tập khác nhau nên không ghép cặp được.
 
-## Phase 2C — chờ số
+## Phase 2C — chiến lược chia đoạn, 281 câu development
 
-| # | Phát biểu dự kiến |
-| ---: | :--- |
-| 4.1 | C1/C2/C3 so với C0 về Hit@5, Recall@5 |
-| 4.2 | C3 có cân bằng được retrieval precision và context completeness không |
-| 4.3 | Chiến lược nào tăng AC mà qua hết guardrail |
-| 4.4 | Mức cải thiện có xứng chi phí index / token / latency không |
+Mọi so sánh dưới đây lấy **C0-P2-D5** (cấu hình production) làm mốc, trừ chỗ ghi rõ.
+
+| # | Phát biểu | Bằng chứng | Mức |
+| ---: | :--- | :--- | :-: |
+| 4.1 | Không cấu hình 2C nào qua hết 6 guardrail; winner giữ nguyên C0-P2-D5 | `phase2c/paired_significance.json` | **A** — áp luật |
+| 4.2 | C3-D3 cao hơn C0-D5 ở AC +0,0380, CI95 [+0,0183; +0,0575] | như trên | **B** — Δ < 7,0% |
+| 4.3 | C3-D3 cao hơn C0-D5 ở Token F1 +0,1382, CI95 [+0,1077; +0,1687] | như trên | **A** |
+| 4.4 | C3 tụt Citation F1 −0,0284, CI95 [−0,0568; −0,0022] | như trên | **B** |
+| 4.5 | C3 trượt **ba** guardrail: Citation F1, Hit@5, Recall@5 | như trên | **A** — áp luật |
+| 4.6 | Hai phán quyết truy xuất **không phân định được** bằng kiểm định: Hit@5 CI95 [−0,0283; +0,0072], Recall@5 [−0,0300; +0,0054] | như trên | **D** — 🔒 cấm viết "C3 truy xuất kém hơn C0"; chỉ được viết "tụt quá ngưỡng đăng ký trước" |
+| 4.7 | C3 **không phân định được** với C0 ở Faithfulness (−0,0128, CI95 [−0,0321; +0,0053]) và Citation Validity | như trên | **D** |
+| 4.8 | Cơ chế Citation F1 tụt: parent được trích dẫn khớp gold context kém hơn recursive chunk, không phải do đánh số citation sai (Citation Validity vẫn ≈ 0,98) | `notes_thang.md` §5.2 | **C** — lập luận cơ chế |
+| 4.9 | C1 (theo câu) và C2 (theo đoạn) bị loại ở vòng sàng lọc sinh | `phase2c/screening/gen_c{1,2}.json` | **C** — 🔒 n = 80 câu, RAGAS chỉ chấm 20. Nêu kèm n, cấm viết "C1/C2 kém hơn" |
+| 4.10 | C1 nhích Hit@5 +0,0107, CI95 [0,0000; +0,0241] | `phase2c_retrieval_screening_eligibility.json` | **D** — cận dưới chạm 0 |
+| 4.11 | C3 tạo 49.218 child + 22.766 parent, index lớn hơn C0 ~18% (76,58 vs 64,90 MiB) | `phase2c_retrieval_screening.csv` | **A** — đếm trực tiếp |
+| 4.12 | Trong nội bộ C3, depth 3 hơn depth 5 ở AC +0,0315, CI95 [+0,0162; +0,0485] | chạy lại với `--baseline c3_d5_development.jsonl` | **B** |
+| 4.13 | Ở C3, depth 3 **không** tụt Faithfulness so với depth 5 (+0,0021, CI95 [−0,0154; +0,0191]) — khác hẳn ở C0, nơi depth 3 tụt −0,0240 | như trên | **D** cho chênh lệch; **C** cho nhận xét đối lập |
+| 4.14 | 2C là **post-hoc exploratory extension**, thiết kế sau khi đã mở held-out | `notes_thang.md` §1, §9 | **A** — 🔒 cấm viết như thể nó nằm trong đăng ký trước ban đầu |
+| 4.15 | Tập reserve 587 câu **chưa chạy** | `notes_thang.md` §7 | **A** — 🔒 cấm viết 2C đã chạy trên reserve |
+
+> Tái lập 4.1–4.7:
+> `python scripts/phase2_paired_comparison.py --scores-dir docs/reports/phase2c/scores --baseline c0_d5_development.jsonl --plan 2c`
+>
+> Kiểm chéo: chạy cùng lệnh cho `c0_d3` sẽ ra lại **đúng** các số Phase 2B
+> (AC +0,0360, Faithfulness −0,0240) — hai phase dùng chung file điểm của C0.
+
+## Phase 3 — abstention, 140 câu development + 60 câu final-test
+
+| # | Phát biểu | Bằng chứng | Mức |
+| ---: | :--- | :--- | :-: |
+| 5.1 | Bộ dữ liệu 200 case đã duyệt xong: 140 development / 60 final-test, 7 loại case | `phase3_final_results.json` | **A** |
+| 5.2 | Winner là **B0** — chính prompt P2 của Phase 2, không đổi gì | `policy_significance.json` | **A** — áp luật |
+| 5.3 | B1/B2 giảm false-answer rate 5,06% → 1,27% trên development | `policy_comparison.csv` | **C** — 79 câu negative, chênh **3 câu** (4 lỗi → 1 lỗi) |
+| 5.4 | B1/B2 trượt guardrail token F1: −0,1070, CI95 [−0,1563; −0,0631] | `policy_significance.json` | **A** — Δ gấp 5 lần ngưỡng, gấp 4,4 lần SE |
+| 5.5 | Cơ chế: prompt B1 bỏ mất câu lệnh quy định **hình dạng đáp án** của P2, chỉ còn "concise answer" — độ dài trung bình đáp án 12,5 → 16,3 từ | `phase3_metrics.py` `B1_PROMPT`; per-case | **C** — 🔒 đây là **confound**, xem 5.6 |
+| 5.6 | B1 đổi **hai** thứ cùng lúc (thêm schema answerability, bỏ ràng buộc hình dạng đáp án) nên thí nghiệm không tách được hai nguyên nhân | `phase3_metrics.py` | **A** — đọc thẳng từ mã, 🔒 bắt buộc nêu ở §7 |
+| 5.7 | Cổng theo điểm reranker (B2) là **kết quả null theo đúng nghĩa**: hiệu chuẩn quét 107 ngưỡng, điểm tốt nhất là ngưỡng thấp nhất — tức **tắt cổng** | `policy_significance.json` | **A** |
+| 5.8 | Không ngưỡng nào hạ được false-answer rate dưới 1,27% mà vẫn giữ false-abstention ≤ 10% | như trên | **A** — quét toàn bộ đường cong |
+| 5.9 | Final-test 60 câu: B0 abstention F1 0,9697 · false-answer 5,88% · false-abstention 0,0% · citation validity 1,0000 | `policy_comparison.csv` | **A** |
+| 5.10 | Trên final-test, khoảng cách B0 ↔ B1 **rộng ra** (−0,1769) chứ không thu hẹp | `policy_significance.json` | **C** — n = 26 câu control |
+| 5.11 | Ngưỡng và chính sách được khóa từ development; mã từ chối hiệu chuẩn trên tập final | `phase3_run.py:376`, `phase3_metrics.py` `calibrate` | **A** — đọc thẳng từ mã |
+| 5.12 | Loại case `natural_retrieval_miss` có n = 2 (dev) và n = 1 (final) | `phase3_final_results.json` | **A** — 🔒 ô này không mang thông tin, cấm diễn giải |
+| 5.13 | Bộ dữ liệu có một lần sửa sau duyệt, 3 dòng, cùng một câu hỏi mơ hồ về cháy rừng | `phase3_revision.py` | **A** — 🔒 phải nêu, không được lặng lẽ bỏ qua |
+
+> **Ba phát biểu quan trọng nhất của Phase 3 là 5.2, 5.6 và 5.7** — và cả ba đều
+> là *kết quả âm*. Báo cáo phải viết được rằng một kết quả âm có kiểm soát vẫn là
+> kết quả, chứ không phải là phần "chưa làm xong".

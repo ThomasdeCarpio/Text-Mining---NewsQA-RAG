@@ -35,6 +35,12 @@ GUARDRAILS = [
     ("citations.citation_f1", "Citation F1", 0.01),
     ("citations.citation_validity", "Citation Validity", 0.01),
 ]
+# Phase 2C is allowed to change how the corpus is cut, so its plan adds two
+# retrieval guardrails that 2B, which froze retrieval, did not need.
+RETRIEVAL_GUARDRAILS = [
+    ("retrieval.hit_rate@5", "Hit@5", 0.01),
+    ("retrieval.recall@5", "Recall@5", 0.01),
+]
 PRIMARY = "ragas.answer_correctness"
 REPORTED = [
     (PRIMARY, "Answer Correctness"),
@@ -162,7 +168,12 @@ def main() -> None:
     parser.add_argument("--scores-dir", required=True, type=Path)
     parser.add_argument("--baseline", default="p0_d5_development.jsonl")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--plan", choices=("2b", "2c"), default="2b",
+                        help="2c adds the Hit@5/Recall@5 guardrails of its plan section 9")
     args = parser.parse_args()
+    guardrails = GUARDRAILS + (RETRIEVAL_GUARDRAILS if args.plan == "2c" else [])
+    reported = REPORTED + ([(metric, label) for metric, label, _ in RETRIEVAL_GUARDRAILS]
+                           if args.plan == "2c" else [])
 
     # Compare within one partition only. The held-out run has no paired baseline
     # by design -- it is allowed exactly one execution -- so sweeping its score
@@ -196,14 +207,14 @@ def main() -> None:
         cand = runs[name]
         coverage = len(cand) / len(base)
         checks, passed = [], coverage >= MIN_COVERAGE
-        for metric, label, tolerance in GUARDRAILS:
+        for metric, label, tolerance in guardrails:
             delta = mean(cand, metric) - mean(base, metric)
             ok = delta >= -tolerance
             passed &= ok
             checks.append({"metric": label, "delta": round(delta, 6),
                            "tolerance": -tolerance, "passed": ok})
         comparisons = {label: paired_delta(base, cand, clusters, metric)
-                       for metric, label in REPORTED}
+                       for metric, label in reported}
         results[name] = {
             "coverage": round(coverage, 4),
             "guardrails": checks,
@@ -251,7 +262,10 @@ def main() -> None:
     payload = {
         "schema_version": 1,
         "method": "paired article-cluster percentile bootstrap over per-question scores",
-        "rule_source": "docs/Detailed Test Plans/phase_2_generation_tuning_plan.md section 7",
+        "rule_source": ("docs/Detailed Test Plans/phase_2_generation_tuning_plan.md section 7"
+                        if args.plan == "2b" else
+                        "docs/Detailed Test Plans/phase_2c_chunking_strategy_test_plan.md section 9"),
+        "plan": args.plan,
         "samples": BOOTSTRAP_SAMPLES,
         "seed": SEED,
         "baseline": base_name,

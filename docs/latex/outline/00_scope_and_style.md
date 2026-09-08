@@ -43,7 +43,16 @@ Một biên độ đo trên **truy xuất** không được bê sang một metri
 Một tỉ lệ đếm trên **30 câu điểm thấp nhất** không được phát biểu như tỉ lệ của
 toàn tập. Mức mạnh được phép nói cho từng phát biểu: [`03_claims.md`](03_claims.md).
 
-### 4. Không dùng ẩn dụ ở chỗ đáng lẽ phải có số đo
+### 4. Mỗi mục kết bằng một đoạn Chốt lại
+
+Ba câu, theo đúng ba ý: **chốt được gì** (có số) · **trả giá bằng gì** ·
+**đưa sang mục sau cái gì**. Nội dung cụ thể cho từng mục đã ghi sẵn ở
+[`02_outline.md`](02_outline.md).
+
+Không có mục nào chỉ toàn tin tốt. Đoạn Chốt lại nào không nêu được cái giá phải
+trả thì hoặc là mục đó viết thiếu, hoặc là đoạn Chốt lại đang tự khen.
+
+### 5. Không dùng ẩn dụ ở chỗ đáng lẽ phải có số đo
 
 Ẩn dụ nghe như một kết luận nhưng không kiểm chứng được, và người đọc không
 biết nó dựa trên cái gì.
@@ -60,7 +69,7 @@ biết nó dựa trên cái gì.
 | "**Thứ tự thời gian là bằng chứng**" | Khẩu hiệu | "Bản ghi quyết định ký 13:31:30Z, run bắt đầu 14:23:24Z; băm của bản ghi được nhúng trong `heldout_access.json`." |
 | "Báo cáo kết quả null **đúng như nó là**, thay vì tô thành chiến thắng" | Tự khen về đạo đức nghiên cứu | Bỏ. Chỉ cần nói khoảng cách 0,0469 dưới ngưỡng và ba CI chồng lấn. |
 
-### 5. Đừng đặt tên mới cho một quy trình
+### 6. Đừng đặt tên mới cho một quy trình
 
 Nếu một thứ phải giải thích mất một đoạn thì nó là **một ý**, không phải một
 thuật ngữ. Ý thì kể ra, đừng đúc thành danh từ ghép rồi bắt người đọc nhớ.
@@ -79,7 +88,7 @@ Và đừng thả thuật ngữ chưa giải thích *vào trong phần giải th
 "cấu hình đã chốt" bằng cụm "được băm SHA-256" là giải thích một chữ lạ bằng một
 chữ lạ khác.
 
-### 6. Bỏ thiết bị trình chiếu ra khỏi báo cáo
+### 7. Bỏ thiết bị trình chiếu ra khỏi báo cáo
 
 `\keypoint{}` (hộp tô nền) và `\takeaway{}` (dải kết luận cuối slide) là ngôn ngữ
 của slide. Trong báo cáo, một đoạn văn có câu chủ đề làm đúng việc đó.
@@ -87,14 +96,14 @@ của slide. Trong báo cáo, một đoạn văn có câu chủ đề làm đún
 **Giữ `\takeaway{}` trong slide** — ở đó nó đúng chức năng. Đây là luật cho báo
 cáo, không phải cho slide.
 
-### 7. Tự khen là số 0 thông tin
+### 8. Tự khen là số 0 thông tin
 
 Bỏ mọi câu nói về *chất lượng của phương pháp luận của chính mình* ("nghiêm
 ngặt", "trung thực", "đúng chuẩn", "đáng tin"). Nếu quy trình chặt thì mô tả quy
 trình, người đọc tự kết luận. Ngoại lệ duy nhất: nêu một **giới hạn**, vì cái đó
 người đọc không tự thấy được.
 
-### 8. Kết quả âm và kết quả null viết cùng độ dài với kết quả dương
+### 9. Kết quả âm và kết quả null viết cùng độ dài với kết quả dương
 
 P1 thất bại, chunk size null, hybrid không chứng minh được — ba cái này là kết
 quả, không phải phần phụ lục xin lỗi.

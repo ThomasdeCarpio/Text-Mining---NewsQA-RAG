@@ -18,7 +18,8 @@ Dự án chia hai giai đoạn vì hai việc đó hỏng theo hai cách khác n
 | **Phase 1** — chọn cách lấy đoạn văn | ✅ khóa | BGE-M3 sparse + bge-reranker-large + chunk 512/64 |
 | **Phase 2** — chọn cách hỏi LLM | ✅ chọn xong | Prompt P2, 5 đoạn context |
 | **Phase 2 — held-out** | ✅ **đã chạy** | **AC 0,7157 trên 284 câu — số công bố** |
-| Phase 3 — biết từ chối trả lời | ⛔ bị chặn | chờ duyệt tay 200 case |
+| Phase 2C — chọn cách cắt đoạn | ✅ đã chạy | Không chiến lược nào qua guardrail; giữ nguyên recursive 512/64 |
+| Phase 3 — biết từ chối trả lời | ✅ đã chạy | Không chính sách nào qua guardrail; prompt Phase 2 đã đủ |
 
 ---
 
@@ -112,6 +113,95 @@ Trên các câu **truy xuất làm đúng việc**, held-out đạt 0,7689 (CI95
 
 ---
 
+# PHASE 2C — Cách cắt đoạn có quan trọng không?
+
+Vòng 3 của Phase 1 nói *kích thước* chunk không quan trọng. 2C hỏi tiếp: *cấu trúc*
+thì sao? Bốn chiến lược, cùng 281 câu development, cùng prompt P2.
+
+| ID | Chiến lược | Đơn vị retrieve | Context cho LLM | Số đơn vị |
+| :-- | :--- | :--- | :--- | ---: |
+| `C0` | Recursive 512/64 *(control)* | chunk 512 | chính chunk đó | 22.766 |
+| `C1` | Theo câu | nhóm câu ≤512 | chính nhóm đó | 22.014 |
+| `C2` | Theo đoạn văn | nhóm đoạn ≤512 | chính nhóm đó | 22.018 |
+| `C3` | Phân cấp | child 256/32 | **parent** chứa child | 49.218 + 22.766 |
+
+C1 và C2 bị loại ở vòng sàng lọc sinh (80 câu, RAGAS chấm 20). Chỉ C3 vào chung
+kết, với hai mức depth.
+
+**Kết quả: không cấu hình nào qua hết 6 guardrail. Winner giữ nguyên C0-P2-D5.**
+
+| So với C0-P2-D5 | Answer Correctness | Citation F1 | Hit@5 | Recall@5 |
+| :--- | ---: | ---: | ---: | ---: |
+| C3-P2-D3 | **+0,0380** ✅ | −0,0284 ❌ | −0,0107 ❌ | −0,0125 ❌ |
+| C3-P2-D5 | +0,0065 | −0,0275 ❌ | −0,0107 ❌ | −0,0125 ❌ |
+
+C3-P2-D3 là **cấu hình cao điểm nhất của cả dự án** trên development (AC 0,7730,
+CI95 của chênh lệch [+0,0183; +0,0575]) và vẫn bị loại vì trượt ba guardrail.
+
+Cơ chế Citation F1 tụt: không phải đánh số citation sai — Citation Validity của C3
+vẫn khoảng 0,98. Là đoạn *parent* được trích dẫn khớp gold context kém hơn chunk
+recursive.
+
+> Hai phán quyết truy xuất là **áp luật đã đăng ký trước**, không phải kết luận
+> thống kê: CI95 của Hit@5 [−0,0283; +0,0072] và Recall@5 [−0,0300; +0,0054] đều
+> chứa 0. Ba trong năm ngưỡng số của 2C nằm dưới độ phân giải của cỡ mẫu.
+
+2C được thiết kế **sau khi** đã mở held-out, nên là phần mở rộng khám phá hậu
+kiểm, không phải phần đăng ký trước ban đầu. Tập dự trữ 587 câu chưa chạy.
+
+---
+
+# PHASE 3 — Hệ thống có biết im lặng không?
+
+Bài toán đảo trục: metric chính không còn là "trả lời đúng tới đâu" mà là
+**tỉ lệ trả lời bừa khi không đủ bằng chứng**. Bộ dữ liệu phải dựng riêng: 200
+case (140 development / 60 final-test), gồm 87 câu trả lời được làm control và 6
+loại câu không trả lời được.
+
+| | Chính sách | Là gì |
+| :-- | :--- | :--- |
+| `B0` | control | Đúng prompt P2 của Phase 2, không sửa một chữ |
+| `B1` | schema | Bắt model trả JSON có trường `answerability` |
+| `B2` | schema + cổng | B1, cộng cổng chặn theo điểm reranker |
+
+**Kết quả: B0 thắng — không đổi gì cả.**
+
+| Development, 140 câu | B0 | B1 / B2 |
+| :--- | ---: | ---: |
+| False-answer rate | 5,06% | **1,27%** |
+| Token F1 các câu trả lời được | **0,4490** | 0,3420 ❌ |
+| Abstention F1 | 0,9740 | **0,9936** |
+
+B1 hạ false-answer rate gần bốn lần nhưng làm token F1 tụt **−0,1070**
+(CI95 [−0,1563; −0,0631]), gấp hơn năm lần ngưỡng 0,02.
+
+**Nguyên nhân, và đây là chỗ đáng chú ý:** prompt B1 bỏ mất câu lệnh quy định
+*hình dạng đáp án* của P2 và chỉ còn "concise answer". Đáp án dài trở lại — trung
+bình 12,5 → 16,3 từ — tức đúng nhóm lỗi mà Phase 2 đã chữa quay về. B1 vì thế đổi
+**hai** thứ cùng lúc, và thí nghiệm không tách được hai nguyên nhân.
+
+**B2 là kết quả null theo đúng nghĩa:** hiệu chuẩn quét 107 ngưỡng, điểm tốt nhất
+chính là ngưỡng thấp nhất — tức *tắt cổng*. Không ngưỡng nào hạ được false-answer
+rate mà vẫn giữ false-abstention ≤ 10%.
+
+Final-test 60 câu, chạy sau khi đã khóa chính sách và ngưỡng từ development:
+B0 abstention F1 **0,9697** · false-answer 5,88% · false-abstention **0,0%** ·
+citation validity 1,0000.
+
+---
+
+# Ba lần liên tiếp, luật thắng điểm số
+
+| Phase | Cấu hình cao điểm nhất | Cấu hình được nhận | Vì sao bị loại |
+| :--- | :--- | :--- | :--- |
+| 2B | P2-depth3 | P2-depth5 | trượt 2 guardrail |
+| 2C | C3-depth3 | C0-depth5 *(không đổi)* | trượt 3 guardrail |
+| 3 | B1 / B2 | B0 *(không đổi)* | trượt guardrail token F1 |
+
+Nếu chỉ chọn theo điểm cao nhất thì cả ba lần đều chọn sai. Mặt kia của chuyện
+này: hai trong ba lần, phán quyết nằm sát biên độ đo được — xem phần *Chưa được
+phép kết luận*.
+
 # Chỗ Phase 1 giúp Phase 2
 
 Phát hiện phương pháp đáng kể nhất của dự án: **Phase 1 đã trả lời sẵn một câu hỏi của Phase 2, miễn phí.**
@@ -132,6 +222,10 @@ Held-out xác nhận cùng cơ chế ở quy mô lớn hơn: với Hit@5 = 0,876
 
 **Phase 1** — không phân định được mô hình dense nào tốt nhất, và dense chưa tái lập được giữa các lần chạy (trôi 0,0143 > khoảng cách giữa các mô hình 0,0094). Chunk size là kết quả null; hybrid là "không chứng minh được có lợi", không phải "đã chứng minh có hại".
 
+**Phase 2C** — ngưỡng guardrail đặt không kèm tính cỡ mẫu: Hit@5 và Recall@5 có tỉ lệ báo động giả 13,3% và 12,8%, Citation F1 là 23,8%. Chỉ phán quyết Citation F1 là vững cả hai đường (trượt ngưỡng *và* CI95 không chứa 0). 2C là phần mở rộng hậu kiểm, và development 281 câu đã dùng qua nhiều vòng nên vẫn có thể overfit thích nghi.
+
+**Phase 3** — B1 đổi hai thứ cùng lúc (thêm schema *và* bỏ ràng buộc hình dạng đáp án) nên không tách được nguyên nhân. Loại case `natural_retrieval_miss` chỉ có 2 case development và 1 case final-test, không mang thông tin. Bộ dữ liệu có một lần sửa sau duyệt, 3 dòng, cùng một câu hỏi mơ hồ về cháy rừng.
+
 **Phase 2** — AC 0,7157 là **cận dưới**: audit 30 câu điểm thấp nhất thấy 23/30 thực ra đúng về ngữ nghĩa, và giám khảo bất đồng với người duyệt ở 18/30 câu. (Biên độ 7,0–24,5% của EDA là sai số của việc chấm điểm theo **nhãn chunk** — nó áp cho Hit@k, nDCG và Citation F1, không áp cho Answer Correctness.) Judge cũng là một LLM, đã tách khỏi generator nhưng **chưa hiệu chuẩn với nhãn người**. Answer Relevancy giảm (0,7092 → 0,6485) là hệ quả có chủ đích của P2, không phải suy thoái.
 
 ---
@@ -145,6 +239,6 @@ Held-out xác nhận cùng cơ chế ở quy mô lớn hơn: với Hit@5 = 0,876
 | 3 | Hiệu chuẩn judge trên 20 câu đã dành sẵn | 2 | Tập đã chuẩn bị |
 | 4 | Chạy held-out 150 bài final-test | 1 | Nghiệm thu Phase 1 |
 | 5 | Chạy lại vòng 1 trên chỉ mục đã đóng gói (cố định số dense) | 1 | Rẻ — bỏ qua bước dựng chỉ mục |
-| 6 | Duyệt tay dataset abstention 200 case | 3 | 3 loại cần reviewer thứ hai |
+| 6 | Chạy 2C trên tập dự trữ 587 câu | 2C | Chưa chạy, giữ cho kiểm chứng sau |
 
 Ngoài ra test plan Phase 1 §6 yêu cầu **4 biểu đồ 300 DPI** (so sánh embedding, dumbbell ΔMRR@5, Pareto accuracy–latency, phân rã latency) — hiện chưa có cái nào; `scripts/generate_retrieval_figures.py` chưa nối được vào CSV các vòng.

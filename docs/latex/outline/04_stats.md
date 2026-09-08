@@ -209,6 +209,60 @@ Phân tích độ nhạy của luật ❓ — xem [`06_decisions.md`](06_decisio
 Khoảng cách quan sát nhỏ hơn **một nửa** thứ mà n = 12 phát hiện nổi. Nêu như
 quan sát kèm n, không nêu như kết luận.
 
+### Phase 2C: ba trong sáu guardrail dưới tầm phân giải 📌
+
+Cùng cỡ mẫu (281 câu / 50 bài), cùng cách bootstrap, nhưng 2C có sáu guardrail
+thay vì bốn. Baseline là C0-P2-D5, ứng viên là C3-P2-D3:
+
+| Guardrail | Ngưỡng $T$ | Δ đo được | CI95 | SE | Báo động giả | Phán quyết |
+| :--- | ---: | ---: | :--- | ---: | ---: | :--- |
+| **Hit@5** | 0,010 | −0,0107 | [−0,0283; +0,0072] | 0,0090 | **13,3%** 🔴 | trượt |
+| **Recall@5** | 0,010 | −0,0125 | [−0,0300; +0,0054] | 0,0088 | **12,8%** 🔴 | trượt |
+| **Citation F1** | 0,010 | −0,0284 | [−0,0568; −0,0022] | 0,0140 | **23,8%** 🔴 | trượt |
+| Faithfulness | 0,020 | −0,0128 | [−0,0321; +0,0053] | 0,0098 | 2,1% ✅ | qua |
+| Citation Validity | 0,010 | −0,0071 | [−0,0184; +0,0000] | 0,0049 | 2,0% ✅ | qua |
+
+Ba phán quyết loại C3 rơi vào ba tình huống **khác nhau**, và báo cáo phải phân
+biệt cả ba:
+
+1. **Citation F1** — trượt ngưỡng *và* CI95 không chứa 0. Vững cả hai đường.
+2. **Hit@5, Recall@5** — trượt ngưỡng nhưng CI95 **chứa 0**. Chỉ là áp luật.
+   Δ đo được (−0,0107 và −0,0125) còn nhỏ hơn MDE₈₀ của chính chúng (0,0252 và
+   0,0247), nên với cỡ mẫu này không thể phân biệt "C3 truy xuất kém hơn thật"
+   với "C3 giống hệt C0". Cả hai ngưỡng đều được đặt ở `0,01` mà không ai tính
+   trước SE.
+3. **Faithfulness, Citation Validity** — qua ngưỡng, và cũng không phân định được.
+   Qua guardrail không phải là "tốt bằng".
+
+**So với 2B:** 2B có 1/3 guardrail dưới tầm phân giải, 2C có 3/5. Nguyên nhân
+giống nhau — ngưỡng chọn theo trực giác "khoảng 3 câu trên 281" chứ không theo
+tính toán cỡ mẫu — nhưng 2C nặng hơn vì hai ngưỡng truy xuất mới cũng đặt ở `0,01`.
+
+Điều **không** kéo theo: winner không đổi. Không cấu hình nào qua hết dù đọc luật
+kiểu gì, vì Citation F1 trượt ở cả hai cách đọc.
+
+### Phase 3: phán quyết duy nhất không sát biên 📌
+
+Ba phase trước đều có ít nhất một phán quyết nằm sát ngưỡng. Phase 3 thì không:
+
+| | Δ | CI95 | SE | Ngưỡng | $|\Delta|/T$ | $|\Delta|/SE$ |
+| :--- | ---: | :--- | ---: | ---: | ---: | ---: |
+| Token F1, B1 − B0, development (n=61) | −0,1070 | [−0,1563; −0,0631] | 0,0243 | 0,02 | **5,4×** | **4,41** |
+| Token F1, B1 − B0, final-test (n=26) | −0,1769 | [−0,2686; −0,0943] | 0,0436 | 0,02 | **8,8×** | **4,06** |
+
+MDE₈₀ là 0,0681 (dev) và 0,1221 (final) — **cao hơn** ngưỡng 0,02 rất nhiều, tức
+thiết kế này *không* phân giải nổi một khoảng cách cỡ ngưỡng. Nhưng khoảng cách
+thật lớn gấp năm lần ngưỡng nên chuyện đó không thành vấn đề: cỡ mẫu chỉ cần đủ
+để bắt cái có thật, không cần đủ để bắt mọi thứ.
+
+Đây là cách nói đúng về công suất, và nên viết vào §2: **"n có đủ không?" không
+có câu trả lời chung — nó phụ thuộc khoảng cách đang muốn bắt.** Cùng n = 61 mà
+đủ thừa cho khoảng cách 0,107 và không đủ cho khoảng cách 0,02.
+
+Bootstrap ở đây bốc lại **theo câu**, không gom cụm theo bài, vì bộ 200 case của
+Phase 3 không tổ chức theo bài như Phase 2. Không đồng nhất với Phase 2, phải ghi
+ở §7.
+
 ### Held-out: độ rộng của các số công bố
 
 Không có baseline trên held-out nên không ghép cặp được; đây là khoảng tin cậy

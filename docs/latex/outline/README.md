@@ -28,14 +28,22 @@ Nguyên tắc: thứ chưa được quyết thì không xuất hiện dưới d�
 
 1. ✅ Chốt người đọc, độ dài, phạm vi
 2. ✅ Thuật ngữ, dàn ý, sổ phát biểu, phân tích thống kê, bảng guardrail
-3. ⬜ **Quyết D1–D4** ở [`06_decisions.md`](06_decisions.md) — bốn cái này chặn
-   việc bắt đầu viết. D5–D8 ảnh hưởng bố cục, nên quyết cùng lúc.
-4. ⬜ Viết `report/main.tex` theo [`02_outline.md`](02_outline.md), mục nào tra
+3. ✅ Bổ sung Phase 2C (§5) và Phase 3 (§7); thêm §1 mở đầu, §9 kết luận, và
+   đoạn *Chốt lại* cho từng mục — 08/09/2026
+4. ⬜ **Quyết D1, D2, D3, D7, D14** ở [`06_decisions.md`](06_decisions.md) —
+   năm cái này chặn việc bắt đầu viết. **D14 chặn nặng nhất**: §1.2 để trống cho
+   tới khi có đề bài. D5, D6, D8, D13 ảnh hưởng bố cục, nên quyết cùng lúc.
+5. ⬜ Viết `report/main.tex` theo [`02_outline.md`](02_outline.md), mục nào tra
    file nấy. §0 và §2 viết trước vì các mục sau trỏ ngược về chúng.
-5. ⬜ Chỉnh slide cho khớp báo cáo mới.
+6. ⬜ Chỉnh slide cho khớp báo cáo mới — slide hiện **chưa có** 2C và Phase 3.
 
 Việc kỹ thuật không chặn viết, làm xen kẽ được: D9 (`.gitattributes` cho hash
-khớp lại), D11 (đo trung vị độ dài đáp án), D12 (báo Thắng về ngưỡng 2C).
+khớp lại), D11 (đo trung vị độ dài đáp án), D13 (đưa mã Phase 3 vào repo).
+
+## Báo cáo có mấy mục
+
+§0 thuật ngữ · §1 mở đầu · §2 luật phán quyết · §3 Phase 1 · §4 Phase 2 ·
+§5 Phase 2C · §6 held-out · §7 Phase 3 · §8 giới hạn · §9 kết luận.
 
 ## Thư mục này không sinh ra file build
 
