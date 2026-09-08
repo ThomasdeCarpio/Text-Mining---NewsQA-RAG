@@ -1,0 +1,35 @@
+{
+  "chunking": {
+    "chunk_overlap": 64,
+    "chunk_size": 512,
+    "strategy": "recursive"
+  },
+  "confirmatory_only": true,
+  "dataset": {
+    "articles": 150,
+    "questions": 871,
+    "variant": "resolved"
+  },
+  "no_post_heldout_reselection": true,
+  "reranker": {
+    "model": "BAAI/bge-reranker-large",
+    "top_n": 5
+  },
+  "retrieval": {
+    "method": "bge-m3 learned sparse",
+    "top_k": 20
+  },
+  "run_mode": "final",
+  "schema_version": 1,
+  "sources": {
+    "chunks_sha256": "3a0f2aae08d0c978ae612c84692a3070ad2cb033935176b7c01eb7cbdc5d4498",
+    "data_repo_id": "ThomasAnderson2009/newsqa-rag-phase2-locked-v2",
+    "data_revision": "bb73e682f472933c212f2c6a3f9575c652b280fd",
+    "index_repo_id": "MatchaMacchiato/TextMining-Phase-1-Index",
+    "index_revision": "5ac4d9798ac96e09b4f06d7cc0d426510f4a7e39",
+    "index_sha256": "cfe11f27ec909f1146b2f6766d733c0e6c2351f84c60d62d72a5e76ce406c5ea",
+    "repository_commit": "3ca47cd03ef6df6bc2dae5df1a9fcd50c1191254",
+    "testset_sha256": "80f1b12acd6090aa353a89578c58c98e7d70d02dc4a271f2c724b370694c3e80"
+  },
+  "winner_locked_before_heldout": true
+}

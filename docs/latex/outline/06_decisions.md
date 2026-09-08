@@ -5,9 +5,12 @@ Mỗi mục là **một câu hỏi**, kèm phương án và hệ quả. Quyết 
 
 Xếp theo thứ tự nên giải quyết: chặn việc viết báo cáo trước, chi tiết sau.
 
-**Cập nhật 08/09/2026:** số Phase 2C và Phase 3 đã về, D4 và D12 đóng lại. Thêm
-**D13** (mã Phase 3 ở đâu) và **D14** (mục tiêu đồ án theo đề bài) — D14 chặn §1
-và §9.
+**Cập nhật 08/09/2026:** số Phase 2C, Phase 3 và final-test Phase 1 đều đã về;
+D4 và D12 đóng lại. Thêm **D13** (mã Phase 3 ở đâu) và **D14** (mục tiêu đồ án
+theo đề bài) — D14 chặn §1 và §9.
+
+Với final-test Phase 1, **cả bốn phase giờ đều có kết quả**. Không còn mục nào
+trong dàn ý phải chờ số.
 
 ---
 
@@ -273,3 +276,4 @@ nhóm tự đặt.
 | ✅ | Báo cáo có §9 Kết luận, và mỗi mục kết bằng đoạn *Chốt lại* ba ý | bạn yêu cầu 08/09 |
 | ✅ | §1 là mục mở đầu có mục tiêu, không còn là "bài toán và dữ liệu" | bạn yêu cầu 08/09 |
 | ✅ | Phase 3 có chỗ trong báo cáo (mục riêng hay đoạn thì xem D7) | bạn yêu cầu 08/09 |
+| ✅ | §3 có phần nghiệm thu final-test 871 câu; §6 nối sang nó bằng quan hệ tập con | số về 08/09 |

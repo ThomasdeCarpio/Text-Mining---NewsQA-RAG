@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "method": "percentile bootstrap over per-question differences, 2000 samples, seed 42",
+  "source": "docs/reports/phase3/phase3_final_results.json",
+  "note": "Phase 3 cases are not grouped by article the way Phase 2 is, so this resamples questions.",
+  "winner": {
+    "ineligibility_reasons": {
+      "B0": [],
+      "B1": [
+        "control_f1_drop"
+      ],
+      "B2": [
+        "control_f1_drop"
+      ]
+    },
+    "status": "selected",
+    "winner": "B0"
+  },
+  "threshold": {
+    "status": "selected",
+    "threshold": -7.839843750000001
+  },
+  "threshold_curve_points": 107,
+  "b2_gate": {
+    "development": {
+      "cases": 140,
+      "gate_applicable": 107,
+      "gate_rejected": 0
+    },
+    "final": {
+      "cases": 60,
+      "gate_applicable": 46,
+      "gate_rejected": 1
+    }
+  },
+  "control_token_f1_b1_minus_b0": {
+    "development": {
+      "n_controls": 61,
+      "delta": -0.107049,
+      "ci95_low": -0.156259,
+      "ci95_high": -0.063073,
+      "se_bootstrap": 0.024292,
+      "min_detectable_effect": 0.068066,
+      "guardrail_tolerance": -0.02,
+      "passed": false
+    },
+    "final": {
+      "n_controls": 26,
+      "delta": -0.17693,
+      "ci95_low": -0.268634,
+      "ci95_high": -0.094263,
+      "se_bootstrap": 0.043578,
+      "min_detectable_effect": 0.122105,
+      "guardrail_tolerance": -0.02,
+      "passed": false
+    }
+  }
+}

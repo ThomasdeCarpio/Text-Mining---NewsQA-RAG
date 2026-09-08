@@ -1,0 +1,104 @@
+{
+  "arm": "c3_hierarchical",
+  "citations": {
+    "answer_citation_coverage": 0.9625,
+    "citation_f1": 0.7592,
+    "citation_precision": 0.7327,
+    "citation_recall": 0.825,
+    "citation_validity": 0.9625,
+    "n_samples": 80
+  },
+  "context_depth": 5,
+  "coverage": {
+    "expected": 80,
+    "failed": 0,
+    "missing": 0,
+    "recorded": 80,
+    "success_rate": 1.0,
+    "successful": 80
+  },
+  "estimated_cost": {
+    "generation_usd": 0.047488,
+    "judge_usd": 0.0,
+    "total_usd": 0.047488
+  },
+  "judge_questions": 20,
+  "latency": {
+    "db_query_ms": {
+      "n_samples": 0
+    },
+    "dense_ms": {
+      "n_samples": 0
+    },
+    "embed_ms": {
+      "n_samples": 0
+    },
+    "fusion_ms": {
+      "n_samples": 0
+    },
+    "llm_ms": {
+      "max_ms": 2937.4,
+      "mean_ms": 718.6,
+      "n_samples": 80,
+      "p50_ms": 691.0,
+      "p90_ms": 847.5,
+      "p95_ms": 924.5
+    },
+    "rerank_ms": {
+      "max_ms": 272.3,
+      "mean_ms": 228.1,
+      "n_samples": 80,
+      "p50_ms": 228.5,
+      "p90_ms": 240.6,
+      "p95_ms": 244.9
+    },
+    "retrieve_ms": {
+      "max_ms": 226.7,
+      "mean_ms": 133.8,
+      "n_samples": 80,
+      "p50_ms": 129.4,
+      "p90_ms": 179.8,
+      "p95_ms": 196.1
+    },
+    "sparse_ms": {
+      "n_samples": 0
+    },
+    "total": {
+      "max_ms": 3315.2,
+      "mean_ms": 1080.5,
+      "n_samples": 80,
+      "p50_ms": 1056.8,
+      "p90_ms": 1220.8,
+      "p95_ms": 1272.4
+    }
+  },
+  "prompt_id": "p2",
+  "qa": {
+    "exact_match": 0.0625,
+    "f1": 0.3791,
+    "n_samples": 80
+  },
+  "questions": 80,
+  "ragas": {
+    "answer_correctness": 0.8094,
+    "answer_relevancy": 0.7449,
+    "context_precision": 0.9085,
+    "context_recall": 1.0,
+    "coverage": 0.25,
+    "faithfulness": 0.975,
+    "n_samples": 20
+  },
+  "repo_commit": "0f3586684deb95d310281754405a1773921b12f2",
+  "run_mode": "screening",
+  "source_retrieval_manifest_sha256": "518880c8d6e8eeeeb95239c25815bf98214780890cc56dbf82712f8d293a2487",
+  "usage": {
+    "generation": {
+      "input_tokens": 181342,
+      "output_tokens": 1435
+    },
+    "judge": {
+      "input_tokens": 0,
+      "output_tokens": 0
+    }
+  }
+}

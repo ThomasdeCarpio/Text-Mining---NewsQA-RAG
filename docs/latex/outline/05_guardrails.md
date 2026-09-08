@@ -20,6 +20,14 @@ Vì sao khác: ở tầng truy xuất, chọn sai chỉ là xếp hạng kém h�
 chọn sai nghĩa là hệ thống nói điều không có trong bằng chứng — nên Phase 2 trở
 đi mới cần một cơ chế loại thẳng.
 
+Bù lại, Phase 1 có thứ mà 2B và 2C không có: một lần chạy **nghiệm thu** trên 150
+bài chưa từng chạm tới, với cấu hình khóa trước và ba cờ ghi thẳng trong bản ghi
+giao thức — `winner_locked_before_heldout`, `confirmatory_only`,
+`no_post_heldout_reselection`. Không có luật loại, nhưng có ràng buộc *không được
+chọn lại sau khi nhìn số*, và ràng buộc đó ghi thành dữ liệu chứ không phải lời hứa.
+
+> Nguồn thêm: `docs/reports/phase1/heldout/final_protocol.json`.
+
 > Nguồn: `phase_1_retrieval_test_plan.md`; `docs/reports/phase1/report.md` §1.2.
 
 ---

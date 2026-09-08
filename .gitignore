@@ -60,3 +60,8 @@ outputs/retrieval/
 *.synctex.gz
 docs/latex/**/*.log
 *.xdv
+
+# Evidence artifacts under docs/reports are what the report cites -- the blanket
+# *.json / *.csv rules above are for data and run outputs, not for these.
+!docs/reports/**/*.json
+!docs/reports/**/*.csv

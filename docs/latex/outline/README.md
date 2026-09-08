@@ -28,8 +28,9 @@ Nguyên tắc: thứ chưa được quyết thì không xuất hiện dưới d�
 
 1. ✅ Chốt người đọc, độ dài, phạm vi
 2. ✅ Thuật ngữ, dàn ý, sổ phát biểu, phân tích thống kê, bảng guardrail
-3. ✅ Bổ sung Phase 2C (§5) và Phase 3 (§7); thêm §1 mở đầu, §9 kết luận, và
-   đoạn *Chốt lại* cho từng mục — 08/09/2026
+3. ✅ Bổ sung Phase 2C (§5), Phase 3 (§7) và final-test Phase 1 (§3); thêm §1 mở
+   đầu, §9 kết luận, và đoạn *Chốt lại* cho từng mục — 08/09/2026.
+   **Cả bốn phase đều đã có số; không mục nào còn phải chờ.**
 4. ⬜ **Quyết D1, D2, D3, D7, D14** ở [`06_decisions.md`](06_decisions.md) —
    năm cái này chặn việc bắt đầu viết. **D14 chặn nặng nhất**: §1.2 để trống cho
    tới khi có đề bài. D5, D6, D8, D13 ảnh hưởng bố cục, nên quyết cùng lúc.

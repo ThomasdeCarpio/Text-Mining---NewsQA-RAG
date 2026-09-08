@@ -157,6 +157,13 @@ mỗi chỗ giải thích lại.
    Nói rõ đây là *contextual chunking*, không phải *metadata indexing*, và vì sao
    (dataset không có metadata thật).
 7. **Cấu hình khóa** + Hit@1/3/5 — con số §4 sẽ dùng lại.
+8. **Nghiệm thu trên 150 bài chưa từng chạm tới** — 871 câu, chạy một lần,
+   retrieval-only, coverage 871/871. Bảng dev ↔ final-test, và nói thẳng rằng
+   **development dễ hơn**: bốn trong sáu metric có CI95 không chồng lấn.
+   Reranker vẫn có lợi (ΔnDCG@5 +0,0758, CI95 [+0,0504; +0,1017]).
+9. **Bằng chứng đăng ký trước:** `winner_locked_before_heldout`,
+   `confirmatory_only`, `no_post_heldout_reselection` đều `true` trong
+   `final_protocol.json`; hash của chunks, index và testset đều ghi trong đó.
 
 **Bằng chứng:** `round1..3.csv`, `paired_significance.json`, `winner_lock.jsonl`,
 `contextual_chunking_ablation.json`.
@@ -170,11 +177,12 @@ cầu sang §5** — vì nó chạy trước, trên harness khác, và nó là c
 
 ### Chốt lại §3
 
-1. Truy xuất chốt ở BGE-M3 sparse + bge-reranker-large + chunk 512/64, Hit@5
-   0,9573 trên 281 câu development.
+1. Truy xuất chốt ở BGE-M3 sparse + bge-reranker-large + chunk 512/64: Hit@5
+   0,9573 trên 281 câu development, **0,8978 trên 871 câu chưa từng chạm tới**.
 2. Trả giá: chỉ **hai** trong nhiều so sánh phân định được (sparse ↔ dense,
    thêm reranker); kích thước chunk và lựa chọn giữa các mô hình dense là kết
-   quả null, và dense chưa tái lập được giữa hai lần chạy.
+   quả null; và final-test cho thấy mọi con số tuyệt đối đo trên development
+   đang lạc quan khoảng 0,06–0,07.
 3. Bàn giao sang §4: một tập 5 đoạn **đóng băng**, cộng một bảng Hit@k sẽ được
    dùng lại để định giá chi phí của việc cắt bớt context.
 
@@ -320,8 +328,18 @@ chính là cái làm bản hiện tại đọc lủng củng.
 4. **Phân tầng** — và phát biểu đúng phạm vi: trên `gold_in_top5`, held-out
    không thấp hơn dev; chênh lệch toàn tập đến từ tỉ lệ truy xuất trượt.
 5. **Hệ quả:** AC toàn tập bị chặn trên bởi Hit@5.
+6. **Chốt lại bằng Phase 1 final-test** — và đây là chỗ hai phase khớp nhau:
+   284 câu held-out của Phase 2 là **tập con** của 871 câu final-test ở §3. Cùng
+   284 câu đó, hai lần chạy độc lập cho Hit@5 **0,8768 và 0,8768**. Nên chuyện
+   truy xuất khó hơn ở held-out không phải là suy luận từ một lần chạy: nó đo
+   được hai lần, và đo trên cả 871 câu (Hit@5 0,8978 so với dev 0,9573, CI95
+   không chồng lấn).
+7. Và 50 bài Phase 2 bốc trúng **không** khó bất thường: 0,8768 [0,8333; 0,9181]
+   so với 100 bài còn lại 0,9080 [0,8786; 0,9385] — chồng lấn. Cả vùng held-out
+   đều khó hơn development, không riêng cụm đó.
 
-**Bằng chứng:** `docs/reports/phase2/heldout/`, `phase2b_winner_decision.json`.
+**Bằng chứng:** `docs/reports/phase2/heldout/`, `phase2b_winner_decision.json`,
+`docs/reports/phase1/heldout/heldout_significance.json`.
 
 **Không nhét vào:** so sánh A/B trên held-out — không có baseline held-out, và
 theo thiết kế thì không được chạy thêm.
@@ -331,7 +349,8 @@ theo thiết kế thì không được chạy thêm.
 1. Con số công bố: Answer Correctness 0,7157 trên 284 câu chưa từng bị chạm tới,
    chạy đúng một lần sau khi quyết định đã đóng băng.
 2. Trả giá: Hit@5 tụt xuống 0,8768, tức khoảng 12% số câu không có đường nào để
-   trả lời đúng — trần của tầng sinh nằm ở tầng truy xuất, không ở prompt.
+   trả lời đúng — trần của tầng sinh nằm ở tầng truy xuất, không ở prompt. Phase 1
+   final-test xác nhận trên 871 câu: 10,2% mất sạch bằng chứng, so với 4,3% ở dev.
 3. Bàn giao sang §7: hệ thống trả lời tốt khi có bằng chứng; câu còn lại là nó
    làm gì **khi không có**.
 
@@ -404,6 +423,11 @@ khác nhau, hai metric chính khác nhau.
 *Giới hạn của kết quả*
 - Dense **chưa tái lập được**: trôi 0,0143 > khoảng cách giữa các mô hình 0,0094.
   Nêu nguyên nhân trong mã: thiếu seed HNSW, `batch_size`, `torch.manual_seed`.
+  Nhánh sparse thì ngược lại — cùng 284 câu, hai lần chạy cho Hit@5 bằng nhau tới
+  bốn chữ số.
+- **Tập development dễ hơn phần còn lại của kho**, đo được: bốn trong sáu metric
+  truy xuất có CI95 của dev và final-test không chồng lấn. Mọi con số tuyệt đối
+  của Phase 1 vì thế là ước lượng lạc quan; các so sánh ghép cặp thì không sao.
 - Giải đấu phân tầng không phát hiện được tương tác giữa các vòng.
 - Bootstrap không đồng nhất: Phase 1, ablation và Phase 3 bốc theo câu; Phase 2
   và 2C gom cụm theo bài.
@@ -449,7 +473,7 @@ Mỗi câu **một dòng**, có số, không giải thích lại:
 
 | | Câu hỏi | Trả lời |
 | :-- | :--- | :--- |
-| Q1 | Truy xuất thế nào? | BGE-M3 sparse + bge-reranker-large, Hit@5 0,9573 — sparse hơn dense +0,1634 nDCG@5 |
+| Q1 | Truy xuất thế nào? | BGE-M3 sparse + bge-reranker-large — sparse hơn dense +0,1634 nDCG@5; Hit@5 0,9573 (dev) và **0,8978 trên 871 câu chưa chạm tới** |
 | Q2 | Ra lệnh cho LLM thế nào? | Prompt P2, 5 đoạn context, AC +0,1043 so với baseline |
 | Q3 | Cách cắt đoạn có quan trọng không? | **Không đủ để đổi cấu hình** — không chiến lược nào qua hết guardrail |
 | Q4 | Có biết im lặng không? | Biết sẵn: false-answer rate 5,88%; **không** chính sách bổ sung nào được nhận |
@@ -500,4 +524,5 @@ không gắn với số nào.
 | 2 | Có cần 4 biểu đồ 300 DPI mà test plan Phase 1 §6 yêu cầu không? | Hiện chưa có cái nào. 10–15 trang thì có chỗ cho 2–3 hình |
 | 3 | Phase 3: mục riêng (§7) hay một đoạn trong §8? | Đã có kết quả final-test nên **D7** phải quyết lại. Để mục riêng thì báo cáo dài thêm khoảng 1,5 trang |
 | 4 | Trung vị độ dài đáp án chuẩn — chưa đo | Cần cho §4.2, không tốn API |
+| 6 | ~~Chạy final-test 150 bài để nghiệm thu Phase 1~~ | ✅ số về ngày 08/09, đã vào §3 |
 | 5 | Mã Phase 3 nằm ngoài repo | Bản chạy thật là `phase3_run.py` / `phase3_metrics.py` của Thắng, khác `scripts/run_phase3_abstention.py` đang có. Xem **D13** |

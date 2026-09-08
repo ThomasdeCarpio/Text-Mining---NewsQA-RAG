@@ -27,6 +27,7 @@ Báo cáo thực nghiệm của dự án **NewsQA RAG**.
 **Artifact:**
 
 - `phase1/` — CSV từng vòng, `winner_lock.jsonl`, `paired_significance.json`.
+- `phase1/heldout/` — **nghiệm thu Phase 1**: 871 câu / 150 bài chưa từng chạm tới, bản ghi giao thức có ba cờ chống chọn lại, điểm theo từng câu, và khoảng tin cậy gom cụm theo bài.
 - `phase2/` — `report.json` của baseline và hai finalist, điểm theo từng câu, `paired_significance.json`, `phase2b_winner_decision.json`.
 - `phase2/heldout/` — **bằng chứng của con số công bố**: access record kèm chuỗi hash, summary micro + article macro, phân tầng theo truy xuất, điểm theo từng câu và từng bài.
 - `phase2/provenance/` — manifest chuẩn bị, danh sách id từng partition, `retrieval_lock.json`, cấu hình judge.

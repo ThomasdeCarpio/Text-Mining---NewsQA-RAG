@@ -1,0 +1,42 @@
+schema_version: 1
+experiment:
+  id: phase1-locked-heldout-final
+  name: Phase 1 locked final
+output_dir: /kaggle/working/newsqa_phase1_heldout/experiments
+seed: 42
+dataset:
+  article_field: article_key
+  development_articles: 50
+  indexes:
+    locked_bge_m3_512_64:
+      config: /kaggle/working/newsqa_phase1_heldout/runtime/locked_phase1_heldout_config.yaml
+      variant_manifest: /kaggle/working/newsqa_phase1_heldout/runtime/locked_phase1_heldout_variant.json
+      testsets:
+        resolved: /kaggle/working/newsqa_phase1_heldout/data/locked-bge-m3-512-64-deduplicated-v2/testset_resolved.jsonl
+fixed:
+  retrieval_only: true
+  top_k: 20
+  rerank_top_n: 5
+  partition: final_test
+runs:
+- index: locked_bge_m3_512_64
+  variant: resolved
+  retriever: sparse
+  reranker: cross-encoder
+  reranker_model: BAAI/bge-reranker-large
+runtime:
+  max_attempts: 2
+  progress: true
+  warmup_queries: 3
+judge:
+  enabled: false
+summary:
+  metrics:
+  - retrieval.hit_rate@1
+  - retrieval.hit_rate@3
+  - retrieval.hit_rate@5
+  - retrieval.mrr@5
+  - retrieval.ndcg@5
+  - retrieval.recall@5
+  quality_metric: retrieval.mrr@5.mean
+  latency_metric: latency.total.p50_ms

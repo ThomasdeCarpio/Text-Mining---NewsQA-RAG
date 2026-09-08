@@ -1,0 +1,7 @@
+partition,policy,n,abstention_f1,false_answer_rate,false_abstention_rate,control_token_f1,control_exact_match,citation_validity,generation_success_rate
+development,B0,140,0.974,0.0506,0.0,0.449,0.082,1.0,0.9929
+development,B1,140,0.9936,0.0127,0.0,0.342,0.0,1.0,0.9929
+development,B2,140,0.9936,0.0127,0.0,0.342,0.0,1.0,0.9929
+final,B0,60,0.9697,0.0588,0.0,0.4766,0.1154,1.0,0.9833
+final,B1,60,0.9538,0.0882,0.0,0.2996,0.0385,1.0,0.9833
+final,B2,60,0.9538,0.0882,0.0,0.2996,0.0385,1.0,0.9833

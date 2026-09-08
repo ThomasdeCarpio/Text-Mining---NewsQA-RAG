@@ -16,6 +16,7 @@ Dự án chia hai giai đoạn vì hai việc đó hỏng theo hai cách khác n
 | :--- | :--- | :--- |
 | EDA — khảo sát dữ liệu | ✅ | Biên độ nhập nhằng nhãn chunk 7,0–24,5%; phục hồi 4.603 bài bị cắt |
 | **Phase 1** — chọn cách lấy đoạn văn | ✅ khóa | BGE-M3 sparse + bge-reranker-large + chunk 512/64 |
+| **Phase 1 — final-test** | ✅ **đã chạy** | **Hit@5 0,8978 trên 871 câu / 150 bài** |
 | **Phase 2** — chọn cách hỏi LLM | ✅ chọn xong | Prompt P2, 5 đoạn context |
 | **Phase 2 — held-out** | ✅ **đã chạy** | **AC 0,7157 trên 284 câu — số công bố** |
 | Phase 2C — chọn cách cắt đoạn | ✅ đã chạy | Không chiến lược nào qua guardrail; giữ nguyên recursive 512/64 |
@@ -48,6 +49,23 @@ Dự án chia hai giai đoạn vì hai việc đó hỏng theo hai cách khác n
 - **Reranker thêm +0,0659 nDCG@5.** EDA đo được mỗi câu hỏi có trung vị **25 đoạn đối thủ** cùng chủ đề, nên lọc lại là bắt buộc chứ không phải tùy chọn.
 - **Chunk size là kết quả null.** Ba kích thước chồng lấn nhau; chọn 512 vì lý do vận hành, không vì nó thắng.
 - **Contextual chunking:** thêm 160 ký tự ngữ cảnh bài báo vào đầu mỗi chunk giúp dense (+0,0293) nhưng hại sparse (−0,0208) — cả hai đều có ý nghĩa thống kê, cả hai đều dưới ngưỡng nhiễu 7,0%. Sparse vẫn thắng trên cả hai kho, nên quyết định không đổi.
+
+**Nghiệm thu — 871 câu / 150 bài chưa từng chạm tới**, chạy đúng một lần, chỉ truy xuất, coverage 871/871. Bản ghi giao thức mang ba cờ: `winner_locked_before_heldout`, `confirmatory_only`, `no_post_heldout_reselection`.
+
+| | Dev (281 câu) | **Final-test (871 câu)** | Δ | CI95 final-test | Hai CI chồng lấn? |
+| :--- | ---: | ---: | ---: | :--- | :-- |
+| Hit@1 | 0,8221 | 0,7543 | −0,0678 | [0,7161; 0,7939] | có |
+| Hit@3 | 0,9324 | **0,8611** | −0,0713 | [0,8298; 0,8904] | **không** |
+| Hit@5 | 0,9573 | **0,8978** | −0,0595 | [0,8722; 0,9210] | **không** |
+| MRR@5 | 0,8797 | 0,8112 | −0,0685 | [0,7803; 0,8423] | có |
+| nDCG@5 | 0,8976 | **0,8313** | −0,0663 | [0,8019; 0,8598] | **không** |
+| Recall@5 | 0,9555 | **0,8955** | −0,0600 | [0,8693; 0,9199] | **không** |
+
+Bốn trong sáu metric có hai khoảng tin cậy tách rời: **tập development dễ hơn phần còn lại của kho, và đây là số đo chứ không phải phỏng đoán.** Hệ quả: mọi con số *tuyệt đối* của Phase 1 đo trên development lạc quan khoảng 0,06–0,07. Các *so sánh* (sparse ↔ dense, có ↔ không reranker) không bị ảnh hưởng, vì chúng ghép cặp trong cùng một tập.
+
+Reranker vẫn có lợi trên dữ liệu khó hơn: ΔnDCG@5 **+0,0758** (CI95 [+0,0504; +0,1017]), ΔMRR@5 +0,0843, ΔnDCG@1 +0,1102 — cả ba khoảng đều không chứa 0, và giá trị đo ở vòng 2 (+0,0659) nằm trong khoảng của final-test.
+
+Latency P50 tổng 550,0 ms (dev 513 ms), trong đó rerank 474,0 ms.
 
 ---
 
@@ -202,6 +220,26 @@ Nếu chỉ chọn theo điểm cao nhất thì cả ba lần đều chọn sai.
 này: hai trong ba lần, phán quyết nằm sát biên độ đo được — xem phần *Chưa được
 phép kết luận*.
 
+# Hai lần chạy độc lập, cùng một tập câu hỏi
+
+Tập held-out của Phase 2 (284 câu / 50 bài) hóa ra là **tập con** của final-test Phase 1 (871 câu / 150 bài) — đủ cả 284 câu, đủ cả 50 bài. Cùng bộ câu hỏi đó đã được chấm hai lần, bởi hai lần chạy khác nhau.
+
+| Hit@5 trên chính 284 câu đó | |
+| :--- | ---: |
+| Lần chạy Phase 1 (nằm trong 871 câu) | 0,8768 |
+| Lần chạy Phase 2 (284 câu riêng) | 0,8768 |
+
+Bằng nhau tới bốn chữ số — bằng chứng tái lập được cho nhánh sparse, đối lập với chỗ dense trôi 0,0143 giữa hai lần chạy.
+
+Và 50 bài Phase 2 bốc trúng **không** khó bất thường:
+
+| Trong 871 câu final-test | n | Hit@5 | CI95 |
+| :--- | ---: | ---: | :--- |
+| 50 bài Phase 2 dùng làm held-out | 284 | 0,8768 | [0,8333; 0,9181] |
+| 100 bài còn lại | 587 | 0,9080 | [0,8786; 0,9385] |
+
+Hai khoảng chồng lấn. Không phải Phase 2 bốc phải cụm khó — **cả vùng held-out đều khó hơn development**. Số câu mất sạch bằng chứng ở top-5: 12/281 (4,3%) trên dev, 89/871 (10,2%) trên final-test.
+
 # Chỗ Phase 1 giúp Phase 2
 
 Phát hiện phương pháp đáng kể nhất của dự án: **Phase 1 đã trả lời sẵn một câu hỏi của Phase 2, miễn phí.**
@@ -237,7 +275,7 @@ Held-out xác nhận cùng cơ chế ở quy mô lớn hơn: với Hit@5 = 0,876
 | 1 | Audit mù 30 cặp P0 ↔ winner, **hai người chấm độc lập** | 2 | **Cần chia việc giữa hai người** |
 | 2 | Lặp 25 câu × 2 cấu hình đo độ ổn định API | 2 | |
 | 3 | Hiệu chuẩn judge trên 20 câu đã dành sẵn | 2 | Tập đã chuẩn bị |
-| 4 | Chạy held-out 150 bài final-test | 1 | Nghiệm thu Phase 1 |
+| 4 | ~~Chạy held-out 150 bài final-test~~ | 1 | ✅ đã chạy — xem phần nghiệm thu Phase 1 |
 | 5 | Chạy lại vòng 1 trên chỉ mục đã đóng gói (cố định số dense) | 1 | Rẻ — bỏ qua bước dựng chỉ mục |
 | 6 | Chạy 2C trên tập dự trữ 587 câu | 2C | Chưa chạy, giữ cho kiểm chứng sau |
 

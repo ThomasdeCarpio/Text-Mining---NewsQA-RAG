@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "method": "percentile bootstrap over articles, per-question retrieval scores",
+  "samples": 2000,
+  "seed": 42,
+  "note": "Development and final-test hold disjoint articles, so these are intervals on each partition, not a paired difference.",
+  "partitions": {
+    "development": {
+      "hit_rate@1": {
+        "value": 0.822064,
+        "ci95_low": 0.760274,
+        "ci95_high": 0.878893,
+        "se_bootstrap": 0.030185,
+        "n_questions": 281,
+        "n_articles": 50
+      },
+      "hit_rate@3": {
+        "value": 0.932384,
+        "ci95_low": 0.899225,
+        "ci95_high": 0.960854,
+        "se_bootstrap": 0.015642,
+        "n_questions": 281,
+        "n_articles": 50
+      },
+      "hit_rate@5": {
+        "value": 0.957295,
+        "ci95_low": 0.934783,
+        "ci95_high": 0.977612,
+        "se_bootstrap": 0.01082,
+        "n_questions": 281,
+        "n_articles": 50
+      },
+      "mrr@5": {
+        "value": 0.879715,
+        "ci95_low": 0.837841,
+        "ci95_high": 0.918983,
+        "se_bootstrap": 0.020342,
+        "n_questions": 281,
+        "n_articles": 50
+      },
+      "ndcg@5": {
+        "value": 0.89763,
+        "ci95_low": 0.86416,
+        "ci95_high": 0.930746,
+        "se_bootstrap": 0.017166,
+        "n_questions": 281,
+        "n_articles": 50
+      },
+      "recall@5": {
+        "value": 0.955516,
+        "ci95_low": 0.933566,
+        "ci95_high": 0.975089,
+        "se_bootstrap": 0.010762,
+        "n_questions": 281,
+        "n_articles": 50
+      }
+    },
+    "final_test": {
+      "hit_rate@1": {
+        "value": 0.754305,
+        "ci95_low": 0.716107,
+        "ci95_high": 0.793875,
+        "se_bootstrap": 0.020375,
+        "n_questions": 871,
+        "n_articles": 150
+      },
+      "hit_rate@3": {
+        "value": 0.861079,
+        "ci95_low": 0.829763,
+        "ci95_high": 0.890443,
+        "se_bootstrap": 0.015649,
+        "n_questions": 871,
+        "n_articles": 150
+      },
+      "hit_rate@5": {
+        "value": 0.897819,
+        "ci95_low": 0.872242,
+        "ci95_high": 0.920991,
+        "se_bootstrap": 0.012375,
+        "n_questions": 871,
+        "n_articles": 150
+      },
+      "mrr@5": {
+        "value": 0.811212,
+        "ci95_low": 0.780292,
+        "ci95_high": 0.84233,
+        "se_bootstrap": 0.015988,
+        "n_questions": 871,
+        "n_articles": 150
+      },
+      "ndcg@5": {
+        "value": 0.831309,
+        "ci95_low": 0.80189,
+        "ci95_high": 0.85983,
+        "se_bootstrap": 0.014841,
+        "n_questions": 871,
+        "n_articles": 150
+      },
+      "recall@5": {
+        "value": 0.895522,
+        "ci95_low": 0.869338,
+        "ci95_high": 0.919861,
+        "se_bootstrap": 0.012894,
+        "n_questions": 871,
+        "n_articles": 150
+      }
+    }
+  },
+  "final_test_question_bootstrap_from_run": {
+    "hit_rate@1": {
+      "ci95_low": 0.726722,
+      "ci95_high": 0.783008
+    },
+    "hit_rate@3": {
+      "ci95_low": 0.838117,
+      "ci95_high": 0.88407
+    },
+    "hit_rate@5": {
+      "ci95_low": 0.877153,
+      "ci95_high": 0.917336
+    },
+    "mrr@5": {
+      "ci95_low": 0.787828,
+      "ci95_high": 0.833471
+    },
+    "ndcg@5": {
+      "ci95_low": 0.810502,
+      "ci95_high": 0.852388
+    },
+    "recall@5": {
+      "ci95_low": 0.87599,
+      "ci95_high": 0.915614
+    }
+  },
+  "reranker_gain_final_test": {
+    "mrr@5": {
+      "delta": 0.084272,
+      "ci95_low": 0.056143,
+      "ci95_high": 0.112573
+    },
+    "ndcg@5": {
+      "delta": 0.075837,
+      "ci95_low": 0.050386,
+      "ci95_high": 0.101723
+    },
+    "ndcg@1": {
+      "delta": 0.110218,
+      "ci95_low": 0.073479,
+      "ci95_high": 0.145809
+    }
+  },
+  "evidence_missing_at_5": {
+    "development": {
+      "n": 12,
+      "of": 281
+    },
+    "final_test": {
+      "n": 89,
+      "of": 871
+    }
+  },
+  "phase2_heldout_overlap": {
+    "shared_questions": 284,
+    "phase2_heldout_questions": 284,
+    "is_subset": true,
+    "phase2_articles_inside": 50,
+    "scored_twice_hit_rate@5": {
+      "phase1_run": 0.876761,
+      "phase2_run": 0.876761
+    },
+    "same_50_articles": {
+      "hit_rate@5": {
+        "value": 0.876761,
+        "ci95_low": 0.833333,
+        "ci95_high": 0.918089,
+        "se_bootstrap": 0.021418,
+        "n_questions": 284,
+        "n_articles": 50
+      },
+      "ndcg@5": {
+        "value": 0.804227,
+        "ci95_low": 0.753234,
+        "ci95_high": 0.851672,
+        "se_bootstrap": 0.025146,
+        "n_questions": 284,
+        "n_articles": 50
+      }
+    },
+    "other_100_articles": {
+      "hit_rate@5": {
+        "value": 0.908007,
+        "ci95_low": 0.878583,
+        "ci95_high": 0.938538,
+        "se_bootstrap": 0.015679,
+        "n_questions": 587,
+        "n_articles": 100
+      },
+      "ndcg@5": {
+        "value": 0.844412,
+        "ci95_low": 0.808817,
+        "ci95_high": 0.880691,
+        "se_bootstrap": 0.018419,
+        "n_questions": 587,
+        "n_articles": 100
+      }
+    }
+  }
+}

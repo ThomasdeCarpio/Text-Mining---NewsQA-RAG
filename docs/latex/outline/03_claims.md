@@ -28,6 +28,30 @@ Mức mạnh — *cách phân loại này chờ quyết, xem [`06_decisions.md`]
 | 1.10 | Dense chưa tái lập được: trôi 0,0143 > khoảng cách giữa các mô hình 0,0094 | `chroma_store.py:33`, `embeddings.py:148` | **C** — quan sát hai lần chạy |
 | 1.11 | Dataset không có metadata thật để index | notebook 16 cell 7, kiểm 200/200 bài | **A** |
 
+## Phase 1 — final-test, 871 câu / 150 bài, chạy một lần
+
+Cấu hình khóa sau vòng 3, chạy retrieval-only trên 150 bài chưa từng bị chạm tới.
+Không sinh, không gọi API, coverage 871/871.
+
+| # | Phát biểu | Bằng chứng | Mức |
+| ---: | :--- | :--- | :-: |
+| 1.12 | Hit@5 0,8978 · nDCG@5 0,8313 · MRR@5 0,8112 · Recall@5 0,8955 trên 871 câu | `phase1/heldout/final_comparison.csv` | **A** |
+| 1.13 | Cấu hình khóa **trước** khi mở final-test: `winner_locked_before_heldout`, `confirmatory_only`, `no_post_heldout_reselection` đều `true` | `final_protocol.json` | **A** |
+| 1.14 | Development **dễ hơn** final-test một cách phân định được: CI95 của Hit@3, Hit@5, nDCG@5, Recall@5 ở hai tập **không chồng lấn** | `heldout_significance.json` | **B** — hai tập rời nhau nên không ghép cặp được, chỉ so hai khoảng |
+| 1.15 | Hit@1 và MRR@5 thì **không phân định được** — CI95 chồng lấn | như trên | **D** |
+| 1.16 | Reranker vẫn có lợi trên tập chưa từng thấy: ΔnDCG@5 +0,0758, CI95 [+0,0504; +0,1017] | như trên | **B** — xác nhận lại 1.5 (+0,0659 trên dev) |
+| 1.17 | Số câu mất sạch bằng chứng ở top-5: 12/281 (4,3%) → 89/871 (10,2%) | như trên | **A** — đếm trực tiếp |
+| 1.18 | Tập held-out của Phase 2 là **tập con** của final-test Phase 1: đủ 284/284 câu, đủ 50/50 bài | như trên | **A** |
+| 1.19 | Cùng 284 câu, hai lần chạy độc lập cho Hit@5 **bằng nhau tới bốn chữ số**: 0,8768 và 0,8768 | như trên | **A** — bằng chứng tái lập được của nhánh sparse |
+| 1.20 | 50 bài Phase 2 bốc trúng **không** khó bất thường: Hit@5 0,8768 [0,8333; 0,9181] so với 100 bài còn lại 0,9080 [0,8786; 0,9385] | như trên | **D** — CI chồng lấn |
+| 1.21 | Latency P50 tổng 550,0 ms trên final-test (dev 513 ms); rerank chiếm 474,0 ms | `final_comparison.csv` | **A** |
+
+> Tái lập 1.14–1.20: `python scripts/phase1_heldout_summary.py`
+>
+> **Hệ quả phải viết ở §8:** mọi con số *tuyệt đối* của Phase 1 đo trên development
+> đều lạc quan khoảng 0,06–0,07. Các *so sánh* của Phase 1 thì không bị ảnh hưởng,
+> vì chúng ghép cặp trong cùng một tập.
+
 ## Phase 2 — development, 281 câu
 
 | # | Phát biểu | Bằng chứng | Mức |
@@ -71,7 +95,7 @@ Mức mạnh — *cách phân loại này chờ quyết, xem [`06_decisions.md`]
 | 3.4 | Trên `gold_in_top5`, held-out **không phân biệt được** với dev | `heldout_retrieval_subgroups.csv` | **C** — 🔒 held-out 0,7689 CI95 [0,7391; 0,7978] chứa giá trị dev 0,7597. Viết "không thấp hơn", cấm viết "cao hơn" |
 | 3.5 | Tỉ lệ truy xuất trượt: 12/281 → 35/284 | như trên | **A** |
 | 3.6 | Citation F1 nhóm trượt = 0,0000 theo định nghĩa | như trên | **A** |
-| 3.7 | AC toàn tập bị chặn trên bởi Hit@5 | 3.4 + 3.5 | **C** — lập luận, không phải kiểm định |
+| 3.7 | AC toàn tập bị chặn trên bởi Hit@5 | 3.4 + 3.5, và 1.17 xác nhận trên 871 câu | **C** — lập luận, không phải kiểm định |
 
 > 3.4 và 3.7 là hai phát biểu quan trọng nhất của báo cáo, và cả hai đều là **C**.
 > Dev với held-out là hai tập khác nhau nên không ghép cặp được.

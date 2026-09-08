@@ -1,0 +1,123 @@
+{
+  "bootstrap": {
+    "c0_recursive": {
+      "hit@5": {
+        "ci95_high": 0.0,
+        "ci95_low": 0.0,
+        "delta_vs_c0": 0.0
+      },
+      "mrr@5": {
+        "ci95_high": 0.0,
+        "ci95_low": 0.0,
+        "delta_vs_c0": 0.0
+      },
+      "ndcg@5": {
+        "ci95_high": 0.0,
+        "ci95_low": 0.0,
+        "delta_vs_c0": 0.0
+      },
+      "recall@5": {
+        "ci95_high": 0.0,
+        "ci95_low": 0.0,
+        "delta_vs_c0": 0.0
+      }
+    },
+    "c1_sentence": {
+      "hit@5": {
+        "ci95_high": 0.024055,
+        "ci95_low": 0.0,
+        "delta_vs_c0": 0.010676
+      },
+      "mrr@5": {
+        "ci95_high": 0.012874,
+        "ci95_low": -0.011516,
+        "delta_vs_c0": 0.000475
+      },
+      "ndcg@5": {
+        "ci95_high": 0.013484,
+        "ci95_low": -0.01114,
+        "delta_vs_c0": 0.001524
+      },
+      "recall@5": {
+        "ci95_high": 0.020002,
+        "ci95_low": -0.010949,
+        "delta_vs_c0": 0.005338
+      }
+    },
+    "c2_paragraph": {
+      "hit@5": {
+        "ci95_high": 0.014816,
+        "ci95_low": -0.007576,
+        "delta_vs_c0": 0.003559
+      },
+      "mrr@5": {
+        "ci95_high": 0.016901,
+        "ci95_low": -0.011736,
+        "delta_vs_c0": 0.00261
+      },
+      "ndcg@5": {
+        "ci95_high": 0.01541,
+        "ci95_low": -0.011682,
+        "delta_vs_c0": 0.002558
+      },
+      "recall@5": {
+        "ci95_high": 0.016779,
+        "ci95_low": -0.016484,
+        "delta_vs_c0": 0.001779
+      }
+    },
+    "c3_hierarchical": {
+      "hit@5": {
+        "ci95_high": 0.007463,
+        "ci95_low": -0.028472,
+        "delta_vs_c0": -0.010676
+      },
+      "mrr@5": {
+        "ci95_high": -0.009567,
+        "ci95_low": -0.056426,
+        "delta_vs_c0": -0.032504
+      },
+      "ndcg@5": {
+        "ci95_high": -0.006151,
+        "ci95_low": -0.044413,
+        "delta_vs_c0": -0.02632
+      },
+      "recall@5": {
+        "ci95_high": 0.005993,
+        "ci95_low": -0.02837,
+        "delta_vs_c0": -0.010676
+      }
+    }
+  },
+  "bootstrap_replicates": 2000,
+  "bootstrap_unit": "article",
+  "c3_delivered_parent_n": 5,
+  "c3_parent_count_distribution": {
+    "5": 281
+  },
+  "c3_primary_unit": "deduplicated_delivered_parent",
+  "c3_rerank_candidate_n": 20,
+  "control": "c0_recursive",
+  "eligibility": {
+    "c0_recursive": {
+      "eligible": true,
+      "reasons": []
+    },
+    "c1_sentence": {
+      "eligible": true,
+      "reasons": []
+    },
+    "c2_paragraph": {
+      "eligible": true,
+      "reasons": []
+    },
+    "c3_hierarchical": {
+      "eligible": true,
+      "reasons": []
+    }
+  },
+  "quality_margin": 0.02,
+  "run_mode": "screening",
+  "schema_version": 1,
+  "selection_permitted": true
+}

@@ -1,0 +1,59 @@
+artifacts:
+  locked_index_dir: data/locked_index
+chunking:
+  chunk_overlap: 64
+  chunk_size: 512
+  sentence_overlap: 2
+  sentences_per_chunk: 8
+  strategy: recursive
+database:
+  hnsw:
+    ef_construction: 200
+    ef_search: 50
+    max_neighbors: 16
+    space: cosine
+embedding:
+  dimensions: 384
+  model_name: all-MiniLM-L6-v2
+  provider: sentence-transformers
+evaluation:
+  llm_model: gpt-4o-mini
+  metrics:
+  - faithfulness
+  - answer_relevancy
+  - context_precision
+  - context_recall
+llm:
+  max_tokens: 1024
+  model: gpt-4o-mini
+  temperature: 0.0
+metadata:
+  categories:
+  - Politics
+  - Technology
+  - Business
+  - World
+  - Science
+  - Health
+  - Sports
+  - Entertainment
+  - Other
+retrieval:
+  hybrid:
+    dense_weight: 0.7
+    enabled: false
+    sparse_weight: 0.3
+  reranker:
+    batch_size: 8
+    enabled: true
+    model: BAAI/bge-reranker-large
+    top_n: 5
+    type: cross-encoder
+    device: cuda:1
+  retriever: sparse
+  sparse:
+    device: cuda:0
+    method: bge-m3
+    model: BAAI/bge-m3
+    model_name: BAAI/bge-m3
+  top_k: 20

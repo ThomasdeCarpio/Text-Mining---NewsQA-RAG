@@ -1,0 +1,114 @@
+{
+  "arm": "c3_hierarchical",
+  "citations": {
+    "answer_citation_coverage": 0.9786,
+    "citation_f1": 0.8108,
+    "citation_precision": 0.8013,
+    "citation_recall": 0.8399,
+    "citation_validity": 0.9786,
+    "n_samples": 281
+  },
+  "context_depth": 3,
+  "coverage": {
+    "expected": 281,
+    "failed": 0,
+    "missing": 0,
+    "recorded": 281,
+    "success_rate": 1.0,
+    "successful": 281
+  },
+  "estimated_cost": {
+    "generation_usd": 0.10501524999999999,
+    "judge_usd": 0.5477251,
+    "total_usd": 0.65274035
+  },
+  "finalist_id": "c3_d3",
+  "judge_questions": 281,
+  "latency": {
+    "db_query_ms": {
+      "n_samples": 0
+    },
+    "dense_ms": {
+      "n_samples": 0
+    },
+    "embed_ms": {
+      "n_samples": 0
+    },
+    "fusion_ms": {
+      "n_samples": 0
+    },
+    "llm_ms": {
+      "max_ms": 3167.2,
+      "mean_ms": 622.9,
+      "n_samples": 281,
+      "p50_ms": 605.0,
+      "p90_ms": 736.4,
+      "p95_ms": 788.5
+    },
+    "rerank_ms": {
+      "max_ms": 339.2,
+      "mean_ms": 228.1,
+      "n_samples": 281,
+      "p50_ms": 227.4,
+      "p90_ms": 243.1,
+      "p95_ms": 249.5
+    },
+    "retrieve_ms": {
+      "max_ms": 310.7,
+      "mean_ms": 133.3,
+      "n_samples": 281,
+      "p50_ms": 128.5,
+      "p90_ms": 187.7,
+      "p95_ms": 206.2
+    },
+    "sparse_ms": {
+      "n_samples": 0
+    },
+    "total": {
+      "max_ms": 3545.0,
+      "mean_ms": 984.3,
+      "n_samples": 281,
+      "p50_ms": 970.2,
+      "p90_ms": 1124.7,
+      "p95_ms": 1161.7
+    }
+  },
+  "prompt_id": "p2",
+  "qa": {
+    "exact_match": 0.2776,
+    "f1": 0.5573,
+    "n_samples": 281
+  },
+  "questions": 281,
+  "ragas": {
+    "answer_correctness": 0.773,
+    "answer_relevancy": 0.5689,
+    "context_precision": 0.9107,
+    "context_recall": 0.9573,
+    "coverage": 1.0,
+    "faithfulness": 0.9674,
+    "n_samples": 281
+  },
+  "repo_commit": "19a2da4429da2989973777013be77e9b7378a7af",
+  "run_mode": "development",
+  "selection": {
+    "configuration": "C3 hierarchical + P2 + D3",
+    "judge_questions": 20,
+    "phase": "phase2c_depth_screening",
+    "screening_questions": 80,
+    "status": "locked_finalist"
+  },
+  "source_child_retrievals_sha256": "12fc49f45e077a45a3757e0fb49da62b3858fdc82ad29a2906de3747b81c7085",
+  "source_parent_retrievals_sha256": "93a111afd88a933630995804109944b51e15bace15d0e1af47657b1dbc41449d",
+  "source_retrieval_manifest_sha256": "518880c8d6e8eeeeb95239c25815bf98214780890cc56dbf82712f8d293a2487",
+  "usage": {
+    "generation": {
+      "input_tokens": 396709,
+      "output_tokens": 3892
+    },
+    "judge": {
+      "input_tokens": 3110844,
+      "output_tokens": 162197
+    }
+  }
+}

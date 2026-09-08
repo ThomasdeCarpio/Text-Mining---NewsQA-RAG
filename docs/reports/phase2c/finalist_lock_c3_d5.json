@@ -1,0 +1,21 @@
+{
+  "arm": "c3_hierarchical",
+  "child_retrievals_sha256": "12fc49f45e077a45a3757e0fb49da62b3858fdc82ad29a2906de3747b81c7085",
+  "configuration": "C3 hierarchical + P2 + D5",
+  "context_depth": 5,
+  "finalist_id": "c3_d5",
+  "generator_model": "gemini-3.1-flash-lite",
+  "generator_reasoning": "minimal",
+  "judge_model": "accounts/fireworks/models/glm-5p3-flash",
+  "judge_questions": 20,
+  "judge_reasoning": "low",
+  "parent_retrievals_sha256": "93a111afd88a933630995804109944b51e15bace15d0e1af47657b1dbc41449d",
+  "phase": "phase2c_depth_screening",
+  "prompt_id": "p2",
+  "prompt_sha256": "09b2508dbf7af601027d889ccb23cfb8ce736c02a8f7f1e6d5888e6c4fec8ef1",
+  "question_ids_sha256": "15f0a90a1fe5772515f15a686f3365ff6cccf45d441e44ab8902159e3e601c36",
+  "retrieval_manifest_sha256": "518880c8d6e8eeeeb95239c25815bf98214780890cc56dbf82712f8d293a2487",
+  "schema_version": 1,
+  "screening_questions": 80,
+  "status": "locked_finalist"
+}
