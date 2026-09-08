@@ -38,7 +38,7 @@ e5-base-v2 \emph{vs} bge-small-en-v1.5 & \NumDenseVsDense & \NumDenseVsDenseCI \
 \end{center}
 
 Chỉ dòng đầu vượt được cả hai điều kiện phán quyết. Khoảng cách
-\NumSparseVsDense{} lớn hơn biên độ nhiễu \NumNoiseFloor{} và khoảng tin cậy
+\NumSparseVsDense{} lớn hơn biên độ nhập nhằng \NumNoiseFloor{} và khoảng tin cậy
 không chứa 0. EDA đã giải thích trước vì sao: câu hỏi NewsQA bám vào tên riêng,
 ngày tháng và con số --- đúng thứ mà khớp từ vựng bắt được chính xác, còn
 embedding dày đặc thì làm nhòe đi thành ``ý nghĩa gần giống''.
@@ -77,7 +77,7 @@ Khoảng cách cao nhất -- thấp nhất & \NumChunkSpread \\
 \end{tabular}
 \end{center}
 
-\NumChunkSpread{} nằm dưới biên độ nhiễu \NumNoiseFloor{}, và cả ba khoảng tin
+\NumChunkSpread{} nằm dưới biên độ nhập nhằng \NumNoiseFloor{}, và cả ba khoảng tin
 cậy chồng lấn nhau. Không có cơ sở thống kê để xếp hạng ba cấu hình này.
 
 Lý do nằm ở phân bố độ dài bài báo: sau khi phục hồi, trung vị vẫn là 724 token

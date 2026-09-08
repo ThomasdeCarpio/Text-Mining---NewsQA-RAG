@@ -37,8 +37,9 @@ cho từng vòng thí nghiệm về sau, và đặt ra ngưỡng phán quyết.
 \toprule
 \textbf{Phát hiện} & \textbf{Hệ quả lên thiết kế thực nghiệm} \\
 \midrule
-Nhãn nhiễu \NumNoiseFloor{}--\NumNoiseCeiling{} &
-  Chênh lệch dưới \NumNoiseFloor{} không được coi là thắng \\
+Biên độ nhập nhằng \NumNoiseFloor{}--\NumNoiseCeiling{} &
+  Hai cấu hình chênh nhau dưới \NumNoiseFloor{} ở điểm \emph{truy xuất}
+  thì không kết luận được \\
 Trung vị \NumDistractorMedian{} đoạn đối thủ cùng chủ đề cho mỗi câu hỏi &
   Reranker là bắt buộc, không phải tùy chọn \\
 Câu hỏi neo vào tên riêng, ngày tháng, con số &
@@ -51,17 +52,30 @@ Notebook cũ đặt \texttt{JUDGE\_MODEL = GENERATOR\_MODEL} &
 \end{tabularx}
 \end{center}
 
-\paragraph{Biên độ nhiễu \NumNoiseFloor{}.}
-EDA ước lượng được rằng \NumNoiseFloor{}--\NumNoiseCeiling{} số câu trong tập
-đánh giá mang nhãn có vấn đề --- đáp án chuẩn không đầy đủ, hoặc có nhiều span
-đúng nhưng chỉ một được ghi nhận. Hệ quả trực tiếp: một cấu hình hơn cấu hình
-khác dưới \NumNoiseFloor{} thì khoảng cách đó \emph{có thể} hoàn toàn do nhiễu
-nhãn. Toàn bộ báo cáo áp dụng luật phán quyết hai điều kiện:
+\paragraph{Biên độ nhập nhằng \NumNoiseFloor{}.}
+Cách chấm điểm coi \emph{đúng một} đoạn là đúng và mọi đoạn khác là sai. EDA
+kiểm giả định đó bằng cách lấy text đáp án của từng câu hỏi rồi đi tìm nó trong
+các đoạn \textbf{không} được gán nhãn: \NumNoiseCeiling{} số câu có ít nhất một
+đoạn như vậy chứa nguyên văn đáp án. Chứa đáp án chưa chắc đã trả lời được câu
+hỏi, nên EDA lọc thêm bằng số từ hiếm dùng chung với câu hỏi, còn
+\NumNoiseFloor{} --- các trường hợp gần như chắc chắn là cùng một sự kiện được
+đưa tin ở bài thứ hai.
 
-\keypoint{Một cấu hình chỉ được tuyên là thắng khi \textbf{(1)} khoảng cách vượt
-biên độ nhiễu \NumNoiseFloor{}, \emph{và} \textbf{(2)} khoảng tin cậy 95\% của
-hiệu \emph{theo cặp} không chứa 0. Có ý nghĩa thống kê là điều kiện cần, không
-phải điều kiện đủ.}
+Nghĩa là nhãn không sai; \textbf{tập nhãn không đầy đủ}. Nếu hệ thống trả về bài
+thứ hai đó, cách chấm gọi là sai dù người dùng vẫn hài lòng. Hệ quả: mọi điểm
+\textbf{truy xuất} --- Hit@k, nDCG, Recall, và Citation F1 vì nó cũng chấm theo
+nhãn đoạn --- đều mang sẵn sai số này. Điểm của tầng sinh (Answer Correctness,
+Faithfulness) chấm bằng giám khảo đọc câu trả lời, \emph{không} theo nhãn đoạn,
+nên biên độ này không áp cho chúng.
+
+\keypoint{Một cấu hình chỉ được tuyên là thắng ở metric truy xuất khi
+\textbf{(1)} khoảng cách vượt biên độ nhập nhằng \NumNoiseFloor{}, \emph{và}
+\textbf{(2)} khoảng tin cậy 95\% của hiệu \emph{theo cặp} không chứa 0. Có ý
+nghĩa thống kê là điều kiện cần, không phải điều kiện đủ.}
+
+EDA tự ghi rõ đây là \textbf{chỉ báo, không phải kết quả đọc tay}: nó kiểm việc
+đoạn có chứa đáp án và có dùng chung từ hiếm, chứ chưa có người đọc để xác nhận
+đoạn đó thật sự trả lời được câu hỏi.
 
 \paragraph{Hai cách đọc cùng một tập câu hỏi.}
 Nhiều câu hỏi NewsQA không đứng độc lập được --- chúng được viết như đang nói
