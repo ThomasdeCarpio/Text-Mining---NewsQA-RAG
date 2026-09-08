@@ -236,6 +236,50 @@ def collect() -> dict[str, str]:
             # Each metric occupies a count column followed by a mean column.
             n[f"Ho{short}{tag}"] = vn(float(row[columns[col] + 1]))
 
+    # ---- Phase 2C: chunking strategies --------------------------------------
+    p2c = load_json("docs/reports/phase2c/paired_significance.json")
+    n["PtwocWinner"] = "C0-P2-D5"
+    n["PtwocCzeroChunks"] = "22.766"
+    n["PtwocConeChunks"] = "22.014"
+    n["PtwocCtwoChunks"] = "22.018"
+    n["PtwocCthreeChunks"] = "49.218 + 22.766"
+    c3_d3 = p2c["runs"]["c3_d3"]
+    n["PtwocCthreeDthreeAC"] = vn(c3_d3["answer_correctness"])
+    n["PtwocCthreeDthreeDeltaAC"] = signed(c3_d3["paired_vs_baseline"]["Answer Correctness"]["delta"])
+    n["PtwocCthreeDthreeDeltaACCI"] = ci(c3_d3["paired_vs_baseline"]["Answer Correctness"]["ci95_low"],
+                                         c3_d3["paired_vs_baseline"]["Answer Correctness"]["ci95_high"])
+    for guard in c3_d3["guardrails"]:
+        key = {"Faithfulness": "Faith", "Citation F1": "CitFone", "Citation Validity": "CitVal",
+               "Hit@5": "HitFive", "Recall@5": "RecallFive"}[guard["metric"]]
+        n[f"PtwocCthreeDthreeGuard{key}"] = signed(guard["delta"])
+    c3_d5 = p2c["runs"]["c3_d5"]
+    n["PtwocCthreeDfiveDeltaAC"] = signed(c3_d5["paired_vs_baseline"]["Answer Correctness"]["delta"])
+    for guard in c3_d5["guardrails"]:
+        key = {"Faithfulness": "Faith", "Citation F1": "CitFone", "Citation Validity": "CitVal",
+               "Hit@5": "HitFive", "Recall@5": "RecallFive"}[guard["metric"]]
+        n[f"PtwocCthreeDfiveGuard{key}"] = signed(guard["delta"])
+
+    # ---- Phase 3: abstention ------------------------------------------------
+    p3_sig = load_json("docs/reports/phase3/policy_significance.json")
+    p3_comp = list(csv.DictReader((ROOT / "docs/reports/phase3/policy_comparison.csv").open(encoding="utf-8-sig")))
+    comp_map = {(r["partition"], r["policy"]): r for r in p3_comp}
+    n["PthreeWinner"] = str(p3_sig["winner"]["winner"])
+    n["PthreeNDev"] = "140"
+    n["PthreeNFinal"] = "60"
+    n["PthreeBzeroFalseAnsDev"] = vn(float(comp_map[("development", "B0")]["false_answer_rate"]) * 100, 2) + "\\%"
+    n["PthreeBoneFalseAnsDev"] = vn(float(comp_map[("development", "B1")]["false_answer_rate"]) * 100, 2) + "\\%"
+    n["PthreeBzeroTokenFoneDev"] = vn(float(comp_map[("development", "B0")]["control_token_f1"]))
+    n["PthreeBoneTokenFoneDev"] = vn(float(comp_map[("development", "B1")]["control_token_f1"]))
+    b1_dev = p3_sig["control_token_f1_b1_minus_b0"]["development"]
+    n["PthreeBoneDeltaTokenFoneDev"] = signed(b1_dev["delta"])
+    n["PthreeBoneDeltaTokenFoneDevCI"] = ci(b1_dev["ci95_low"], b1_dev["ci95_high"])
+    n["PthreeBzeroAbstFoneDev"] = vn(float(comp_map[("development", "B0")]["abstention_f1"]))
+    n["PthreeBoneAbstFoneDev"] = vn(float(comp_map[("development", "B1")]["abstention_f1"]))
+
+    n["PthreeBzeroAbstFoneFinal"] = vn(float(comp_map[("final", "B0")]["abstention_f1"]))
+    n["PthreeBzeroFalseAnsFinal"] = vn(float(comp_map[("final", "B0")]["false_answer_rate"]) * 100, 2) + "\\%"
+    n["PthreeBzeroFalseAbstFinal"] = vn(float(comp_map[("final", "B0")]["false_abstention_rate"]) * 100, 1) + "\\%"
+
     return n
 
 
