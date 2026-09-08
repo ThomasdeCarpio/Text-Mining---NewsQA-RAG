@@ -109,7 +109,7 @@ dùng** (BGE-M3, Gemini…) như một mục "công nghệ sử dụng" — chú
 
 ---
 
-## §2 — Cái gì được coi là bằng chứng · ~1,5 trang
+## §2 — Cách kiểm định giả thuyết · ~1,5 trang
 
 > **Mục mới. Bản hiện tại không có, và đây là lý do chính khiến nó lủng củng** —
 > luật phán quyết đang nằm rải rác ở ba chỗ, mỗi chỗ phát biểu một kiểu.
