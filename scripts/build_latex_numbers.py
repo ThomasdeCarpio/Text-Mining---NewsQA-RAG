@@ -215,9 +215,11 @@ def collect() -> dict[str, str]:
     for tag, index in retrievers.items():
         for variant, suffix in [("resolved", ""), ("original", "Original")]:
             row = next(r for r in round1 if r["index"] == index and r["variant"] == variant)
-            value = float(row["retrieval.ndcg@5.mean"])
-            n["Rone" + tag + suffix] = vn(value)
-            n["Rone" + tag + suffix + "Plot"] = str(value)
+            ndcg = float(row["retrieval.ndcg@5.mean"])
+            n["Rone" + tag + suffix] = vn(ndcg)
+            n["Rone" + tag + suffix + "Plot"] = str(ndcg)
+            n["Rone" + tag + suffix + "Mrr"] = vn(float(row["retrieval.mrr@5.mean"]))
+            n["Rone" + tag + suffix + "Hit"] = vn(float(row["retrieval.hit_rate@5.mean"]))
     round2 = list(csv.DictReader((ROOT / "docs/reports/phase1/round2.csv").open(encoding="utf-8-sig")))
     for family in ("dense", "sparse", "hybrid"):
         for tag, model in [("None", ""), ("Mini", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
@@ -226,10 +228,12 @@ def collect() -> dict[str, str]:
                        and r["reranker_model"] == model)
             prefix = "Rtwo" + family.title() + tag
             n[prefix] = vn(float(row["retrieval.ndcg@5.mean"]))
+            n[prefix + "Mrr"] = vn(float(row["retrieval.mrr@5.mean"]))
             n[prefix + "Latency"] = vn(float(row["latency.total.p50_ms"]), 1)
     sparse_rows = [r for r in round2 if r["variant"] == "resolved" and r["retriever"] == "sparse"]
     sparse_before = next(r for r in sparse_rows if r["reranker"] == "noop")
     sparse_after = next(r for r in sparse_rows if r["reranker_model"] == "BAAI/bge-reranker-large")
+    n["RerankerMrrGain"] = signed(float(sparse_after["retrieval.mrr@5.mean"]) - float(sparse_before["retrieval.mrr@5.mean"]))
     n["RerankerNdcgGain"] = signed(float(sparse_after["retrieval.ndcg@5.mean"]) - float(sparse_before["retrieval.ndcg@5.mean"]))
     final_retrieval = load_json("docs/reports/phase1/heldout/heldout_significance.json")
     final_scores = final_retrieval["partitions"]["final_test"]

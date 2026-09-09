@@ -1,14 +1,15 @@
 \begin{frame}[t]{Reranker cải thiện thứ tự bằng chứng}
-\purpose{Giữ các retriever đi tiếp, so sánh không xếp hạng lại, MiniLM và bge-reranker-large trên development.}
-{\tabletext\begin{tabularx}{\textwidth}{@{}Lrrr@{}}
-\rowcolor{paleblue}\textbf{nDCG@5 — resolved} & \textbf{Không rerank} & \textbf{MiniLM-L6} & \textbf{BGE-large} \\\midrule
-\textbf{BGE-M3 sparse} & \NumRtwoSparseNone & \NumRtwoSparseMini & \cellcolor{paleblue}\textbf{\NumRtwoSparseLarge} \\\midrule
-Dense · e5-base-v2 & \NumRtwoDenseNone & \NumRtwoDenseMini & \NumRtwoDenseLarge \\\midrule
-Hybrid · sparse + dense & \NumRtwoHybridNone & \NumRtwoHybridMini & \NumRtwoHybridLarge \\\bottomrule
+\purpose{So sánh trên câu resolved: ưu tiên MRR@5, sau đó xét nDCG@5.}
+{\smalltext\begin{tabularx}{\textwidth}{@{}p{82mm}*{6}{>{\centering\arraybackslash}X}@{}}
+\rowcolor{paleblue}\textbf{Retriever} & \multicolumn{2}{c}{\textbf{Không rerank}} & \multicolumn{2}{c}{\textbf{MiniLM-L6}} & \multicolumn{2}{c}{\textbf{BGE-large}} \\
+\rowcolor{paleblue} & \textbf{MRR} & \textbf{nDCG} & \textbf{MRR} & \textbf{nDCG} & \textbf{MRR} & \textbf{nDCG} \\\midrule
+\textbf{BGE-M3 sparse} & \NumRtwoSparseNoneMrr & \NumRtwoSparseNone & \NumRtwoSparseMiniMrr & \NumRtwoSparseMini & \cellcolor{paleblue}\textbf{\NumRtwoSparseLargeMrr} & \cellcolor{paleblue}\textbf{\NumRtwoSparseLarge} \\\midrule
+Dense · e5-base-v2 & \NumRtwoDenseNoneMrr & \NumRtwoDenseNone & \NumRtwoDenseMiniMrr & \NumRtwoDenseMini & \NumRtwoDenseLargeMrr & \NumRtwoDenseLarge \\\midrule
+Hybrid · sparse + dense & \NumRtwoHybridNoneMrr & \NumRtwoHybridNone & \NumRtwoHybridMiniMrr & \NumRtwoHybridMini & \NumRtwoHybridLargeMrr & \NumRtwoHybridLarge \\\bottomrule
 \end{tabularx}\par}
 \vspace{6mm}
 \begin{columns}[T,onlytextwidth]
-\begin{column}{.30\textwidth}\statcard{Sparse + BGE-large}{\NumRerankerNdcgGain}{$\Delta$ nDCG@5 so với không rerank}\end{column}
+\begin{column}{.30\textwidth}\statcard{Sparse + BGE-large}{\NumRerankerMrrGain}{$\Delta$ MRR@5 so với không rerank}\end{column}
 \begin{column}{.65\textwidth}
 \heading{Cái giá: thêm thời gian xếp hạng lại}
 {\tabletext\begin{tabularx}{\linewidth}{@{}Lrrr@{}}

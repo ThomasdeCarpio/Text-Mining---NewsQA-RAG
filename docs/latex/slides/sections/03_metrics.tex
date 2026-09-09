@@ -1,15 +1,31 @@
-\begin{frame}[t]{Đo độ đúng, bằng chứng và trích dẫn}
+\begin{frame}[t]{Thước đo đánh giá}
 \modelstrip
-{\tabletext\begin{tabularx}{\textwidth}{@{}p{37mm}p{85mm}L@{}}
-\rowcolor{paleblue}\textbf{Nhóm} & \textbf{Thước đo} & \textbf{Câu hỏi cần trả lời} \\\midrule
-\textbf{Đáp án} & Answer Correctness — \textbf{AC} & Nội dung có khớp đáp án chuẩn? \\\midrule
-& Exact Match — \textbf{EM} & Khớp hoàn toàn sau chuẩn hóa? \\\midrule
-& Token F1 & Các từ trong đáp án khớp đúng và đủ đến đâu? \\\midrule
-\rowcolor{palegreen}\textbf{Bằng chứng} & Faithfulness & Các khẳng định có được context hỗ trợ? \\\midrule
-\textbf{Trích dẫn} & Citation F1 & Trích đúng và đủ đoạn bằng chứng? \\\midrule
-& Citation Validity & Chỉ số trích dẫn có hợp lệ trong context? \\\bottomrule
-\end{tabularx}\par}
-\takeaway{\textbf{RAGAS} dùng mô hình giám khảo để chấm AC và Faithfulness.\\[1mm]
-\textbf{Coverage} là tỷ lệ câu chạy thành công hoặc được chấm trong tập cần đánh giá.}
-\slidenote{Context: các đoạn cung cấp cho mô hình sinh. Các điểm chất lượng có thang 0–1; cao hơn tốt hơn.}
+\vspace{-4mm}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.42\textwidth}
+\heading{Truy xuất đoạn đúng}
+{\smalltext\begin{tabularx}{\linewidth}{@{}p{29mm}L@{}}
+\rowcolor{paleblue}\textbf{Thước đo} & \textbf{Nội dung đo} \\\midrule
+Hit Rate@5 & Có ít nhất một gold chunk trong top 5? \\\midrule
+Recall@5 & Tìm được bao nhiêu phần gold chunks? \\\midrule
+MRR@5 & Gold chunk đầu tiên đứng cao đến đâu? \\\midrule
+nDCG@5 & Toàn bộ gold chunks được xếp hạng tốt đến đâu? \\\bottomrule
+\end{tabularx}}
+\end{column}
+\begin{column}{.54\textwidth}
+\heading{Sinh câu trả lời có kiểm chứng}
+{\smalltext\begin{tabularx}{\linewidth}{@{}p{48mm}L@{}}
+\rowcolor{palegreen}\textbf{Thước đo} & \textbf{Nội dung đo} \\\midrule
+Answer Correctness & Nội dung có khớp đáp án chuẩn? \\\midrule
+Exact Match & Khớp hoàn toàn sau chuẩn hóa? \\\midrule
+Token F1 & Token đáp án khớp đúng và đủ? \\\midrule
+Faithfulness & Khẳng định có được context hỗ trợ? \\\midrule
+Citation F1 & Trích đúng và đủ gold chunks? \\\midrule
+Citation Validity & Số citation có tồn tại trong context? \\\bottomrule
+\end{tabularx}}
+\end{column}
+\end{columns}
+\takeaway{\textbf{Phase 1:} ưu tiên MRR@5, đối chiếu nDCG@5 và Hit@5.\quad
+\textbf{Phase 2:} ưu tiên Answer Correctness; Faithfulness và citation là guardrail.}
+\slidenote{Gold chunk: đoạn chứa evidence chuẩn. Context: các đoạn đưa cho generator. Mọi điểm chất lượng nằm trong khoảng 0–1; cao hơn tốt hơn.}
 \end{frame}
