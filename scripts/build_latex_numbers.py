@@ -202,7 +202,24 @@ def collect() -> dict[str, str]:
         cells = next([c.strip().replace("**", "") for c in line.strip("|").split("|")]
                      for line in screening_text.splitlines()
                      if line.startswith("|") and line.split("|")[1].strip().replace("**", "") == prompt)
-        n["Screen" + tag + "AC"] = vn(float(cells[2].replace(",", ".")))
+        for metric, cell in [("Fone", 1), ("AC", 2), ("Faith", 3),
+                             ("CitFone", 5), ("CitVal", 6)]:
+            n["Screen" + tag + metric] = vn(float(cells[cell].replace(",", ".")))
+
+    # Phase 2B.2 screened both the baseline and selected prompt at depths 1
+    # and 3. Depth 5 is the Phase 2B.1 result above and was reused unchanged.
+    for depth, depth_tag in [(1, "One"), (3, "Three")]:
+        depth_path = (ROOT / "results/phase2/configuration tunning/context depth"
+                      / f"d{depth}/results/phase2b_comparison.csv")
+        depth_rows = list(csv.DictReader(depth_path.open(encoding="utf-8-sig")))
+        for prompt, prompt_tag in [("p0", "Pzero"), ("p2", "Ptwo")]:
+            row = next(r for r in depth_rows
+                       if r["prompt_id"] == prompt and int(r["context_depth"]) == depth)
+            for metric, column in [("AC", "answer_correctness"),
+                                   ("Faith", "faithfulness"),
+                                   ("CitFone", "citation_f1"),
+                                   ("CitVal", "citation_validity")]:
+                n["Depth" + prompt_tag + depth_tag + metric] = vn(float(row[column]))
 
     # Presentation comparisons: values and bar lengths share the same source.
     round1 = list(csv.DictReader((ROOT / "docs/reports/phase1/round1.csv").open(encoding="utf-8-sig")))
@@ -285,6 +302,24 @@ def collect() -> dict[str, str]:
                       ("AnsRel", ("ragas", "answer_relevancy")),
                       ("HitFive", ("retrieval", "hit_rate@5"))]:
         n["Dev" + tag] = vn(sum(r[path[0]][path[1]] for r in dev) / len(dev))
+
+    # Absolute finalist metrics shown before the guardrail deltas.
+    finalist_paths = {
+        "PtwodThree": "docs/reports/phase2/scores/p2_d3_development.jsonl",
+        "PtwodFive": "docs/reports/phase2/scores/p2_d5_development.jsonl",
+    }
+    for prefix, relative in finalist_paths.items():
+        finalist_rows = [json.loads(line) for line in
+                          (ROOT / relative).read_text(encoding="utf-8").splitlines()
+                          if line.strip()]
+        for tag, path in [("AC", ("ragas", "answer_correctness")),
+                          ("EM", ("qa", "exact_match")),
+                          ("Fone", ("qa", "f1")),
+                          ("Faith", ("ragas", "faithfulness")),
+                          ("CitFone", ("citations", "citation_f1")),
+                          ("CitVal", ("citations", "citation_validity"))]:
+            n[prefix + tag] = vn(sum(r[path[0]][path[1]] for r in finalist_rows)
+                                    / len(finalist_rows))
 
     # ---- Phase 2: the held-out run, executed once ---------------------------
     ho = load_json("docs/reports/phase2/heldout/heldout_final_summary.json")

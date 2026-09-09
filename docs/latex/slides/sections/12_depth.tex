@@ -1,20 +1,37 @@
-\begin{frame}[t]{Context depth: bớt đoạn, mất bằng chứng nào?}
-\purpose{Cắt từ đầu cùng danh sách đã rerank. Đọc Hit@k trước để thấy chi phí của việc giảm context.}
-{\tabletext\begin{tabularx}{\textwidth}{@{}p{36mm}rL@{}}
-\rowcolor{paleblue}\textbf{Depth} & \textbf{Hit@k} & \textbf{Số câu mất gold so với depth 5} \\\midrule
-1 đoạn & \NumPoneHitOne & \NumLostAtDepthOne\ câu \\\midrule
-3 đoạn & \NumPoneHitThree & \NumLostAtDepthThree\ câu \\\midrule
-\rowcolor{paleblue}5 đoạn & \NumPoneHitFive & Mốc đối chứng: giữ toàn bộ top 5 \\\bottomrule
-\end{tabularx}\par}
-\vspace{6mm}
-\begin{columns}[T,onlytextwidth]
-\begin{column}{.31\textwidth}\statcard{P2 · depth 3}{\NumPtwodThreeAC}{AC trên toàn bộ development}\end{column}
-\begin{column}{.31\textwidth}\statcard{P2 · depth 5}{\NumPtwodFiveAC}{AC trên toàn bộ development}\end{column}
-\begin{column}{.31\textwidth}
-\heading{Hai ứng viên chung kết}
-{\smalltext Depth 1 dừng ở sàng lọc.\\[4mm]
-P2-depth3 và P2-depth5 được chạy đủ \NumNDev\ câu.\\[4mm]
-\textbf{AC cao chưa đủ: bước tiếp theo là kiểm tra guardrail.}\par}
-\end{column}\end{columns}
-\slidenote{Hit@k tính trên \NumNDev\ câu development từ trace retrieval dùng chung; không phải một lần truy xuất mới cho mỗi depth.}
+\begin{frame}[t]{Context depth: P0/P2 $\times$ 1/3/5 đoạn}
+\purpose{Cùng ranked trace; chỉ cắt còn 1/3/5 đoạn. Depth 5 tái sử dụng từ vòng prompt.}
+\heading{Độ phủ bằng chứng}
+{\fontsize{11.5}{13}\selectfont
+\setlength{\tabcolsep}{9pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabular}{lrr}
+\toprule
+\rowcolor{paleblue}\textbf{Depth} & \textbf{Hit@depth} & \textbf{Số câu mất gold so với depth 5} \\\midrule
+\cellcolor{paleblue}\textbf{1} & \NumPoneHitOne & \NumLostAtDepthOne\ câu \\\midrule
+\cellcolor{paleblue}\textbf{3} & \NumPoneHitThree & \NumLostAtDepthThree\ câu \\\midrule
+\cellcolor{paleblue}\textbf{5} & \NumPoneHitFive & 0 \\\bottomrule
+\end{tabular}\par}
+\vspace{3mm}
+\heading{Chất lượng screening}
+{\fontsize{10.6}{12.4}\selectfont
+\setlength{\tabcolsep}{4.5pt}
+\renewcommand{\arraystretch}{1.02}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\rowcolor{paleblue}& \multicolumn{4}{c}{\textbf{P0}} & \multicolumn{4}{c}{\textbf{P2}} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+\rowcolor{paleblue}\textbf{Depth} & \textbf{AC} & \textbf{Faith.} & \textbf{Cit.F1} & \textbf{Valid.}
+& \textbf{AC} & \textbf{Faith.} & \textbf{Cit.F1} & \textbf{Valid.} \\\midrule
+\cellcolor{paleblue}\textbf{1} & \NumDepthPzeroOneAC & \NumDepthPzeroOneFaith & \NumDepthPzeroOneCitFone & \NumDepthPzeroOneCitVal
+  & \NumDepthPtwoOneAC & \NumDepthPtwoOneFaith & \NumDepthPtwoOneCitFone & \NumDepthPtwoOneCitVal \\\midrule
+\cellcolor{paleblue}\textbf{3} & \NumDepthPzeroThreeAC & \NumDepthPzeroThreeFaith & \NumDepthPzeroThreeCitFone & \NumDepthPzeroThreeCitVal
+  & \textbf{\NumDepthPtwoThreeAC} & \NumDepthPtwoThreeFaith & \NumDepthPtwoThreeCitFone & \NumDepthPtwoThreeCitVal \\\midrule
+\cellcolor{paleblue}\textbf{5} & \NumScreenPzeroAC & \NumScreenPzeroFaith & \NumScreenPzeroCitFone & \NumScreenPzeroCitVal
+  & \NumScreenPtwoAC & \textbf{\NumScreenPtwoFaith} & \textbf{\NumScreenPtwoCitFone} & \textbf{\NumScreenPtwoCitVal} \\\bottomrule
+\end{tabular}\par}
+\vspace{3mm}
+{\smalltext \NumNScreening\ câu screening; metric dùng cùng \NumNJudgeScreening\ câu RAGAS. P2-depth3/5 triển vọng nhất và được chạy đủ \NumNDev\ câu.\par}
+\vspace{1mm}
+\takeaway{Screening chỉ chọn ứng viên. Guardrail chỉ được áp dụng ở full-development để quyết định winner.}
+\slidenote{Hit@k tính trên \NumNDev\ câu từ trace retrieval dùng chung. Không retrieve lại khi đổi prompt hoặc context depth.}
 \end{frame}

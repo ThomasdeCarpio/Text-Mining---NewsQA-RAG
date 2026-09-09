@@ -1,18 +1,19 @@
 \begin{frame}[t]{Chọn prompt: thử cách yêu cầu đáp án}
-\purpose{Giữ nguyên retrieval và depth 5. Sàng lọc trên \NumNScreening\ câu; AC do RAGAS chấm trên \NumNJudgeScreening\ câu cố định.}
-{\tabletext\begin{tabularx}{\textwidth}{@{}p{15mm}p{60mm}Lr@{}}
-\rowcolor{paleblue}\textbf{ID} & \textbf{Giả thuyết} & \textbf{Chỉ thị khác biệt} & \textbf{AC sàng lọc} \\\midrule
-P0 & Đối chứng & Trả lời ngắn, dựa vào context, có citation. & \NumScreenPzeroAC \\\midrule
-P1 & Siết bám bằng chứng & Chỉ dùng sự kiện được viết rõ; không thêm giả định. & \NumScreenPoneAC \\\midrule
-\rowcolor{paleblue}\textbf{P2} & \textbf{Đúng loại thông tin} & \textbf{Một câu trả lời ngắn; không lặp câu hỏi hoặc thêm bối cảnh.} & \textbf{\NumScreenPtwoAC} \\\midrule
-P3 & Phân biệt sự kiện & Chọn đoạn khớp chủ thể, sự kiện, địa điểm và thời gian. & \NumScreenPthreeAC \\\bottomrule
+\purpose{Giữ nguyên retrieval và depth 5; mỗi prompt chỉ thay đổi chỉ thị dành cho generator.}
+{\smalltext\renewcommand{\arraystretch}{1.05}\begin{tabularx}{\textwidth}{@{}p{15mm}p{62mm}L@{}}
+\rowcolor{paleblue}\textbf{ID} & \textbf{Giả thuyết} & \textbf{Chỉ thị khác biệt} \\\midrule
+P0 & Đối chứng & Trả lời ngắn; chỉ dựa trên context; gắn citation [n]. \\\midrule
+P1 & Siết bám bằng chứng & Chỉ dùng sự kiện được viết rõ; không thêm giả định. \\\midrule
+\rowcolor{paleblue}\textbf{P2} & \textbf{Đúng loại thông tin} & \textbf{Một câu ngắn; không lặp câu hỏi hoặc thêm bối cảnh.} \\\midrule
+P3 & Phân biệt sự kiện & Chọn đoạn khớp chủ thể, sự kiện, địa điểm và thời gian. \\\bottomrule
 \end{tabularx}\par}
-\vspace{6mm}
-\begin{center}\begin{tikzpicture}[node distance=9mm]
-\node[stage,text width=65mm] (q) {Câu hỏi yêu cầu\\\textbf{người / nơi / thời điểm}};
-\node[stage,text width=73mm,right=of q,fill=brandaccent,text=white] (p) {\textbf{P2}\\Chỉ trả đúng loại thông tin};
-\node[stage,text width=65mm,right=of p] (a) {Một câu ngắn\\+ citation [n]};
-\draw[flow](q)--(p);\draw[flow](p)--(a);
-\end{tikzpicture}\end{center}
-\slidenote{Sàng lọc chọn ứng viên P2 để thử depth. Chưa dùng các điểm trên mẫu nhỏ này làm kết quả cuối cùng.}
+\vspace{4mm}
+{\smalltext\renewcommand{\arraystretch}{1.05}\begin{tabularx}{\textwidth}{@{}p{45mm}*{4}{>{\centering\arraybackslash}X}@{}}
+\rowcolor{palegreen}\textbf{Kết quả} & \textbf{AC} & \textbf{Faithfulness} & \textbf{Citation F1} & \textbf{Citation Validity} \\\midrule
+P0 & \NumScreenPzeroAC & \NumScreenPzeroFaith & \NumScreenPzeroCitFone & \NumScreenPzeroCitVal \\\midrule
+P1 & \NumScreenPoneAC & \NumScreenPoneFaith & \NumScreenPoneCitFone & \NumScreenPoneCitVal \\\midrule
+\rowcolor{paleblue}\textbf{P2} & \textbf{\NumScreenPtwoAC} & \textbf{\NumScreenPtwoFaith} & \textbf{\NumScreenPtwoCitFone} & \textbf{\NumScreenPtwoCitVal} \\\midrule
+P3 & \NumScreenPthreeAC & \NumScreenPthreeFaith & \NumScreenPthreeCitFone & \NumScreenPthreeCitVal \\\bottomrule
+\end{tabularx}\par}
+\slidenote{Citation: \NumNScreening\ câu screening. AC và Faithfulness: cùng \NumNJudgeScreening\ câu cố định do RAGAS chấm. P2 là prompt triển vọng nhất và được đưa sang thử context depth; chưa quyết định winner tại đây.}
 \end{frame}

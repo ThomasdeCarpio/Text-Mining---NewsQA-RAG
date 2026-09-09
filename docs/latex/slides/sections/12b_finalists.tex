@@ -1,0 +1,19 @@
+\begin{frame}[t]{Kết quả finalist trên development}
+\purpose{Ba cấu hình chạy trên cùng \NumNDev\ câu / \NumNDevArticles\ bài; retrieval, reranker và generator model được giữ cố định.}
+{\fontsize{14}{17}\selectfont
+\setlength{\tabcolsep}{11pt}
+\renewcommand{\arraystretch}{1.24}
+\begin{tabular}{lrrr}
+\toprule
+\rowcolor{paleblue}\textbf{Metric} & \textbf{P0-depth5} & \textbf{P2-depth3} & \textbf{P2-depth5} \\\midrule
+\cellcolor{paleblue}\textbf{Answer Correctness} & \NumPzeroAC & \textbf{\NumPtwodThreeAC} & \NumPtwodFiveAC \\\midrule
+\cellcolor{paleblue}\textbf{Exact Match} & \NumPzeroEM & \textbf{\NumPtwodThreeEM} & \NumPtwodFiveEM \\\midrule
+\cellcolor{paleblue}\textbf{Token F1} & \NumPzeroFone & \textbf{\NumPtwodThreeFone} & \NumPtwodFiveFone \\\midrule
+\cellcolor{paleblue}\textbf{Faithfulness} & \NumPzeroFaith & \NumPtwodThreeFaith & \textbf{\NumPtwodFiveFaith} \\\midrule
+\cellcolor{paleblue}\textbf{Citation F1} & \NumPzeroCitFone & \NumPtwodThreeCitFone & \textbf{\NumPtwodFiveCitFone} \\\midrule
+\cellcolor{paleblue}\textbf{Citation Validity} & \textbf{\NumPzeroCitVal} & \NumPtwodThreeCitVal & \NumPtwodFiveCitVal \\\bottomrule
+\end{tabular}\par}
+\vspace{7mm}
+\takeaway{P2-depth3 dẫn đầu về độ chính xác; bước tiếp theo kiểm tra mức suy giảm grounding và citation bằng guardrail đã đăng ký.}
+\slidenote{Đây là số tuyệt đối. Slide sau dùng chênh lệch so với P0-depth5 để xác định cấu hình hợp lệ trước khi chọn theo AC.}
+\end{frame}
