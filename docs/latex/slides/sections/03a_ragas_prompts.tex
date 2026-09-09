@@ -1,0 +1,16 @@
+\begin{frame}[t]{Prompt chấm RAGAS}
+\purpose{Judge: GLM-5.3 Flash · reasoning low · temperature 0 · JSON output. Core instructions lấy từ RAGAS 0.4.x.}
+{\fontsize{9.2}{11.1}\selectfont
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.10}
+\begin{tabularx}{\textwidth}{@{}p{34mm}L@{}}
+\toprule
+\rowcolor{paleblue}\textbf{Metric} & \textbf{Core instruction sent to the judge} \\\midrule
+\cellcolor{paleblue}\textbf{Faithfulness} & ``Break down each answer sentence into fully understandable statements.'' Then: ``Return verdict 1 if the statement can be directly inferred from the context; otherwise 0.'' \\\midrule
+\cellcolor{paleblue}\textbf{Answer Correctness} & ``Classify answer and ground-truth statements as TP, FP, or FN. Each statement can belong to only one category. Provide a reason for each classification.'' \\\midrule
+\cellcolor{paleblue}\textbf{Answer Relevancy} & ``Generate a question for the given answer and identify whether the answer is noncommittal. Return noncommittal as 1 or 0.'' \\\midrule
+\cellcolor{paleblue}\textbf{Context Precision} & ``Given question, answer and context, verify whether the context was useful in arriving at the answer. Return verdict 1 if useful; otherwise 0.'' \\\midrule
+\cellcolor{paleblue}\textbf{Context Recall} & ``For each sentence in the reference answer, classify whether it can be attributed to the given context. Return Yes (1) or No (0), with a reason.'' \\\bottomrule
+\end{tabularx}\par}
+\slidenote{RAGAS ghép question/response/reference/contexts vào từng template. Citation F1/Validity, EM và Token F1 được tính deterministic, không gọi judge.}
+\end{frame}

@@ -1,0 +1,36 @@
+\begin{frame}[t]{Hai dạng lỗi citation}
+\purpose{Hai ví dụ thực cho thấy Citation F1 và Citation Validity đo hai lỗi khác nhau.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.49\textwidth}
+\heading{1. Đúng index, sai gold chunk}
+{\smalltext
+\textbf{Q:} How many troops does Canada have in Afghanistan?\\[2mm]
+\textbf{Gold [2]:} ``more than \textbf{2,800 Canadian troops}''\\[2mm]
+\textbf{Distractor [3]:} ``Canada's \textbf{2,500 troops}''\\[2mm]
+\textbf{Output:} Canada has 2,500 troops in Afghanistan [3].\par}
+\vspace{4mm}
+{\tabletext\begin{tabular}{lrr}
+\rowcolor{paleblue}\textbf{Metric} & \textbf{Score} & \textbf{Lý do} \\\midrule
+Validity & 1{,}0000 & [3] tồn tại \\\midrule
+Citation F1 & 0{,}0000 & [3] $\neq$ gold [2] \\\bottomrule
+\end{tabular}\par}
+\end{column}
+\begin{column}{.49\textwidth}
+\heading{2. Index ngoài context}
+{\smalltext
+\textbf{Q:} What day was the suicide blast outside the district courthouse in Peshawar?\\[2mm]
+\textbf{Context được cấp:} chỉ có [1]\\[2mm]
+\textbf{Output:} The suicide blast occurred on Monday \textbf{[8]}.\\[2mm]
+\textbf{Parser:} valid = [,]; invalid = [8]\par}
+\vspace{4mm}
+{\tabletext\begin{tabular}{lrr}
+\rowcolor{paleblue}\textbf{Metric} & \textbf{Score} & \textbf{Lý do} \\\midrule
+Validity & 0{,}0000 & [8] không tồn tại \\\midrule
+Citation F1 & 0{,}0000 & không có valid citation \\\bottomrule
+\end{tabular}\par}
+\end{column}
+\end{columns}
+\vspace{5mm}
+\takeaway{Citation Validity kiểm tra index có tồn tại; Citation F1 kiểm tra citation có trỏ tới gold evidence hay không.}
+\slidenote{Ví dụ 1: P2-depth5 development. Ví dụ 2: P0-depth1 screening; chỉ một context được đưa vào generator.}
+\end{frame}
