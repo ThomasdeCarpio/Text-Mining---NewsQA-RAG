@@ -38,15 +38,43 @@ class ChatSettingsTests(unittest.TestCase):
         settings = chat_service.load_chat_settings({})
 
         self.assertEqual(settings.mode, "auto")
-        self.assertEqual(settings.model, "gpt-4o-mini")
+        self.assertEqual(settings.model, "gemini-3.1-flash-lite")
         self.assertEqual(settings.max_history, 20)
         self.assertIsNone(settings.max_tokens)
+        self.assertEqual(settings.temperature, 0.0)
+        self.assertEqual(settings.reasoning_effort, "minimal")
 
     def test_invalid_mode_is_rejected(self):
         """Reject misspelled modes before a gateway request is attempted."""
 
         with self.assertRaisesRegex(ValueError, "CHAT_MODE"):
             chat_service.load_chat_settings({"CHAT_MODE": "sometimes"})
+
+    def test_locked_generation_contract_uses_p2_at_depth_five(self):
+        """Keep application generation aligned with the approved Phase 2 winner."""
+
+        prompt, context_depth = chat_service._load_locked_generation_config()
+
+        self.assertEqual(context_depth, 5)
+        self.assertIn("Give one short answer sentence", prompt)
+        self.assertIn("Place a supporting citation [n]", prompt)
+
+    def test_llm_receives_locked_reasoning_effort(self):
+        """Forward the Gemini reasoning setting instead of silently dropping it."""
+
+        llm = chat_service._create_llm(
+            chat_service.ChatSettings(
+                mode="rag",
+                model="gemini-3.1-flash-lite",
+                max_history=20,
+                max_tokens=512,
+                temperature=0.0,
+                rag_top_k=5,
+                reasoning_effort="minimal",
+            )
+        )
+
+        self.assertEqual(llm.reasoning_effort, "minimal")
 
 
 class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
@@ -184,7 +212,7 @@ class ChatServiceTests(unittest.IsolatedAsyncioTestCase):
 
         final = events[-1]
         self.assertEqual(final.type, "final_answer")
-        self.assertIn("OPENAI_API_KEY", final.content)
+        self.assertIn("API key", final.content)
         self.assertNotIn("secret provider response", final.content)
 
 

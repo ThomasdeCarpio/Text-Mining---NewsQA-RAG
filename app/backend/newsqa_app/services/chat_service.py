@@ -26,9 +26,12 @@ _DIRECT_SYSTEM_PROMPT = (
     "retrieval context is explicitly provided."
 )
 _RAG_CONFIG_PATH = PROJECT_ROOT / "configs" / "config.yaml"
+_RAG_PROMPT_REGISTRY_PATH = (
+    PROJECT_ROOT / "configs" / "experiments" / "phase2_generation_prompts.yaml"
+)
 _VALID_CHAT_MODES = {"auto", "direct", "rag"}
 _rag_agent = None
-_rag_agent_key: tuple[str, float, int | None, int] | None = None
+_rag_agent_key: tuple[str, float, int | None, str | None, int] | None = None
 
 
 class RAGUnavailableError(RuntimeError):
@@ -48,6 +51,7 @@ class ChatSettings:
             ``None`` lets the gateway select a model-appropriate limit.
         temperature: Sampling temperature passed to the chat completions endpoint.
         rag_top_k: Maximum number of local chunks included in a RAG response.
+        reasoning_effort: Provider-specific reasoning level, when supported.
     """
 
     mode: ChatMode
@@ -56,6 +60,7 @@ class ChatSettings:
     max_tokens: int | None
     temperature: float
     rag_top_k: int
+    reasoning_effort: str | None = None
 
 
 def _read_positive_int(source: Mapping[str, str], name: str, default: int) -> int:
@@ -133,8 +138,12 @@ def load_chat_settings(environ: Mapping[str, str] | None = None) -> ChatSettings
         supported = ", ".join(sorted(_VALID_CHAT_MODES))
         raise ValueError(f"CHAT_MODE must be one of: {supported}.")
 
-    model = source.get("CHAT_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini"
-    temperature = float(source.get("CHAT_TEMPERATURE", "0.2").strip() or "0.2")
+    model = (
+        source.get("CHAT_MODEL", "gemini-3.1-flash-lite").strip()
+        or "gemini-3.1-flash-lite"
+    )
+    temperature = float(source.get("CHAT_TEMPERATURE", "0.0").strip() or "0.0")
+    reasoning_effort = source.get("CHAT_REASONING_EFFORT", "minimal").strip()
     return ChatSettings(
         mode=cast(ChatMode, mode),
         model=model,
@@ -142,6 +151,7 @@ def load_chat_settings(environ: Mapping[str, str] | None = None) -> ChatSettings
         max_tokens=_read_optional_positive_int(source, "CHAT_MAX_TOKENS"),
         temperature=temperature,
         rag_top_k=_read_positive_int(source, "RAG_TOP_K", 5),
+        reasoning_effort=reasoning_effort or None,
     )
 
 
@@ -159,7 +169,27 @@ def _create_llm(settings: ChatSettings) -> OpenAILLM:
         model=settings.model,
         temperature=settings.temperature,
         max_tokens=settings.max_tokens,
+        reasoning_effort=settings.reasoning_effort,
     )
+
+
+def _load_locked_generation_config() -> tuple[str, int]:
+    """Load the registered winner prompt and context depth from pipeline config."""
+
+    with _RAG_CONFIG_PATH.open(encoding="utf-8") as config_file:
+        config = yaml.safe_load(config_file) or {}
+    llm_config = config.get("llm", {})
+    prompt_id = str(llm_config.get("prompt_id", "p2"))
+    context_depth = int(llm_config.get("context_depth", 5))
+    if context_depth < 1:
+        raise ValueError("llm.context_depth must be at least 1.")
+
+    with _RAG_PROMPT_REGISTRY_PATH.open(encoding="utf-8") as prompt_file:
+        registry = (yaml.safe_load(prompt_file) or {}).get("prompts", {})
+    prompt = registry.get(prompt_id, {}).get("system_prompt")
+    if not isinstance(prompt, str) or not prompt.strip():
+        raise ValueError(f"Unknown or empty locked RAG prompt: {prompt_id!r}.")
+    return prompt.strip(), context_depth
 
 
 def _rag_is_candidate(mode: ChatMode) -> bool:
@@ -201,6 +231,7 @@ def _get_rag_agent(settings: ChatSettings):
         settings.model,
         settings.temperature,
         settings.max_tokens,
+        settings.reasoning_effort,
         settings.rag_top_k,
     )
     if _rag_agent is not None and _rag_agent_key == cache_key:
@@ -217,13 +248,14 @@ def _get_rag_agent(settings: ChatSettings):
         # The Phase 1 tournament locked in BGE-M3 sparse retrieval. Fall back
         # to the legacy Chroma route only when its artifacts are not exported.
         if retrieval_service.locked_is_available():
-            retriever = retrieval_service.get_locked_retriever()
+            retriever, reranker, _ = retrieval_service.get_locked_pipeline()
             # Retrieve the full candidate pool, not rag_top_k, or the reranker
             # has nothing to reorder and the locked configuration is not what
             # actually runs. rag_top_k then controls how many survive to the LLM.
             top_k = max(settings.rag_top_k, int(config.get("retrieval", {}).get("top_k", 20)))
         else:
             retriever = retrieval_service.get_dense_retriever()
+            reranker = get_reranker(config)
             top_k = settings.rag_top_k
         rerank_top_n = min(
             settings.rag_top_k,
@@ -235,7 +267,7 @@ def _get_rag_agent(settings: ChatSettings):
         )
         _rag_agent = RAGAgent(
             retriever=retriever,
-            reranker=get_reranker(config),
+            reranker=reranker,
             llm=_create_llm(settings),
             top_k=top_k,
             rerank_top_n=rerank_top_n,
@@ -269,7 +301,13 @@ def _run_rag_pipeline(question: str, settings: ChatSettings) -> dict:
             if not stats.get("exists") or int(stats.get("count", 0)) <= 0:
                 raise RAGUnavailableError("The local news collection is empty or missing.")
 
-        result = _get_rag_agent(settings).run(question)
+        agent = _get_rag_agent(settings)
+        system_prompt, context_depth = _load_locked_generation_config()
+        result = agent.generate_from_trace(
+            agent.retrieve_and_rerank(question),
+            system_prompt=system_prompt,
+            context_depth=context_depth,
+        )
     except RAGUnavailableError:
         raise
     except Exception as exc:
@@ -369,8 +407,8 @@ def _gateway_failure_event() -> AgentEvent:
     return AgentEvent(
         type="final_answer",
         content=(
-            "The model gateway request failed. Check OPENAI_API_KEY, "
-            "OPENAI_BASE_URL, and CHAT_MODEL, then try again."
+            "The model gateway request failed. Check the API key for CHAT_MODEL "
+            "(GEMINI_API_KEY for Gemini), then try again."
         ),
         citations=[],
     )

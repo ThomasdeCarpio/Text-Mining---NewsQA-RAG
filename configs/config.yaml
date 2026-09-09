@@ -40,9 +40,12 @@ database:
 
 # --- LLM ---
 llm:
-  model: "gpt-4o-mini"
+  model: "gemini-3.1-flash-lite"
   temperature: 0.0
-  max_tokens: 1024
+  max_tokens: 512
+  reasoning_effort: "minimal"
+  prompt_id: "p2"
+  context_depth: 5
 
 # --- Retrieval (LOCKED by the Phase 1 tournament) ---
 # Full evidence and the rejected alternatives: notebooks/13_phase_1_tournament_report.ipynb

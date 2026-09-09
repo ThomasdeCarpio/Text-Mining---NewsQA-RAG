@@ -170,6 +170,12 @@ def get_locked_retriever() -> Any:
     return _get_locked()[0]
 
 
+def get_locked_pipeline() -> tuple[Any, Any, dict]:
+    """Return the cached retriever, reranker, and locked configuration."""
+
+    return _get_locked()
+
+
 def list_algorithms() -> list[dict]:
     """Return the retrieval algorithms, flagged by what is actually on disk."""
 
