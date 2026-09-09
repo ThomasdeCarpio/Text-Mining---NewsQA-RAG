@@ -6,12 +6,12 @@
 % Preserve Windows typography; use Vietnamese-capable TeX fonts on Linux.
 \IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{\setmainfont{TeX Gyre Termes}}
 \IfFontExistsTF{Arial}{\setsansfont{Arial}}{\setsansfont{TeX Gyre Heros}}
-\IfFontExistsTF{Consolas}{\setmonofont{Consolas}[Scale=MatchLowercase]}{\setmonofont{TeX Gyre Cursor}[Scale=MatchLowercase]}
+\IfFontExistsTF{Consolas}{\setmonofont{Consolas}[Scale=MatchLowercase]}{%
+  \IfFontExistsTF{Menlo}{\setmonofont{Menlo}[Scale=MatchLowercase]}{\setmonofont{Latin Modern Mono}[Scale=MatchLowercase]}}
 
 \usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{array}
-\usepackage{multirow}
 \usepackage{tabularx}
 \usepackage{amsmath}
 \usepackage{graphicx}

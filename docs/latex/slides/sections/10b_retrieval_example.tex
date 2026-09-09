@@ -1,0 +1,45 @@
+\begin{frame}[t]{Ví dụ truy xuất và xếp hạng lại}
+\purpose{Minh họa một trace thực: BGE-M3 lấy 20 ứng viên từ chỉ mục; cross-encoder đọc từng cặp câu hỏi--chunk và giữ 5 context.}
+
+\begin{center}
+\begin{tikzpicture}[node distance=5mm]
+\node[stage,text width=58mm,minimum height=24mm] (q) {
+  \textbf{1. Câu hỏi}\\[1.5mm]
+  {\fontsize{13}{17}\selectfont Which Swedish golfer stripped down to play a recovery shot?}
+};
+\node[stage,text width=48mm,minimum height=24mm,right=of q] (e) {
+  \textbf{2. BGE-M3 sparse}\\[1.5mm]
+  {\fontsize{13}{17}\selectfont Mã hóa truy vấn thành vector từ khóa có trọng số}
+};
+\node[stage,text width=47mm,minimum height=24mm,right=of e] (i) {
+  \textbf{3. Tra chỉ mục}\\[1.5mm]
+  {\fontsize{13}{17}\selectfont So khớp với \NumCorpusChunks\ chunk\\Lấy \textbf{top 20}}
+};
+\node[stage,text width=53mm,minimum height=24mm,right=of i,fill=brandaccent,text=white] (r) {
+  \textbf{4. BGE reranker}\\[1.5mm]
+  {\fontsize{13}{17}\selectfont Chấm lại 20 cặp\\Giữ \textbf{top 5}}
+};
+\foreach \a/\b in {q/e,e/i,i/r}\draw[flow](\a)--(\b);
+\end{tikzpicture}
+\end{center}
+
+\vspace{2mm}
+{\renewcommand{\arraystretch}{1.12}\fontsize{12}{15}\selectfont
+\begin{tabularx}{\textwidth}{@{}
+  >{\centering\arraybackslash}p{30mm}
+  >{\raggedright\arraybackslash}X
+  >{\centering\arraybackslash}p{36mm}
+  >{\centering\arraybackslash}p{34mm}
+  >{\centering\arraybackslash}p{25mm}@{}}
+\rowcolor{paleblue}
+\textbf{Hạng BGE-M3} & \textbf{Nội dung chunk} & \textbf{Điểm reranker} & \textbf{Hạng reranker} & \textbf{Kết quả} \\\midrule
+1 & \texttt{64646a...\_0}: Henrik Stenson; recovery shot & 9,3047 & 1 & \pass{Giữ} \\\midrule
+2 & \texttt{c7f52d...\_0}: lịch sử U.S. Open golf & $-6,0$ & 10 & Loại \\\midrule
+8 & \texttt{9a3ab5...\_0}: hickory golf; Thụy Điển & $-5,2578$ & 5 & \pass{Giữ} \\\midrule
+15 & \texttt{6c21ba...\_0}: VĐV Thụy Điển; huy chương & $-4,2$ & 3 & \pass{Giữ} \\\bottomrule
+\end{tabularx}}
+
+\takeaway{\textbf{Chọn theo thứ hạng tương đối, không theo dấu của score.} Đầu ra: 5 context có thứ tự kèm ID, điểm, metadata và văn bản.}
+% Trace development thật: question ID 0161b1de8e9944f58ba3663305c9759a.
+% Reranker chấm toàn bộ cặp câu hỏi--chunk, độc lập với điểm BGE-M3 ban đầu.
+\end{frame}

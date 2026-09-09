@@ -1,8 +1,8 @@
-# NewsLens — 20 slide thực nghiệm và ứng dụng
+# NewsLens — 22 slide thực nghiệm và ứng dụng
 
 [Mở PDF](slides/main.pdf) · [Mã Beamer](slides/main.tex)
 
-Bộ 20 trang 16:9 (320 × 180 mm), nền trắng, xanh `#003F88` lấy từ logo gốc.
+Bộ 22 trang 16:9 (320 × 180 mm), nền trắng, xanh `#003F88` lấy từ logo gốc.
 Slide dùng bảng kẻ nhẹ, sơ đồ vector, thanh so sánh và ô điểm nổi bật. Mỗi slide
 nêu mục đích hoặc kết luận rõ ràng; model/cấu hình/mẫu đánh giá nằm trong nội dung
 chính. Chú thích trên slide chỉ giữ điều kiện diễn giải; đường dẫn nguồn nằm ở
@@ -27,6 +27,7 @@ thực nghiệm và code ứng dụng hiện có. Các đường dẫn ngắn tr
 | 8 | So sánh retriever, original và resolved | `phase1/round1.csv`; `phase1/paired_significance.json`, gồm so sánh BGE-M3/BM25 trên original |
 | 9 | Reranker: chất lượng và latency | `phase1/round2.csv`, lọc resolved; delta nDCG tính trực tiếp từ hai hàng sparse |
 | 10 | Xác nhận retrieval trên bài chưa thấy | `phase1/heldout/heldout_significance.json`; `final_protocol.json` |
+| 10b | Ví dụ BGE-M3 top-20 và reranker top-5 | Trace thật của câu `0161b1de8e9944f58ba3663305c9759a` trong finalist P2-depth5 |
 | 11 | Giả thuyết P0–P3 và AC sàng lọc | `configs/experiments/phase2_generation_prompts.yaml`; `phase2/report.md` §7.2 (bộ sinh đọc bảng đã commit); subset manifest cho mẫu 80/20 |
 | 12 | Context depth và hai finalist | `phase2/scores/p0_d5_development.jsonl` cho Hit@k và số câu mất gold; `phase2/paired_significance.json`; `phase2/report.md` §8 |
 | 13 | Guardrail loại P2-depth3, chọn P2-depth5 | `phase2/paired_significance.json`; `phase2/phase2b_winner_decision.json` |
@@ -91,7 +92,7 @@ docs/latex/
 ├── common/preamble.tex       font và macro chung
 ├── common/numbers.tex        sinh tự động, không sửa tay
 ├── figures/hcmus-logo.png    logo gốc
-├── slides/main.tex           điểm vào Beamer, 20 frame
+├── slides/main.tex           điểm vào Beamer, 22 frame
 ├── slides/theme.tex          palette, bảng, thẻ số, sơ đồ và chân trang
 ├── slides/sections/01..20*   nội dung từng slide
 ├── slides/main.pdf           bản trình chiếu
@@ -120,10 +121,10 @@ uv run --with pymupdf python scripts/check_latex_slides.py
 uv run --with pymupdf python scripts/check_latex_slides.py --render-dir /tmp/newslens-review
 ```
 
-Bộ kiểm tra PDF yêu cầu build log bên cạnh PDF, kiểm đúng 20 trang 16:9, nội dung
+Bộ kiểm tra PDF yêu cầu build log bên cạnh PDF, kiểm đúng 22 trang 16:9, nội dung
 quan trọng, số liệu, logo, không có đường dẫn kỹ thuật, chữ không ra ngoài trang,
 khoảng cách nội dung–chú thích, và log không có overfull/missing glyph. Cần xem đủ
-20 trang: kiểm tra tự động không chứng minh mọi căn hàng/cột hoặc mức độ đọc tốt.
+22 trang: kiểm tra tự động không chứng minh mọi căn hàng/cột hoặc mức độ đọc tốt.
 
 Bản này đã build bằng Tectonic 0.17.0, kiểm tra bằng PyMuPDF 1.28.2 và duyệt ảnh.
 Bốn test macro đạt. Không chạy test ứng dụng/API vì không thay code ứng dụng.

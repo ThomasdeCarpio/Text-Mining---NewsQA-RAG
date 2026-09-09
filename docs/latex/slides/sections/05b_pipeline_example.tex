@@ -1,0 +1,37 @@
+\begin{frame}[t]{Ví dụ truy vấn đầu-cuối}
+\purpose{Một truy vấn thực tế từ tập development: hệ thống truy xuất bằng chứng, sinh câu trả lời và gắn citation có thể kiểm tra.}
+
+\begin{center}
+\begin{tikzpicture}[node distance=6mm]
+\node[stage,text width=56mm,minimum height=27mm] (q) {
+  \textbf{Câu hỏi}\\[2mm]
+  {\fontsize{14}{18}\selectfont Which Swedish golfer stripped down to the bare essentials to play a recovery shot?}
+};
+\node[stage,text width=55mm,minimum height=27mm,right=of q] (r) {
+  \textbf{Truy xuất + xếp hạng}\\[2mm]
+  {\fontsize{14}{18}\selectfont BGE-M3\,+\,BGE reranker\\Top-5 context}
+};
+\node[stage,text width=42mm,minimum height=27mm,right=of r] (g) {
+  \textbf{Generator}\\[2mm]
+  {\fontsize{14}{18}\selectfont Gemini 3.1 Flash-Lite\\Prompt P2}
+};
+\node[stage,text width=72mm,minimum height=27mm,right=of g,fill=brandaccent,text=white] (a) {
+  \textbf{Câu trả lời}\\[2mm]
+  {\fontsize{14}{18}\selectfont Henrik Stenson stripped down to his boxer shorts to play a recovery shot \textbf{[1]}.}
+};
+\foreach \a/\b in {q/r,r/g,g/a}\draw[flow](\a)--(\b);
+\end{tikzpicture}
+\end{center}
+
+\vspace{2mm}
+{\smalltext
+\begin{tabularx}{\textwidth}{@{}p{20mm}p{48mm}L@{}}
+\rowcolor{paleblue}
+\textbf{Ký hiệu} & \textbf{Chunk được dẫn} & \textbf{Bằng chứng trong bài báo} \\\midrule
+\textbf{[1]} & {\fontsize{11}{14}\selectfont\texttt{64646a6038ad\_chunk\_0}} &
+``Swedish golfer Henrik Stenson''; ``Stenson stripped down to the bare essentials --- a pair of white boxer shorts.'' \\\bottomrule
+\end{tabularx}}
+
+\takeaway{Citation \textbf{[1]} trỏ tới context hạng 1 và cho phép kiểm tra trực tiếp bằng chứng.}
+\slidenote{Nguồn: prediction thành công của cấu hình finalist P2-depth5; question ID 0161b1de8e9944f58ba3663305c9759a.}
+\end{frame}

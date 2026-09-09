@@ -41,11 +41,13 @@ def main() -> None:
          "Citation Validity", number("GeneratorModel"), number("JudgeModel")],
         ["Bootstrap", "Guardrail", number("CoverageThreshold"), number("BootstrapSamples")],
         [number(k) for k in ("CorpusArticles", "CorpusChunks", "NResolved", "NDev", "NHeldout", "NReserve")],
+        ["Henrik Stenson", "Generator", "Câu trả lời", "64646a6038ad_chunk_0"],
         ["GĐ1", "GĐ2", "Ứng dụng", "P0", "Baseline"],
         [number(k) for k in ("PzeroAC", "PzeroFaith", "PzeroEM", "PzeroFone", "PzeroCitFone", "PzeroCitVal")],
         ["Original", "Resolved", "BGE-M3", number("RoneSparseBge"), number("RoneDenseEfive")],
         ["Hybrid", "MiniLM", number("RtwoSparseLarge"), number("RtwoSparseLargeLatency")],
         [number(k) for k in ("RetrievalFinalQuestions", "RetrievalFinalHitFive", "RetrievalFinalNdcgFive")],
+        ["BGE-M3 sparse", "top 20", "BGE reranker", "top 5", "64646a6038ad_chunk_0"],
         ["P0", "P1", "P2", "P3", number("ScreenPtwoAC"), number("NJudgeScreening")],
         [number(k) for k in ("LostAtDepthThree", "PtwodThreeAC", "PtwodFiveAC")],
         ["Loại", "Chọn", number("PtwodThreeGuardFaithExact"), number("PtwodFiveGuardFaithExact")],
@@ -62,7 +64,7 @@ def main() -> None:
         args.render_dir.mkdir(parents=True, exist_ok=True)
     with pymupdf.open(args.pdf) as document:
         if len(document) != len(expected):
-            errors.append(f"Expected 20 pages, got {len(document)}")
+            errors.append(f"Expected {len(expected)} pages, got {len(document)}")
         for index, page in enumerate(document):
             label = f"Page {index + 1}"
             text = unicodedata.normalize("NFC", page.get_text())
@@ -105,7 +107,7 @@ def main() -> None:
         errors.append("The original supplied logo has changed")
     if errors:
         raise SystemExit("\n".join(errors))
-    print("PASS: 20 pages, 16:9, expected text/numbers, original logo, no source paths, "
+    print(f"PASS: {len(expected)} pages, 16:9, expected text/numbers, original logo, no source paths, "
           "no clipping/overflow or body-note collisions. Visual inspection is still required.")
 
 

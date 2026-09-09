@@ -65,3 +65,5 @@ docs/latex/**/*.log
 # *.json / *.csv rules above are for data and run outputs, not for these.
 !docs/reports/**/*.json
 !docs/reports/**/*.csv
+
+*temp/
