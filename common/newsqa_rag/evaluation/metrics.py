@@ -277,6 +277,7 @@ def _ragas_shim() -> None:
 
 
 FIREWORKS_BASE_URL = "https://api.fireworks.ai/inference/v1"
+Z_AI_BASE_URL = "https://api.z.ai/api/paas/v4/"
 
 # GLM 5.3 Flash emits reasoning_content before any visible content. Capped
 # below this it returns HTTP 200 with an empty message and
@@ -298,7 +299,7 @@ def _resolve_judge_provider(llm_model: str, provider: str = "auto") -> str:
         provider: Explicit provider, or "auto" to derive one.
 
     Returns:
-        One of "bai", "fireworks", "gemini", "deepseek", "openai".
+        One of "bai", "z_ai", "fireworks", "gemini", "deepseek", "openai".
     """
 
     if provider and provider != "auto":
@@ -338,9 +339,10 @@ def _ragas_judge(
     """
     Build the RAGAS judge LLM from environment configuration.
 
-    Gemini uses GEMINI_API_KEY, DeepSeek uses DEEPSEEK_API_KEY, and OpenAI or
-    an OpenAI-compatible gateway uses OPENAI_API_KEY. Embeddings are always
-    local because answer_relevancy requires an embedding model.
+    Gemini uses GEMINI_API_KEY, Z.AI uses Z_AI_API_KEY, DeepSeek uses
+    DEEPSEEK_API_KEY, and OpenAI or an OpenAI-compatible gateway uses
+    OPENAI_API_KEY. Embeddings are always local because answer_relevancy
+    requires an embedding model.
     """
     import os
 
@@ -357,7 +359,21 @@ def _ragas_judge(
 
     resolved = _resolve_judge_provider(llm_model, provider)
 
-    if resolved == "bai":
+    if resolved == "z_ai":
+        if not os.getenv("Z_AI_API_KEY"):
+            raise RuntimeError("Z_AI_API_KEY is required for the Z.AI judge")
+        thinking_type = "disabled" if reasoning_effort == "none" else "enabled"
+        chat = ChatOpenAI(
+            model=llm_model,
+            api_key=os.environ["Z_AI_API_KEY"],
+            base_url=os.getenv("Z_AI_BASE_URL") or Z_AI_BASE_URL,
+            temperature=0,
+            timeout=300.0,
+            max_retries=3,
+            max_tokens=max_tokens,
+            extra_body={"thinking": {"type": thinking_type}},
+        )
+    elif resolved == "bai":
         if not os.getenv("BAI_API_KEY"):
             raise RuntimeError("BAI_API_KEY is required for the BAI judge")
         if not os.getenv("BAI_BASE_URL"):
@@ -510,7 +526,7 @@ def evaluate_ragas_rows(
     # Fireworks is included for a second reason: GLM 5.3 Flash spends most of
     # its output budget on reasoning, so three candidates triples the most
     # expensive part of the run for no extra signal.
-    if _resolve_judge_provider(llm_model, provider) in {"bai", "deepseek", "gemini", "fireworks"}:
+    if _resolve_judge_provider(llm_model, provider) in {"bai", "z_ai", "deepseek", "gemini", "fireworks"}:
         answer_relevancy.strictness = 1
 
     dataset = Dataset.from_list([

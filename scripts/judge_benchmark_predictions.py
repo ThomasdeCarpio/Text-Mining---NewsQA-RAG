@@ -42,7 +42,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-dir", required=True)
     parser.add_argument(
         "--judge-provider",
-        choices=["openai", "deepseek", "gemini", "fireworks", "bai"],
+        choices=["openai", "deepseek", "gemini", "fireworks", "bai", "z_ai"],
         required=True,
     )
     parser.add_argument("--judge-model", required=True)

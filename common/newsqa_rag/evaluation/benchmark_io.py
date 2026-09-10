@@ -206,6 +206,7 @@ def sanitized_error_message(exc: Exception) -> str:
         "GEMINI_API_KEY",
         "FIREWORKS_API_KEY",
         "BAI_API_KEY",
+        "Z_AI_API_KEY",
     ):
         secret = os.getenv(name, "")
         if secret:

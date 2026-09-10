@@ -12,6 +12,7 @@ from unittest.mock import patch
 from newsqa_rag.evaluation.metrics import (
     FIREWORKS_BASE_URL,
     JUDGE_MIN_MAX_TOKENS,
+    Z_AI_BASE_URL,
     _resolve_judge_provider,
 )
 
@@ -61,6 +62,7 @@ class ResolveJudgeProviderTests(unittest.TestCase):
         )
         self.assertEqual(_resolve_judge_provider("gpt-4o-mini", "fireworks"), "fireworks")
         self.assertEqual(_resolve_judge_provider("glm-5.3-flash", "bai"), "bai")
+        self.assertEqual(_resolve_judge_provider("glm-5.3-flash", "z_ai"), "z_ai")
 
 
 class JudgeOutputBudgetTests(unittest.TestCase):
@@ -75,6 +77,9 @@ class JudgeOutputBudgetTests(unittest.TestCase):
     def test_fireworks_base_url_is_the_openai_compatible_path(self):
         self.assertTrue(FIREWORKS_BASE_URL.endswith("/inference/v1"))
         self.assertTrue(FIREWORKS_BASE_URL.startswith("https://"))
+
+    def test_z_ai_base_url_is_the_general_openai_compatible_path(self):
+        self.assertEqual(Z_AI_BASE_URL, "https://api.z.ai/api/paas/v4/")
 
 
 class JudgeCliTests(unittest.TestCase):
@@ -100,6 +105,7 @@ class JudgeCliTests(unittest.TestCase):
             if isinstance(element, ast.Constant)
         }
         self.assertIn("fireworks", choices)
+        self.assertIn("z_ai", choices)
 
     def test_reasoning_ablation_arguments_are_exposed(self):
         from unittest.mock import patch
