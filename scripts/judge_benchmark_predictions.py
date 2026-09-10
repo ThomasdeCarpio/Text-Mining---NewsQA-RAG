@@ -42,7 +42,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-dir", required=True)
     parser.add_argument(
         "--judge-provider",
-        choices=["openai", "deepseek", "gemini", "fireworks"],
+        choices=["openai", "deepseek", "gemini", "fireworks", "bai"],
         required=True,
     )
     parser.add_argument("--judge-model", required=True)
@@ -58,6 +58,11 @@ def parse_args() -> argparse.Namespace:
         help="Run-relative JSONL filename, allowing isolated judge ablations.",
     )
     parser.add_argument(
+        "--attempts-file",
+        default="attempts.jsonl",
+        help="Run-relative JSONL retry log; set separately for concurrent judge workers.",
+    )
+    parser.add_argument(
         "--require-complete-metrics",
         action="store_true",
         help="Retry a batch unless every requested metric is present for every row.",
@@ -65,6 +70,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--metrics", nargs="+", choices=DEFAULT_METRICS, default=DEFAULT_METRICS)
     parser.add_argument("--batch-size", type=int, default=10)
     parser.add_argument("--max-workers", type=int, default=4)
+    parser.add_argument(
+        "--min-batch-interval-seconds",
+        type=float,
+        default=0.0,
+        help="Minimum time between batch starts; useful for per-key RPM limits.",
+    )
     parser.add_argument("--n-eval", type=int, default=None)
     parser.add_argument(
         "--question-ids-file",
@@ -101,12 +112,16 @@ def main() -> None:
         or args.max_workers < 1
         or args.max_attempts < 1
         or args.judge_max_tokens < 1
+        or args.min_batch_interval_seconds < 0
     ):
         raise SystemExit(
-            "Batch size, workers, attempts, and judge max tokens must be at least 1"
+            "Batch size, workers, attempts, and judge max tokens must be at least 1; "
+            "the batch interval cannot be negative"
         )
     if Path(args.results_file).name != args.results_file or not args.results_file.endswith(".jsonl"):
         raise SystemExit("--results-file must be a run-relative .jsonl filename")
+    if Path(args.attempts_file).name != args.attempts_file or not args.attempts_file.endswith(".jsonl"):
+        raise SystemExit("--attempts-file must be a run-relative .jsonl filename")
     run_dir = Path(args.run_dir)
     manifest = json.loads((run_dir / "run_manifest.json").read_text(encoding="utf-8"))
     if manifest.get("inputs", {}).get("retrieval_only"):
@@ -186,8 +201,9 @@ def main() -> None:
 
         iterable = tqdm(batches, desc="Judge", unit="batch")
 
-    attempts_path = run_dir / "attempts.jsonl"
+    attempts_path = run_dir / args.attempts_file
     for batch_index, batch in enumerate(iterable, 1):
+        batch_started_at = time.monotonic()
         batch_id = stable_hash([record["question_id"] for record in batch])[:16]
         def evaluate_batch():
             rows, usage = evaluate_ragas_rows(
@@ -258,6 +274,12 @@ def main() -> None:
             )
         if not args.progress:
             print(f"Judged batch {batch_index}/{len(batches)}")
+        if batch_index < len(batches):
+            remaining = args.min_batch_interval_seconds - (
+                time.monotonic() - batch_started_at
+            )
+            if remaining > 0:
+                time.sleep(remaining)
 
     final_records = latest_by_question(load_jsonl(results_path))
     judged = sum(record.get("status") == "success" for record in final_records.values())

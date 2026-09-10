@@ -298,7 +298,7 @@ def _resolve_judge_provider(llm_model: str, provider: str = "auto") -> str:
         provider: Explicit provider, or "auto" to derive one.
 
     Returns:
-        One of "fireworks", "gemini", "deepseek", "openai".
+        One of "bai", "fireworks", "gemini", "deepseek", "openai".
     """
 
     if provider and provider != "auto":
@@ -357,7 +357,22 @@ def _ragas_judge(
 
     resolved = _resolve_judge_provider(llm_model, provider)
 
-    if resolved == "gemini":
+    if resolved == "bai":
+        if not os.getenv("BAI_API_KEY"):
+            raise RuntimeError("BAI_API_KEY is required for the BAI judge")
+        if not os.getenv("BAI_BASE_URL"):
+            raise RuntimeError("BAI_BASE_URL is required for the BAI judge")
+        chat = ChatOpenAI(
+            model=llm_model,
+            api_key=os.environ["BAI_API_KEY"],
+            base_url=os.environ["BAI_BASE_URL"],
+            temperature=0,
+            timeout=300.0,
+            max_retries=3,
+            max_tokens=max_tokens,
+            reasoning_effort=reasoning_effort,
+        )
+    elif resolved == "gemini":
         if not os.getenv("GEMINI_API_KEY"):
             raise RuntimeError("GEMINI_API_KEY is required for the Gemini judge")
         chat = ChatOpenAI(
@@ -495,7 +510,7 @@ def evaluate_ragas_rows(
     # Fireworks is included for a second reason: GLM 5.3 Flash spends most of
     # its output budget on reasoning, so three candidates triples the most
     # expensive part of the run for no extra signal.
-    if _resolve_judge_provider(llm_model, provider) in {"deepseek", "gemini", "fireworks"}:
+    if _resolve_judge_provider(llm_model, provider) in {"bai", "deepseek", "gemini", "fireworks"}:
         answer_relevancy.strictness = 1
 
     dataset = Dataset.from_list([

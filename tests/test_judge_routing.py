@@ -60,6 +60,7 @@ class ResolveJudgeProviderTests(unittest.TestCase):
             "openai",
         )
         self.assertEqual(_resolve_judge_provider("gpt-4o-mini", "fireworks"), "fireworks")
+        self.assertEqual(_resolve_judge_provider("glm-5.3-flash", "bai"), "bai")
 
 
 class JudgeOutputBudgetTests(unittest.TestCase):
@@ -113,6 +114,7 @@ class JudgeCliTests(unittest.TestCase):
             "--reasoning-effort", "low",
             "--judge-max-tokens", "512",
             "--results-file", "judge_results_low.jsonl",
+            "--attempts-file", "judge_attempts_low.jsonl",
             "--question-ids-file", "judge_ids.json",
         ]
         with patch("sys.argv", argv):
@@ -121,7 +123,26 @@ class JudgeCliTests(unittest.TestCase):
         self.assertEqual(args.reasoning_effort, "low")
         self.assertEqual(args.judge_max_tokens, 512)
         self.assertEqual(args.results_file, "judge_results_low.jsonl")
+        self.assertEqual(args.attempts_file, "judge_attempts_low.jsonl")
         self.assertEqual(args.question_ids_file, "judge_ids.json")
+
+    def test_multi_key_workaround_arguments_are_exposed(self):
+        from unittest.mock import patch
+
+        from scripts.judge_benchmark_predictions import parse_args
+
+        argv = [
+            "judge_benchmark_predictions.py",
+            "--run-dir", "run",
+            "--judge-provider", "bai",
+            "--judge-model", "glm-5.3-flash",
+            "--min-batch-interval-seconds", "30",
+        ]
+        with patch("sys.argv", argv):
+            args = parse_args()
+
+        self.assertEqual(args.judge_provider, "bai")
+        self.assertEqual(args.min_batch_interval_seconds, 30.0)
 
 
 if __name__ == "__main__":
