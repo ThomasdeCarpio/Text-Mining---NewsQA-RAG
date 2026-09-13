@@ -1,0 +1,32 @@
+% Compile from this directory with:
+%   latexmk -xelatex -interaction=nonstopmode -halt-on-error main.tex
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[a4paper,margin=25mm]{geometry}
+\input{../common/preamble.tex}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{polyglossia}
+\setdefaultlanguage{vietnamese}
+\usepackage[hidelinks]{hyperref}
+
+\title{Báo cáo hệ thống hỏi đáp tin tức NewsLens}
+\author{Nhóm 9}
+\date{}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\clearpage
+
+% This standalone draft currently renders Sections 3--5 only.
+% Remove this counter override after Sections 1--2 are added.
+\setcounter{section}{2}
+
+\input{sections/03_data_and_evaluation.tex}
+\input{sections/04_phase1_retrieval.tex}
+\input{sections/05_phase2_generation.tex}
+\input{appendix/appendix.tex}
+
+\end{document}

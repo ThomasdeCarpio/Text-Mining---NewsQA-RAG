@@ -1,0 +1,48 @@
+{
+  "ragas_version": "0.4.3",
+  "templates": [
+    {
+      "file": "statement_generation.txt",
+      "metrics": [
+        "Faithfulness",
+        "Answer Correctness"
+      ],
+      "sha256": "190a9060e5c02cdbdfefcc4214e4438c2448a482b76a441d6c9425d556748816"
+    },
+    {
+      "file": "faithfulness_verdict.txt",
+      "metrics": [
+        "Faithfulness"
+      ],
+      "sha256": "1ec729940961017ce3772d41b7b4610da00b71cf4899c7a9b3a92bbac64b0c30"
+    },
+    {
+      "file": "answer_correctness_classification.txt",
+      "metrics": [
+        "Answer Correctness"
+      ],
+      "sha256": "48dab3f4e5b27ddcf11d998498f3b9869bba859894e61e11b3009b140a320a0e"
+    },
+    {
+      "file": "answer_relevancy.txt",
+      "metrics": [
+        "Answer Relevancy"
+      ],
+      "sha256": "d29d1cef851ea3b32d7e2853262c0401eb50a3a674372165e52e859a7c6322ba"
+    },
+    {
+      "file": "context_precision.txt",
+      "metrics": [
+        "Context Precision"
+      ],
+      "sha256": "9bdc79bf6dc4c0c2b6c3542a53354a5836760d73c213156aa7c13507f1b7f46b"
+    },
+    {
+      "file": "context_recall.txt",
+      "metrics": [
+        "Context Recall"
+      ],
+      "sha256": "722511959aa1d9b61fce6ecb829fd3d0e2e8d967c89bd97d4648f35f66f1cbde"
+    }
+  ]
+}

@@ -1,0 +1,190 @@
+\clearpage
+\appendix
+\section*{Phụ lục}
+\addcontentsline{toc}{section}{Phụ lục}
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  frame=single,
+  xleftmargin=2mm,
+  xrightmargin=2mm
+}
+
+\section{Prompt zero-shot}
+
+Các đoạn dưới đây là \emph{system prompt} P0--P3 nguyên văn từ prompt registry
+của Giai đoạn 2. Câu hỏi và năm context được gửi riêng trong user prompt;
+phần này không đưa đáp án mẫu cho generator.
+
+\noindent\textbf{P0 --- Đối chứng.} Yêu cầu trả lời ngắn, dựa vào context và có
+citation cho từng phát biểu thực tế.
+\begin{quote}\small\sloppy
+You are a helpful assistant answering questions based on provided context.
+Answer concisely and only based on the given context. Cite supporting context
+using its bracketed number, for example [1]. Every factual claim must have a
+citation, and you must not cite context that does not support the claim. If the
+answer is not in the context, say: 'I cannot find this information in the
+provided context.'
+\end{quote}
+
+\noindent\textbf{P1 --- Siết grounding.} Kiểm tra liệu cấm suy đoán và chỉ dẫn
+bằng chứng trực tiếp có tăng Faithfulness hay không.
+\begin{quote}\small\sloppy
+Answer the question using only facts explicitly stated in the numbered
+context. Do not add background knowledge, assumptions, or plausible details.
+Give a concise answer and cite the supporting context with [n] after every
+factual claim. Cite only context that directly supports that claim. If the
+context does not contain the answer, say: 'I cannot find this information in
+the provided context.'
+\end{quote}
+
+\noindent\textbf{P2 --- Đúng loại đáp án.} Kiểm tra liệu đáp án một câu, chỉ
+chứa loại thông tin được hỏi, có tăng độ chính xác hay không.
+\begin{quote}\small\sloppy
+Answer using only the numbered context. Give one short answer sentence
+containing only the information type requested by the question, such as a
+person, place, date, year, number, object, event, or explanation. Include
+multiple items only when the question explicitly asks for them. Do not repeat
+the question, list alternative answers, or add background details. Place a
+supporting citation [n] immediately after the answer. If the answer is not in
+the context, say: 'I cannot find this information in the provided context.'
+\end{quote}
+
+\noindent\textbf{P3 --- Phân biệt sự kiện.} Kiểm tra liệu chọn đoạn khớp chủ
+thể, sự kiện, địa điểm và thời gian có giảm nhầm lẫn giữa các bài hay không.
+\begin{quote}\small\sloppy
+Answer using only facts explicitly stated in the numbered context. First
+identify the passage that best matches all identifying details in the
+question, including its subject, event, location, and time. Do not combine
+facts, figures, or dates from different events, articles, or reporting
+periods. Give one short answer sentence containing only the requested
+information type, and include multiple items only when explicitly asked.
+Place a supporting citation [n] immediately after the answer and cite only
+the passage that directly supports it. If no passage contains a defensible
+answer, say: 'I cannot find this information in the provided context.'
+\end{quote}
+
+\section{Prompt one-shot P2-1S}
+
+P2-1S giữ nguyên P2 và nối thêm ví dụ dưới đây vào cùng system prompt. Ví dụ
+\textbf{hoàn toàn được tạo tổng hợp}: bảo tàng Northbridge, kế hoạch Riverside,
+ngữ cảnh, câu hỏi và đáp án đều không lấy từ NewsQA, corpus truy xuất,
+development hoặc held-out. Ví dụ chỉ minh họa cách trả lời ngắn và trỏ tới đúng
+số thứ tự context.
+
+\begin{quote}\small
+Demonstration (format example only):\\
+Context [1]: The Northbridge museum opened a new gallery in 2018.\\
+Context [2]: The city council approved the Riverside transit plan in March
+2021.\\
+Question: When was the Riverside transit plan approved?\\
+Answer: March 2021 [2]
+
+Now answer the user's question using the supplied numbered context and the
+same concise citation format.
+\end{quote}
+
+Bản prompt đầy đủ là P2 ở Phụ lục A, hai dòng trống, rồi phần demonstration
+trên. Bản ghi nguyên văn và SHA-256 được lưu trong
+\path{results/phase2/1s_prompt_experiment/1s_dev_results/results/one_shot_prompt_contract.json}.
+
+\section{Prompt judge RAGAS}
+
+Các file dưới đây được xuất bằng \path{scripts/export_report_ragas_prompts.py}
+từ \textbf{RAGAS 0.4.3}. Mỗi file chứa instruction nguyên văn, JSON output
+schema, toàn bộ ví dụ few-shot có sẵn trong thư viện và phần input cuối. Các
+giá trị trong dấu \texttt{<...>} ở input cuối là \emph{giữ chỗ} để in template;
+khi chấm, RAGAS thay bằng dữ liệu của từng câu hỏi. Judge là GLM-5.3-Flash qua
+Fireworks, reasoning \texttt{low}. Citation metrics không sử dụng judge này.
+
+\begin{table}[H]
+  \centering
+  \caption{Template RAGAS được dùng cho năm metric.}
+  \small
+  \begin{tabularx}{\textwidth}{@{}p{38mm}X@{}}
+    \toprule
+    \textbf{Metric} & \textbf{Template / bước chấm} \\
+    \midrule
+    Faithfulness & Tách đáp án thành phát biểu; kiểm tra từng phát biểu với context. \\
+    Answer Correctness & Tách đáp án và gold thành phát biểu; phân loại TP/FP/FN. \\
+    Answer Relevancy & Sinh câu hỏi từ đáp án, phát hiện trả lời lảng tránh; so embedding với câu hỏi gốc. \\
+    Context Precision & Chấm từng context có hữu ích cho câu hỏi và gold không; xét thứ tự context. \\
+    Context Recall & Chấm từng phát biểu của gold có được context hỗ trợ không. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection*{Tách phát biểu: Faithfulness và Answer Correctness}
+\lstinputlisting{appendix/ragas_prompts/statement_generation.txt}
+
+\subsection*{Kiểm tra phát biểu: Faithfulness}
+\lstinputlisting{appendix/ragas_prompts/faithfulness_verdict.txt}
+
+\subsection*{Phân loại TP/FP/FN: Answer Correctness}
+\lstinputlisting{appendix/ragas_prompts/answer_correctness_classification.txt}
+
+\subsection*{Sinh câu hỏi: Answer Relevancy}
+\lstinputlisting{appendix/ragas_prompts/answer_relevancy.txt}
+
+\subsection*{Chấm từng context: Context Precision}
+\lstinputlisting{appendix/ragas_prompts/context_precision.txt}
+
+\subsection*{Kiểm tra độ phủ gold: Context Recall}
+\lstinputlisting{appendix/ragas_prompts/context_recall.txt}
+
+\section{Cách chấm citation}
+
+Generator nhận các context đánh số \texttt{[1]}--\texttt{[5]}. Bộ chấm ánh xạ
+chỉ số trong đáp án về chunk ID theo đúng thứ tự context đã gửi. Ví dụ tổng
+hợp: \texttt{[1]}--\texttt{[5]} lần lượt là \texttt{c1}--\texttt{c5}, còn tập
+gold là \texttt{\{c2,c4\}}.
+
+\begin{table}[H]
+  \centering
+  \caption{Ví dụ phân biệt citation hợp lệ và citation đúng bằng chứng.}
+  \label{tab:appendix-citation-examples}
+  \small
+  \begin{tabularx}{\textwidth}{@{}p{24mm}p{28mm}rrrX@{}}
+    \toprule
+    \textbf{Citation} & \textbf{Chunk được cite} & \textbf{Validity} &
+    \textbf{Precision} & \textbf{Recall} & \textbf{Giải thích} \\
+    \midrule
+    \texttt{[2]} & \texttt{c2} & 1 & 1 & 0,5 & Hợp lệ, đúng một trong hai gold. \\
+    \texttt{[3]} & \texttt{c3} & 1 & 0 & 0 & Hợp lệ nhưng sai bằng chứng. \\
+    \texttt{[6]} & Không có & 0 & 0 & 0 & Vượt số context đã gửi. \\
+    \texttt{[2][3]} & \texttt{c2,c3} & 1 & 0,5 & 0,5 & Có một citation thừa. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{itemize}
+  \item \textbf{Citation Validity} $= |C|/(|C|+|I|)$, với $C$ là tập chunk ID
+  được cite từ chỉ số hợp lệ và $I$ là tập chỉ số citation ngoài phạm vi.
+  Không có citation thì điểm bằng 0.
+  \item \textbf{Citation Precision} $=|C\cap G|/|C|$: bao nhiêu chunk được
+  cite thực sự thuộc gold $G$.
+  \item \textbf{Citation Recall} $=|C\cap G|/|G|$: tỷ lệ gold chunks được cite.
+  \item \textbf{Citation F1} $=2PR/(P+R)$ khi $P+R>0$; nếu không thì bằng 0.
+  \item Bộ chấm loại citation trùng trước khi tính và tính điểm từng câu rồi
+  lấy trung bình. Validity chỉ kiểm tra chỉ số tồn tại, không xác nhận claim
+  được context hỗ trợ về mặt ngữ nghĩa.
+\end{itemize}
+
+\section{Nguồn tái lập}
+
+\begin{itemize}
+  \item Prompt generator: \path{configs/experiments/phase2_generation_prompts.yaml};
+  prompt one-shot và SHA-256: \path{one_shot_prompt_contract.json} trong artifact
+  development P2-1S.
+  \item Prompt judge: các file \texttt{.txt} và \texttt{manifest.json} trong
+  \path{docs/latex/report/appendix/ragas_prompts/}; chạy lại
+  \path{scripts/export_report_ragas_prompts.py} với RAGAS 0.4.3 để đối chiếu.
+  \item Bộ chấm citation: \path{common/newsqa_rag/evaluation/metrics.py}; ánh xạ
+  \texttt{[n]} và loại chỉ số ngoài phạm vi: \path{common/newsqa_rag/response_parsing.py}.
+  \item Mỗi \texttt{run\_manifest.json} ghi model, question IDs, prompt hash và
+  coverage. Bảng điểm đầy đủ ở \path{results/phase2/}.
+\end{itemize}

@@ -1,0 +1,197 @@
+\section{Giai đoạn 1: Truy xuất}
+
+\subsection{Thiết kế thực nghiệm}
+
+\begin{itemize}
+  \item \textbf{Mục tiêu:} chọn cấu hình đưa chunk chứa bằng chứng lên đầu danh
+  sách trước khi đánh giá generation.
+  \item \textbf{Phạm vi:} chỉ đánh giá retrieval offline; không gọi generator,
+  không chấm RAGAS và không phát sinh chi phí API sinh văn bản.
+  \item \textbf{Gold label:} đối chiếu kết quả với \path{relevant_chunk_ids}
+  được ánh xạ từ evidence span. Một chunk chỉ đúng khi ID của nó thuộc tập gold.
+\end{itemize}
+
+\noindent\textbf{Thiết lập cố định}
+\begin{itemize}
+  \item Development: 281 câu resolved thuộc 50 bài; corpus gồm 11.064 bài.
+  \item Chunking: recursive, kích thước 512 token và overlap 64 token.
+  \item Resolved là biến thể chính vì câu hỏi có thể hiểu độc lập. Original chỉ
+  dùng để phân tích ảnh hưởng của câu hỏi thiếu chủ thể.
+\end{itemize}
+
+\noindent\textbf{Quy trình chọn cấu hình}
+
+\begin{enumerate}
+  \item Sàng lọc riêng dense và sparse retriever, không rerank.
+  \item So sánh dense tốt nhất, sparse tốt nhất và hybrid RRF với ba chế độ
+        reranker.
+  \item Khóa pipeline rồi chạy đúng một lần trên 871 câu thuộc 150 bài chưa
+        thấy.
+\end{enumerate}
+
+\noindent\textbf{Tiêu chí đánh giá}
+\begin{itemize}
+  \item Ưu tiên MRR@5 vì generator có lợi nhất khi bằng chứng đầu tiên xuất hiện
+  sớm.
+  \item Khi MRR gần nhau, lần lượt xét nDCG@5, Hit@5 và latency.
+  \item Dùng Recall@5 để kiểm tra độ phủ khi một câu có nhiều gold chunks.
+  \item Mọi run phải đạt coverage 100\%; question IDs, seed và cách chấm được
+  giữ cố định trong cùng một vòng.
+\end{itemize}
+
+\subsection{Sàng lọc retriever}
+
+\begin{itemize}
+  \item \textbf{Dense:} all-MiniLM-L6-v2, bge-small-en-v1.5,
+  bge-large-en-v1.5 và e5-base-v2.
+  \item \textbf{Sparse:} BM25 Okapi, BM25+, BM25 có
+  stemming/stopword normalization và learned sparse BGE-M3.
+  \item \textbf{Điều kiện chung:} mỗi phương pháp trả tối đa 10 candidates;
+  chưa dùng cross-encoder.
+\end{itemize}
+
+\begin{table}[H]
+  \centering
+  \caption{Kết quả sàng lọc retriever trên 281 câu resolved.}
+  \label{tab:phase1-retriever-screening}
+  \small
+  \begin{tabular}{lrrrr}
+    \toprule
+    \textbf{Retriever} & \textbf{MRR@5} & \textbf{nDCG@5} &
+    \textbf{Hit@5} & \textbf{P50 (ms)} \\
+    \midrule
+    BGE-M3 learned sparse          & \textbf{0,8059} & \textbf{0,8317} & \textbf{0,9181} & 76,7 \\
+    BM25 Okapi + stemming          & 0,7815 & 0,8123 & 0,9146 & 56,1 \\
+    BM25+                          & 0,6881 & 0,7206 & 0,8221 & 101,1 \\
+    BM25 Okapi                     & 0,6732 & 0,7087 & 0,8185 & 111,8 \\
+    Dense: e5-base-v2              & \textbf{0,6316} & \textbf{0,6684} & \textbf{0,7865} & 15,5 \\
+    Dense: bge-small-en-v1.5       & 0,6285 & 0,6589 & 0,7651 & 16,0 \\
+    Dense: bge-large-en-v1.5       & 0,6252 & 0,6536 & 0,7544 & 27,4 \\
+    Dense: all-MiniLM-L6-v2        & 0,4851 & 0,5165 & 0,6299 & 10,6 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent\textbf{Kết quả và phạm vi kết luận}
+\begin{itemize}
+  \item Trong các mô hình và dữ liệu được khảo sát, nhánh sparse đạt kết quả
+  retrieval cao hơn nhánh dense.
+  \item BGE-M3 được chọn làm sparse representative vì đứng đầu theo quy tắc
+  MRR@5, sau đó là nDCG@5. Tuy nhiên, so với BM25-stemmed trên tập resolved,
+  CI95 của hiệu nDCG@5 là $[-0,0125;\,0,0508]$; chưa đủ bằng chứng kết luận một
+  sparse model tốt hơn model còn lại.
+  \item e5-base-v2 được chọn làm dense representative. Chênh lệch giữa các
+  dense models nhỏ và chưa đủ để thiết lập một thứ hạng tổng quát.
+  \item BGE-M3 chậm hơn e5-base-v2; P95 vẫn dưới 0,1 giây trong thử nghiệm.
+\end{itemize}
+
+\subsection{Sàng lọc chiến lược retrieval và reranker}
+
+\begin{itemize}
+  \item \textbf{Retriever:} e5-base-v2 dense, BGE-M3 sparse và hybrid RRF giữa
+  hai nhánh.
+  \item \textbf{Reranker:} không rerank, cross-encoder MiniLM-L6 và
+  BGE-reranker-large.
+  \item \textbf{Thiết lập:} retriever lấy 20 candidates; reranker sắp lại và
+  trả top 5 để tính metric.
+\end{itemize}
+
+\begin{table}[H]
+  \centering
+  \caption{MRR@5 và nDCG@5 theo retriever và reranker trên tập development.}
+  \label{tab:phase1-reranker-matrix}
+  \small
+  \setlength{\tabcolsep}{4.5pt}
+  \begin{tabular}{lrrr|rrr}
+    \toprule
+    & \multicolumn{3}{c|}{\textbf{MRR@5}}
+    & \multicolumn{3}{c}{\textbf{nDCG@5}} \\
+    \textbf{Retriever} & \textbf{Không} & \textbf{MiniLM} & \textbf{BGE-large}
+    & \textbf{Không} & \textbf{MiniLM} & \textbf{BGE-large} \\
+    \midrule
+    BGE-M3 sparse & 0,8059 & 0,8387 & \textbf{0,8797} & 0,8317 & 0,8642 & \textbf{0,8976} \\
+    e5-base dense & 0,6316 & 0,7783 & 0,7997 & 0,6684 & 0,7994 & 0,8172 \\
+    Hybrid RRF    & 0,7192 & 0,7938 & 0,8203 & 0,7474 & 0,8164 & 0,8405 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Độ trễ P50 của ma trận Phase 1 trên cùng môi trường chạy.}
+  \label{tab:phase1-reranker-latency}
+  \small
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Retriever} & \textbf{Không rerank} & \textbf{MiniLM} &
+    \textbf{BGE-large} \\
+    \midrule
+    BGE-M3 sparse & 66,1 ms & 163,9 ms & 510,1 ms \\
+    e5-base dense & 17,7 ms & 127,3 ms & 540,5 ms \\
+    Hybrid RRF    & 90,4 ms & 193,3 ms & 609,8 ms \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent\textbf{Kết quả}
+\begin{itemize}
+  \item Trên BGE-M3, MiniLM tăng MRR@5 từ 0,8059 lên 0,8387; BGE-large đạt
+  0,8797 nhưng P50 tăng từ 163,9 ms lên 510,1 ms.
+  \item BGE-M3 + BGE-large đứng đầu ma trận: MRR@5 0,8797; nDCG@5 0,8976;
+  Hit@5 0,9573; Recall@5 0,9555. Vì vậy, cấu hình này được chọn.
+  \item Hybrid RRF không vượt BGE-M3 sparse ở cả ba chế độ reranker; fusion
+  không đem lại lợi ích quan sát được trong thiết lập này.
+\end{itemize}
+
+\subsection{Final-test và cấu hình retrieval khóa}
+
+\begin{itemize}
+  \item \textbf{Cấu hình khóa trước final-test:} recursive chunking 512/64;
+  BGE-M3 learned sparse lấy top 20; BGE-large cross-encoder trả top 5.
+  \item \textbf{Dữ liệu:} 871 câu resolved thuộc 150 bài chưa dùng để chọn cấu
+  hình.
+  \item \textbf{Phạm vi:} chỉ chạy retrieval; không gọi generator. Cả 871/871
+  câu đều có bản ghi thành công.
+\end{itemize}
+
+\begin{table}[H]
+  \centering
+  \caption{Kết quả của pipeline retrieval đã khóa.}
+  \label{tab:phase1-final-test}
+  \small
+  \begin{tabular}{lrr}
+    \toprule
+    \textbf{Metric} & \textbf{Development (281 câu)} &
+    \textbf{Final-test (871 câu)} \\
+    \midrule
+    MRR@5       & 0,8797 & 0,8112 \\
+    nDCG@5      & 0,8976 & 0,8313 \\
+    Hit@5       & 0,9573 & 0,8978 \\
+    Recall@5    & 0,9555 & 0,8955 \\
+    P50 latency & 512,7 ms & 550,0 ms \\
+    P95 latency & 531,0 ms & 567,0 ms \\
+    Coverage    & 100\% & 100\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent\textbf{Kết quả}
+\begin{itemize}
+  \item 782/871 câu có ít nhất một gold chunk trong top 5; 89 câu không đạt
+  Hit@5.
+  \item So với BGE-M3 trước rerank, BGE-large tăng MRR@5 từ 0,7269 lên 0,8112,
+  nDCG@5 từ 0,7555 lên 0,8313 và Hit@5 từ 0,8519 lên 0,8978.
+  \item Mức tăng nDCG@5 là 0,0758, với paired CI95
+  $[0,0504;\,0,1017]$. Khoảng này không chứa 0, nên hiệu quả rerank vẫn xuất
+  hiện trên các bài chưa thấy.
+\end{itemize}
+
+\noindent\textbf{Diễn giải và quyết định}
+\begin{itemize}
+  \item Bốn metric chính đều thấp hơn development; điểm development đã lạc
+  quan hơn so với dữ liệu chưa thấy.
+  \item Coverage vẫn đạt 100\%; pipeline tìm được gold evidence trong top 5 cho
+  gần 90\% câu hỏi.
+  \item Khóa BGE-M3 top 20 + BGE-large top 5 làm retrieval đầu vào cho Phase 2.
+  Final-test không được dùng để chọn lại model.
+\end{itemize}

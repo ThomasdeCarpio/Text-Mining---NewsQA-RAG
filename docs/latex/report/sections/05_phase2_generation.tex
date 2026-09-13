@@ -1,0 +1,358 @@
+\section{Giai đoạn 2: Sinh câu trả lời}
+
+\subsection{Thiết kế thực nghiệm}
+
+\begin{itemize}
+  \item \textbf{Mục tiêu:} đánh giá pipeline end-to-end và cải thiện câu trả
+  lời mà không làm giảm grounding hoặc chất lượng citation.
+  \item \textbf{Retrieval cố định:} recursive 512/64, BGE-M3 top 20,
+  BGE-reranker-large top 5.
+  \item \textbf{Dữ liệu:} development gồm 281 câu/50 bài; held-out gồm 284
+  câu/50 bài chưa dùng để tuning.
+  \item \textbf{Generator:} Gemini 3.1 Flash-Lite, reasoning minimal,
+  temperature 0 và tối đa 512 output tokens.
+  \item \textbf{Judge:} GLM-5.3-Flash qua Fireworks, reasoning low; chấm năm
+  RAGAS metrics. Exact Match, Token F1 và citation metrics được tính trực tiếp.
+  \item \textbf{Metric chính:} Answer Correctness. Guardrail gồm
+  Faithfulness, Citation F1, Citation Validity và coverage.
+\end{itemize}
+
+\subsection{Thiết lập và kết quả baseline end-to-end}
+
+Baseline dùng prompt P0 và 5 context trên toàn bộ development.
+
+\begin{table}[H]
+  \centering
+  \caption{Baseline P0-depth5 trên 281 câu development.}
+  \label{tab:phase2-baseline}
+  \small
+  \begin{tabular}{llr}
+    \toprule
+    \textbf{Nhóm} & \textbf{Metric} & \textbf{Điểm} \\
+    \midrule
+    Đáp án & Exact Match & 0,0000 \\
+           & Token F1 & 0,2648 \\
+           & Answer Correctness & 0,6308 \\
+           & Answer Relevancy & 0,7950 \\
+    \midrule
+    Grounding & Faithfulness & 0,9761 \\
+              & Context Precision & 0,8980 \\
+              & Context Recall & 0,9644 \\
+    \midrule
+    Citation & Citation F1 & 0,8025 \\
+             & Citation Validity & 0,9893 \\
+    \midrule
+    Vận hành & Coverage & 100\% \\
+             & Latency P50 / P95 & 2,77 s / 53,63 s \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent\textbf{Phân tích baseline}
+\begin{itemize}
+  \item Faithfulness và Citation Validity cao, nhưng Answer Correctness chỉ đạt
+  0,6308 và Exact Match bằng 0.
+  \item Audit 30 câu có Answer Correctness dưới 0,5: 24 câu vẫn có gold evidence
+  trong top 5. Lỗi chính là trả lời dài, sai loại thông tin hoặc chọn nhầm chi
+  tiết trong context.
+  \item Sáu câu còn lại không có gold trong top 5; prompt không thể khôi phục
+  bằng chứng mà retrieval không cung cấp.
+  \item Vì vậy, bước tiếp theo tập trung vào prompt ngắn và đúng loại đáp án,
+  đồng thời giữ các guardrail của RAG.
+\end{itemize}
+
+\subsection{Sàng lọc prompt zero-shot}
+
+\begin{table}[H]
+  \centering
+  \caption{Các zero-shot prompt được khảo sát.}
+  \label{tab:phase2-prompts}
+  \small
+  \begin{tabularx}{\textwidth}{@{}p{13mm}p{38mm}X@{}}
+    \toprule
+    \textbf{ID} & \textbf{Mục tiêu} & \textbf{Chỉ thị khác biệt} \\
+    \midrule
+    P0 & Đối chứng & Trả lời dựa trên context và kèm citation. \\
+    P1 & Siết grounding & Chỉ nêu claim được context hỗ trợ trực tiếp. \\
+    P2 & Tăng độ chính xác & Trả đúng loại thông tin, ngắn gọn và kèm citation. \\
+    P3 & Chọn evidence & Chọn đoạn hỗ trợ trước khi tạo câu trả lời ngắn. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Sàng lọc prompt trên 80 câu; RAGAS dùng cùng 20 câu calibration.}
+  \label{tab:phase2-prompt-screening}
+  \small
+  \begin{tabular}{lrrrrrr}
+    \toprule
+    \textbf{Prompt} & \textbf{Token F1} & \textbf{AC} & \textbf{Faith.} &
+    \textbf{AR} & \textbf{Cit. F1} & \textbf{Cit. Valid.} \\
+    \midrule
+    P0 & 0,2417 & 0,7118 & 1,0000 & 0,8131 & 0,7808 & 0,9750 \\
+    P1 & 0,2570 & 0,6885 & 0,9750 & 0,7426 & 0,7863 & 0,9625 \\
+    P2 & \textbf{0,3999} & \textbf{0,8363} & \textbf{1,0000} & 0,7388 & 0,8133 & \textbf{0,9750} \\
+    P3 & 0,2790 & 0,7190 & 0,9750 & \textbf{0,8153} & \textbf{0,8146} & 0,9625 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{itemize}
+  \item Screening là bước tiết kiệm chi phí, không phải final comparison.
+  \item P1 thấp hơn P0 về Answer Correctness và Faithfulness nên bị loại.
+  \item P2 và P3 có kết quả cạnh tranh; P2 nổi bật về Answer Correctness và
+  Token F1 nên được đưa sang bước kiểm tra depth.
+\end{itemize}
+
+\subsection{Sàng lọc số lượng context}
+
+Giữ nguyên thứ tự rerank và cắt danh sách context còn 1, 3 hoặc 5 đoạn.
+
+\begin{table}[H]
+  \centering
+  \caption{Ảnh hưởng của context depth trên tập screening.}
+  \label{tab:phase2-depth-screening}
+  \small
+  \begin{tabular}{llrrrrrr}
+    \toprule
+    \textbf{Prompt} & \textbf{Depth} & \textbf{Token F1} & \textbf{AC} &
+    \textbf{Faith.} & \textbf{AR} & \textbf{Cit. F1} & \textbf{Cit. Valid.} \\
+    \midrule
+    P0 & 1 & 0,2543 & 0,7063 & 0,9750 & 0,7365 & 0,7250 & 0,8167 \\
+    P0 & 3 & 0,2527 & 0,7046 & 0,9875 & 0,7667 & 0,7792 & 0,9500 \\
+    P0 & 5 & 0,2417 & 0,7118 & 1,0000 & 0,8131 & 0,7808 & 0,9750 \\
+    \midrule
+    P2 & 1 & \textbf{0,5809} & 0,8671 & 0,9500 & 0,4825 & 0,5500 & 0,6125 \\
+    P2 & 3 & 0,5311 & \textbf{0,8795} & 0,9250 & 0,6806 & 0,8125 & 0,9500 \\
+    P2 & 5 & 0,3999 & 0,8363 & \textbf{1,0000} & 0,7388 & \textbf{0,8133} & \textbf{0,9750} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{itemize}
+  \item Depth 1 tăng Answer Correctness nhưng giảm mạnh Citation F1 và
+  Citation Validity; 38/281 câu không có gold ở rank 1.
+  \item P2 depth 3 và P2 depth 5 được chọn để chạy đủ 281 câu development.
+\end{itemize}
+
+\subsection{Kết quả zero-shot trên development và held-out}
+
+\begin{table}[H]
+  \centering
+  \caption{Kết quả finalist trên toàn bộ development.}
+  \label{tab:phase2-zero-shot-finalists}
+  \small
+  \begin{tabular}{lrrrrrr}
+    \toprule
+    \textbf{Cấu hình} & \textbf{Token F1} & \textbf{AC} & \textbf{Faith.} &
+    \textbf{AR} & \textbf{Cit. F1} & \textbf{Cit. Valid.} \\
+    \midrule
+    P0-depth5 & 0,2648 & 0,6308 & 0,9761 & \textbf{0,7950} & 0,8025 & \textbf{0,9893} \\
+    P2-depth3 & \textbf{0,5549} & \textbf{0,7711} & 0,9561 & 0,5694 & 0,8381 & 0,9751 \\
+    P2-depth5 & 0,4191 & 0,7350 & \textbf{0,9801} & 0,7092 & \textbf{0,8391} & 0,9858 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{itemize}
+  \item P2 depth 3 tăng Answer Correctness nhiều nhất, nhưng giảm Faithfulness
+  0,0200 và Citation Validity 0,0142; cấu hình không qua guardrail.
+  \item So với P0 depth 5: Answer Correctness tăng 0,1043.
+  CI95: $[0,0844;\,0,1240]$. Citation F1 tăng 0,0366; Faithfulness không giảm.
+  \item P2 depth 5 qua toàn bộ guardrail và được khóa trước khi mở held-out.
+\end{itemize}
+
+\begin{table}[H]
+  \centering
+  \caption{P2-depth5 trên development và held-out.}
+  \label{tab:phase2-zero-shot-heldout}
+  \small
+  \begin{tabular}{lrr}
+    \toprule
+    \textbf{Metric} & \textbf{Development (281)} & \textbf{Held-out (284)} \\
+    \midrule
+    Token F1 & 0,4191 & 0,4313 \\
+    Answer Correctness & 0,7350 & 0,7157 \\
+    Faithfulness & 0,9801 & 0,9249 \\
+    Answer Relevancy & 0,7092 & 0,6485 \\
+    Citation F1 & 0,8391 & 0,7289 \\
+    Citation Validity & 0,9858 & 0,9437 \\
+    Coverage & 100\% & 100\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{itemize}
+  \item Held-out có 35/284 câu không có gold trong top 5, so với 12/281 câu ở
+  development. Hit@5 giảm từ 0,9573 xuống 0,8768.
+  \item Khi gold có trong top 5, Answer Correctness held-out đạt 0,7689, so với
+  0,7597 trên development. Phần suy giảm tổng thể chủ yếu đi cùng retrieval miss.
+  \item Held-out chỉ dùng để đánh giá khả năng tổng quát hóa, không dùng để sửa
+  prompt hoặc chọn lại cấu hình.
+\end{itemize}
+
+\subsection{Thử nghiệm prompt one-shot}
+
+\textbf{Giả thuyết:} một ví dụ hoàn toàn tổng hợp giúp generator học định dạng
+đáp án ngắn và citation đúng vị trí, từ đó tăng độ đúng của câu trả lời. P2-1S
+giữ chỉ thị P2 và thêm ví dụ gồm context, câu hỏi và đáp án có citation. Chỉ
+thay prompt; retrieval trace, depth 5 và Gemini 3.1 Flash-Lite được giữ nguyên.
+Ví dụ không thuộc development hoặc held-out.
+
+\begin{table}[H]
+  \centering
+  \caption{So sánh P2 zero-shot và one-shot, cùng depth 5, trên development.}
+  \label{tab:phase2-one-shot}
+  \small
+  \begin{tabular}{lrr}
+    \toprule
+    \textbf{Metric} & \textbf{P2 zero-shot (281)} & \textbf{P2 one-shot (281)} \\
+    \midrule
+    Exact Match & 0,0000 & 0,3559 \\
+    Token F1 & 0,4191 & 0,6267 \\
+    Answer Correctness & 0,7350 & 0,8015 \\
+    Faithfulness & 0,9801 & 0,9603 \\
+    Answer Relevancy & 0,7092 & 0,5251 \\
+    Citation F1 & 0,8391 & 0,8441 \\
+    Citation Validity & 0,9858 & 0,9786 \\
+    Coverage & 100\% & 100\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{P2 one-shot trên development và held-out; chỉ kiểm tra khả năng
+  tổng quát hóa của cùng cấu hình, không chọn lại prompt.}
+  \label{tab:phase2-one-shot-heldout}
+  \small
+  \begin{tabular}{lrr}
+    \toprule
+    \textbf{Metric} & \textbf{Development (281)} & \textbf{Held-out (284)} \\
+    \midrule
+    Exact Match & 0,3559 & 0,3239 \\
+    Token F1 & 0,6267 & 0,6032 \\
+    Answer Correctness & 0,8015 & 0,7557 \\
+    Faithfulness & 0,9603 & 0,9082 \\
+    Answer Relevancy & 0,5251 & 0,4688 \\
+    Citation F1 & 0,8441 & 0,7315 \\
+    Citation Validity & 0,9786 & 0,9437 \\
+    Coverage & 100\% & 100\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Sai khác paired của P2-1S so với zero-shot P2-depth5 trên 281 câu
+  development; CI95 bootstrap theo 50 bài, 2.000 lần lấy mẫu.}
+  \label{tab:phase2-one-shot-paired}
+  \small
+  \begin{tabular}{lrrl}
+    \toprule
+    \textbf{Metric} & \textbf{P2-D5} & \textbf{P2-1S-D5} & \textbf{$\Delta$ và CI95} \\
+    \midrule
+    Answer Correctness & 0,7350 & 0,8015 & $+0,0664\ [0,0444;\,0,0883]$ \\
+    Token F1 & 0,4191 & 0,6267 & $+0,2076\ [0,1728;\,0,2427]$ \\
+    Faithfulness & 0,9801 & 0,9603 & $-0,0199\ [-0,0388;\,-0,0028]$ \\
+    Answer Relevancy & 0,7092 & 0,5251 & $-0,1841\ [-0,2233;\,-0,1458]$ \\
+    Citation F1 & 0,8391 & 0,8441 & $+0,0050\ [-0,0104;\,0,0229]$ \\
+    Citation Validity & 0,9858 & 0,9786 & $-0,0071\ [-0,0182;\,0,0000]$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{itemize}
+  \item Trên development, Answer Correctness và Token F1 tăng; CI95 của hai
+  sai khác đều không chứa 0. Citation F1 chưa có bằng chứng thay đổi.
+  \item Answer Relevancy giảm rõ rệt; Faithfulness cũng giảm, dù mức giảm trung
+  bình 0,0199 vẫn nằm sát ngưỡng guardrail 0,02. Do đó, one-shot không phải
+  cải thiện đồng đều trên mọi tiêu chí của RAG.
+  \item Held-out chỉ đối chiếu P2-1S với chính P2-1S trên development. Các
+  metric chất lượng thấp hơn trên bài chưa thấy; đây không phải so sánh
+  zero-shot với one-shot trên held-out, và không được dùng để chọn lại prompt.
+\end{itemize}
+
+\noindent\textbf{Phân tích Answer Relevancy giảm}
+\begin{itemize}
+  \item Trên cùng 281 câu, câu trả lời one-shot có trung vị 7 từ, so với 11 từ
+  của zero-shot; 105 so với 23 câu dài không quá ba từ. Số câu có Answer
+  Relevancy dưới 0,5 tăng từ 54 lên 133.
+  \item Trong 133 câu one-shot dưới 0,5, có 109 câu vẫn đạt Answer Correctness
+  từ 0,8 trở lên. Ví dụ, với câu hỏi ``Where was the 2009 Swamp Soccer World
+  Championship held?'', zero-shot trả lời ``The 2009 Swamp Soccer World
+  Championship was held in Scotland [1]'' (Relevancy 1,00), còn one-shot trả
+  lời ``Scotland [1]'' (Relevancy 0,037; Correctness 1,00).
+  \item RAGAS Answer Relevancy sinh câu hỏi ngược từ đáp án rồi so với câu hỏi
+  gốc. Đáp án chỉ gồm một thực thể hoặc địa điểm thường không giữ chủ thể và
+  sự kiện cần để tái tạo câu hỏi gốc. Điều này phù hợp với các ví dụ đã kiểm
+  tra, nhưng không chứng minh độ ngắn giải thích mọi trường hợp giảm điểm;
+  Answer Relevancy vẫn là một trade-off cần báo cáo riêng.
+\end{itemize}
+
+\subsection{So sánh các mô hình sinh câu trả lời}
+
+\textbf{Mục tiêu:} mô tả điều gì thay đổi khi thay generator, gồm độ chính xác,
+grounding, citation, token usage và latency. Thí nghiệm giữ cố định retrieval
+trace, P2-1S, depth 5 và cùng 281 câu development; chỉ thay generator. Gemini
+3.1 Flash-Lite được dùng làm mốc so sánh. Đây là ablation để quan sát trade-off,
+không phải vòng chọn winner; không chạy held-out riêng cho từng model và không
+thay đổi cấu hình đã khóa.
+
+\begin{table}[H]
+  \centering
+  \caption{Generator ablation với P2-1S-depth5 trên development.}
+  \label{tab:phase2-generator-ablation}
+  \small
+  \begin{tabular}{lrrrrrr}
+    \toprule
+    \textbf{Generator} & \textbf{Token F1} & \textbf{AC} & \textbf{Faith.} &
+    \textbf{AR} & \textbf{Cit. F1} & \textbf{Cit. Valid.} \\
+    \midrule
+    Gemini 3.1 Flash-Lite & 0,6267 & 0,8015 & \textbf{0,9603} & \textbf{0,5251} & \textbf{0,8441} & \textbf{0,9786} \\
+    Gemini 3.5 Flash-Lite & 0,6803 & \textbf{0,8164} & 0,9557 & 0,4351 & 0,8351 & 0,9680 \\
+    Gemini 3.6 Flash & \textbf{0,6934} & 0,8011 & 0,9472 & 0,3837 & 0,8248 & 0,9644 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \caption{Sai khác so với Gemini 3.1 Flash-Lite và tài nguyên generation trên
+  281 câu. CI95 là paired article-cluster bootstrap (2.000 mẫu).}
+  \label{tab:phase2-generator-operation}
+  \small
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{lrrrlrr}
+    \toprule
+    \textbf{Generator} & \textbf{$\Delta$ AC} & \textbf{$\Delta$ Cit. F1} &
+    \textbf{$\Delta$ Cit. Valid.} & \textbf{CI95 $\Delta$ AC} &
+    \textbf{LLM P95} & \textbf{Token in/out} \\
+    \midrule
+    3.1 Lite & 0 & 0 & 0 & Đối chứng & 1,02 s & 666.604 / 3.847 \\
+    3.5 Lite & $+0,0149$ & $-0,0090$ & $-0,0107$ &
+    $[-0,0052;\,0,0359]$ & 0,89 s & 666.604 / 3.112 \\
+    3.6 Flash & $-0,0003$ & $-0,0193$ & $-0,0142$ &
+    $[-0,0204;\,0,0195]$ & 3,50 s & 666.604 / 3.249 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{itemize}
+  \item Gemini 3.5 Flash-Lite có Answer Correctness trung bình cao nhất, nhưng
+  CI95 của sai khác so với 3.1 chứa 0; chưa đủ bằng chứng kết luận model này
+  chính xác hơn trên quần thể mục tiêu. Model dùng ít output token và có LLM
+  P95 thấp nhất trong các run đã ghi.
+  \item Gemini 3.6 Flash có Token F1 cao nhất nhưng không tăng Answer
+  Correctness so với 3.1; Citation F1 và Citation Validity thấp hơn, còn LLM
+  P95 cao nhất.
+  \item Gemini 3.1 Flash-Lite giữ Faithfulness, Answer Relevancy và hai citation
+  metrics cao nhất trong ba model được khảo sát.
+  \item Token là tổng usage của 281 lần generation, không gồm judge. P95 là độ
+  trễ gọi LLM ghi trong từng run, chỉ để mô tả vận hành vì các run có thể chạy
+  trên môi trường và thời điểm khác nhau. Không quy đổi ra tiền khi chưa cố
+  định bảng giá API tại thời điểm thí nghiệm.
+  \item Kết quả mô tả trade-off trên development; nhóm không dùng ablation này
+  để chọn lại generator hoặc thay đổi pipeline đã khóa.
+\end{itemize}

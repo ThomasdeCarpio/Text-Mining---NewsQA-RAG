@@ -1,0 +1,336 @@
+\section{Dữ liệu và phương pháp đánh giá}
+
+\subsection{Dữ liệu}
+
+\subsubsection{Nguồn dữ liệu}
+
+Bộ dữ liệu ban đầu của nghiên cứu là NewsQA, được tải từ kho
+\href{https://huggingface.co/datasets/lucadiliello/newsqa}
+{\texttt{lucadiliello/newsqa}} trên Hugging Face. NewsQA gồm các bài báo CNN,
+câu hỏi do người đọc đặt, đáp án dạng đoạn văn bản ngắn (answer span) và vị trí
+ký tự của đoạn đáp án trong bài báo.
+
+Dữ liệu được tổ chức theo câu hỏi, không gom sẵn theo bài báo. Mỗi dòng chứa
+một câu hỏi và toàn bộ bài báo tương ứng. Vì vậy, một bài có nhiều câu hỏi sẽ
+được lặp ở nhiều dòng. Nguồn không có \texttt{article\_id}; số bài được tính
+bằng số \texttt{context} khác nhau.
+
+Ví dụ rút gọn một dòng dữ liệu gốc:
+
+\begin{verbatim}
+{
+  "context": "... full CNN article ...",
+  "question": "When was Pandher sentenced to death?",
+  "answers": ["February."],
+  "key": "724f6eb9a2814e4fb2d7d8e4de846073",
+  "labels": [{"start": [261], "end": [269]}]
+}
+\end{verbatim}
+
+Ý nghĩa các trường:
+
+\begin{itemize}
+  \item \texttt{context}: toàn bộ nội dung bài báo CNN.
+  \item \texttt{question}: câu hỏi được đặt dựa trên bài báo đó.
+  \item \texttt{answers}: một hoặc nhiều đáp án ngắn lấy từ bài báo.
+  \item \texttt{key}: mã định danh của câu hỏi.
+  \item \texttt{labels}: vị trí ký tự đầu và cuối của đáp án trong
+  \texttt{context}. Ví dụ, \texttt{start = 261} và \texttt{end = 269} nghĩa
+  là đáp án gồm cả ký tự ở vị trí 269. Pipeline đổi thành đoạn
+  $[261,270)$ và kiểm tra đoạn này khớp với đáp án.
+\end{itemize}
+
+Revision nguồn được khóa tại
+\texttt{728e52920b8e4ffcfaad93fa47556f26a1d82546}. Thống kê theo định dạng gốc
+như sau:
+
+\begin{table}[htbp]
+  \centering
+  \caption{Quy mô các split NewsQA nguồn.}
+  \label{tab:newsqa-source-splits}
+  \begin{tabular}{@{}lrrr@{}}
+    \toprule
+    \textbf{Split} & \textbf{Số câu hỏi} & \textbf{Số context khác nhau}
+    & \textbf{Câu hỏi/bài} \\
+    \midrule
+    Train & 74.160 & 10.895 & 6,8 \\
+    Validation & 4.212 & 638 & 6,6 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Từ 638 context của split validation, nhóm dùng seed 42 để chọn ngẫu nhiên 200
+context và lấy toàn bộ câu hỏi tương ứng làm tập đánh giá. Split train có
+10.895 context khác nhau; 31 context trùng nội dung với tập đánh giá bị loại để
+tránh rò rỉ dữ liệu. 10.864 context còn lại được dùng làm distractor. Corpus
+cuối gồm 11.064 bài báo: 200 bài đánh giá và 10.864 distractor. Các distractor
+không có câu hỏi đánh giá, nhưng buộc hệ thống phải tìm bằng chứng trong một kho
+dữ liệu lớn hơn.
+
+\subsubsection{Hiệu chỉnh câu hỏi đánh giá}
+
+Câu hỏi NewsQA được đặt khi người đọc đang xem bài báo, nên nhiều câu thiếu ngữ
+cảnh khi đứng riêng. Nhóm giữ dữ liệu gốc để truy vết và tạo phiên bản
+\texttt{resolved} theo quy trình sau:
+
+\begin{enumerate}
+  \item Codex đọc bài báo, gắn nhãn vấn đề và đề xuất sửa tối thiểu.
+  \item Người đánh giá duyệt từng câu; phần thêm vào chỉ dùng để xác định chủ
+  thể hoặc sự kiện, không chứa đáp án.
+  \item Đáp án và evidence sai được sửa; câu không thể trả lời được loại.
+  \item Các câu cùng bài, cùng ý nghĩa và cùng đáp án được gom cụm để loại trùng.
+  \item Evidence span được ánh xạ sang \path{relevant_chunk_ids} sau khi chunk.
+\end{enumerate}
+
+Trong 1.340 câu nguồn, 4 câu không có đáp án đáng tin cậy bị loại. Sau review
+còn 1.336 câu; loại tiếp 184 câu trùng nghĩa, thu được 1.152 câu
+\texttt{resolved} thuộc 200 bài báo. Việc loại trùng diễn ra sau khi làm rõ câu
+hỏi để so sánh đúng ý nghĩa đầy đủ của chúng.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Các mốc tạo tập câu hỏi đánh giá.}
+  \label{tab:dataset-preparation}
+  \begin{tabularx}{0.86\textwidth}{@{}Xrr@{}}
+    \toprule
+    \textbf{Mốc dữ liệu} & \textbf{Số câu} & \textbf{Thay đổi} \\
+    \midrule
+    Câu hỏi lấy từ 200 bài NewsQA & 1.340 & -- \\
+    Sau human review & 1.336 & Loại 4 câu invalid \\
+    Sau semantic deduplication & 1.152 & Loại 184 câu lặp \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Các vấn đề được ghi nhận khi review.}
+  \label{tab:question-review-issues}
+  \begin{tabularx}{\textwidth}{@{}l r X@{}}
+    \toprule
+    \textbf{Issue code} & \textbf{Số lần} & \textbf{Ý nghĩa} \\
+    \midrule
+    \texttt{missing\_subject} & 688 & Thiếu chủ thể cần xác định \\
+    \texttt{underspecified\_event} & 139 & Chưa xác định rõ sự kiện \\
+    \texttt{generic\_reference} & 98 & Dùng tham chiếu chung như ``he'', ``it'' \\
+    \texttt{wrong\_evidence} & 87 & Evidence không hỗ trợ đáp án \\
+    \texttt{malformed\_question} & 71 & Câu hỏi sai hoặc thiếu cấu trúc \\
+    \texttt{truncated\_answer} & 59 & Đáp án bị cắt thiếu \\
+    \texttt{wrong\_answer} & 35 & Đáp án nguồn không đúng \\
+    \texttt{yes\_no\_answer\_mismatch} & 4 & Câu hỏi Yes/No nhưng gold không phải Yes/No \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{1mm}
+  {\footnotesize Một câu hỏi có thể mang nhiều issue code.}
+\end{table}
+
+Hai ví dụ về câu hỏi cần hiệu chỉnh:
+
+\begin{enumerate}
+  \item \textbf{Ngữ cảnh/làm rõ câu hỏi:} ``When was her surgery?'' được sửa
+  thành ``When was Natalie Cole's kidney transplant surgery?''. Đáp án
+  ``Tuesday'' không được đưa vào câu hỏi mới.
+  \item \textbf{Đáp án:} câu hỏi về quân Canada có gold nguồn là ``35,000'',
+  nhưng đây là tổng quân của các đồng minh NATO. Bài báo ghi Canada có hơn
+  2.800 quân, nên nhóm sửa đáp án và evidence span, đồng thời giữ giá trị nguồn
+  để truy vết.
+\end{enumerate}
+
+\subsection{Chia tập}
+
+Toàn bộ partition được tạo theo bài báo. Danh sách article ID và question ID
+được cố định bằng seed và SHA-256.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Các partition của tập resolved deduplicated.}
+  \label{tab:evaluation-partitions}
+  \begin{tabularx}{\textwidth}{@{}XrrX@{}}
+    \toprule
+    \textbf{Partition} & \textbf{Bài} & \textbf{Câu} & \textbf{Vai trò} \\
+    \midrule
+    Development & 50 & 281 & Screening và chọn cấu hình \\
+    Held-out generation & 50 & 284 & Đánh giá cấu hình generation đã khóa \\
+    Held-out reserve & 100 & 587 & Dữ liệu dự trữ, không dùng để tuning \\
+    Phase 1 final-test retrieval & 150 & 871 & Toàn bộ held-out pool dùng kiểm tra retrieval \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Trong 200 bài đánh giá, 50 bài với 281 câu được dùng làm development. 150 bài
+còn lại tạo thành held-out pool gồm 871 câu. Từ 150 bài này, nhóm dùng seed 46
+để chọn 50 bài với 284 câu cho held-out generation; 100 bài với 587 câu còn lại
+được giữ làm reserve. Phase 1 dùng toàn bộ held-out pool 150 bài, còn Phase 2
+chỉ dùng phần held-out generation 50 bài. Development và held-out pool không
+trùng bài báo.
+
+\subsection{Nguyên tắc thực nghiệm}
+
+\subsubsection{Phase 1: đánh giá retrieval}
+
+\begin{itemize}
+  \item Đánh giá khả năng đưa gold evidence lên đầu danh sách; không gọi
+  generator hoặc LLM-as-a-Judge.
+  \item Các vòng chọn retriever, reranker và hybrid dùng cùng 281 câu
+  development. Mỗi vòng chỉ thay đổi thành phần đang xét.
+  \item Sau khi khóa cấu hình, final-test được chạy một lần trên 871 câu của 150
+  bài chưa dùng để tuning. Kết quả này không được dùng để chọn lại cấu hình.
+\end{itemize}
+
+\subsubsection{Phase 2: đánh giá generation end-to-end}
+
+\begin{itemize}
+  \item Dùng cấu hình retrieval đã khóa từ Phase 1.
+  \item Chạy retrieval và reranking một lần trên development, sau đó dùng lại
+  cùng ranked traces cho mọi cấu hình generation.
+  \item Khi thử context depth 1, 3 hoặc 5, pipeline chỉ lấy số context tương ứng
+  từ đầu cùng một danh sách đã rerank.
+\end{itemize}
+
+Để kiểm soát chi phí API, Phase 2 được chia thành các chế độ sau:
+
+\begin{table}[htbp]
+  \centering
+  \caption{Các chế độ chạy trong Phase 2.}
+  \label{tab:phase2-run-modes}
+  \begin{tabularx}{\textwidth}{@{}XrX@{}}
+    \toprule
+    \textbf{Chế độ} & \textbf{Số câu} & \textbf{Mục đích} \\
+    \midrule
+    Screening & 80 & So sánh nhanh prompt/context configuration \\
+    Judge calibration & 20 & Tập con cố định của screening để chấm RAGAS \\
+    Full development & 281 & Xác nhận finalist và áp dụng guardrail \\
+    Held-out generation & 284 & Đánh giá cấu hình đã khóa trên 50 bài chưa thấy \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{itemize}
+  \item Screening 80 câu và judge calibration 20 câu được chọn một lần với seed
+  42 và giữ nguyên ID trong mọi thí nghiệm.
+  \item Screening là bước tiết kiệm chi phí: loại cấu hình kém hơn trên tập nhỏ,
+  chỉ giữ cấu hình có kết quả tương đương hoặc tốt hơn để làm finalist.
+  \item Các finalist được chạy và chấm trên đủ 281 câu development. Guardrail
+  được áp dụng ở bước này để chọn winner.
+  \item Held-out chỉ được mở sau khi khóa winner và không dùng để tuning tiếp.
+  \item Mỗi run lưu cấu hình, model, prompt hash, question IDs, source trace
+  hash, coverage và retry log để có thể dừng và tiếp tục.
+\end{itemize}
+
+\subsection{Thước đo và kiểm định}
+
+\subsubsection{Thước đo retrieval}
+
+Với câu hỏi $q$, gọi $r_q$ là thứ hạng đầu tiên có gold chunk và $G_q$ là tập
+gold chunks. Các thước đo được tính tại cutoff $k$:
+
+\begin{align}
+  \mathrm{Hit@}k(q) &= \mathbf{1}\!\left[G_q \cap R_q^{(k)} \neq \emptyset\right],\\
+  \mathrm{Recall@}k(q) &= \frac{|G_q \cap R_q^{(k)}|}{|G_q|},\\
+  \mathrm{MRR@}k(q) &=
+  \begin{cases}
+    1/r_q, & r_q \leq k,\\
+    0, & r_q > k,
+  \end{cases}
+\end{align}
+
+Trong đó, $R_q^{(k)}$ là $k$ kết quả đầu:
+
+\begin{itemize}
+  \item \textbf{Hit@$k$:} bằng 1 nếu top-$k$ chứa ít nhất một gold chunk; ngược
+  lại bằng 0.
+  \item \textbf{Recall@$k$:} tỷ lệ gold chunks xuất hiện trong top-$k$.
+  \item \textbf{MRR@$k$:} dựa trên vị trí của gold chunk đầu tiên; gold xuất
+  hiện càng sớm thì điểm càng cao.
+  \item \textbf{nDCG@$k$:} đánh giá toàn bộ thứ tự top-$k$, ưu tiên gold chunks
+  ở vị trí cao và chuẩn hóa theo thứ tự lý tưởng.
+  \item \textbf{Latency:} thời gian truy xuất và rerank cho một câu hỏi.
+  \item \textbf{Quy tắc chọn:} ưu tiên MRR@5; dùng nDCG@5, Hit@5 và latency để
+  phân xử và mô tả trade-off.
+\end{itemize}
+
+\subsubsection{Thước đo generation và citation}
+
+\begin{table}[H]
+  \centering
+  \caption{Vai trò của các thước đo Phase 2.}
+  \label{tab:generation-metrics}
+  \begin{tabularx}{\textwidth}{@{}p{42mm}X@{}}
+    \toprule
+    \textbf{Metric} & \textbf{Ý nghĩa} \\
+    \midrule
+    \multicolumn{2}{@{}l}{\textbf{So sánh đáp án}} \\
+    \cmidrule(lr){1-2}
+    Exact Match & Đáp án chuẩn hóa trùng hoàn toàn một accepted answer. \\
+    Token F1 & Mức chồng lấp token giữa đáp án sinh và accepted answer tốt nhất. \\
+    \addlinespace[2pt]
+    \multicolumn{2}{@{}l}{\textbf{RAGAS}} \\
+    \cmidrule(lr){1-2}
+    Answer Correctness & RAGAS đánh giá độ đúng ngữ nghĩa so với gold answer. \\
+    Answer Relevancy & Mức độ câu trả lời trực tiếp giải quyết câu hỏi. \\
+    Faithfulness & Tỷ lệ các phát biểu trong đáp án được context hỗ trợ. \\
+    Context Precision & Mức độ các context được đưa vào thực sự liên quan. \\
+    Context Recall & Mức độ context bao phủ evidence cần để trả lời. \\
+    \addlinespace[2pt]
+    \multicolumn{2}{@{}l}{\textbf{Citation}} \\
+    \cmidrule(lr){1-2}
+    Citation Validity & Tỷ lệ citation trỏ tới một context index hợp lệ. \\
+    Citation F1 & Trung bình điều hòa giữa precision và recall của citation so với gold evidence. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Exact Match, Token F1 và citation metrics được tính xác định từ artifact. Answer
+Correctness, Answer Relevancy, Faithfulness, Context Precision và Context Recall
+được chấm bằng RAGAS với judge tách biệt khỏi generator. Báo cáo phải ghi model,
+provider, reasoning setting và score coverage của judge. Latency được báo cáo
+theo P50/P95; token usage và chi phí chỉ so sánh khi các run dùng cùng phạm vi
+câu hỏi và cùng cách tính giá.
+
+\subsubsection{Khoảng tin cậy và điều kiện chọn cấu hình}
+
+Khi so sánh hai cấu hình $A$ và $B$ trên cùng câu hỏi, nhóm tính sai khác theo
+cặp:
+
+\begin{equation}
+  d_i = m(B,q_i)-m(A,q_i).
+\end{equation}
+
+\begin{itemize}
+  \item \textbf{Paired bootstrap:} lấy lại các cặp sai khác $d_i$, thay vì lấy
+  điểm của hai cấu hình độc lập.
+  \item \textbf{Phase 1:} tạo 1.000 mẫu bootstrap; mỗi mẫu lấy lại 281 câu hỏi
+  có hoàn lại.
+  \item \textbf{Phase 2:} tạo 2.000 mẫu bootstrap; mỗi mẫu lấy lại 50 bài báo
+  có hoàn lại và giữ toàn bộ câu hỏi của từng bài. Do đó, đây không phải 2.000
+  tập gồm 50 câu hỏi.
+  \item \textbf{CI95:} lấy percentile 2,5--97,5\% của 1.000 hoặc 2.000 giá trị
+  trung bình mô phỏng.
+  \item \textbf{Diễn giải:} CI95 không chứa 0 cho thấy khác biệt ở mức ý nghĩa
+  0,05; CI95 chứa 0 nghĩa là chưa đủ bằng chứng về khác biệt, không phải hai cấu
+  hình tương đương.
+  \item \textbf{Guardrail:} kiểm tra delta trung bình so với baseline có nằm
+  trong mức suy giảm cho phép hay không; đây là tiêu chí khác với CI95.
+\end{itemize}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Guardrail dùng khi chọn cấu hình Phase 2 trên full development.}
+  \label{tab:phase2-guardrails}
+  \begin{tabular}{@{}lr@{}}
+    \toprule
+    \textbf{Điều kiện} & \textbf{Ngưỡng} \\
+    \midrule
+    $\Delta$ Faithfulness & $\geq -0{,}02$ \\
+    $\Delta$ Citation F1 & $\geq -0{,}01$ \\
+    $\Delta$ Citation Validity & $\geq -0{,}01$ \\
+    Generation và judge coverage & $\geq 95\%$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Trong các ứng viên qua guardrail, Answer Correctness là metric chất lượng chính;
+token cost, generation P95 và độ đơn giản của cấu hình lần lượt được dùng khi
+khác biệt Answer Correctness nhỏ. Quy tắc này chỉ áp dụng trên full development.
+Held-out được báo cáo nguyên trạng và không mở thêm vòng lựa chọn.
