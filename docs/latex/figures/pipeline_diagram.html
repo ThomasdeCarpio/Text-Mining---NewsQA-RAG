@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NewsLens RAG Pipeline Architecture</title>
+  <style>
+    :root {
+      --brand-ink: #1F2933;
+      --brand-primary: #003F88;
+      --brand-accent: #1D6F8C;
+      --brand-pass: #1F7A4D;
+      --brand-fail: #B3261E;
+      --brand-bg: #F4F7F9;
+      --card-bg: #FFFFFF;
+      --border-color: #D6DDE3;
+      --text-muted: #52606D;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--brand-bg); color: var(--brand-ink); padding: 24px; }
+    .header { text-align: center; margin-bottom: 24px; }
+    .header h1 { font-size: 26px; color: var(--brand-primary); font-weight: 700; margin-bottom: 6px; }
+    .header p { font-size: 14px; color: var(--text-muted); }
+    
+    .toolbar { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
+    .btn { background: var(--brand-primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: none; }
+    .btn:hover { background: var(--brand-accent); }
+    .btn-outline { background: white; color: var(--brand-primary); border: 1px solid var(--brand-primary); }
+
+    /* Pipeline Diagram Container */
+    #capture-area {
+      background: #FFFFFF;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 1280px;
+      margin: 0 auto;
+      box-shadow: 0 4px 16px rgba(0, 63, 136, 0.08);
+    }
+
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      position: relative;
+    }
+
+    .stage-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .stage-badge {
+      background: var(--brand-primary);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .card {
+      background: white;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+      position: relative;
+    }
+
+    .card.highlight {
+      border-color: var(--brand-accent);
+      border-width: 2px;
+      background: #F0F7FA;
+    }
+
+    .card.winner {
+      border-color: var(--brand-pass);
+      border-width: 2px;
+      background: #F2F9F5;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand-ink);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .card-metric {
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px dashed var(--border-color);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--brand-pass);
+    }
+
+    .arrow-right {
+      position: absolute;
+      right: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0; 
+      height: 0; 
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+      border-left: 8px solid var(--brand-accent);
+      z-index: 10;
+    }
+
+    .arrow-down {
+      display: block;
+      margin: -6px auto;
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid var(--brand-accent);
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #E2E8F0;
+      color: #334155;
+      margin-top: 4px;
+    }
+
+    .offline-box {
+      border: 1.5px dashed #94A3B8;
+      border-radius: 8px;
+      padding: 14px;
+      background: #F8FAFC;
+      margin-bottom: 20px;
+    }
+
+    .offline-header {
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .offline-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1.4fr;
+      gap: 12px;
+    }
+
+    .bottom-bar {
+      margin-top: 18px;
+      padding: 12px 16px;
+      background: #EDF2F7;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .bottom-bar strong { color: var(--brand-ink); }
+
+    /* Mermaid Section */
+    .mermaid-box {
+      margin-top: 30px;
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      max-width: 1280px;
+      margin: 30px auto 0;
+    }
+    pre.mermaid-code {
+      background: #1E293B;
+      color: #E2E8F0;
+      padding: 14px;
+      border-radius: 6px;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>SƠ ĐỒ KIẾN TRÚC PIPELINE RAG — HỆ THỐNG NEWSLENS</h1>
+    <p>Quy trình hai tầng khép kín: Truy xuất (Retrieval) và Sinh đáp án có kiểm chứng (Grounded Generation with Citations)</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn" onclick="window.print()">In / Xuất PDF hoặc Ảnh</button>
+    <button class="btn btn-outline" onclick="copyMermaid()">Sao chép mã Mermaid</button>
+  </div>
+
+  <!-- MAIN CAPTURE AREA -->
+  <div id="capture-area">
+    
+    <!-- TẦNG TIỀN XỬ LÝ & LẬP CHỈ MỤC OFFLINE -->
+    <div class="offline-box">
+      <div class="offline-header">
+        <span>⚙ Giai đoạn Chuẩn bị Dữ liệu & Chỉ mục Offline</span>
+      </div>
+      <div class="offline-grid">
+        <div class="card">
+          <div class="card-title">1. Tập dữ liệu NewsQA</div>
+          <div class="card-desc">11.064 bài báo CNN toàn văn (200 bài gán nhãn hỏi đáp + 10.864 bài nhiễu/distractors). 1.152 câu hỏi ngữ nghĩa resolved.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">2. Phân đoạn văn bản (Chunking)</div>
+          <div class="card-desc">Recursive Text Splitter: kích thước <strong>512 tokens</strong>, overlap <strong>64 tokens</strong>. Tổng cộng tạo lập <strong>22.766 chunks</strong>.</div>
+        </div>
+        <div class="card highlight">
+          <div class="card-title">3. Chỉ mục kép (Dual Indexing)</div>
+          <div class="card-desc">
+            • <strong>Chỉ mục Thưa (Sparse):</strong> BM25S inverted index (từ khóa chính xác).<br>
+            • <strong>Chỉ mục Vector (Dense):</strong> Chroma DB lưu vector embeddings (BGE-M3 / MiniLM).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIPELINE ONLINE 5 CỘT -->
+    <div class="pipeline-grid">
+      
+      <!-- CỘT 1: TIẾP NHẬN TRUY VẤN -->
+      <div class="stage-col">
+        <div class="stage-badge">Bước 1: Tiếp nhận</div>
+        
+        <div class="card">
+          <div class="card-title">Câu hỏi người dùng</div>
+          <div class="card-desc">Tiếp nhận qua Web UI (Chat Page) hoặc REST API.</div>
+          <span class="tag">Giao diện Chat</span>
+        </div>
+
+        <div class="arrow-down"></div>
+
+        <div class="card">
+          <div class="card-title">Phân giải câu hỏi</div>
+          <div class="card-desc">Chuẩn hóa câu hỏi dạng standalone (Resolved format) đảm bảo đủ thông tin ngữ cảnh.</div>
+        </div>
+      </div>
+
+      <!-- CỘT 2: TRUY XUẤT ỨNG VIÊN -->
+      <div class="stage-col">
+        <div class="stage-badge">Bước 2: Truy xuất (P1)</div>
+        
+        <div class="card winner">
+          <div class="card-title">BGE-M3 Sparse</div>
+          <div class="card-desc">Truy xuất ứng viên trên toàn kho 22.766 chunks dựa trên từ khóa hiếm, ngày tháng, tên riêng.</div>
+          <div class="card-metric">✓ Thắng Dense +0,1634 nDCG@5<br>✓ Lấy Top-20 Chunks</div>
+        </div>
+
+        <div class="arrow-down"></div>
+
+        <div class="card">
+          <div class="card-title">Tập ứng viên Top-20</div>
+          <div class="card-desc">Danh sách 20 chunks tiềm năng chứa bằng chứng với độ trễ thấp (~11 ms).</div>
+        </div>
+      </div>
+
+      <!-- CỘT 3: TÁI XẾP HẠNG -->
+      <div class="stage-col">
+        <div class="stage-badge">Bước 3: Tái xếp hạng</div>
+        
+        <div class="card winner">
+          <div class="card-title">BGE-Reranker-Large</div>
+          <div class="card-desc">Cross-Encoder chấm điểm chéo từng cặp (Câu hỏi, Đoạn văn) với tương tác chú ý đầy đủ.</div>
+          <div class="card-metric">✓ Tăng +0,0659 nDCG@5<br>✓ Chọn lọc Top-5 Chunks</div>
+        </div>
+
+        <div class="arrow-down"></div>
+
+        <div class="card highlight">
+          <div class="card-title">Ngữ cảnh Top-5</div>
+          <div class="card-desc">Đánh số thứ tự <code>[1]</code> đến <code>[5]</code> chuẩn hóa. Hit@5 đạt <strong>95,73%</strong> trên dev và <strong>89,78%</strong> trên held-out.</div>
+        </div>
+      </div>
+
+      <!-- CỘT 4: SINH ĐÁP ÁN -->
+      <div class="stage-col">
+        <div class="stage-badge">Bước 4: Sinh đáp án (P2)</div>
+        
+        <div class="card winner">
+          <div class="card-title">Prompt P2 + Context 5</div>
+          <div class="card-desc">Ràng buộc chặt: trả lời đúng loại thông tin trong một câu ngắn duy nhất, buộc kèm trích dẫn <code>[n]</code>.</div>
+          <div class="card-metric">✓ Vượt qua cả 4 Guardrails<br>✓ Answer Correctness 0,8015</div>
+        </div>
+
+        <div class="arrow-down"></div>
+
+        <div class="card">
+          <div class="card-title">LLM Generator</div>
+          <div class="card-desc"><strong>Gemini 3.1 Flash-Lite</strong> (temperature = 0, reasoning minimal, giới hạn 512 tokens).</div>
+        </div>
+      </div>
+
+      <!-- CỘT 5: KIỂM CHỨNG & TRẢ VỀ -->
+      <div class="stage-col">
+        <div class="stage-badge">Bước 5: Xác thực & Trả lời</div>
+        
+        <div class="card highlight">
+          <div class="card-title">Bộ phân tích trích dẫn</div>
+          <div class="card-desc">Kiểm tra chỉ số <code>[n]</code>, ánh xạ về Chunk ID, tiêu đề bài báo, ngày xuất bản và URL gốc.</div>
+          <div class="card-metric">✓ Citation Validity: 97,86%<br>✓ Citation F1: 84,41%</div>
+        </div>
+
+        <div class="arrow-down"></div>
+
+        <div class="card">
+          <div class="card-title">Hiển thị Streaming</div>
+          <div class="card-desc">Đưa câu trả lời về UI kèm thẻ trích dẫn tương tác và modal "View Sources" xem đoạn văn gốc.</div>
+          <span class="tag">SSE Stream API</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- THANH THỐNG KÊ CUỐI CÙNG -->
+    <div class="bottom-bar">
+      <div><strong>Corpus:</strong> 11.064 bài báo CNN (22.766 chunks)</div>
+      <div><strong>Winner Pipeline:</strong> BGE-M3 Sparse → BGE-Reranker-Large (Top-5) → Prompt P2 (Gemini 3.1 Flash-Lite)</div>
+      <div><strong>Held-out Final AC:</strong> <span style="color: var(--brand-pass); font-weight: 700;">0,7157</span> (284 câu kiểm định một lần duy nhất)</div>
+    </div>
+
+  </div>
+
+  <!-- MERMAID CODE BLOCK CHO BÁO CÁO -->
+  <div class="mermaid-box">
+    <h3 style="color: var(--brand-primary); font-size: 16px;">Mã Mermaid (Dành cho tài liệu Markdown hoặc Beamer)</h3>
+    <pre class="mermaid-code" id="mermaid-raw">
+flowchart LR
+  subgraph Ingestion["Tiền xử lý & Lập chỉ mục (Offline)"]
+    D[NewsQA Corpus<br>11.064 CNN Articles] --> CK[Recursive Splitter<br>512 tokens / 64 overlap]
+    CK --> IDX1[(Chroma DB<br>Dense Index)]
+    CK --> IDX2[(BM25S Index<br>Sparse Inverted)]
+  end
+
+  subgraph Retrieval["Truy xuất & Tái xếp hạng (Online)"]
+    Q[User Question] --> SP[BGE-M3 Sparse<br>Top-20 Chunks]
+    IDX2 -.-> SP
+    SP --> RR[BGE-Reranker-Large<br>Cross-Encoder Top-5]
+  end
+
+  subgraph Generation["Sinh câu trả lời có kiểm chứng"]
+    RR --> CTX[Numbered Contexts<br>[1] .. [5]]
+    CTX --> PR[Prompt P2<br>Answer-type Constraint]
+    PR --> LLM[Gemini 3.1 Flash-Lite<br>temp=0, max=512]
+    LLM --> RAW[Raw Answer<br>với trích dẫn [n]]
+  end
+
+  subgraph Delivery["Xác thực trích dẫn & Trả về"]
+    RAW --> VAL{Xác thực Citation<br>Valid & Precision}
+    VAL --> UI[FastAPI SSE Stream<br>React Chat Interface]
+    VAL -.-> AUD[RAGAS Judge &<br>Evaluation Desk]
+  end
+
+  classDef winner fill:#F2F9F5,stroke:#1F7A4D,stroke-width:2px;
+  classDef highlight fill:#F0F7FA,stroke:#1D6F8C,stroke-width:2px;
+  class SP,RR,PR,LLM winner;
+  class CTX,VAL highlight;
+    </pre>
+  </div>
+
+  <script>
+    function copyMermaid() {
+      const code = document.getElementById('mermaid-raw').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        alert("Đã sao chép mã Mermaid vào clipboard!");
+      });
+    }
+  </script>
+</body>
+</html>

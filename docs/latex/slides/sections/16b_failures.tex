@@ -1,0 +1,29 @@
+\begin{frame}[t]{Khi context không có bằng chứng, hệ thống làm gì?}
+\purpose{Hai câu trong nhóm không có gold ở top 5, cùng cấu hình P2-depth5. Hai hành vi khác nhau.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.48\textwidth}
+\heading{Từ chối trả lời}
+{\smalltext\textbf{Câu hỏi:} \NumExAbstainQuestion\par
+\textbf{Đáp án chuẩn:} \textit{\NumExAbstainGold}\par}
+\vspace{3mm}
+{\tabletext\begin{tabularx}{\linewidth}{@{}L@{}}
+\rowcolor{palegreen}\textit{``\NumExAbstainAnswer''} \\\bottomrule
+\end{tabularx}}
+\vspace{3mm}
+{\smalltext Trích dẫn: \NumExAbstainCites\quad·\quad AC \NumExAbstainAC\par}
+\takeaway{Không có bằng chứng thì không khẳng định. Điểm AC vẫn thấp vì đáp án chuẩn không được nêu.}
+\end{column}
+\begin{column}{.48\textwidth}
+\heading{Trả lời từ nhầm bài báo}
+{\smalltext\textbf{Câu hỏi:} \NumExWrongQuestion\par
+\textbf{Đáp án chuẩn:} \textit{\NumExWrongGold}\par}
+\vspace{3mm}
+{\tabletext\begin{tabularx}{\linewidth}{@{}L@{}}
+\rowcolor{paleslate}\textit{``\NumExWrongAnswer''} \\\bottomrule
+\end{tabularx}}
+\vspace{3mm}
+{\smalltext Trích dẫn: \NumExWrongCites\quad·\quad AC \NumExWrongAC\par}
+\takeaway{Ghép tên từ các bài khác trong context và vẫn trích dẫn: đây là lỗi cần chặn.}
+\end{column}\end{columns}
+\slidenote{Đáp án nguyên văn từ lần chạy P2-depth5 trên development. Đây là hai trong \NumGoldNotInTopFive\ câu không có gold ở top 5.}
+\end{frame}

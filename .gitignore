@@ -56,8 +56,11 @@ outputs/retrieval/
 *.nav
 *.snm
 *.toc
+*.lof
+*.lot
 *.out
 *.synctex.gz
+*.blg
 docs/latex/**/*.log
 *.xdv
 

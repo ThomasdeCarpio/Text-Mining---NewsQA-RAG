@@ -1,0 +1,292 @@
+{
+  "schema_version": 2,
+  "note": "Verbatim answers from committed per-question scores, joined with question and evidence text from the evaluation dataset. Evidence is the gold chunk, truncated for display.",
+  "sources": {
+    "scores": [
+      "p0_d5_development.jsonl",
+      "p2_d3_development.jsonl",
+      "p2_d5_development.jsonl",
+      "p2_d5_heldout.jsonl",
+      "c0_d5_development.jsonl",
+      "c3_d5_development.jsonl"
+    ],
+    "testset": "data/evaluation/newsqa_200_11064_restored/final/testset_resolved.jsonl",
+    "testset_sha256": "f41c7b78dea72867d79ce3118f0b6183bb28d8e83aab235db53ad326ec7bd544",
+    "chunks": "data/evaluation/newsqa_200_11064/final/chunks.jsonl",
+    "chunks_sha256": "9f9c3fd6b645b72c8e2e18764c461d77cccea334cd781dd8eb28950918c474a4"
+  },
+  "cases": {
+    "prompt_effect": {
+      "question_id": "94b8ba1c855e4789a90cd5692ee3e710",
+      "question": "Who made the Abbey Road studios famous with the album \"Abbey Road\"?",
+      "ground_truth": "the Beatles",
+      "evidence": "London, England (CNN) -- The iconic Abbey Road music studios made famous by the Beatles are not for sale, the music label that owns them said Sunday, after days of speculation that they were. It is seeking a partner to help pay for ...",
+      "runs": {
+        "p0": {
+          "answer": "The Beatles made the Abbey Road studios famous when they were photographed crossing the road there for the cover of their album \"Abbey Road\".",
+          "citation_indices": [
+            1,
+            2
+          ],
+          "answer_correctness": 0.4234,
+          "exact_match": 0.0,
+          "token_f1": 0.1538,
+          "citation_f1": 0.6667,
+          "faithfulness": 1.0,
+          "gold_in_top5": true,
+          "gold_rank_one": true
+        },
+        "p2": {
+          "answer": "The Beatles.",
+          "citation_indices": [
+            1
+          ],
+          "answer_correctness": 0.9938,
+          "exact_match": 1.0,
+          "token_f1": 1.0,
+          "citation_f1": 1.0,
+          "faithfulness": 1.0,
+          "gold_in_top5": true,
+          "gold_rank_one": true
+        }
+      }
+    },
+    "abstains": {
+      "question_id": "9206f18617d749b09fc00c5f949e4a54",
+      "question": "Who was known as the blonde angel of death?",
+      "ground_truth": "Alfredo Astiz,",
+      "evidence": "The conclusion of the two-year ESMA trial on Wednesday night provided a sense of closure for victims' family members and friends, thousands of whom braved chilly spring temperatures outside the courthouse to watch a judge read the ...",
+      "runs": {
+        "p0": {
+          "answer": "I cannot find this information in the provided context.",
+          "citation_indices": [],
+          "answer_correctness": 0.0329,
+          "exact_match": 0.0,
+          "token_f1": 0.0,
+          "citation_f1": 0.0,
+          "faithfulness": 1.0,
+          "gold_in_top5": false,
+          "gold_rank_one": false
+        },
+        "p2": {
+          "answer": "I cannot find this information in the provided context.",
+          "citation_indices": [],
+          "answer_correctness": 0.0329,
+          "exact_match": 0.0,
+          "token_f1": 0.0,
+          "citation_f1": 0.0,
+          "faithfulness": 0.0,
+          "gold_in_top5": false,
+          "gold_rank_one": false
+        }
+      }
+    },
+    "answers_anyway": {
+      "question_id": "ac0b5576a66945a299d5ff45ce412c7a",
+      "question": "The ex-wife mentioned in the custody dispute is the ex-wife of whom?",
+      "ground_truth": "Christopher Savoie",
+      "evidence": "TOKYO, Japan (CNN) -- Had this custody drama played out in the United States, Christopher Savoie might be considered a hero -- snatching his two little children back from an ex-wife who defied the law and ran off with them. A Tennessee ...",
+      "runs": {
+        "p0": {
+          "answer": "The ex-wife mentioned in the custody disputes is the ex-wife of: * **James Boldt**, in the case involving their 12-year-old son. * **Scott Evans Dekraai**, in the case involving their 8-year-old son. * **Michael Jackson**, in the case involving his children.",
+          "citation_indices": [
+            1,
+            2,
+            3,
+            5,
+            4
+          ],
+          "answer_correctness": 0.0274,
+          "exact_match": 0.0,
+          "token_f1": 0.0,
+          "citation_f1": 0.0,
+          "faithfulness": 0.6667,
+          "gold_in_top5": false,
+          "gold_rank_one": false
+        },
+        "p2": {
+          "answer": "The ex-wife mentioned in the custody dispute is the ex-wife of James Boldt, Scott Evans Dekraai, and Michael Jackson.",
+          "citation_indices": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "answer_correctness": 0.0254,
+          "exact_match": 0.0,
+          "token_f1": 0.0,
+          "citation_f1": 0.0,
+          "faithfulness": 1.0,
+          "gold_in_top5": false,
+          "gold_rank_one": false
+        }
+      }
+    },
+    "reranker": {
+      "question_id": "04aba1b206a74b468046427c8ba664a9",
+      "question": "What does Iran deny its nuclear program is to be used for?",
+      "ground_truth": "building bombs",
+      "evidence": "... and there was some cheering. Iran denies its nuclear program is aimed at building bombs, but Israel and the United States do not believe it. CNN's Diana Magnay contributed to this report.",
+      "initial_rank": "> 10",
+      "initial_ndcg5": 0.0,
+      "initial_hit1": 0.0,
+      "reranked_rank": 1,
+      "reranked_ndcg5": 1.0,
+      "reranked_hit1": 1.0,
+      "runs": {
+        "p2": {
+          "answer": "Iran denies that its nuclear program is aimed at building bombs.",
+          "citation_indices": [
+            1
+          ],
+          "answer_correctness": 0.8597,
+          "exact_match": 0.0,
+          "token_f1": 0.9,
+          "citation_f1": 1.0,
+          "faithfulness": 1.0,
+          "gold_in_top5": true,
+          "gold_rank_one": true
+        }
+      }
+    },
+    "depth_abstain": {
+      "question_id": "c20046f2bae84d69a5bc57eb097ed474",
+      "question": "When did Kim II Sung die?",
+      "ground_truth": "1994",
+      "evidence": "... really thinks the North Koreans will launch an attack. \"Nothing happened in 1994 when Kim Il Sung died and it will be the same this time.\" The architect of what became known as the Democratic People's Republic of Korea in 1948 after the ...",
+      "gold_rank": 4,
+      "runs": {
+        "d3": {
+          "answer": "I cannot find this information in the provided context.",
+          "citation_indices": [],
+          "answer_correctness": 0.0516,
+          "exact_match": 0.0,
+          "token_f1": 0.0,
+          "citation_f1": 0.0,
+          "faithfulness": 0.0,
+          "gold_in_top5": true,
+          "gold_rank_one": false
+        },
+        "d5": {
+          "answer": "Kim Il Sung died in 1994.",
+          "citation_indices": [
+            4
+          ],
+          "answer_correctness": 0.8372,
+          "exact_match": 0.0,
+          "token_f1": 0.2857,
+          "citation_f1": 1.0,
+          "faithfulness": 1.0,
+          "gold_in_top5": true,
+          "gold_rank_one": false
+        }
+      }
+    },
+    "depth_distractor": {
+      "question_id": "1416c66b2eb543aea04972d5780b31d6",
+      "question": "In how many states were cases of the Listeria monocytogenes outbreak reported?",
+      "ground_truth": "26",
+      "evidence": "... for Disease Control and Prevention said Tuesday. A total of 133 people in 26 states have been infected, according to the CDC. Additionally, a woman who was pregnant at the time of her illness had a miscarriage. Although health officials ...",
+      "gold_rank": 5,
+      "runs": {
+        "d3": {
+          "answer": "Cases of the Listeria monocytogenes outbreak were reported in 25 states.",
+          "citation_indices": [
+            1
+          ],
+          "answer_correctness": 0.0062,
+          "exact_match": 0.0,
+          "token_f1": 0.0,
+          "citation_f1": 0.0,
+          "faithfulness": 1.0,
+          "gold_in_top5": true,
+          "gold_rank_one": false
+        },
+        "d5": {
+          "answer": "Cases of the Listeria monocytogenes outbreak were reported in 26 states.",
+          "citation_indices": [
+            5
+          ],
+          "answer_correctness": 0.7674,
+          "exact_match": 0.0,
+          "token_f1": 0.1667,
+          "citation_f1": 1.0,
+          "faithfulness": 1.0,
+          "gold_in_top5": true,
+          "gold_rank_one": false
+        }
+      }
+    },
+    "heldout": {
+      "question_id": "2aa93a690e904c89b259f98500106b69",
+      "question": "What is the first name of Osama bin Laden's son who spoke to CNN near Cairo?",
+      "ground_truth": "Omar",
+      "evidence": "CAIRO, Egypt (CNN) -- Omar bin Laden has a message for his father, Osama: \"Find another way.\" Omar bin Laden says he last saw his father in 2000 when the son decided to leave al Qaeda. The son of the most-wanted man in the world spoke ...",
+      "runs": {
+        "p2": {
+          "answer": "Omar.",
+          "citation_indices": [
+            1
+          ],
+          "answer_correctness": 0.9935,
+          "exact_match": 1.0,
+          "token_f1": 1.0,
+          "citation_f1": 1.0,
+          "faithfulness": 1.0,
+          "gold_in_top5": true,
+          "gold_rank_one": true
+        }
+      }
+    },
+    "p2c_c0_vs_c3": {
+      "question_id": "27b67e1a4f4d40b5b5d242ef0b789b9a",
+      "question": "What is the first name of the former Thai Prime Minister Shinawatra?",
+      "ground_truth": "Thaksin",
+      "evidence": "... in a stalemate. The demonstrators are supporters of former Prime Minister Thaksin Shinawatra, who was ousted in a bloodless military coup in 2006. Thaksin was the only Thai prime minister to serve a full term and remains hugely popular. He ...",
+      "runs": {
+        "c0": {
+          "answer": "Thaksin",
+          "citation_indices": [
+            3
+          ],
+          "answer_correctness": 1.0,
+          "exact_match": 1.0,
+          "token_f1": 1.0,
+          "citation_f1": 1.0,
+          "faithfulness": 1.0,
+          "gold_in_top5": true,
+          "gold_rank_one": false
+        },
+        "c3": {
+          "answer": "Thaksin.",
+          "citation_indices": [
+            1
+          ],
+          "answer_correctness": 0.992,
+          "exact_match": 1.0,
+          "token_f1": 1.0,
+          "citation_f1": 0.0,
+          "faithfulness": 1.0,
+          "gold_in_top5": false,
+          "gold_rank_one": false
+        }
+      }
+    },
+    "reranker_ferry": {
+      "question_id": "ef29092974ce40b980f963ac746247ec",
+      "question": "How many people were on board the ferry that capsized in Bangladesh?",
+      "ground_truth": "2,000",
+      "gold_snippet": "... had a capacity of 1,500, but was overcrowded with about 2,000 people, said Nazrul Islam, the police chief of Bangladesh's southern Bhola district. They were traveling from the ...",
+      "distractor_snippet": "(CNN) -- Nine people were killed and 957 rescued when a ferry capsized Sunday in the Philippines, leaving crews scouring the waters for survivors, officials said. A woman and ...",
+      "initial_distractor_rank": 1,
+      "initial_gold_rank": 6,
+      "reranked_gold_rank": 1,
+      "reranked_distractor_rank": 2,
+      "answer": "About 2,000 people were on board the ferry that capsized in Bangladesh.",
+      "citation_indices": [
+        1
+      ],
+      "answer_correctness": 0.8267
+    }
+  }
+}

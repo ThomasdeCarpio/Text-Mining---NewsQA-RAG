@@ -1,0 +1,32 @@
+\begin{frame}[t]{Minh họa Reranker: Truy xuất thực tế trước và sau BGE-reranker}
+\purpose{BGE-M3 sparse bị nhiễu từ khóa đưa sai đoạn lên \#1; Cross-attention cứu gold từ \#6 lên \#1.}
+{\smalltext
+\textbf{Câu hỏi:} \NumExFerryQuestion\quad·\quad\textbf{Đáp án chuẩn:} \textit{\NumExFerryGold}\par
+}
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.48\textwidth}
+\heading{Trước rerank — BGE-M3 sparse}
+{\tabletext
+\textbf{Hạng \NumExFerryInitDistractRank\ (Nhiễu Philippines, BM25 cao):}\\
+\textit{``\NumExFerryDistractSnippet''}\par
+\vspace{1.5mm}
+\textbf{Hạng \NumExFerryInitGoldRank\ (Gold Bangladesh):} \fail{Rơi khỏi Top 5!}\\
+\fail{$\Rightarrow$ Mất bằng chứng do trùng từ khóa (\textit{ferry, capsized}).}
+}
+\end{column}
+\begin{column}{.48\textwidth}
+\heading{Sau rerank — + bge-reranker-large}
+{\tabletext
+\textbf{Hạng \NumExFerryRerankGoldRank\ (Gold Bangladesh):} \pass{Kéo từ \#6 lên \#1!}\\
+\textit{``\NumExFerryGoldSnippet''}\par
+\vspace{1.5mm}
+\textbf{Đáp án P2-depth5:} \textit{``\NumExFerryAnswer''}\ \NumExFerryCites\\
+\pass{$\Rightarrow$ AC: \NumExFerryAC\ · Khớp thực thể \textbf{Bangladesh}.}
+}
+\end{column}\end{columns}
+\vspace{-1mm}
+\takeaway{Reranker phân biệt chính xác thực thể địa lý giữa các sự kiện tương đồng, cứu gold chunk bị chìm ở hạng 6 đưa thẳng lên đầu context [1].}
+\slidenote{Truy xuất từ kho 11.233 đoạn (chứa cả vụ chìm phà Philippines và Bangladesh). Question ID: ef290929.}
+\end{frame}
+

@@ -1,0 +1,32 @@
+\begin{frame}[t]{Một câu hỏi chạy trên Held-out: Bài báo hoàn toàn mới}
+\purpose{Cấu hình đã khóa (Sparse + Reranker + P2-depth5) chạy trên \NumNHeldout\ câu / \NumNArticles\ bài chưa từng thấy khi chọn prompt.}
+{\smalltext
+\textbf{Câu hỏi:} \NumExHeldoutQuestion\quad·\quad\textbf{Đáp án chuẩn:} \textit{\NumExHeldoutGold}\par
+\vspace{1mm}
+\textbf{Context [1]:} \NumExHeldoutEvidence\par}
+\vspace{1.5mm}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.52\textwidth}
+\heading{Đáp án từ pipeline đã khóa}
+{\smalltext\textit{``\NumExHeldoutAnswer''}\quad\NumExHeldoutCites\par}
+\vspace{2mm}
+{\smalltext
+\textbf{Quy trình xử lý thực tế:}\\[1.5mm]
+1. BGE-M3 sparse truy xuất đúng bài về Omar bin Laden.\\[1.5mm]
+2. BGE-reranker-large xếp đoạn mở đầu chứa tin lên hạng 1.\\[1.5mm]
+3. Prompt P2 chỉ xuất đúng tên riêng được hỏi, trích dẫn [1].\par}
+\end{column}
+\begin{column}{.44\textwidth}
+\heading{Chỉ số trên câu hỏi này}
+\vspace{1mm}
+{\tabletext\renewcommand{\arraystretch}{1.08}\begin{tabularx}{\linewidth}{@{}Lr@{}}
+\rowcolor{paleblue}Answer Correctness & \textbf{\NumExHeldoutAC} \\\midrule
+Exact Match & \textbf{\NumExHeldoutEM} \\\midrule
+Token F1 & \textbf{\NumExHeldoutFone} \\\midrule
+Citation F1 & \textbf{\NumExHeldoutCitFone} \\\midrule
+Faithfulness & \textbf{\NumExHeldoutFaith} \\\bottomrule
+\end{tabularx}}
+\end{column}\end{columns}
+\takeaway{Hệ thống giữ trọn vẹn đặc tính trên bài báo mới: bắt đúng thực thể ngắn gọn, không bịa chi tiết ngoài bài, và dẫn nguồn chính xác 100\%.}
+\slidenote{Trích nguyên văn từ lần chạy held-out (khởi động \NumHoStartedTime\ UTC, sau khi ký duyệt cấu hình).}
+\end{frame}

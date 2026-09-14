@@ -1,0 +1,35 @@
+\begin{frame}[t]{Một câu hỏi chạy hết pipeline: P0 và P2}
+\purpose{Cùng câu hỏi, cùng context đã rerank, gold ở hạng 1. Chỉ prompt thay đổi.}
+{\smalltext
+\textbf{Câu hỏi:} \NumExPromptQuestion\quad·\quad\textbf{Đáp án chuẩn:} \textit{\NumExPromptGold}\par
+\vspace{1mm}
+\textbf{Context [1]:} \NumExPromptEvidence\par}
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.48\textwidth}
+\heading{P0 — đối chứng}
+{\smalltext\textit{``\NumExPromptPzeroAnswer''}\quad\NumExPromptPzeroCites\par}
+\vspace{1mm}
+{\tabletext\renewcommand{\arraystretch}{1.08}\begin{tabularx}{\linewidth}{@{}Lr@{}}
+\rowcolor{paleslate}Answer Correctness & \NumExPromptPzeroAC \\\midrule
+Exact Match & \NumExPromptPzeroEM \\\midrule
+Token F1 & \NumExPromptPzeroFone \\\midrule
+Citation F1 & \NumExPromptPzeroCitFone \\\bottomrule
+\end{tabularx}}
+\end{column}
+\begin{column}{.48\textwidth}
+\heading{P2 — được chọn}
+{\smalltext\textit{``\NumExPromptPtwoAnswer''}\quad\NumExPromptPtwoCites\par}
+\vspace{1mm}
+{\tabletext\renewcommand{\arraystretch}{1.08}\begin{tabularx}{\linewidth}{@{}Lr@{}}
+\rowcolor{paleblue}Answer Correctness & \textbf{\NumExPromptPtwoAC} \\\midrule
+Exact Match & \textbf{\NumExPromptPtwoEM} \\\midrule
+Token F1 & \textbf{\NumExPromptPtwoFone} \\\midrule
+Citation F1 & \textbf{\NumExPromptPtwoCitFone} \\\bottomrule
+\end{tabularx}}
+\end{column}\end{columns}
+\vspace{-2mm}
+\takeaway{P0 đúng nội dung nhưng thêm chi tiết ngoài câu hỏi và trích thêm một đoạn không cần thiết.
+P2 trả đúng loại thông tin được hỏi và chỉ trích đoạn chứa bằng chứng.}
+\slidenote{Đáp án nguyên văn từ hai lần chạy trên development; chỉ số trích dẫn hiển thị lại từ đáp án gốc.}
+\end{frame}

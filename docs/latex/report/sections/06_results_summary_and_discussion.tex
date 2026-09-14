@@ -1,0 +1,174 @@
+\section{Tổng kết kết quả và Thảo luận}
+\label{sec:results-summary-discussion}
+
+\subsection{Tổng hợp kết quả qua các giai đoạn thực nghiệm}
+
+Trải qua một chuỗi các giai đoạn thực nghiệm có kiểm soát chặt chẽ từ Giai đoạn 1 đến Giai đoạn 3 và bước nghiệm thu độc lập trên tập held-out, hệ thống \textbf{NewsLens} đã xác lập được cấu hình tối ưu toàn diện. Bảng~\ref{tab:master-summary} tổng hợp các kết quả thực nghiệm then chốt xuyên suốt toàn bộ dự án.
+
+\begin{table}[H]
+  \centering
+  \caption{Tổng hợp kết quả thực nghiệm qua các giai đoạn của đồ án NewsLens.}
+  \label{tab:master-summary}
+  \small
+  \begin{tabularx}{\textwidth}{@{}p{22mm}p{40mm}p{32mm}X@{}}
+    \toprule
+    \textbf{Giai đoạn} & \textbf{Cấu hình so sánh} & \textbf{Chỉ số then chốt} & \textbf{Kết luận / Quyết định} \\
+    \midrule
+    \textbf{Giai đoạn 1} (Truy xuất) &
+    • Dense (BGE-M3 / MiniLM)\newline
+    • BM25 vs BGE-M3 Sparse\newline
+    • Thêm Cross-Encoder\newline
+    • Khảo sát Chunking &
+    $\Delta$ nDCG@5 $= +0{,}1634$\newline
+    (Sparse so với Dense)\newline
+    $\Delta$ nDCG@5 $= +0{,}0659$\newline
+    (Thêm Reranker)\newline
+    Hit@5 $= 0{,}9573$ (Dev) &
+    \textbf{Khóa cấu hình truy xuất:}\newline
+    BGE-M3 Sparse + BGE-Reranker-Large + Chunking 512/64.\newline
+    Sparse vượt trội nhờ câu hỏi neo vào thực thể tên riêng và thời gian. \\
+    \midrule
+    \textbf{Giai đoạn 2} (Sinh đáp án) &
+    • Baseline P0-depth5\newline
+    • P1 (Siết grounding)\newline
+    • P2-depth3 (Chung kết)\newline
+    • P2-depth5 (Chung kết)\newline
+    • P3 (Phân biệt sự kiện) &
+    Baseline AC: $0{,}6308$\newline
+    P2-depth3 AC: $0{,}8375$\newline
+    P2-depth5 AC: $0{,}8015$\newline
+    ($\Delta$ AC $= +0{,}1043$)\newline
+    Faithfulness: $0{,}9603$ &
+    \textbf{Khóa cấu hình sinh: P2-depth5.}\newline
+    P2-depth3 tuy có AC cao hơn ($+0{,}0360$) nhưng \fail{bị loại} do trượt 2 rào chắn an toàn (Faithfulness và Citation Validity).\newline
+    P2-depth5 là cấu hình hợp lệ duy nhất. \\
+    \midrule
+    \textbf{Giai đoạn 2C} (Phân đoạn khám phá) &
+    • C0: Recursive 512/64\newline
+    • C1: Phân tách theo câu\newline
+    • C2: Phân tách theo đoạn\newline
+    • C3: Phân cấp Parent-Child &
+    C3-depth3 AC: $0{,}7730$\newline
+    ($+0{,}0380$ so với C0)\newline
+    $\Delta$ Cit. F1 $= -0{,}0284$\newline
+    $\Delta$ Hit@5 $= -0{,}0107$ &
+    \textbf{Giữ nguyên cấu hình C0.}\newline
+    C3-depth3 đạt điểm AC cao nhất nhưng \fail{bị loại} do vi phạm 3 rào chắn an toàn (Cit. F1, Hit@5, Recall@5). Không cấu hình nào qua hết 6 guardrails. \\
+    \midrule
+    \textbf{Giai đoạn 3} (Từ chối trả lời) &
+    • B0: Giữ nguyên P2\newline
+    • B1: Ràng buộc JSON schema\newline
+    • B2: Cổng chặn ngưỡng Reranker &
+    B0 False-Answer: $5{,}88\%$\newline
+    B1 False-Answer: $1{,}27\%$\newline
+    B1 $\Delta$ Token F1 $= -0{,}1070$\newline
+    B2: Ngưỡng tối ưu $=$ 0 &
+    \textbf{Giữ nguyên cấu hình B0 (P2).}\newline
+    B1 hạ được tỷ lệ trả lời sai nhưng phá hủy hình dạng đáp án. B2 là kết quả null (tắt cổng là tốt nhất). Winner giữ nguyên B0. \\
+    \midrule
+    \textbf{Nghiệm thu Held-out} &
+    284 câu hỏi / 50 bài báo chưa từng tiếp xúc; kiểm định đúng 1 lần sau khi khóa pipeline. &
+    \textbf{Answer Correctness:} $\mathbf{0{,}7157}$\newline
+    Hit@5: $0{,}8768$\newline
+    Coverage: $100\%$ &
+    \textbf{Xác lập khả năng tổng quát hóa.}\newline
+    Khoảng cách AC so với Dev ($0{,}7157$ vs $0{,}8015$) hoàn toàn tương ứng với độ sụt giảm của Hit@5 ($0{,}8768$ vs $0{,}9573$). \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Trả lời trực diện hai câu hỏi nghiên cứu cốt lõi}
+
+Đối chiếu với các câu hỏi nghiên cứu được đặt ra tại Mục~\ref{sec:introduction}, đồ án đưa ra các kết luận cụ thể cho hai tầng chức năng chính của hệ thống:
+
+\begin{enumerate}
+  \item[\textbf{Q1:}] \textbf{Phương pháp truy xuất tối ưu?}
+  Bộ truy xuất thưa \textbf{BGE-M3 Sparse kết hợp mô hình tái xếp hạng BGE-Reranker-Large trên các đoạn văn bản kích thước 512 token (overlap 64 token)} là giải pháp vượt trội nhất. Trên kho ngữ liệu 11.064 bài báo có nhiễu cao, BGE-M3 Sparse vượt hơn Dense Retriever $+0{,}1634$ nDCG@5 (khoảng tin cậy 95\% $[+0{,}1231;\,+0{,}2080]$ hoàn toàn tách rời 0 và vượt xa cận dưới của biên độ nhập nhằng $7{,}0\%$). Bộ tái xếp hạng chéo tiếp tục đóng góp thêm $+0{,}0659$ nDCG@5, đưa tỷ lệ tìm thấy bằng chứng Hit@5 đạt $95{,}73\%$ trên tập phát triển và $89{,}78\%$ trên 871 câu hỏi kiểm định cuối kỳ.
+
+  \textit{Giải mã hiện tượng Sparse vượt Dense trong kỷ nguyên Transformer dưới góc độ dữ liệu (EDA):}
+  Phân tích khám phá dữ liệu trên kho ngữ liệu phục hồi v2.0.0 (22.766 đoạn văn bản từ 11.064 bài báo) đã làm sáng tỏ cơ chế nền tảng giúp phương pháp thưa chiến thắng:
+  \begin{itemize}
+    \item \textbf{Đặc trưng điểm neo từ hiếm (Rare-term anchors, $\text{IDF} \ge 6{,}0$):} Câu hỏi tin tức phụ thuộc chủ yếu vào các thực thể định danh rời rạc (tên riêng nhân vật, địa danh, mốc thời gian, tổ chức). Khi câu hỏi được chuẩn hóa ngữ cảnh (\texttt{resolved}), tỷ lệ câu hỏi sở hữu ít nhất một từ hiếm (xuất hiện trong $\le 55$ đoạn văn bản trên toàn kho, tương ứng $\text{IDF} \ge 6{,}0$) tăng từ $28{,}4\%$ lên $59{,}5\%$ (trung bình từ $0{,}34$ lên $0{,}93$ từ hiếm/câu).
+    \item \textbf{Hiện tượng pha loãng thực thể ở Dense Bi-Encoder (Entity Dilution):} Các mô hình Dense Bi-Encoder nén ngữ nghĩa vào vector 768 chiều. Dù nắm bắt tốt chủ đề tổng quát (như tai nạn hay tranh tụng pháp lý), biểu diễn vector dày đặc dễ làm mờ ranh giới giữa các sự kiện cùng loại có sự tham gia của các thực thể khác nhau, kéo theo nhiều bài báo gây nhiễu (distractors). Ngược lại, Sparse Retriever tận dụng cơ chế khớp từ vựng chính xác (exact lexical matching) để cô lập không gian tìm kiếm một cách dứt khoát.
+    \item \textbf{Cơ sở dữ liệu cho sự cần thiết của Reranker (Cross-Encoder):} Mặc dù các điểm neo từ hiếm giúp lọc giảm mạnh từ 22.766 đoạn xuống trung vị còn 25 đoạn văn bản cạnh tranh, 25 vẫn là khoảng cách quá xa so với vị trí Top-1 (chỉ $25{,}8\%$ câu hỏi thu hẹp được về $\le 10$ đoạn, và $35{,}2\%$ câu hỏi hoàn toàn không chứa từ hiếm). Tầng truy xuất thưa đưa hệ thống đến rất gần bằng chứng nhưng không thể tự mình dứt điểm. Mô hình tái xếp hạng chéo (\texttt{bge-reranker-large}) với cơ chế cross-attention toàn phần giữa câu hỏi và đoạn văn bản đóng vai trò quyết định để phân xử chính xác 25 ứng viên cạnh tranh này.
+    \item \textbf{Biên độ nhập nhằng cố hữu của nhãn dữ liệu ($7{,}0\%\text{--}24{,}5\%$):} Do cùng một sự kiện thời sự có thể được CNN đưa tin qua nhiều bài báo, một câu hỏi có thể có đáp án đúng nằm ở bài báo khác ngoài bài báo được gán nhãn gốc (\textit{unlabelled true answer}). Khảo sát va chạm dữ liệu xác lập hai cận đo lường ước lượng:
+    \begin{itemize}
+      \item \textit{Cận dưới trường hợp mạnh ($7{,}0\%$):} Tỷ lệ câu hỏi mà đoạn văn bản ở bài báo khác vừa chứa chuỗi ký tự đáp án chuẩn (\textit{ground-truth answer string}, dài $\ge 8$ ký tự), vừa chứa $\ge 2$ từ hiếm ($\text{IDF} \ge 6{,}0$) lấy từ chính câu hỏi $\rightarrow$ Đây là chỉ số đại diện khả tín (\textit{plausible proxy}) cho thấy bài báo đó có khả năng rất cao cùng phản ánh đúng sự kiện thời sự.
+      \item \textit{Cận trên tối đa ($24{,}5\%$):} Tỷ lệ câu hỏi mà bài báo khác chứa chuỗi ký tự đáp án chuẩn thuần túy (\textit{raw string match}, không xét từ hiếm) $\rightarrow$ Thu thập toàn bộ các trường hợp tiềm năng nhưng bị phóng đại do bao gồm cả trùng tên riêng hoặc cụm từ phổ biến một cách ngẫu nhiên.
+    \end{itemize}
+    Khoảng $7{,}0\%\text{--}24{,}5\%$ đóng vai trò là \textbf{ngưỡng nhiễu đo lường} (\textit{measurement noise floor}). Mức vượt trội $+0{,}1634$ nDCG@5 của BGE-M3 Sparse (khoảng tin cậy 95\% $[+0{,}1231;\,+0{,}2080]$) vượt xa ngưỡng nhiễu $7{,}0\%$, chứng minh ưu thế của mô hình thưa là thực chất và vững chắc về mặt thống kê.
+  \end{itemize}
+
+  \item[\textbf{Q2:}] \textbf{Chiến lược ra lệnh và độ sâu ngữ cảnh tối ưu?}
+  \textbf{Prompt P2 với 5 đoạn ngữ cảnh (\texttt{context\_depth = 5})} là cấu hình chiến thắng. Bằng cách ràng buộc mô hình chỉ trả lời đúng loại thực thể được hỏi trong một câu ngắn duy nhất, P2 loại bỏ hoàn toàn hiện tượng lan man ngoài lề, tăng Answer Correctness $+0{,}1043$ so với baseline P0 (CI95 $[+0{,}0844;\,+0{,}1240]$) và vượt qua toàn bộ 4 rào chắn an toàn. Việc cắt giảm ngữ cảnh xuống depth 3 tuy làm tăng điểm số bề mặt nhưng dẫn đến suy thoái grounding và vi phạm rào chắn an toàn.
+\end{enumerate}
+
+\subsection{Bài học từ các khảo sát mở rộng (Ablation Studies)}
+
+Bên cạnh hai câu hỏi nghiên cứu trọng tâm, hai khảo sát mở rộng (tóm lược tại Mục~\ref{sec:phase2-ablations} và chi tiết tại Phụ lục~\ref{sec:appendix-ablations}) đem lại các bài học thiết kế giá trị:
+
+\begin{itemize}
+  \item \textbf{Tác động của chiến lược phân đoạn văn bản (Giai đoạn 2C):}
+  \textbf{Không có chiến lược phân đoạn mới nào đủ điều kiện để thay thế cấu hình chuẩn C0 (Recursive 512/64).} Mặc dù kỹ thuật phân cấp Parent--Child (C3-depth3) đạt điểm Answer Correctness bề mặt cao nhất toàn dự án ($0{,}7730$, tăng $+0{,}0380$ so với C0), nó làm suy giảm nghiêm trọng độ khớp bằng chứng của trích dẫn (Citation F1 tụt $-0{,}0284$, vượt quá rào chắn an toàn $-0{,}01$). Do đó, cấu hình phân đoạn chuẩn C0 được bảo toàn. Kết quả này hoàn toàn nhất quán với đặc tính cấu trúc tháp ngược (Inverted Pyramid) của văn bản báo chí: phân tích EDA cho thấy bằng chứng trả lời trong NewsQA tập trung chủ yếu ở phân vị thứ 18 (gần đầu bài viết) và trung bình mỗi bài báo chỉ gồm 2,06 đoạn văn bản kích thước 512 token, khiến dư địa cải thiện của các kỹ thuật phân đoạn phức tạp trở nên rất hạn chế.
+
+  \item \textbf{Năng lực nhận diện ranh giới thông tin và chủ động từ chối trả lời (Giai đoạn 3):}
+  \textbf{Hệ thống với prompt P2 đã sở hữu khả năng từ chối tự nhiên rất hiệu quả.} Trên tập kiểm định 60 tình huống phức tạp của Giai đoạn 3, cấu hình cơ sở B0 (sử dụng câu lệnh từ chối tự nhiên của prompt P2) đạt False-Answer Rate chỉ $5{,}88\%$ và Abstention F1 đạt $0{,}9697$. Các chính sách can thiệp bằng cách ép buộc cấu trúc JSON schema (B1) hay thiết lập ngưỡng điểm tái xếp hạng (B2) đều không vượt qua được sự đánh đổi: dù giúp hạ thấp tỷ lệ trả lời sai khi thiếu ngữ cảnh, chúng lại làm suy thoái nghiêm trọng chất lượng của các câu trả lời đúng (Token F1 tụt $-0{,}1070$, vi phạm rào chắn an toàn). Do đó, cấu hình cơ sở B0 tiếp tục được duy trì.
+\end{itemize}
+
+\subsection{Bài học phương pháp luận: Hiện tượng ``Luật thắng điểm số''}
+
+Phát hiện phương pháp luận sâu sắc nhất của đồ án nằm ở hiện tượng \textbf{``Luật thắng điểm số''} (The Rule Trumps Score Phenomenon) được lặp lại một cách nhất quán qua ba giai đoạn nghiên cứu độc lập (Bảng~\ref{tab:rule-trumps-score}).
+
+\begin{table}[H]
+  \centering
+  \caption{Minh chứng hiện tượng ``Luật thắng điểm số'' qua ba giai đoạn thực nghiệm.}
+  \label{tab:rule-trumps-score}
+  \small
+  \begin{tabularx}{\textwidth}{@{}lp{30mm}p{30mm}X@{}}
+    \toprule
+    \textbf{Giai đoạn} & \textbf{Cấu hình cao điểm nhất} & \textbf{Cấu hình được chọn} & \textbf{Lý do loại cấu hình cao điểm nhất} \\
+    \midrule
+    \textbf{Phase 2B} & P2-depth3\newline(AC: $0{,}8375$) & P2-depth5\newline(AC: $0{,}8015$) & \fail{Trượt 2 rào chắn an toàn:}\newline Faithfulness $-0{,}0200$ (ngưỡng $-0{,}02$)\newline Citation Validity $-0{,}0142$ (ngưỡng $-0{,}01$). \\
+    \midrule
+    \textbf{Phase 2C} & C3-depth3\newline(AC: $0{,}7730$) & C0-depth5\newline(AC: $0{,}7350$) & \fail{Trượt 3 rào chắn an toàn:}\newline Citation F1 $-0{,}0284$ (ngưỡng $-0{,}01$)\newline Hit@5 $-0{,}0107$ và Recall@5 $-0{,}0125$. \\
+    \midrule
+    \textbf{Phase 3} & B1 (JSON Schema)\newline(False-Ans: $1{,}27\%$) & B0 (Prompt P2)\newline(False-Ans: $5{,}88\%$) & \fail{Trượt rào chắn chất lượng:}\newline Token F1 tụt $-0{,}1070$ (ngưỡng $-0{,}02$), làm hỏng cấu trúc câu trả lời đúng. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Trong cả ba trường hợp, nếu chỉ lựa chọn cấu hình thuần túy dựa vào điểm số cao nhất của chỉ số chính (greedy score maximization), hệ thống sẽ ba lần liên tiếp đưa ra quyết định không tối ưu:
+\begin{itemize}
+  \item Ở Phase 2B, chọn P2-depth3 tuy có điểm Answer Correctness cao hơn nhưng lại làm suy giảm độ trung thực (Faithfulness) và làm tăng trích dẫn ngoài dải hợp lệ.
+  \item Ở Phase 2C, chọn C3-depth3 tuy tăng điểm số bề mặt nhưng làm giảm độ đặc hiệu của nguồn trích dẫn và độ bao phủ bằng chứng (Citation F1, Hit@5).
+  \item Ở Phase 3, chọn B1 tuy giảm tỷ lệ câu trả lời sai trên tập âm tính nhưng lại làm suy giảm đáng kể chất lượng câu trả lời trên các câu hỏi thông thường (Token F1 tụt $-0{,}1070$).
+\end{itemize}
+
+Kết quả này khẳng định vai trò thiết yếu của việc \textbf{đăng ký trước hệ thống rào chắn an toàn (pre-registered guardrails)}. Hệ thống rào chắn an toàn buộc quá trình đánh giá phải xem xét đa chiều và cân bằng giữa các tiêu chuẩn chất lượng, thay vì chỉ ưu tiên điểm số đơn lẻ của một chỉ số chính nhưng đánh đổi sự ổn định của hệ thống.
+
+\subsection{Giới hạn của nghiên cứu}
+
+Bên cạnh những kết quả đạt được, nhóm tác giả thẳng thắn chỉ ra các giới hạn nội tại của nghiên cứu nhằm phục vụ các nghiên cứu tiếp nối:
+
+\begin{enumerate}
+  \item \textbf{Độ lệch mức độ khó giữa tập Development và toàn kho dữ liệu:}
+  Kết quả thực nghiệm trên 871 câu hỏi kiểm định cuối kỳ cho thấy tập phát triển (development 281 câu) dễ hơn đáng kể so với phần còn lại của kho ngữ liệu. Bốn trong sáu metric truy xuất có khoảng tin cậy 95\% giữa dev và final-test hoàn toàn không chồng lấn (ví dụ nDCG@5 đạt $0{,}8976$ trên dev nhưng giảm xuống $0{,}8288$ trên final-test). Do đó, các giá trị tuyệt đối đo trên development mang tính chất lạc quan khoảng $0{,}06\text{--}0{,}07$ điểm. Tuy nhiên, các kết luận so sánh ghép cặp tương đối giữa các mô hình vẫn hoàn toàn vững vàng.
+
+  \item \textbf{Tính trôi dạt tái lập của Dense Retriever:}
+  Trong Giai đoạn 1, kết quả chạy lại dense retriever trên cùng một mã nguồn ghi nhận mức độ trôi dạt điểm số $\Delta = 0{,}0143$, lớn hơn khoảng cách giữa hai mô hình dense cạnh tranh ($0{,}0094$). Nguyên nhân bắt nguồn từ việc chưa cố định seed ngẫu nhiên cho thuật toán xấp xỉ HNSW, kích thước lô (batch size) và hàm sinh số ngẫu nhiên của PyTorch trên GPU. Ngược lại, nhánh sparse hoàn toàn bất biến qua các lần chạy (trên cùng 284 câu held-out, hai lần chạy độc lập cho Hit@5 trùng khớp tuyệt đối tới bốn chữ số thập phân: $0{,}8768$).
+
+  \item \textbf{Hạn chế của bộ giám khảo LLM (LLM-as-a-Judge):}
+  Giám khảo đánh giá là GLM-5.3-Flash đã được tách biệt hoàn toàn khỏi mô hình sinh (Gemini 3.1 Flash-Lite) để tránh thiên vị nội bộ. Tuy nhiên, bộ giám khảo này chưa được hiệu chuẩn toàn diện với nhãn đánh giá của con người (bộ 20 câu \texttt{judge\_calibration} đã được chuẩn bị nhưng chưa được gắn nhãn double-blind bởi con người). Đợt audit 30 câu hỏi điểm thấp cho thấy có tới $18/30$ câu giám khảo bất đồng ý kiến với người duyệt, và $23/30$ câu bị chấm thấp thực chất đúng về mặt ngữ nghĩa, cho thấy điểm Answer Correctness do LLM chấm có xu hướng là một cận dưới khắt khe.
+
+  \item \textbf{Yếu tố gây nhiễu (Confound) trong khảo sát từ chối trả lời (Giai đoạn 3):}
+  Ở chính sách từ chối B1 (bắt buộc trả lời theo cấu trúc JSON), câu trả lời bị dài dòng và Token F1 sụt giảm mạnh ($-0{,}1070$). Tuy nhiên, nguyên nhân chưa thể kết luận chắc chắn: do khi chuyển sang prompt B1, câu lệnh vừa bổ sung định dạng JSON vừa vô tình lược bỏ chỉ thị ``trả lời ngắn gọn'' của P2. Do đó, nghiên cứu chưa tách bạch được việc chất lượng câu trả lời suy giảm là do cấu trúc JSON gây cản trở hay chỉ vì thiếu chỉ thị kiểm soát độ dài.
+\end{enumerate}
+
+\subsection{Hướng phát triển trong tương lai}
+
+Dựa trên các phát hiện thực nghiệm, nhóm đề xuất ba hướng nghiên cứu ưu tiên:
+\begin{enumerate}
+  \item \textbf{Tích hợp kỹ thuật Viết lại câu hỏi (Query Rewriting / Expansion):} Phân tích held-out chỉ ra rằng trần chất lượng của tầng sinh bị khống chế trực tiếp bởi Hit@5 ($87{,}68\%$). Việc áp dụng các kỹ thuật phân rã câu hỏi hoặc viết lại câu hỏi truy vấn sẽ là chìa khóa mở rộng trần truy xuất mà không cần can thiệp vào tầng sinh.
+  \item \textbf{Hiệu chuẩn có hệ thống giữa LLM Judge và đánh giá của con người:} Tiến hành quy trình double-blind human review trên tập calibration để xây dựng hàm hiệu chuẩn điểm số RAGAS, lượng hóa chính xác sai số của bộ giám khảo tự động.
+  \item \textbf{Hoàn thiện tích hợp đầy đủ vào ứng dụng thực tế:} Đồng bộ hóa toàn diện cấu hình chiến thắng P2-depth5 cùng mô hình Gemini 3.1 Flash-Lite vào luồng xử lý mặc định của dịch vụ chat backend nhằm mang lại trải nghiệm tối ưu nhất cho người dùng cuối.
+\end{enumerate}

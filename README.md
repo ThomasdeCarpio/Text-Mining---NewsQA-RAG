@@ -3,6 +3,8 @@
 Hệ thống hỏi đáp trên NewsQA/CNN: tìm kiếm dense/BM25/hybrid, rerank,
 sinh câu trả lời có trích dẫn và so sánh các cấu hình bằng experiment.
 
+> **Video Demo hệ thống:** [Xem video trải nghiệm trên Google Drive](https://drive.google.com/file/d/1M3nf3z-kyqBO_QBA6DVe4uClQBiRqwQG/view?usp=sharing)
+
 ## Bắt đầu từ đâu?
 
 | Bạn muốn làm gì? | Đọc/chạy ở đâu? |

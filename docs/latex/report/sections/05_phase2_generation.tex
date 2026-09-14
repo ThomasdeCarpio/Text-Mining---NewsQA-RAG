@@ -356,3 +356,15 @@ thay đổi cấu hình đã khóa.
   \item Kết quả mô tả trade-off trên development; nhóm không dùng ablation này
   để chọn lại generator hoặc thay đổi pipeline đã khóa.
 \end{itemize}
+
+\subsection{Khảo sát mở rộng: Phân đoạn văn bản và Chính sách từ chối}
+\label{sec:phase2-ablations}
+
+Bên cạnh luồng thực nghiệm chính, nhóm tác giả tiến hành hai khảo sát mở rộng mang tính chất thăm dò (\textit{ablation studies}) trên tập phát triển nhằm kiểm chứng tính tối ưu của cấu hình đã chọn:
+
+\begin{itemize}
+  \item \textbf{Khảo sát chiến lược phân đoạn văn bản (Giai đoạn 2C):} Thử nghiệm bốn phương pháp phân đoạn gồm C0 (Recursive 512/64 chuẩn), C1 (Tách theo câu), C2 (Tách theo đoạn) và C3 (Phân cấp Parent--Child: đoạn con 128 token để truy xuất, trả về đoạn cha 512 token để sinh). Mặc dù cấu hình C3-depth3 đạt điểm Answer Correctness bề mặt cao nhất ($0{,}7730$, tăng $+0{,}0380$ so với C0), nó làm suy giảm nghiêm trọng độ khớp bằng chứng của trích dẫn (Citation F1 tụt $-0{,}0284$, vi phạm rào chắn an toàn $-0{,}01$) do trích dẫn trỏ sang đoạn cha lớn thay vì đoạn bằng chứng cụ thể. Do đó, cấu hình chuẩn C0 được bảo toàn.
+  \item \textbf{Khảo sát chính sách từ chối trả lời (Giai đoạn 3):} Thử nghiệm khả năng nhận biết thiếu thông tin trên tập kiểm thử 200 tình huống (140 dev, 60 final) giữa ba chính sách: B0 (dùng chính prompt P2 từ chối tự nhiên), B1 (ràng buộc JSON schema với trường \texttt{answerability}) và B2 (cổng chặn ngưỡng điểm tái xếp hạng). Mặc dù B1 giúp hạ tỷ lệ trả lời sai khi thiếu bằng chứng xuống $1{,}27\%$, nó lại làm suy thoái chất lượng câu trả lời ở các câu hỏi thông thường (Token F1 tụt $-0{,}1070$, vi phạm rào chắn an toàn). Nhóm quyết định giữ nguyên cấu hình cơ sở B0.
+\end{itemize}
+
+Chi tiết bảng số liệu và thiết lập của hai khảo sát mở rộng này được cung cấp tại Phụ lục~\ref{sec:appendix-ablations}.

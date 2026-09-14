@@ -1,0 +1,27 @@
+\begin{frame}[t]{Context depth: hai phản ứng khi bị cắt mất bằng chứng}
+\purpose{Khi giảm từ 5 xuống 3 đoạn, \NumLostAtDepthThree\ câu mất sạch bằng chứng. Hai hành vi điển hình của hệ thống.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.48\textwidth}
+\heading{Mất bằng chứng $\rightarrow$ Từ chối trả lời}
+{\smalltext\textbf{Câu hỏi:} \NumExDepthAbsQuestion\par
+\textbf{Đáp án chuẩn:} \textit{\NumExDepthAbsGold}\quad(gold ở hạng \NumExDepthAbsRank)\par}
+\vspace{2mm}
+{\tabletext\begin{tabularx}{\linewidth}{@{}Lr@{}}
+\rowcolor{paleslate}\textbf{Depth 3} (cắt top 3 $\rightarrow$ mất gold):\newline\textit{``\NumExDepthAbsDthreeAnswer''} & \fail{AC \NumExDepthAbsDthreeAC} \\\midrule
+\rowcolor{paleblue}\textbf{Depth 5} (đoạn [4]):\newline\textit{``\NumExDepthAbsDfiveAnswer''}\quad\NumExDepthAbsDfiveCites & \pass{AC \NumExDepthAbsDfiveAC} \\\bottomrule
+\end{tabularx}}
+\takeaway{Depth 3 không thấy đoạn [4] nên từ chối. Giữ depth 5 đưa đủ bằng chứng để trả lời đúng.}
+\end{column}
+\begin{column}{.48\textwidth}
+\heading{Mất bằng chứng $\rightarrow$ Bị distractor đánh lừa}
+{\smalltext\textbf{Câu hỏi:} \NumExDepthDisQuestion\par
+\textbf{Đáp án chuẩn:} \textit{\NumExDepthDisGold}\quad(gold ở hạng \NumExDepthDisRank)\par}
+\vspace{2mm}
+{\tabletext\begin{tabularx}{\linewidth}{@{}Lr@{}}
+\rowcolor{paleslate}\textbf{Depth 3} (đọc nhầm số cũ ở đoạn [1]):\newline\textit{``\NumExDepthDisDthreeAnswer''}\quad\NumExDepthDisDthreeCites & \fail{AC \NumExDepthDisDthreeAC} \\\midrule
+\rowcolor{paleblue}\textbf{Depth 5} (cập nhật ở đoạn [5]):\newline\textit{``\NumExDepthDisDfiveAnswer''}\quad\NumExDepthDisDfiveCites & \pass{AC \NumExDepthDisDfiveAC} \\\bottomrule
+\end{tabularx}}
+\takeaway{Đoạn [1] nêu 25 bang, đoạn [5] mới cập nhật 26 bang. Cắt depth khiến model tin vào distractor.}
+\end{column}\end{columns}
+\slidenote{Cùng prompt P2 trên development, chỉ thay context depth từ 3 lên 5. Đây là hai trong \NumLostAtDepthThree\ câu có gold ở hạng 4--5.}
+\end{frame}

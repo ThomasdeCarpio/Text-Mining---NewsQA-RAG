@@ -1,0 +1,34 @@
+\begin{frame}[t]{Vì sao các phương án khảo sát phụ bị loại?}
+\purpose{Hai ví dụ thực tế cho thấy vai trò của guardrail: điểm thành phần có thể cao nhưng chất lượng hệ thống suy thoái.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.48\textwidth}
+\heading{Phase 2C: C3 mất độ chuẩn trích dẫn}
+{\smalltext\textbf{Câu hỏi:} \NumExPtwocQuestion\par
+\textbf{Đáp án chuẩn:} \textit{\NumExPtwocGold}\par}
+\vspace{1.5mm}
+{\tabletext\renewcommand{\arraystretch}{1.1}\begin{tabularx}{\linewidth}{@{}Lr@{}}
+\rowcolor{paleslate}\multicolumn{2}{@{}L@{}}{\textbf{C0} (Recursive): \textit{``\NumExPtwocCzeroAnswer''}\ [3]} \\
+Answer Correctness & \NumExPtwocCzeroAC \\
+Citation F1 & \pass{\NumExPtwocCzeroCitFone} \\\midrule
+\rowcolor{paleblue}\multicolumn{2}{@{}L@{}}{\textbf{C3} (Child--Parent): \textit{``\NumExPtwocCthreeAnswer''}\ [1]} \\
+Answer Correctness & \NumExPtwocCthreeAC \\
+Citation F1 & \fail{\NumExPtwocCthreeCitFone} \\\bottomrule
+\end{tabularx}}
+\takeaway{C3 mở rộng sang parent chunk nên trích dẫn [1] trỏ vào container lớn thay vì gold chunk, khiến Citation F1 tụt về \NumExPtwocCthreeCitFone.}
+\end{column}
+\begin{column}{.48\textwidth}
+\heading{Phase 3: B1 làm bung độ dài đáp án}
+{\smalltext\textbf{Vấn đề:} B1 bắt trả JSON \texttt{\{answerability, ...\}} nhưng bỏ mất ràng buộc hình dạng ngắn của P2.\par}
+\vspace{1.5mm}
+{\tabletext\renewcommand{\arraystretch}{1.1}\begin{tabularx}{\linewidth}{@{}Lr@{}}
+\rowcolor{paleblue}\multicolumn{2}{@{}L@{}}{\textbf{B0} (chính prompt P2): Giữ khuôn ngắn gọn} \\
+Độ dài trung bình & 12,5 từ \\
+Token F1 (có bằng chứng) & \textbf{\NumPthreeBzeroTokenFoneDev} \\\midrule
+\rowcolor{paleslate}\multicolumn{2}{@{}L@{}}{\textbf{B1} (Schema JSON): Câu trả lời dài ra} \\
+Độ dài trung bình & 16,3 từ \\
+Token F1 (có bằng chứng) & \fail{\NumPthreeBoneTokenFoneDev} \\\bottomrule
+\end{tabularx}}
+\takeaway{Token F1 giảm \fail{\NumPthreeBoneDeltaTokenFoneDev}\ (vượt ngưỡng 0,02). Thêm schema làm tái phát lỗi nói dài mà Phase 2 đã chữa.}
+\end{column}\end{columns}
+\slidenote{Cả C3 và B1 đều có điểm đơn lẻ cao hơn (C3 tăng AC, B1 giảm false-answer), nhưng đều bị loại vì trượt guardrail.}
+\end{frame}

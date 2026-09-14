@@ -1,0 +1,57 @@
+\section{Giới thiệu}
+\label{sec:introduction}
+
+\subsection{Bối cảnh và Động lực}
+
+Khối lượng tin tức trực tuyến khổng lồ đặt ra nhu cầu cấp thiết về các hệ thống hỏi đáp tin tức (News Question Answering -- News QA) có khả năng cung cấp câu trả lời chính xác, ngắn gọn và có nguồn dẫn kiểm chứng. Mặc dù các mô hình ngôn ngữ lớn (LLMs) \cite{radford2019language,brown2020language} thể hiện năng lực hiểu ngôn ngữ ấn tượng, việc ứng dụng trực tiếp LLMs vào tác vụ này gặp phải ba hạn chế cố hữu: (i) hiện tượng ảo giác (hallucination) \cite{ji2023survey}; (ii) giới hạn tri thức đóng băng (knowledge cutoff); và (iii) thiếu khả năng kiểm chứng nguồn gốc thông tin (lack of provenance).
+
+Mô hình Sinh có Tăng cường Truy xuất (Retrieval-Augmented Generation -- RAG) \cite{lewis2020retrieval} giải quyết các hạn chế trên bằng cách kết hợp một bộ truy xuất (retriever) tìm kiếm ngữ cảnh liên quan từ kho dữ liệu ngoài và một bộ sinh (generator) tổng hợp câu trả lời dựa trên ngữ cảnh đó. Tuy nhiên, trên ngữ liệu tin tức quy mô lớn với độ nhiễu cao, bài toán đặt ra thách thức lớn do hai nguồn sai sót độc lập ở hai tầng xử lý:
+\begin{itemize}
+  \item \textbf{Sai sót ở tầng truy xuất (Retrieval Failure):} Bộ truy xuất không đưa được đoạn văn bản chứa bằng chứng (gold chunk) vào danh sách ứng viên do sự hiện diện của nhiều bài báo tương tự hoặc các bài viết gây phân tâm (distractors).
+  \item \textbf{Sai sót ở tầng sinh (Generation Failure):} Mô hình ngôn ngữ suy diễn sai, diễn đạt dài dòng làm lệch trọng tâm câu hỏi, hoặc trích dẫn sai nguồn dù đoạn văn bằng chứng đã nằm trọn vẹn trong ngữ cảnh.
+\end{itemize}
+
+Nếu chỉ đo lường điểm số ở đầu ra cuối cùng, rất khó phân định sai sót bắt nguồn từ khâu truy xuất hay khâu tạo sinh. Do đó, đồ án này đặt ra yêu cầu phân tách độc lập hai tầng chức năng, xây dựng hệ thống đo lường chuyên biệt cho từng tầng, và áp dụng quy trình thực nghiệm có kiểm soát chặt chẽ.
+
+\subsection{Mục tiêu của đồ án}
+
+Đồ án hướng tới hai mục tiêu đồng bộ:
+\begin{enumerate}
+  \item \textbf{Mục tiêu kỹ thuật:} Thiết kế và hiện thực hóa hệ thống hỏi đáp tin tức \textbf{NewsLens} (frontend React, backend FastAPI, thư viện lõi \texttt{newsqa\_rag}) với quy trình xử lý dữ liệu NewsQA, lập chỉ mục kép (vector Chroma và chỉ mục thưa BM25S), tầng truy xuất kết hợp tái xếp hạng, và giao diện hỏi đáp hiển thị trích dẫn nguồn có thể kiểm tra trực tiếp.
+  \item \textbf{Mục tiêu phương pháp luận:} Xây dựng quy trình thực nghiệm khoa học dựa trên nguyên tắc đăng ký trước (pre-registration), ứng dụng kiểm định thống kê bootstrap ghép cặp gom cụm theo bài báo (paired article-cluster bootstrap), và thiết lập hệ thống rào chắn an toàn (safety guardrails) nhằm đảm bảo các quyết định lựa chọn kỹ thuật mang tính khách quan và kiểm soát được sự suy thoái chất lượng.
+\end{enumerate}
+
+\subsection{Các câu hỏi nghiên cứu then chốt}
+
+Đồ án tập trung giải quyết hai câu hỏi nghiên cứu cốt lõi tương ứng với hai tầng chức năng chính của hệ thống:
+\begin{itemize}
+  \item[\textbf{Q1:}] \emph{Phương pháp truy xuất nào (Dense, BM25, Sparse, Hybrid) cùng cơ chế tái xếp hạng nào định vị đoạn văn bản chứa bằng chứng hiệu quả nhất trên kho tin tức quy mô lớn có độ nhiễu cao?}
+  \item[\textbf{Q2:}] \emph{Chiến lược cấu trúc chỉ thị (prompt engineering) và độ sâu ngữ cảnh (\texttt{context\_depth}) nào giúp bộ sinh đạt độ chính xác tối ưu mà vẫn bảo toàn tính trung thực (Faithfulness) và độ hợp lệ của trích dẫn (Citation Validity)?}
+\end{itemize}
+
+Bên cạnh hai câu hỏi trọng tâm, đồ án tiến hành hai khảo sát mở rộng (\textit{ablation studies}) nhằm kiểm chứng các quyết định thiết kế: (i) Tác động của các chiến lược phân đoạn văn bản (chunking) đến trần hiệu năng truy xuất và độ chính xác câu trả lời; và (ii) Năng lực nhận diện ranh giới thông tin cùng cơ chế từ chối trả lời (abstention) một cách tin cậy khi ngữ cảnh thiếu hụt bằng chứng.
+
+Song hành với đó là câu hỏi phương pháp luận xuyên suốt: \emph{Làm thế nào để phân định một cải tiến kỹ thuật là thực chất so với nhiễu đo lường của dữ liệu?} Vấn đề này được đồ án giải quyết thông qua việc xác định biên độ nhập nhằng, khoảng tin cậy bootstrap 95\% và hệ thống rào chắn an toàn được khóa cứng trước khi quan sát dữ liệu.
+
+\subsection{Đóng góp của đồ án}
+
+Các đóng góp chính của đồ án bao gồm:
+\begin{enumerate}
+  \item \textbf{Xây dựng ứng dụng hoàn chỉnh:} Phát triển ứng dụng hỏi đáp NewsLens (frontend React, backend FastAPI) kết hợp thư viện lõi \texttt{newsqa\_rag}, tích hợp giao diện hội thoại hiển thị nguồn trích dẫn và công cụ Bàn thử nghiệm truy xuất (Retrieval Playground) phục vụ kiểm thử độc lập. Toàn bộ mã nguồn dự án được công khai tại \url{https://github.com/ThomasdeCarpio/Text-Mining---NewsQA-RAG/tree/main} và video trình diễn hệ thống (demo) tại \url{https://drive.google.com/file/d/1M3nf3z-kyqBO_QBA6DVe4uClQBiRqwQG/view?usp=sharing}.
+  \item \textbf{Phương pháp luận thực nghiệm chuẩn hóa:} Thiết lập quy trình đánh giá minh bạch với toàn bộ kế hoạch, ngưỡng sai số và mã băm chỉ mục được đăng ký trước; áp dụng kiểm định bootstrap gom cụm theo bài báo để phản ánh chính xác cấu trúc phụ thuộc dữ liệu.
+  \item \textbf{Đánh giá đa chiều với hệ thống rào chắn an toàn:} Khảo sát toàn diện cả hai khâu truy xuất và tạo sinh dưới sự kiểm soát của hệ thống rào chắn an toàn đa chỉ số, giúp tránh việc thiên vị một cấu hình chỉ vì điểm số cao ở một chỉ số đơn lẻ trong khi chất lượng câu trả lời và các tiêu chí khác không ổn định.
+  \item \textbf{Kiểm định độc lập năng lực tổng quát hóa:} Thiết kế tập kiểm thử held-out (284 câu hỏi từ 50 bài báo) được giữ kín hoàn toàn trong quá trình phát triển để đánh giá khách quan độ tin cậy của pipeline trong điều kiện thực tế.
+\end{enumerate}
+
+\subsection{Cấu trúc của báo cáo}
+
+Phần còn lại của báo cáo được tổ chức như sau:
+\begin{itemize}
+  \item \textbf{Mục~\ref{sec:system-pipeline}:} Trình bày kiến trúc phần mềm phân tầng và luồng xử lý RAG end-to-end của NewsLens.
+  \item \textbf{Mục 3 (Dữ liệu và phương pháp đánh giá):} Mô tả tập dữ liệu NewsQA, quy trình chuẩn bị dữ liệu, hệ thống chỉ số đo lường và phương pháp kiểm định thống kê.
+  \item \textbf{Mục 4 (Giai đoạn 1: Truy xuất):} Báo cáo chi tiết quy trình thực nghiệm so sánh các phương pháp truy xuất và tái xếp hạng nhằm giải quyết câu hỏi Q1.
+  \item \textbf{Mục 5 (Giai đoạn 2: Sinh câu trả lời):} Báo cáo chi tiết các thử nghiệm về cấu trúc prompt, độ sâu ngữ cảnh nhằm giải quyết câu hỏi Q2, khảo sát các mô hình sinh và tóm lược hai khảo sát mở rộng.
+  \item \textbf{Mục~\ref{sec:results-summary-discussion}:} Tổng hợp kết quả toàn diện, trả lời trực diện hai câu hỏi nghiên cứu, phân tích bài học từ các khảo sát mở rộng, hiện tượng ``Luật thắng điểm số'' và các giới hạn của nghiên cứu.
+  \item \textbf{Mục~\ref{sec:conclusion}:} Đưa ra kết luận chung và định hướng phát triển tiếp theo.
+  \item \textbf{Phụ lục:} Cung cấp chi tiết các mẫu prompt, cấu hình RAGAS, công thức chấm trích dẫn và toàn bộ bảng số liệu của các khảo sát mở rộng.
+\end{itemize}

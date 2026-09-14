@@ -174,6 +174,65 @@ gold là \texttt{\{c2,c4\}}.
   được context hỗ trợ về mặt ngữ nghĩa.
 \end{itemize}
 
+\section{Khảo sát mở rộng: Phân đoạn văn bản và Chính sách từ chối}
+\label{sec:appendix-ablations}
+
+Phụ lục này cung cấp số liệu chi tiết của hai khảo sát thăm dò mở rộng được tóm lược tại Mục~\ref{sec:phase2-ablations}.
+
+\subsection{Khảo sát chiến lược phân đoạn văn bản (Giai đoạn 2C)}
+Bảng~\ref{tab:appendix-phase2c} trình bày kết quả sàng lọc truy xuất trên 281 câu hỏi tập phát triển giữa bốn phương pháp phân đoạn:
+\begin{itemize}
+  \item C0: Recursive Character Splitter (kích thước 512 token, overlap 64 token).
+  \item C1: Sentence Splitter (phân tách theo ranh giới câu tự nhiên).
+  \item C2: Paragraph Splitter (phân tách theo đoạn văn bản).
+  \item C3: Hierarchical Parent--Child (đoạn con 128 token để truy xuất; đoạn cha 512 token để sinh).
+\end{itemize}
+
+\begin{table}[H]
+  \centering
+  \caption{Kết quả sàng lọc truy xuất của các chiến lược phân đoạn văn bản (Giai đoạn 2C).}
+  \label{tab:appendix-phase2c}
+  \small
+  \begin{tabular}{lrrrrr}
+    \toprule
+    \textbf{Chiến lược} & \textbf{Số chunks} & \textbf{Hit@5} & \textbf{Recall@5} & \textbf{MRR@5} & \textbf{nDCG@5} \\
+    \midrule
+    C0 (Recursive 512/64) & 22.766 & 0,9573 & 0,9537 & 0,8791 & 0,8963 \\
+    C1 (Sentence)         & 22.014 & 0,9680 & 0,9591 & 0,8796 & 0,8979 \\
+    C2 (Paragraph)        & 22.018 & 0,9609 & 0,9555 & 0,8817 & 0,8989 \\
+    C3 (Parent--Child)    & 49.218 & 0,9324 & 0,9241 & 0,8166 & 0,8417 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Khảo sát chính sách từ chối trả lời (Giai đoạn 3)}
+Thử nghiệm trên tập dữ liệu kiểm soát gồm 200 tình huống (140 câu development, 60 câu final) với các trường hợp bị loại bỏ bài báo hoặc loại bỏ đoạn văn bản chứa bằng chứng nhằm đánh giá ba chính sách:
+\begin{itemize}
+  \item B0: Cấu hình cơ sở, sử dụng prompt P2 với câu từ chối mặc định.
+  \item B1: Ràng buộc cấu trúc JSON bắt buộc trường \texttt{answerability} nhận một trong hai giá trị \texttt{"answerable"} hoặc \texttt{"insufficient\_evidence"}.
+  \item B2: B1 kết hợp cổng chặn ngưỡng điểm của mô hình tái xếp hạng BGE-Reranker-Large.
+\end{itemize}
+
+\begin{table}[H]
+  \centering
+  \caption{So sánh các chính sách từ chối trả lời trên tập Development (140 câu) và Final (60 câu).}
+  \label{tab:appendix-phase3}
+  \small
+  \begin{tabularx}{\textwidth}{@{}llrrrr@{}}
+    \toprule
+    \textbf{Tập dữ liệu} & \textbf{Chính sách} & \textbf{Abst. F1} & \textbf{False-Ans.} & \textbf{Token F1} & \textbf{Cit. Valid.} \\
+    \midrule
+    \textbf{Development} & B0 (Prompt P2)   & 0,9740 & 5,06\% & \textbf{0,4490} & 1,0000 \\
+    (140 câu)            & B1 (JSON Schema) & \textbf{0,9936} & \textbf{1,27\%} & 0,3420 & 1,0000 \\
+                         & B2 (Score Gate)  & \textbf{0,9936} & \textbf{1,27\%} & 0,3420 & 1,0000 \\
+    \midrule
+    \textbf{Final}       & B0 (Prompt P2)   & \textbf{0,9697} & \textbf{5,88\%} & \textbf{0,4766} & 1,0000 \\
+    (60 câu)             & B1 (JSON Schema) & 0,9538 & 8,82\% & 0,2996 & 1,0000 \\
+                         & B2 (Score Gate)  & 0,9538 & 8,82\% & 0,2996 & 1,0000 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
 \section{Nguồn tái lập}
 
 \begin{itemize}
