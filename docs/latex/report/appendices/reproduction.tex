@@ -1,0 +1,40 @@
+\clearpage
+\section{Cài đặt và tái lập}\label{app:reproduction}
+\subsection{Ứng dụng và kiểm tra phần mềm}
+Dự án yêu cầu Python 3.11 trở lên; giao diện web được khuyến nghị chạy với Node.js 20 trở lên. Từ thư mục gốc, tạo môi trường ảo, kích hoạt và cài các gói phụ thuộc. Tạo \code{.env} từ tệp mẫu và điền khóa truy cập của riêng người chạy; chuẩn bị chỉ mục phù hợp với cấu hình trước khi chạy RAG.
+\begin{Verbatim}[fontsize=\small]
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m uvicorn newsqa_app.api.main:app --port 8000
+# Terminal frontend:
+cd app/frontend
+npm install
+npm run dev
+\end{Verbatim}
+Có thể chạy các kiểm tra phần mềm sau khi cài \code{pytest}:
+\begin{Verbatim}[fontsize=\small]
+python -m pip install pytest
+python -m pytest -q tests/test_chat_service.py \
+  tests/test_chunking_strategies.py \
+  tests/test_benchmark_pipeline.py tests/test_benchmark_scoring.py
+\end{Verbatim}
+\subsection{Dữ liệu và cấu hình khi tái lập}
+Bộ chỉ mục chính có nhãn \code{locked-bge-m3-512-64-deduplicated-v2}. Quy trình tái lập gồm:
+\begin{enumerate}
+\item Chuẩn bị đúng corpus, chỉ mục và danh sách câu hỏi; kiểm tra mã băm trong manifest.
+\item Thu đầu ra; khi đổi prompt hoặc độ sâu, tái sử dụng trace theo mã câu hỏi.
+\item Chấm đáp án/dẫn nguồn, chấm RAGAS rồi so sánh ghép cặp; giữ đúng dữ liệu, mô hình sinh/chấm và tham số của từng thực nghiệm.
+\end{enumerate}
+
+Bản ghi lỗi sinh được chấm với đáp án rỗng; bản ghi thiếu được thống kê riêng. Khi tiếp tục lần chạy, giữ kết quả thành công và chỉ chạy lại lỗi đã hết lượt thử khi được yêu cầu.
+
+Ở Phase 3, bộ case được hiệu chỉnh để làm rõ ba câu hỏi development cùng sự kiện cháy rừng. Sáu đầu ra B0/B1 được sinh lại; 394 đầu ra khác, kể cả bốn lỗi sinh, được giữ nguyên. Ngưỡng và chính sách được chọn lại trên development; đầu ra final không đổi. Tái lập kết quả này cần dùng bộ case và đầu ra sau hiệu chỉnh.
+
+Lệnh sau so sánh các cấu hình zero-shot từ điểm đã lưu, không gọi API:
+\begin{Verbatim}[fontsize=\small]
+python scripts/phase2_paired_comparison.py \
+  --scores-dir docs/reports/phase2/scores \
+  --baseline p0_d5_development.jsonl --plan 2b \
+  --output phase2_comparison.json
+\end{Verbatim}

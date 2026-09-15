@@ -1,0 +1,48 @@
+% Authoritative final-test results: upstream 4d6a4a2, Phase 1 and Phase 2 sections.
+\par\noindent\begin{minipage}[t]{0.49\linewidth}
+\begin{table}[H]\setstretch{1.05}
+  \centering
+  \caption{Truy xuất: development và final-test.}
+  \label{tab:phase1-final-test}
+  \small
+  \begin{tabularx}{\linewidth}{@{}Yrr@{}}
+    \toprule
+    \textbf{Thước đo} & \textbf{Dev. (281)} &
+    \textbf{Final (871)} \\
+    \midrule
+    MRR@5       & 0,8797 & 0,8112 \\
+    nDCG@5      & 0,8976 & 0,8313 \\
+    Hit@5       & 0,9573 & 0,8978 \\
+    Recall@5    & 0,9555 & 0,8955 \\
+    P50 latency & 512,7 ms & 550,0 ms \\
+    P95 latency & 531,0 ms & 567,0 ms \\
+    Coverage    & 100\% & 100\% \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\linewidth}
+\begin{table}[H]\setstretch{1.05}
+  \centering
+  \caption{P2-D5 trên development và held-out.}
+  \label{tab:phase2-zero-shot-heldout}
+  \small
+  \begin{tabularx}{\linewidth}{@{}Yrr@{}}
+    \toprule
+    \textbf{Thước đo} & \textbf{Dev. (281)} & \textbf{Held-out (284)} \\
+    \midrule
+    Token F1 & 0,4191 & 0,4313 \\
+    Answer Correctness & 0,7350 & 0,7157 \\
+    Faithfulness & 0,9801 & 0,9249 \\
+    Answer Relevancy & 0,7092 & 0,6485 \\
+    Citation F1 & 0,8391 & 0,7289 \\
+    Citation Validity & 0,9858 & 0,9437 \\
+    Coverage & 100\% & 100\% \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+\end{minipage}
+\par
+
+
+\noindent\textbf{Truy xuất.} Pipeline xử lý đủ 871/871 câu: 782 câu có đoạn chuẩn trong top 5, 89 câu có Hit@5 bằng 0. Reranker tăng MRR@5 từ 0,7269 lên 0,8112 và nDCG@5 thêm 0,0758, CI95 $[0{,}0504;\,0{,}1017]$ (2.000 mẫu bootstrap ghép cặp theo 150 bài).

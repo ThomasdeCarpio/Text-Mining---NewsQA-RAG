@@ -1,0 +1,17 @@
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=0.8cm and 1cm]
+\node[box] (a) {Câu hỏi và cấu hình\\Chọn chế độ chat};
+\node[box,right=of a] (b) {Truy xuất ứng viên\\Xếp hạng lại};
+\node[box,below=of a] (e) {Gọi mô hình trực tiếp\\Câu hỏi và lịch sử chat};
+\node[box,below=of b] (c) {Gọi mô hình theo RAG\\Lời nhắc và các đoạn đã chọn};
+\node[box,below=of e] (d) {Hiển thị câu trả lời\\Kèm nguồn nếu có};
+\draw[flow] (a)--node[above,font=\footnotesize]{RAG}(b);
+\draw[flow] (a)--node[left,font=\footnotesize]{Trực tiếp}(e);
+\draw[flow] (b)--(c);
+\draw[flow,dashed] (b.south west)--node[midway,fill=white,inner sep=1pt,sloped,font=\footnotesize]{Lỗi}(e.north east);
+\draw[flow,dashed] (c.west)--node[above,fill=white,inner sep=1pt,font=\footnotesize]{Lỗi}(e.east);
+\draw[flow] (e)--(d);
+\draw[flow] (c.south)|-(d.east);
+\end{tikzpicture}
+\caption{Luồng xử lý truy vấn và nhánh chat dự phòng}\label{fig:query}
+\end{figure}

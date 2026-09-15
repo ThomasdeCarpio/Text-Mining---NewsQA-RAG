@@ -1,0 +1,35 @@
+% Authoritative results: upstream 4d6a4a2, sections/05_phase2_generation.tex.
+\begin{table}[H]\setstretch{1.05}
+  \centering
+  \caption{So sánh mô hình sinh với P2-1S-D5 trên development.}
+  \label{tab:phase2-generator-ablation}
+  \small
+  \begin{tabular}{lrrrrrr}
+    \toprule
+    \textbf{Generator} & \textbf{Token F1} & \textbf{AC} & \textbf{Faith.} &
+    \textbf{AR} & \textbf{Cit. F1} & \textbf{Cit. Valid.} \\
+    \midrule
+    Gemini 3.1 Flash-Lite & 0,6267 & 0,8015 & \textbf{0,9603} & \textbf{0,5251} & \textbf{0,8441} & \textbf{0,9786} \\
+    Gemini 3.5 Flash-Lite & 0,6803 & \textbf{0,8164} & 0,9557 & 0,4351 & 0,8351 & 0,9680 \\
+    Gemini 3.6 Flash & \textbf{0,6934} & 0,8011 & 0,9472 & 0,3837 & 0,8248 & 0,9644 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]\setstretch{1.05}\centering\small
+\caption{Sai khác Answer Correctness và tài nguyên tầng sinh trên 281 câu}\label{tab:generator-operation}
+\begin{tabularx}{\linewidth}{@{}YrrP{3.5cm}r@{}}\toprule
+\textbf{Generator} & \textbf{$\Delta$ AC} & \textbf{LLM P95 (s)} & \textbf{CI95 của $\Delta$ AC} & \textbf{Token ra}\\\midrule
+3.1 Flash-Lite & --- & 1,02 & Đối chứng & 3.847 \\
+3.5 Flash-Lite & $+0{,}0149$ & 0,89 & $[-0{,}0052;\,0{,}0359]$ & 3.112 \\
+3.6 Flash & $-0{,}0003$ & 3,50 & $[-0{,}0204;\,0{,}0195]$ & 3.249 \\\bottomrule
+\end{tabularx}\end{table}
+\begin{itemize}
+\item \textbf{Gemini 3.5 Flash-Lite:} AC trung bình cao nhất, nhưng CI95 của sai khác so với 3.1 chứa 0.
+\item \textbf{Gemini 3.6 Flash:} Token F1 cao nhất nhưng chưa cho thấy cải thiện AC; Citation F1/Validity giảm, LLM P95 cao hơn.
+\item \textbf{Gemini 3.1 Flash-Lite:} Faithfulness, Relevancy và hai thước đo dẫn nguồn cao nhất trong ba mô hình khảo sát.
+\end{itemize}
+
+Mỗi lần chạy dùng 666.604 token đầu vào; token đầu ra và LLM P95 ở Bảng~\ref{tab:generator-operation}. Token không gồm chấm điểm. Độ trễ phản ánh điều kiện từng lần chạy, không tách riêng ảnh hưởng của mô hình và dịch vụ cung cấp.
+
+\noindent\textbf{Kết luận.} Đổi mô hình tạo đánh đổi về đáp án, bằng chứng, dẫn nguồn và thời gian. Khảo sát chỉ dùng development, không có held-out riêng từng mô hình và không thay cấu hình đã khóa.

@@ -1,0 +1,81 @@
+% Authoritative results: upstream 4d6a4a2, sections/05_phase2_generation.tex.
+% Low-score sample and semantic caveat: docs/reports/phase2/report.md, section 6.
+\subsubsection{Đối chứng và sàng lọc}
+Baseline dùng P0 với 5 đoạn ngữ cảnh (P0-D5) trên toàn bộ development.
+\begin{table}[H]\setstretch{1.05}\centering\small
+\caption{Baseline P0-D5 trên 281 câu development.}\label{tab:phase2-baseline}
+\begin{tabularx}{\linewidth}{@{}YrYr@{}}\toprule
+\textbf{Thước đo} & \textbf{Giá trị} & \textbf{Thước đo} & \textbf{Giá trị}\\\midrule
+Exact Match & 0,0000 & Faithfulness & 0,9761 \\
+Token F1 & 0,2648 & Context Precision & 0,8980 \\
+Answer Correctness & 0,6308 & Context Recall & 0,9644 \\
+Answer Relevancy & 0,7950 & Coverage & 100\% \\
+Citation F1 & 0,8025 & P50 toàn chuỗi (s) & 2,77 \\
+Citation Validity & 0,9893 & P95 toàn chuỗi (s) & 53,63 \\\bottomrule
+\end{tabularx}\end{table}
+\textbf{Phân tích lỗi.} Trong mẫu 30 câu có AC dưới 0,5, có 24 câu vẫn tìm được đoạn chuẩn trong top 5. Các vấn đề gồm trả lời dài, sai loại thông tin hoặc chọn nhầm chi tiết. Điểm thấp không luôn đồng nghĩa sai ngữ nghĩa; mẫu này không đại diện cho tỷ lệ lỗi toàn tập.
+\begin{table}[H]\setstretch{1.05}
+  \centering
+  \caption{Sàng lọc prompt trên 80 câu; RAGAS dùng cùng 20 câu calibration.}
+  \label{tab:phase2-prompt-screening}
+  \small
+  \begin{tabular}{lrrrrrr}
+    \toprule
+    \textbf{Prompt} & \textbf{Token F1} & \textbf{AC} & \textbf{Faith.} &
+    \textbf{AR} & \textbf{Cit. F1} & \textbf{Cit. Valid.} \\
+    \midrule
+    P0 & 0,2417 & 0,7118 & 1,0000 & 0,8131 & 0,7808 & 0,9750 \\
+    P1 & 0,2570 & 0,6885 & 0,9750 & 0,7426 & 0,7863 & 0,9625 \\
+    P2 & \textbf{0,3999} & \textbf{0,8363} & \textbf{1,0000} & 0,7388 & 0,8133 & \textbf{0,9750} \\
+    P3 & 0,2790 & 0,7190 & 0,9750 & \textbf{0,8153} & \textbf{0,8146} & 0,9625 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+P1 bị loại vì AC và Faithfulness thấp hơn P0. P3 có AC cao hơn P0, nhưng P2 dẫn đầu về AC và Token F1 nên được khảo sát tiếp cùng P0. RAGAS chỉ chấm cùng 20 câu calibration; đáp án và dẫn nguồn chấm trên 80 câu.
+\begin{table}[H]\setstretch{1.05}
+  \centering
+  \caption{Ảnh hưởng của số đoạn ngữ cảnh trên tập sàng lọc.}
+  \label{tab:phase2-depth-screening}
+  \small
+  \begin{tabular}{llrrrrrr}
+    \toprule
+    \textbf{Prompt} & \textbf{Depth} & \textbf{Token F1} & \textbf{AC} &
+    \textbf{Faith.} & \textbf{AR} & \textbf{Cit. F1} & \textbf{Cit. Valid.} \\
+    \midrule
+    P0 & 1 & 0,2543 & 0,7063 & 0,9750 & 0,7365 & 0,7250 & 0,8167 \\
+    P0 & 3 & 0,2527 & 0,7046 & 0,9875 & 0,7667 & 0,7792 & 0,9500 \\
+    P0 & 5 & 0,2417 & 0,7118 & 1,0000 & 0,8131 & 0,7808 & 0,9750 \\
+    \midrule
+    P2 & 1 & \textbf{0,5809} & 0,8671 & 0,9500 & 0,4825 & 0,5500 & 0,6125 \\
+    P2 & 3 & 0,5311 & \textbf{0,8795} & 0,9250 & 0,6806 & 0,8125 & 0,9500 \\
+    P2 & 5 & 0,3999 & 0,8363 & \textbf{1,0000} & 0,7388 & \textbf{0,8133} & \textbf{0,9750} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Trên tập sàng lọc, P2-D1 và P2-D3 có AC cao hơn P2-D5, nhưng D1 giảm mạnh Citation F1/Validity. Nhóm đưa P2-D3 và P2-D5 vào vòng cuối trên development.
+\subsubsection{Kết quả và lựa chọn}
+\begin{table}[H]\setstretch{1.05}
+  \centering
+  \caption{Kết quả finalist trên toàn bộ development.}
+  \label{tab:phase2-zero-shot-finalists}
+  \small
+  \begin{tabular}{lrrrrrr}
+    \toprule
+    \textbf{Cấu hình} & \textbf{Token F1} & \textbf{AC} & \textbf{Faith.} &
+    \textbf{AR} & \textbf{Cit. F1} & \textbf{Cit. Valid.} \\
+    \midrule
+    P0-D5 & 0,2648 & 0,6308 & 0,9761 & \textbf{0,7950} & 0,8025 & \textbf{0,9893} \\
+    P2-D3 & \textbf{0,5549} & \textbf{0,7711} & 0,9561 & 0,5694 & 0,8381 & 0,9751 \\
+    P2-D5 & 0,4191 & 0,7350 & \textbf{0,9801} & 0,7092 & \textbf{0,8391} & 0,9858 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{itemize}
+\item \textbf{P2-D3:} AC cao nhất nhưng không qua guardrail. Citation Validity giảm 0,0142 so với P0-D5, vượt ngưỡng 0,01; Faithfulness giảm 0,020029, vượt nhẹ ngưỡng 0,02.
+\item \textbf{P2-D5:} AC tăng 0,1043, CI95 $[0{,}0844;\,0{,}1240]$; Citation F1 tăng 0,0366 và Faithfulness trung bình cao hơn đối chứng.
+\end{itemize}
+
+\noindent\textbf{Kết luận.} P2-D5 đạt đủ guardrail và được khóa trước held-out. Chỉ thị trả đúng loại thông tin cải thiện chất lượng trong thiết lập này; AC tăng riêng lẻ chưa đủ nếu dẫn nguồn giảm quá ngưỡng.

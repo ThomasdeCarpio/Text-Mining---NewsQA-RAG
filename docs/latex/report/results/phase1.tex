@@ -1,0 +1,68 @@
+% Authoritative results: upstream 4d6a4a2, sections/04_phase1_retrieval.tex.
+\subsubsection{Kết quả và phân tích}
+\begin{table}[H]\setstretch{1.05}
+  \centering
+  \caption{Kết quả sàng lọc retriever trên 281 câu resolved.}
+  \label{tab:phase1-retriever-screening}
+  \small
+  \begin{tabular}{lrrrr}
+    \toprule
+    \textbf{Retriever} & \textbf{MRR@5} & \textbf{nDCG@5} &
+    \textbf{Hit@5} & \textbf{P50 (ms)} \\
+    \midrule
+    BGE-M3 learned sparse          & \textbf{0,8059} & \textbf{0,8317} & \textbf{0,9181} & 76,7 \\
+    BM25 Okapi + stemming          & 0,7815 & 0,8123 & 0,9146 & 56,1 \\
+    BM25+                          & 0,6881 & 0,7206 & 0,8221 & 101,1 \\
+    BM25 Okapi                     & 0,6732 & 0,7087 & 0,8185 & 111,8 \\
+    Dense: e5-base-v2              & \textbf{0,6316} & \textbf{0,6684} & \textbf{0,7865} & 15,5 \\
+    Dense: bge-small-en-v1.5       & 0,6285 & 0,6589 & 0,7651 & 16,0 \\
+    Dense: bge-large-en-v1.5       & 0,6252 & 0,6536 & 0,7544 & 27,4 \\
+    Dense: all-MiniLM-L6-v2        & 0,4851 & 0,5165 & 0,6299 & 10,6 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Trên 281 câu resolved, BGE-M3 đạt điểm cao nhất trong nhóm sparse, còn E5-base-v2 được chọn làm đại diện dense. Các phương pháp sparse đạt điểm cao hơn các mô hình dense được khảo sát. Tuy nhiên, CI95 của hiệu nDCG@5 giữa BGE-M3 và BM25 có stemming là $[-0{,}0125;\,0{,}0508]$, nên chưa đủ bằng chứng khẳng định BGE-M3 tốt hơn phương án này trên quần thể mục tiêu.
+\begin{table}[H]\setstretch{1.05}
+  \centering
+  \caption{MRR@5 và nDCG@5 theo retriever và reranker trên tập development.}
+  \label{tab:phase1-reranker-matrix}
+  \small
+  \setlength{\tabcolsep}{4.5pt}
+  \begin{tabular}{lrrr|rrr}
+    \toprule
+    & \multicolumn{3}{c|}{\textbf{MRR@5}}
+    & \multicolumn{3}{c}{\textbf{nDCG@5}} \\
+    \textbf{Retriever} & \textbf{Không} & \textbf{MiniLM} & \textbf{BGE-large}
+    & \textbf{Không} & \textbf{MiniLM} & \textbf{BGE-large} \\
+    \midrule
+    BGE-M3 sparse & 0,8059 & 0,8387 & \textbf{0,8797} & 0,8317 & 0,8642 & \textbf{0,8976} \\
+    e5-base dense & 0,6316 & 0,7783 & 0,7997 & 0,6684 & 0,7994 & 0,8172 \\
+    Hybrid RRF    & 0,7192 & 0,7938 & 0,8203 & 0,7474 & 0,8164 & 0,8405 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]\setstretch{1.05}
+  \centering
+  \caption{Độ trễ P50 của ma trận Phase 1 trên cùng môi trường chạy.}
+  \label{tab:phase1-reranker-latency}
+  \small\setlength{\tabcolsep}{6pt}
+  \begin{tabular}{lrrr}
+    \toprule
+    \textbf{Retriever} & \textbf{Không rerank} & \textbf{MiniLM} &
+    \textbf{BGE-large} \\
+    \midrule
+    BGE-M3 sparse & 66,1 ms & 163,9 ms & 510,1 ms \\
+    e5-base dense & 17,7 ms & 127,3 ms & 540,5 ms \\
+    Hybrid RRF    & 90,4 ms & 193,3 ms & 609,8 ms \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{itemize}
+\item \textbf{Reranker:} với BGE-M3, MiniLM nâng MRR@5 từ 0,8059 lên 0,8387; BGE-reranker-large đạt 0,8797. Đổi lại, P50 tăng từ 163,9 ms với MiniLM lên 510,1 ms với BGE-large.
+\item \textbf{Hybrid RRF:} không vượt BGE-M3 ở cả ba chế độ xếp hạng lại; phép hợp nhất chưa đem lại lợi ích trong thiết lập khảo sát.
+\end{itemize}
+
+\noindent\textbf{Kết luận.} BGE-M3 top 20 kết hợp BGE-reranker-large top 5 được chọn cho tầng sinh, với Hit@5/Recall@5 trên development là 0,9573/0,9555.

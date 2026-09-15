@@ -1,3 +1,7 @@
+> Cập nhật sau pull `dc04e2d`: [trạng thái hiện hành](README.md) và
+> [quy cách/nội dung tích hợp](../report/README.md) có ưu tiên. Nội dung dưới
+> đây lưu lịch sử Plan; lề, giãn dòng và phạm vi 2C/3 đã được cập nhật.
+
 # 02 — Dàn ý báo cáo
 
 Mục tiêu 10–15 trang. Mỗi mục ghi rõ: **phải chứng minh được điều gì**, người đọc

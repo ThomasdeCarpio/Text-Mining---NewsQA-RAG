@@ -1,0 +1,16 @@
+\section{Cơ sở lý thuyết và công trình liên quan}
+\subsection{Hỏi đáp và RAG}
+NewsQA yêu cầu tìm đáp án trích từ một bài báo cho sẵn~\cite{newsqa}. NewsLens mở rộng sang hỏi đáp trên toàn kho bằng RAG: truy xuất các đoạn liên quan rồi dùng chúng làm ngữ cảnh cho mô hình sinh~\cite{rag}.
+\subsection{Truy xuất và chia đoạn}
+\begin{itemize}
+\item \textbf{Truy xuất thưa (sparse):} biểu diễn văn bản theo các chiều từ vựng. BM25 dùng tần suất từ, độ hiếm và chuẩn hóa độ dài~\cite{bm25}; learned-sparse của BGE-M3 học trọng số từ vựng~\cite{bge}.
+\item \textbf{Truy xuất vector (dense):} ánh xạ câu hỏi và đoạn văn vào vector liên tục, rồi xếp hạng theo độ tương tự.
+\item \textbf{Truy xuất kết hợp (hybrid):} kết hợp nhiều danh sách truy xuất. NewsLens dùng nghịch đảo thứ hạng có trọng số (Reciprocal Rank Fusion, RRF)~\cite{rrf}.
+\end{itemize}
+Bộ xếp hạng lại (reranker) dùng cross-encoder chấm từng cặp câu hỏi--đoạn văn để sắp lại ứng viên; không tìm thêm đoạn ngoài danh sách truy xuất.
+
+Chia đoạn (chunking) tạo đơn vị lập chỉ mục. Cách chia đệ quy (recursive) ưu tiên ranh giới đoạn, dòng và từ trong giới hạn token; phần chồng lấp giữ ngữ cảnh ở biên. Kích thước đoạn, số ứng viên và số đoạn đưa cho mô hình sinh là các tham số riêng.
+\subsection{Sinh và đánh giá}
+Lời nhắc zero-shot không kèm ví dụ; one-shot có một ví dụ minh họa. Chỉ dấu \texttt{[n]} trong câu trả lời trỏ tới đoạn ngữ cảnh thứ $n$, khác với trích dẫn học thuật trong báo cáo.
+
+NewsLens kết hợp so khớp đáp án, đối chiếu nhãn bằng chứng và điểm chấm bằng mô hình ngôn ngữ của RAGAS~\cite{ragas}. Các thước đo ở Chương 5 đánh giá riêng độ đúng, mức hỗ trợ của ngữ cảnh và dẫn nguồn.

@@ -1,0 +1,31 @@
+% Sources: phase3_final_results.json (post-review amendment),
+% policy_comparison.csv, policy_significance.json, docs/reports/phase3/README.md.
+\subsubsection{Kết quả, phân tích và kết luận}
+Các thước đo có phạm vi khác nhau:
+\begin{itemize}
+\item \textbf{Token F1/Citation Validity:} chỉ tính trên nhóm trả lời được.
+\item \textbf{False-answer:} lỗi quyết định trên nhóm thiếu bằng chứng (79 case development, 34 case final), gồm trả lời thay vì từ chối và lỗi sinh; không phải tỷ lệ câu trả lời sai sự thật.
+\item \textbf{False-abstention:} lỗi quyết định trên nhóm trả lời được, cũng tính lỗi sinh. Cả ba chính sách đạt 0\% trên hai tập, thỏa ngưỡng 10\%.
+\end{itemize}
+
+Abstention F1 được tính bằng $2TP/(2TP+FP+FN)$, với TP là số case thiếu bằng chứng được từ chối đúng. Lỗi sinh ở case thiếu bằng chứng được tính vào FN; lỗi sinh hoặc từ chối trên case có thể trả lời được tính vào FP. Mỗi chính sách có một lỗi sinh ở nhóm thiếu bằng chứng của mỗi tập, tương ứng tỷ lệ sinh thành công 99,29\% và 98,33\%.
+\begin{table}[H]\centering\small\setstretch{1.05}
+\caption{Chính sách từ chối trên development 140 case và final 60 case.}\label{tab:abstention-results}
+\begin{tabular}{@{}llrrrr@{}}\toprule
+\textbf{Tập} & \textbf{Chính sách} & \textbf{Abst. F1} & \textbf{False-answer} & \textbf{Token F1} & \textbf{Cit. Valid.}\\\midrule
+Development & B0 & 0,9740 & 5,06\% & 0,4490 & 1,0000\\
+ & B1 & 0,9936 & 1,27\% & 0,3420 & 1,0000\\
+ & B2 & 0,9936 & 1,27\% & 0,3420 & 1,0000\\\midrule
+Final & B0 & 0,9697 & 5,88\% & 0,4766 & 1,0000\\
+ & B1 & 0,9538 & 8,82\% & 0,2996 & 1,0000\\
+ & B2 & 0,9538 & 8,82\% & 0,2996 & 1,0000\\\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{itemize}
+\item \textbf{B1 trên development:} false-answer giảm từ 5,06\% xuống 1,27\%, nhưng Token F1 của 61 case trả lời được giảm khoảng 0,1070 (CI95 $[-0{,}1563;\,-0{,}0631]$), vượt guardrail 0,02.
+\item \textbf{B2:} ngưỡng reranker thô khoảng $-7{,}8398$, chọn từ 107 ngưỡng. Cổng không chặn case nào ở development; ở final chỉ chặn một case mà B1 đã từ chối, nên không đổi quyết định nào.
+\item \textbf{Quyết định và final:} giữ B0 theo development. Trên final, B0 có 2/34 lỗi ở nhóm thiếu bằng chứng, B1/B2 có 3/34.
+\end{itemize}
+
+\textbf{Giới hạn.} B1 đồng thời đổi JSON và chỉ dẫn về hình thức đáp án; mức giảm Token F1 không cô lập tác động của JSON và chưa đủ để kết luận sai ngữ nghĩa. Kết luận chỉ áp dụng cho bộ case đã kiểm soát và các chính sách được thử.

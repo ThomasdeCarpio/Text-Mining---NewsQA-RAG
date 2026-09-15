@@ -1,0 +1,36 @@
+% Sources: phase2c/notes_thang.md; screening CSV (parent_* for C3);
+% paired_significance.json; finalist_lock_c3_d3.json. All under docs/reports/.
+\subsubsection{Kết quả, phân tích và kết luận}
+Bảng~\ref{tab:chunking-screen} trình bày kết quả truy xuất của vòng sàng lọc. Với C3, bảng dùng các đoạn cha được chuyển cho mô hình sinh; các chỉ số trên đoạn con không được dùng cho phép so sánh này. C1 và C2 tăng nhẹ các chỉ số, còn C3 thấp hơn C0. C3 vẫn được khảo sát tiếp theo biên sàng lọc 0,02; ngưỡng loại sớm này khác guardrail 0,01 ở vòng cuối.
+\begin{table}[H]\centering\small\setstretch{1.05}
+\caption{Sàng lọc chia đoạn trên 281 câu, chấm theo ngữ cảnh chuyển cho tầng sinh.}\label{tab:chunking-screen}
+\begin{tabular}{@{}lrrrrr@{}}\toprule
+\textbf{Phương án} & \textbf{Số đoạn lập chỉ mục} & \textbf{Hit@5} & \textbf{Recall@5} & \textbf{MRR@5} & \textbf{nDCG@5}\\\midrule
+C0: recursive & 22.766 & 0,9573 & 0,9537 & 0,8791 & 0,8963\\
+C1: theo câu & 22.014 & 0,9680 & 0,9591 & 0,8796 & 0,8979\\
+C2: theo đoạn & 22.018 & 0,9609 & 0,9555 & 0,8817 & 0,8989\\
+C3: phân cấp & 49.218 & 0,9466 & 0,9431 & 0,8466 & 0,8700\\\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Sàng lọc.}
+\begin{itemize}
+\item \textbf{Chọn C3 để khảo sát tiếp:} C1--C3 dùng P2-D5 trên 80 câu, cùng 20 câu chấm RAGAS. C3 đạt AC 0,8094 so với C0 là 0,8363; Faithfulness 0,9750 cao hơn C1 (0,9433) và C2 (0,9100). Nhóm tiếp tục C3 vì giữ Faithfulness tốt hơn, dù Citation F1 còn thấp; mẫu này chưa đủ để kết luận C3 tốt hơn.
+\item \textbf{Chọn độ sâu:} với C3, D1 bị loại vì Citation F1/Validity chỉ đạt 0,5250/0,6250. D3 có AC cao hơn D5; D5 có Faithfulness và Citation F1 cao hơn D3. Cả D3/D5 vào vòng cuối trên 281 câu.
+\end{itemize}
+
+\textbf{Đối chứng.} C0 ở Bảng~\ref{tab:chunking-screen} dùng trace truy xuất của vòng sàng lọc 2C, có Recall@5 bằng 0,9537. Vòng cuối tái sử dụng C0-D3/D5 của Phase 2, với Recall@5 bằng 0,9555 (Bảng~\ref{tab:phase1-final-test}). Sai khác ở Bảng~\ref{tab:chunking-final} được tính ghép cặp từ điểm từng câu trước khi làm tròn. Hit/Recall@5 chấm danh sách năm đoạn sau mở rộng cha; D3/D5 chỉ giới hạn phần đưa cho mô hình sinh.
+
+\begin{table}[H]\centering\small\setstretch{1.05}
+\caption{Ứng viên cuối chia đoạn: sai khác so với C0-P2-D5 trên 281 câu.}\label{tab:chunking-final}
+\begin{tabular}{@{}lrrrrr@{}}\toprule
+\textbf{Cấu hình} & \textbf{AC} & \textbf{$\Delta$ AC} & \textbf{$\Delta$ Cit. F1} & \textbf{$\Delta$ Hit@5} & \textbf{$\Delta$ Recall@5}\\\midrule
+C3-P2-D3 & 0,7730 & $+0{,}0380$ & $-0{,}0284$ & $-0{,}0107$ & $-0{,}0125$\\
+C3-P2-D5 & 0,7415 & $+0{,}0065$ & $-0{,}0275$ & $-0{,}0107$ & $-0{,}0125$\\\bottomrule
+\end{tabular}
+\end{table}
+\begin{itemize}
+\item \textbf{Quyết định:} cả hai ứng viên đạt coverage 100\% nhưng vi phạm ngưỡng giảm 0,01 của Citation F1, Hit@5 và Recall@5. C0-P2-D5 được giữ nguyên.
+\item \textbf{Ảnh hưởng của độ sâu:} mức tăng AC 0,0380 của C3-D3 bao gồm cả thay đổi độ sâu; so với C0-D3 (AC 0,7711), chênh lệch chỉ 0,0019.
+\item \textbf{Giới hạn:} Citation Validity gần 0,98 chỉ xác nhận chỉ dấu hợp lệ, không bảo đảm đoạn được dẫn khớp bằng chứng chuẩn. Mở rộng cha chưa bảo đảm khớp bằng chứng tốt hơn; phép so sánh chưa tách riêng tác động từng bước.
+\end{itemize}

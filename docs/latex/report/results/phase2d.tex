@@ -1,0 +1,31 @@
+% Original finalist P2-D5 scores are the frozen baseline; one-shot scores are paired by question.
+% Raw deterministic_scores.jsonl confirms EM=26/281; the source report printed 0 in error.
+\begin{table}[H]\setstretch{1.05}\centering\small
+\caption[Zero-shot và one-shot: điểm số và sai khác ghép cặp.]{Zero-shot và one-shot: development 281 câu, held-out 284 câu. $\Delta$ và CI95 so sánh P2-1S với P2-D5 finalist trên development.}\label{tab:result-phase2d}
+\begin{tabular}{@{}lrrrlr@{}}\toprule
+\textbf{Thước đo} & \textbf{\shortstack{P2\\dev}} & \textbf{\shortstack{P2-1S\\dev}} & \textbf{$\Delta$} & \textbf{CI95} & \textbf{\shortstack{P2-1S\\held-out}}\\\midrule
+Exact Match & 0,0925 & 0,3559 & --- & --- & 0,3239 \\
+Token F1 & 0,4191 & 0,6267 & $+0{,}2076$ & $[0{,}1728;\,0{,}2427]$ & 0,6032 \\
+Answer Correctness & 0,7350 & 0,8015 & $+0{,}0664$ & $[0{,}0444;\,0{,}0883]$ & 0,7557 \\
+Faithfulness & 0,9801 & 0,9603 & $-0{,}0199$ & $[-0{,}0388;\,-0{,}0028]$ & 0,9082 \\
+Answer Relevancy & 0,7092 & 0,5251 & $-0{,}1841$ & $[-0{,}2233;\,-0{,}1458]$ & 0,4688 \\
+Citation F1 & 0,8391 & 0,8441 & $+0{,}0050$ & $[-0{,}0104;\,0{,}0229]$ & 0,7315 \\
+Citation Validity & 0,9858 & 0,9786 & $-0{,}0071$ & $[-0{,}0182;\,0{,}0000]$ & 0,9437 \\
+Coverage & 100\% & 100\% & --- & --- & 100\% \\\bottomrule
+\end{tabular}\end{table}
+\begin{itemize}
+\item \textbf{Cải thiện:} AC và Token F1 tăng; CI95 của hai sai khác không chứa 0. Citation F1 chưa có bằng chứng thay đổi.
+\item \textbf{Đánh đổi:} Faithfulness và Answer Relevancy giảm. Mức giảm Faithfulness trung bình sát ngưỡng 0,02; one-shot không cải thiện đồng đều các tiêu chí.
+\end{itemize}
+
+% Length: word regex after removing all numeric citation groups (including [1, 2]) from raw answers.
+\textbf{Phân tích.}
+\begin{itemize}
+\item \textbf{Quan sát:} trung vị độ dài đáp án (bỏ chỉ dấu nguồn) giảm từ 11 xuống 7 từ; số đáp án không quá ba từ tăng từ 23 lên 105. Số câu có Relevancy dưới 0,5 tăng từ 54 lên 133; 109/133 câu one-shot này vẫn đạt AC ít nhất 0,8.
+\item \textbf{Ví dụ:} với câu hỏi về nơi tổ chức giải Swamp Soccer năm 2009, đáp án đầy đủ đạt Relevancy 1,00; ``Scotland [1]'' đạt 0,037 dù Correctness bằng 1,00.
+\end{itemize}
+RAGAS sinh câu hỏi ngược từ đáp án để tính Relevancy. Đáp án quá ngắn có thể mất chủ thể và sự kiện; cách giải thích này phù hợp với ví dụ, chưa được kiểm chứng trên toàn bộ các trường hợp giảm điểm.
+
+Trên held-out, các thước đo chất lượng của one-shot đều thấp hơn development.
+
+\noindent\textbf{Kết luận.} Trên development, mức giảm Faithfulness và các điểm dẫn nguồn vẫn trong guardrail theo điểm trung bình. Khảo sát diễn ra sau đánh giá held-out zero-shot, ngoài vòng lựa chọn đã khóa. Kết quả phục vụ phân tích đánh đổi, không thay cấu hình P2-D5; việc dùng lại held-out không tạo tập kiểm tra độc lập mới.

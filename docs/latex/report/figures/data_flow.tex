@@ -1,0 +1,12 @@
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=0.45cm and 0.3cm]
+\node[box] (a) {NewsQA / CNN\\Chọn bài và câu hỏi};
+\node[box,right=of a] (b) {EDA và làm sạch\\Đối chiếu bản lưu};
+\node[box,right=of b] (c) {Phục hồi phần đuôi\\Rà soát câu hỏi và đáp án};
+\node[box,below=of c] (d) {Khử trùng lặp đã duyệt\\Cố định mã bài và câu hỏi};
+\node[box,left=of d] (e) {Chia đoạn\\Ánh xạ bằng chứng};
+\node[box,left=of e] (f) {Tập đánh giá và chỉ mục\\Lưu phiên bản và mã băm};
+\draw[flow] (a)--(b);\draw[flow] (b)--(c);\draw[flow] (c)--(d);\draw[flow] (d)--(e);\draw[flow] (e)--(f);
+\end{tikzpicture}
+\caption{Quy trình chuẩn bị dữ liệu đánh giá.}\label{fig:data}
+\end{figure}

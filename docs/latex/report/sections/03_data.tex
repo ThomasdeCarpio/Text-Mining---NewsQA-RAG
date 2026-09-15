@@ -1,0 +1,55 @@
+% Dataset description: authoritative upstream 4d6a4a2, 03_data_and_evaluation.tex.
+% Restoration/evidence mapping: evaluation/testset.py, question_review.py,
+% question_dedup.py; scripts/restore_corpus.py; docs/eda/eda_report.md.
+\section{Dữ liệu và quy trình chuẩn bị}
+\subsection{Nguồn dữ liệu và cấu trúc}
+Nhóm sử dụng bản NewsQA trên Hugging Face (\href{https://huggingface.co/datasets/lucadiliello/newsqa}{lucadiliello/newsqa}), gồm bài CNN, câu hỏi, đáp án và vị trí ký tự~\cite{newsqa}. Mỗi bản ghi tương ứng một câu hỏi; các bài được phân biệt theo nội dung. Phiên bản nguồn được cố định để tái lập.
+
+Tập train có 74.160 câu hỏi thuộc 10.895 bài; validation có 4.212 câu hỏi thuộc 638 bài. Nhóm chọn 200 bài validation với seed 42 và lấy toàn bộ câu hỏi tương ứng. Loại 31 bài train trùng với tập đánh giá, dùng 10.864 bài còn lại làm bài gây nhiễu (distractor). Kho truy xuất gồm 11.064 bài; distractor không có câu hỏi đánh giá riêng.
+
+\subsection{Làm sạch, phục hồi và rà soát}
+\begin{itemize}
+\item \textbf{Phục hồi bài:} EDA khảo sát độ dài, HTML, câu hỏi, độ trùng và bằng chứng. Bài bị cắt được đối chiếu với bản lưu CNN; chỉ nối phần đuôi khi toàn bộ nội dung cũ khớp sau chuẩn hóa, giữ nguyên vị trí bằng chứng.
+\item \textbf{Làm rõ câu hỏi:} Codex đề xuất sửa, nhóm đối chiếu với bài nguồn. Bản original giữ cách hỏi gốc; bản resolved làm rõ chủ thể hoặc sự kiện, không thêm đáp án. Đây là biên tập có hỗ trợ AI, không phải kiểm định mù độc lập.
+\item \textbf{Sửa nhãn:} đối chiếu đáp án với câu hỏi và bài nguồn; sửa nội dung hoặc ranh giới đáp án sai, cập nhật khoảng bằng chứng. Nhãn gốc và lý do sửa được lưu để đối chiếu.
+\item \textbf{Khử trùng lặp:} sau khi làm rõ, gộp các câu cùng bài, cùng ý nghĩa và cùng đáp án; giữ câu đại diện cùng các đáp án chấp nhận và bằng chứng.
+\end{itemize}
+Từ 1.340 câu nguồn, loại 4 câu không có đáp án đáng tin cậy rồi 184 câu trùng nghĩa, thu được 1.152 câu resolved thuộc 200 bài.
+\begin{table}[H]\setstretch{1.05}\small
+  \centering
+  \caption{Các vấn đề được ghi nhận khi rà soát câu hỏi.}
+  \label{tab:question-review-issues}
+  \begin{tabularx}{\textwidth}{@{}l r X@{}}
+    \toprule
+    \textbf{Vấn đề} & \textbf{Số lần ghi nhận} & \textbf{Ý nghĩa} \\
+    \midrule
+    Thiếu chủ thể & 688 & Thiếu chủ thể cần xác định \\
+    Sự kiện chưa rõ & 139 & Chưa xác định rõ sự kiện \\
+    Tham chiếu chung & 98 & Dùng tham chiếu chung như ``he'', ``it'' \\
+    Bằng chứng sai & 87 & Bằng chứng không hỗ trợ đáp án \\
+    Câu hỏi thiếu cấu trúc & 71 & Câu hỏi sai hoặc thiếu cấu trúc \\
+    Đáp án bị cắt & 59 & Đáp án bị cắt thiếu \\
+    Đáp án sai & 35 & Đáp án nguồn không đúng \\
+    Lệch dạng Yes/No & 4 & Câu hỏi Có/Không nhưng đáp án sai dạng \\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{1mm}
+  {\footnotesize Một câu hỏi có thể mang nhiều nhãn vấn đề.}
+\end{table}
+\input{figures/data_flow}
+\subsection{Ánh xạ bằng chứng và chia tập}
+Đoạn chuẩn (gold) là đoạn có khoảng ký tự giao với ít nhất một khoảng bằng chứng. Nhãn được tạo lại cho từng cách chia đoạn và dùng để chấm điểm; không bao quát mọi bằng chứng hợp lý.
+
+Development được chọn theo bài với seed 42; screening và calibration là các tập con. Generation held-out chọn 50 bài với seed 46 từ 150 bài còn lại, phần còn lại làm reserve. Chia theo bài ngăn câu cùng nguồn xuất hiện ở cả development và tập kiểm tra.
+\begin{table}[H]\setstretch{1.05}\centering\small
+\caption{Các tập của benchmark sau khử trùng lặp}\label{tab:partitions}
+\begin{tabularx}{\linewidth}{@{}YrrY@{}}\toprule
+\textbf{Tập} & \textbf{Câu} & \textbf{Bài} & \textbf{Vai trò}\\\midrule
+Development & 281 & 50 & Chọn cấu hình \\
+Screening / calibration & 80 / 20 & --- & Tập con development \\
+Generation held-out & 284 & 50 & Kiểm tra cấu hình đã khóa \\
+Reserve & 587 & 100 & Dự trữ, không chọn cấu hình \\
+Retrieval final-test & 871 & 150 & Toàn bộ held-out và reserve \\\bottomrule
+\end{tabularx}\end{table}
+Retrieval final-test gồm generation held-out và reserve, nên hai tập kiểm tra không độc lập. Reserve không dùng để chọn cấu hình.

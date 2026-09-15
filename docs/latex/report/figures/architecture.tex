@@ -1,0 +1,12 @@
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=0.6cm and 0.4cm]
+\node[box] (a) {Frontend React\\Hội thoại và nguồn};
+\node[box,right=of a] (b) {Backend FastAPI\\Phiên và dịch vụ chat};
+\node[box,right=of b] (f) {Cổng gọi mô hình\\Provider theo cấu hình};
+\node[box,below=of a] (c) {Bộ thực nghiệm\\Chia tập, lưu và chấm điểm};
+\node[box,right=of c] (d) {Lõi RAG dùng chung\\Truy xuất, xếp hạng, sinh};
+\node[box,right=of d] (e) {Kho bài báo và chỉ mục\\Sparse / Chroma dense};
+\draw[flow] (a)--(b);\draw[flow] (b)--(d);\draw[flow] (b)--(f);\draw[flow] (c)--(d);\draw[flow] (e)--(d);\draw[flow] (d.north east)--(f.south west);
+\end{tikzpicture}
+\caption[Kiến trúc ứng dụng và bộ thực nghiệm chính.]{Kiến trúc ứng dụng và bộ thực nghiệm chính. Mũi tên từ kho cung cấp dữ liệu; các mũi tên còn lại thể hiện yêu cầu xử lý.}\label{fig:architecture}
+\end{figure}

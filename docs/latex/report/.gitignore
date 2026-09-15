@@ -1,0 +1,10 @@
+# Editable LaTeX results override the root rule for generated result folders.
+!results/
+!results/*.tex
+# Keep main.pdf; exclude transient build files and editor backups.
+*.bbl
+*.blg
+*.lof
+*.lot
+*.bak
+*~

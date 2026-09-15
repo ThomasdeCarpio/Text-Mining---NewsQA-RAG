@@ -1,3 +1,8 @@
+> **Báo cáo chính:** xem [PDF](report/main.pdf),
+> [hướng dẫn build/Overleaf và đối chiếu nội dung](report/README.md).
+> Target `make report` độc lập với bộ sinh số slide. Các bảng/ghi chú slide
+> bên dưới không thay thế kết luận đã đối chiếu trong báo cáo chính.
+
 # NewsLens — 22 slide thực nghiệm và ứng dụng
 
 [Mở PDF](slides/main.pdf) · [Mã Beamer](slides/main.tex)

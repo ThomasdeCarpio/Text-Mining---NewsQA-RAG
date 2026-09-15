@@ -1,0 +1,29 @@
+% Synthesis grounded in accepted Experiment and stored example 1416c66b2eb543aea04972d5780b31d6.
+\clearpage
+\section{Thảo luận, kết luận và hướng phát triển}
+\subsection{Thảo luận}\label{sec:discussion-evidence}
+\begin{itemize}
+\item \textbf{Tổng quát hóa:} reranker vẫn có lợi trên tập kiểm tra; chất lượng truy xuất và phần lớn thước đo sinh thấp hơn development. Điểm development chưa đại diện cho hiệu quả trên bài mới.
+\item \textbf{Bằng chứng:} held-out có 35/284 câu thiếu đoạn chuẩn trong top 5, so với 12/281 câu development. Khi có đoạn chuẩn, AC tương ứng là 0,7689 và 0,7597. AC tổng thể thấp hơn đi cùng tỷ lệ thiếu đoạn chuẩn cao hơn; đây là liên hệ, chưa chứng minh nhân quả.
+\end{itemize}
+
+\textbf{Diễn giải thước đo.} Faithfulness cao chưa bảo đảm khớp đáp án chuẩn. Bảng~\ref{tab:evidence-example} minh họa với câu hỏi ``In how many states were cases of the Listeria monocytogenes outbreak reported?'', đáp án chuẩn ``26''.
+\begin{table}[H]\centering\small\setstretch{1.05}
+\caption{Hai cấu hình trả lời câu hỏi về số bang ghi nhận dịch Listeria.}\label{tab:evidence-example}
+\begin{tabularx}{\linewidth}{@{}lY Y@{}}\toprule
+\textbf{Cấu hình} & \textbf{Phần đáp án và chỉ dấu nguồn} & \textbf{Thông tin trong đoạn được dẫn}\\\midrule
+P2-D3 & 25 states [1] & 116 ca ở 25 bang \\
+P2-D5 & 26 states [5] & 133 ca ở 26 bang; đoạn chuẩn \\\bottomrule
+\end{tabularx}\end{table}
+Cả hai đầu ra đạt Faithfulness 1; chỉ D5 khớp đáp án chuẩn với bằng chứng ở đoạn [5]. Câu hỏi không nêu thời điểm, nên chênh lệch với đáp án chuẩn chưa đủ để kết luận câu trả lời thiếu căn cứ. Ví dụ không đại diện cho tỷ lệ lỗi toàn tập.
+
+\subsection{Giới hạn}
+\begin{itemize}
+\item \textbf{Dữ liệu và thước đo:} CNN và câu hỏi tiếng Anh đã rà soát chưa đại diện cho hội thoại tự nhiên hoặc nguồn khác. Việc làm rõ câu hỏi thay đổi độ khó; nhãn chuẩn không bao phủ hết bằng chứng hợp lý. Token F1 ưu tiên khớp từ với đáp án ngắn; RAGAS phụ thuộc mô hình và lời nhắc chấm.
+\item \textbf{Thống kê:} CI trên đầu ra cố định không đo biến động khi gọi lại generator/judge. Bootstrap theo câu ở Phase 1 development chưa xử lý phụ thuộc cùng bài; chọn qua nhiều vòng có thể đánh giá quá cao khả năng khái quát.
+\item \textbf{Khảo sát:} one-shot và 2C diễn ra sau held-out; Phase 3 dùng case có chủ đích, hiệu chỉnh sau khi xem đầu ra. Các khảo sát chưa thay thế đánh giá độc lập hoặc kiểm định mù bởi người đọc.
+\item \textbf{Ứng dụng:} chat dự phòng nằm ngoài đánh giá RAG; hệ thống chưa viết lại câu hỏi theo hội thoại. Lịch sử và nhật ký mất khi backend khởi động lại. Kiểm thử giả lập kiểm tra luồng phần mềm; chưa xét tải đồng thời và trải nghiệm người dùng.
+\end{itemize}
+
+\subsection{Kết luận và hướng phát triển}
+Đồ án hiện thực hệ thống hỏi đáp có dẫn nguồn, đánh giá riêng truy xuất, đáp án và bằng chứng. Cấu hình được giữ là BGE-M3 top 20, BGE-reranker-large top 5, P2-D5 với Gemini 3.1 Flash-Lite. Hướng tiếp theo gồm mở rộng nguồn tin, đánh giá mù bởi người đọc, khảo sát one-shot/few-shot và từ chối trên câu hỏi tự nhiên; đồng thời hiển thị rõ chat dự phòng và đánh giá truy vấn hội thoại.

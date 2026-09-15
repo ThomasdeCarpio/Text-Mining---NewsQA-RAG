@@ -1,91 +1,42 @@
-% Compile from this directory with:
-%   latexmk -xelatex -interaction=nonstopmode -halt-on-error main.tex
+% Build: make -C docs/latex report (from repository root).
 \documentclass[12pt,a4paper]{article}
-
-\usepackage[a4paper,margin=25mm]{geometry}
-\input{../common/preamble.tex}
-\usepackage{float}
-\usepackage{listings}
-\usepackage{polyglossia}
-\setdefaultlanguage{vietnamese}
-\usepackage{fancyhdr}
-\usepackage{setspace}
-\usepackage{xurl}
-\usepackage[colorlinks=true,linkcolor=brandaccent,citecolor=brandpass,urlcolor=brandaccent]{hyperref}
-
-% Định dạng đoạn văn và giãn dòng gọn gàng cho technical report
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{3pt plus 1pt minus 1pt}
-\setstretch{1.15}
-
-% Tối ưu khoảng cách danh sách (itemize, enumerate) cho toàn bộ báo cáo
-\usepackage{enumitem}
-\setlist{noitemsep, topsep=2pt plus 1pt minus 1pt, partopsep=0pt, parsep=1pt}
-
-% Tối ưu khoảng cách tiêu đề các đề mục
-\usepackage{titlesec}
-\titlespacing*{\section}{0pt}{10pt plus 2pt minus 2pt}{4pt plus 1pt minus 1pt}
-\titlespacing*{\subsection}{0pt}{7pt plus 2pt minus 2pt}{3pt plus 1pt minus 1pt}
-\titlespacing*{\subsubsection}{0pt}{5pt plus 1pt minus 1pt}{2pt plus 1pt minus 1pt}
-
-% Tối ưu khoảng cách các khối float (bảng, hình ảnh)
-\setlength{\intextsep}{8pt plus 2pt minus 2pt}
-\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
-\setlength{\floatsep}{8pt plus 2pt minus 2pt}
-\setlength{\abovecaptionskip}{4pt}
-\setlength{\belowcaptionskip}{2pt}
-
-% Định nghĩa thông tin môn học và đề tài
-\newcommand{\coursename}{Khai phá văn bản (Text Mining)}
-\newcommand{\reporttitle}{Hệ thống hỏi đáp tin tức NewsLens}
-
-% Cấu hình Header và Footer bằng fancyhdr
-\pagestyle{fancy}
-\fancyhf{}
-\setlength{\headheight}{28pt}
-\lhead{\small Báo cáo Đồ án: \reporttitle}
-\rhead{\small Trường ĐH Khoa học Tự nhiên -- ĐHQG-HCM\\\coursename}
-\rfoot{\small Trang \thepage}
-\renewcommand{\headrulewidth}{0.4pt}
-\renewcommand{\footrulewidth}{0.4pt}
-
+\input{preamble}
 \begin{document}
-
-% Phần bìa và thông tin mở đầu đánh số La Mã
+\hypersetup{pageanchor=false}
+\input{frontmatter/cover}
 \pagenumbering{roman}
-
-% Trang bìa theo mẫu HCMUS
-\input{sections/00_title.tex}
-
-% Tóm tắt (Abstract)
-\input{sections/00_abstract.tex}
-\clearpage
-
-% Mục lục, Danh mục bảng, Danh mục hình
+\hypersetup{pageanchor=true}
+\input{frontmatter/team}
+\input{frontmatter/abstract}
+\begingroup\small\setstretch{1.0}
 \tableofcontents
+\endgroup
 \clearpage
-\listoftables
+\section*{Danh mục hình và bảng}
+\begingroup\small\setstretch{1.0}
+\makeatletter
+\textbf{Hình}\par\@starttoc{lof}
+\vspace{1em}\textbf{Bảng}\par\@starttoc{lot}
+\makeatother
+\endgroup
 \clearpage
-\listoffigures
-\clearpage
-
-% Bắt đầu nội dung chính: đánh số trang Ả Rập từ 1
 \pagenumbering{arabic}
-\setcounter{page}{1}
-
-\input{sections/01_introduction.tex}
-\input{sections/02_system_pipeline.tex}
-\input{sections/03_data_and_evaluation.tex}
-\input{sections/04_phase1_retrieval.tex}
-\input{sections/05_phase2_generation.tex}
-\input{sections/06_results_summary_and_discussion.tex}
-\input{sections/07_conclusion.tex}
-
+\input{sections/01_introduction}
+\input{sections/02_background}
+\input{sections/03_data}
+\input{sections/04_system}
+\input{sections/05_experiments}
+\input{sections/06_conclusion}
 \clearpage
+\phantomsection
 \addcontentsline{toc}{section}{Tài liệu tham khảo}
 \bibliographystyle{plain}
+\begingroup\raggedright
 \bibliography{references}
-
-\input{appendix/appendix.tex}
-
+\endgroup
+\clearpage
+\appendix
+\titleformat{\section}{\large\bfseries}{Phụ lục \thesection.}{0.5em}{}
+\input{appendices/configuration}
+\input{appendices/reproduction}
 \end{document}

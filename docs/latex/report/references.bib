@@ -1,102 +1,45 @@
-@inproceedings{lewis2020retrieval,
-  title={Retrieval-augmented generation for knowledge-intensive {NLP} tasks},
-  author={Lewis, Patrick and Perez, Ethan and Piktus, Aleksandra and Petroni, Fabio and Karpukhin, Vladimir and Goyal, Naman and K{\"u}ttler, Heinrich and Lewis, Mike and Yih, Wen-tau and Rockt{\"a}schel, Tim and others},
-  booktitle={Advances in Neural Information Processing Systems (NeurIPS)},
-  volume={33},
-  pages={9459--9474},
-  year={2020}
+@inproceedings{newsqa,
+ author={Trischler, Adam and Wang, Tong and Yuan, Xingdi and Harris, Justin and Sordoni, Alessandro and Bachman, Philip and Suleman, Kaheer},
+ title={{NewsQA}: A Machine Comprehension Dataset},
+ booktitle={Proceedings of the 2nd Workshop on Representation Learning for NLP},
+ year={2017},pages={191--200},publisher={Association for Computational Linguistics},
+ doi={10.18653/v1/W17-2623},note={\url{https://aclanthology.org/W17-2623/}}
+}
+@inproceedings{rag,
+ author={Lewis, Patrick and Perez, Ethan and Piktus, Aleksandra and Petroni, Fabio and Karpukhin, Vladimir and Goyal, Naman and K\"uttler, Heinrich and Lewis, Mike and Yih, Wen-tau and Rockt\"aschel, Tim and Riedel, Sebastian and Kiela, Douwe},
+ title={Retrieval-Augmented Generation for Knowledge-Intensive {NLP} Tasks},
+ booktitle={Advances in Neural Information Processing Systems},volume={33},
+ pages={9459--9474},year={2020},note={\url{https://arxiv.org/abs/2005.11401}}
+}
+@inproceedings{bge,
+ author={Chen, Jianlyu and Xiao, Shitao and Zhang, Peitian and Luo, Kun and Lian, Defu and Liu, Zheng},
+ title={{M3-Embedding}: Multi-Linguality, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation},
+ booktitle={Findings of the Association for Computational Linguistics: ACL 2024},
+ year={2024},pages={2318--2335},doi={10.18653/v1/2024.findings-acl.137},
+ note={\url{https://aclanthology.org/2024.findings-acl.137/}}
+}
+@inproceedings{ragas,
+ author={Es, Shahul and James, Jithin and Espinosa Anke, Luis and Schockaert, Steven},
+ title={{RAGAs}: Automated Evaluation of Retrieval Augmented Generation},
+ booktitle={Proceedings of the 18th Conference of the European Chapter of the Association for Computational Linguistics: System Demonstrations},
+ year={2024},pages={150--158},publisher={Association for Computational Linguistics},
+ doi={10.18653/v1/2024.eacl-demo.16},note={\url{https://aclanthology.org/2024.eacl-demo.16/}}
+}
+@article{bm25,
+ author={Robertson, Stephen and Zaragoza, Hugo},
+ title={The Probabilistic Relevance Framework: {BM25} and Beyond},
+ journal={Foundations and Trends in Information Retrieval},volume={3},number={4},
+ pages={333--389},year={2009},doi={10.1561/1500000019},note={\url{https://doi.org/10.1561/1500000019}}
 }
 
-@inproceedings{trischler2017newsqa,
-  title={{NewsQA}: A machine comprehension dataset},
-  author={Trischler, Adam and Wang, Tong and Yuan, Xingdi and Harris, Justin and Sordoni, Alessandro and Bachman, Philip and Suleman, Kaheer},
-  booktitle={Proceedings of the 2nd Workshop on Representation Learning for NLP (Rep4NLP@ACL)},
-  pages={191--200},
-  year={2017}
+@inproceedings{rrf,
+ author={Cormack, G. V. and Clarke, C. L. A. and B{\"u}ttcher, Stefan},
+ title={{Reciprocal Rank Fusion} Outperforms {Condorcet} and Individual Rank Learning Methods},
+ booktitle={Proceedings of SIGIR 2009},year={2009},
+ note={\url{https://cormack.uwaterloo.ca/cormacksigir09-rrf.pdf}}
 }
-
-@article{chen2024bge,
-  title={{BGE M3-Embedding}: Multi-lingual, multi-functionality, multi-granularity text embeddings through self-knowledge distillation},
-  author={Chen, Jianlv and Xiao, Shitao and Zhang, Peitian and Luo, Kun and Lian, Defu and Liu, Zheng},
-  journal={arXiv preprint arXiv:2402.03216},
-  year={2024}
-}
-
-@article{xiao2023c,
-  title={{C-Pack}: Packaged resources to advance general {Chinese} embedding},
-  author={Xiao, Shitao and Liu, Zheng and Zhang, Peitian and Muennighoff, Niklas},
-  journal={arXiv preprint arXiv:2309.07597},
-  year={2023}
-}
-
-@article{es2023ragas,
-  title={{RAGAS}: Automated evaluation of retrieval augmented generation},
-  author={Es, Shahul and James, Jithin and Espinosa-Anke, Luis and Schockaert, Steven},
-  journal={arXiv preprint arXiv:2309.15217},
-  year={2023}
-}
-
-@article{robertson2009probabilistic,
-  title={The probabilistic relevance framework: {BM25} and beyond},
-  author={Robertson, Stephen and Zaragoza, Hugo and others},
-  journal={Foundations and Trends{\textregistered} in Information Retrieval},
-  volume={3},
-  number={4},
-  pages={333--389},
-  year={2009}
-}
-
-@inproceedings{reimers2019sentence,
-  title={Sentence-{BERT}: Sentence embeddings using {Siamese BERT}-networks},
-  author={Reimers, Nils and Gurevych, Iryna},
-  booktitle={Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP)},
-  pages={3982--3992},
-  year={2019}
-}
-
-@inproceedings{cormack2009reciprocal,
-  title={Reciprocal rank fusion outperforms {Condorcet} and individual rank learning methods},
-  author={Cormack, Gordon V and Clarke, Charles LA and Buettcher, Stefan},
-  booktitle={Proceedings of the 32nd International ACM SIGIR Conference on Research and Development in Information Retrieval},
-  pages={758--759},
-  year={2009}
-}
-
-@article{ji2023survey,
-  title={Survey of hallucination in natural language generation},
-  author={Ji, Ziwei and Lee, Nayeon and Frieske, Rita and Yu, Tiezheng and Su, Dan and Xu, Yan and Ishii, Etsuko and Bang, Ye Jin and Dai, Wenliang and Madotto, Andrea and others},
-  journal={ACM Computing Surveys},
-  volume={55},
-  number={12},
-  pages={1--38},
-  year={2023}
-}
-
-@article{radford2019language,
-  title={Language models are unsupervised multitask learners},
-  author={Radford, Alec and Wu, Jeffrey and Child, Rewon and Luan, David and Amodei, Dario and Sutskever, Ilya and others},
-  journal={OpenAI blog},
-  volume={1},
-  number={8},
-  pages={9},
-  year={2019}
-}
-
-@article{brown2020language,
-  title={Language models are few-shot learners},
-  author={Brown, Tom and Mann, Benjamin and Ryder, Nick and Subbiah, Melanie and Kaplan, Jared D and Dhariwal, Prafulla and Neelakantan, Arvind and Shyam, Pranav and Sastry, Girish and Askell, Amanda and others},
-  journal={Advances in Neural Information Processing Systems (NeurIPS)},
-  volume={33},
-  pages={1877--1901},
-  year={2020}
-}
-
-@article{efron1979bootstrap,
-  title={Bootstrap methods: another look at the jackknife},
-  author={Efron, Bradley},
-  journal={The Annals of Statistics},
-  volume={7},
-  number={1},
-  pages={1--26},
-  year={1979}
+@misc{ragasdocs,
+ author={{Ragas}},title={{Answer Correctness}},
+ howpublished={Tài liệu chính thức},
+ note={\url{https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/answer_correctness/}. Truy cập ngày 14/09/2026}
 }

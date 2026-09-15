@@ -1,0 +1,61 @@
+% Typography adapted from the upstream main report at dc04e2d.
+% Independent of slide number generation and local experiment artifacts.
+\usepackage[a4paper,margin=25mm,headheight=28pt]{geometry}
+\usepackage{fontspec}
+\IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{\setmainfont{texgyretermes-regular.otf}[BoldFont=texgyretermes-bold.otf,ItalicFont=texgyretermes-italic.otf,BoldItalicFont=texgyretermes-bolditalic.otf]}
+\IfFontExistsTF{Arial}{\setsansfont{Arial}}{\setsansfont{texgyreheros-regular.otf}[BoldFont=texgyreheros-bold.otf]}
+\IfFontExistsTF{Consolas}{\setmonofont{Consolas}[Scale=MatchLowercase]}{\setmonofont{lmmono10-regular.otf}[Scale=MatchLowercase]}
+\usepackage{setspace}
+\setstretch{1.15}
+\usepackage{graphicx,xcolor,booktabs,tabularx,longtable,array,amsmath,amssymb,microtype}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{caption,titlesec,enumitem,fancyvrb,etoolbox,float,fancyhdr}
+\usepackage{xurl,placeins}
+\definecolor{brandaccent}{HTML}{1D6F8C}
+\definecolor{brandpass}{HTML}{1F7A4D}
+\colorlet{NewsBlue}{brandaccent}
+\usepackage[unicode,colorlinks=true,linkcolor=brandaccent,citecolor=brandpass,urlcolor=brandaccent]{hyperref}
+\urlstyle{same}
+\hypersetup{pdftitle={NewsLens: Xây dựng và đánh giá hệ thống hỏi đáp tin tức có dẫn nguồn trên bộ dữ liệu NewsQA},pdfauthor={Nhóm 9}}
+\renewcommand{\contentsname}{Mục lục}
+\renewcommand{\refname}{Tài liệu tham khảo}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
+\renewcommand{\appendixname}{Phụ lục}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
+\titleformat{\section}{\large\bfseries}{Chương \thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection.}{0.5em}{}
+\titlespacing*{\section}{0pt}{10pt plus 2pt minus 2pt}{4pt plus 1pt minus 1pt}
+\titlespacing*{\subsection}{0pt}{7pt plus 2pt minus 2pt}{3pt plus 1pt minus 1pt}
+\titlespacing*{\subsubsection}{0pt}{5pt plus 1pt minus 1pt}{2pt plus 1pt minus 1pt}
+\setlist{leftmargin=1.5em,noitemsep,topsep=2pt plus 1pt minus 1pt,partopsep=0pt,parsep=1pt}
+\captionsetup{font=small,labelfont=bf,skip=4pt}
+\captionsetup[table]{position=top}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt plus 1pt minus 1pt}
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\setlength{\emergencystretch}{2em}
+\setlength{\tabcolsep}{4pt}
+\setlength{\intextsep}{8pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\renewcommand{\arraystretch}{1.15}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\code}[1]{\nolinkurl{#1}}
+\newcommand{\PendingResult}[3]{\par\vspace{2pt}\noindent\fcolorbox{NewsBlue}{white}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{\footnotesize\setstretch{1.05}\textbf{Chờ bổ sung — #1.} #2\par\textit{Phụ trách: #3.}}}\par\vspace{2pt}}
+\newcommand{\Missing}{Chưa bổ sung}
+\tikzset{box/.style={draw=NewsBlue,rounded corners=2pt,align=center,font=\small,text width=4.4cm,minimum height=1.05cm,inner sep=4pt},flow/.style={-{Stealth[length=2mm]},draw=NewsBlue,thick}}
+\pagestyle{fancy}
+\fancyhf{}
+\setlength{\headheight}{28pt}
+\lhead{\small Báo cáo đồ án: NewsLens}
+\rhead{\small Trường ĐH Khoa học Tự nhiên -- ĐHQG-HCM\\Khai thác dữ liệu văn bản và ứng dụng}
+\rfoot{\small Trang \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}

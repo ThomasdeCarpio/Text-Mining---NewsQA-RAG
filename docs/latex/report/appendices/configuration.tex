@@ -1,0 +1,31 @@
+\section{Prompt và cấu hình quan trọng}\label{app:prompts}
+\subsection{Prompt P2 và mở rộng one-shot}
+P2 dùng chỉ thị sau; câu hỏi và các đoạn ngữ cảnh đánh số được gửi riêng. Ký hiệu \texttt{[n]} trỏ tới đoạn ngữ cảnh, không phải tài liệu tham khảo.
+\begin{quote}\small\setstretch{1.05}
+Answer using only the numbered context. Give one short answer sentence
+containing only the information type requested by the question, such as
+a person, place, date, year, number, object, event, or explanation.
+Include multiple items only when the question explicitly asks for them.
+Do not repeat the question, list alternative answers, or add background
+details. Place a supporting citation [n] immediately after the answer.
+If the answer is not in the context, say: 'I cannot find this information
+in the provided context.'
+\end{quote}
+P2-1S giữ nguyên P2 và nối thêm ví dụ tổng hợp sau. Ví dụ không lấy từ NewsQA, kho truy xuất hoặc các tập đánh giá; mục đích là minh họa đáp án ngắn với chỉ dấu nguồn đúng vị trí.
+\begin{quote}\small\setstretch{1.05}
+Demonstration (format example only):\\
+Context [1]: The Northbridge museum opened a new gallery in 2018.\\
+Context [2]: The city council approved the Riverside transit plan in March 2021.\\
+Question: When was the Riverside transit plan approved?\\
+Answer: March 2021 [2]
+
+Now answer the user's question using the supplied numbered context and the same concise citation format.
+\end{quote}
+\subsection{Môi trường và điều kiện đo}
+% Environment: baseline/environment.json (2026-09-05), phase1/heldout/environment.json (2026-09-06).
+\begin{itemize}
+\item \textbf{Môi trường baseline P0 và retrieval final-test:} Linux x86\_64, Python 3.12.13, PyTorch 2.10.0+cu128, Ragas 0.4.3, sentence-transformers 5.4.1; bốn CPU logic. OMP/MKL dùng một luồng ở baseline, hai luồng ở final-test.
+\item \textbf{Retrieval final-test:} sparse và reranker lần lượt dùng CUDA 0 và 1; làm nóng bằng ba truy vấn; tối đa hai lần thử mỗi bước.
+\item \textbf{Thu đầu ra:} xử lý tuần tự từng câu. Khi đổi prompt hoặc mô hình, dùng lại trace nên không đo lại truy xuất. Hai mô hình sinh bổ sung đặt khoảng cách tối thiểu 4,2 giây giữa các yêu cầu.
+\item \textbf{Phạm vi đo:} LLM P95 chỉ tính lời gọi sinh thành công, không gồm khoảng chờ hoặc lượt thử thất bại trước đó. Tổng độ trễ từ trace và lời gọi sinh không phải thời gian xử lý cả lô câu hỏi.
+\end{itemize}

@@ -14,3 +14,11 @@ slides: numbers
 # Tectonic uses XeTeX and can build without a system TeX Live installation.
 slides-tectonic: numbers
 	cd slides && $(TECTONIC) --keep-logs main.tex
+
+# Report is independent of slide statistics and local benchmark data.
+.PHONY: report report-tectonic
+report:
+	cd report && $(LATEXMK) -xelatex -interaction=nonstopmode -halt-on-error main.tex
+
+report-tectonic:
+	cd report && $(TECTONIC) --keep-logs main.tex

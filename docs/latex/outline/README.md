@@ -1,51 +1,40 @@
-# Dàn ý báo cáo
+# Trạng thái báo cáo NewsLens
 
-Đặc tả nội dung cho báo cáo LaTeX ở [`../report/`](../report/). Viết mục nào thì
-tra file tương ứng trước.
+## Phạm vi hiện hành
 
-| File | Trả lời câu hỏi | Đọc khi |
-| :--- | :--- | :--- |
-| [`00_scope_and_style.md`](00_scope_and_style.md) | Viết cho ai, dài bao nhiêu, giọng thế nào | Trước khi viết bất kỳ mục nào |
-| [`01_terms.md`](01_terms.md) | Thuật ngữ nào phải định nghĩa, và định nghĩa ra sao | Khi viết §0 |
-| [`02_outline.md`](02_outline.md) | Có mục nào, mỗi mục phải chứng minh gì | Khi viết mục đó |
-| [`03_claims.md`](03_claims.md) | Được phép nói mạnh đến đâu, dựa vào artifact nào | Mỗi lần viết một phát biểu có số |
-| [`04_stats.md`](04_stats.md) | Giả thuyết là gì, cỡ mẫu phân giải được tới đâu | Khi viết §2, và mỗi lần định dùng chữ "có ý nghĩa" |
-| [`05_guardrails.md`](05_guardrails.md) | Toàn bộ guardrail của cả bốn phase | Khi viết §2, §4, §5 |
-| [`06_decisions.md`](06_decisions.md) | Những chỗ còn chờ quyết | Trước khi bắt đầu viết |
+- Báo cáo sáu chương, mục tiêu 25 trang. Môn học: **Khai thác dữ liệu văn
+  bản và ứng dụng**. Giữ kiểu bìa, font, lề 2,5 cm và giãn dòng 1,15 của
+  main GitHub `dc04e2d`; Experiment `4d6a4a2` là chuẩn cho thực nghiệm.
+- Các tài liệu outline còn lại lưu lịch sử kế hoạch. Khi khác bản hiện hành,
+  dùng [README báo cáo](../report/README.md) và nội dung LaTeX đang được input.
+- Phạm vi thay đổi: nguồn báo cáo, hướng dẫn build và PDF checker. Không
+  sửa ứng dụng, slide, dữ liệu hoặc kết quả; không chạy model/API/benchmark.
 
-## Ba nhãn trạng thái
+## Nội dung đã hoàn thành
 
-Mọi mục trong thư mục này mang một trong ba nhãn:
+- Tích hợp kiến trúc, dữ liệu, thực nghiệm và thảo luận; đối chiếu với mã
+  nguồn, tài liệu và kết quả từng câu. Sửa EM P2-D5 thành 0,0925; phân biệt
+  đối chứng 2C, dữ liệu/đầu ra sau hiệu chỉnh Phase 3 và khảo sát one-shot.
+- Giữ giới hạn diễn giải CI, chất lượng dẫn nguồn, phạm vi held-out và
+  điều kiện đo. Phần dữ liệu/lý thuyết đã rút gọn; PDF không có ghi chú
+  biên tập. Hình giao diện dùng ảnh gốc, sơ đồ vector đối chiếu từ code.
+- Đã duyệt 25 trang, 22 bảng, 5 hình. Kiểm tra font nhúng, lề, Unicode,
+  tham chiếu và số liệu đạt; ZIP đã build độc lập và khớp PDF từng trang.
 
-- **✅ ĐÃ CHỐT** — có nguồn: test plan, artifact, hoặc đã được duyệt.
-- **📌 SỰ KIỆN ĐO ĐƯỢC** — số tính từ artifact. Đúng hoặc sai, không thương lượng.
-- **❓ CHỜ QUYẾT** — viết dưới dạng **câu hỏi kèm phương án**, không viết thành
-  khẳng định. Toàn bộ gom ở [`06_decisions.md`](06_decisions.md).
+## Dọn trước bàn giao qua nhánh main-report
 
-Nguyên tắc: thứ chưa được quyết thì không xuất hiện dưới dạng câu khẳng định.
+- Chỉ giữ các section được input. Bỏ entry chuyển tiếp, bản nội dung cũ,
+  review đã xử lý và tệp BibTeX sinh tự động; rút gọn README và tracker.
+- Giữ mẫu prompt judge trong `report/appendix/ragas_prompts/` vì có giá trị
+  đối chiếu và được công cụ xuất prompt sử dụng. Giữ các artifact khoa học
+  trong `docs/reports/` và PDF cuối; không đưa backup/ZIP vào commit.
+- Đã lưu một bản trước dọn ngoài repository; lịch sử báo cáo gốc còn trong
+  Git. So sánh xác nhận toàn bộ 23 input TeX và bibliography không đổi.
+- Build từ đúng các tệp đã stage và PDF checker đạt: 25 trang, khớp từng
+  pixel với PDF trước dọn ở 108 dpi. `git diff --check` đạt; commit chỉ gồm
+  tài liệu báo cáo và checker. Nhánh bàn giao: `main-report`, không push `main`.
 
-## Thứ tự làm
+## Phần còn điền
 
-1. ✅ Chốt người đọc, độ dài, phạm vi
-2. ✅ Thuật ngữ, dàn ý, sổ phát biểu, phân tích thống kê, bảng guardrail
-3. ✅ Bổ sung Phase 2C (§5), Phase 3 (§7) và final-test Phase 1 (§3); thêm §1 mở
-   đầu, §9 kết luận, và đoạn *Chốt lại* cho từng mục — 08/09/2026.
-   **Cả bốn phase đều đã có số; không mục nào còn phải chờ.**
-4. ⬜ **Quyết D1, D2, D3, D7, D14** ở [`06_decisions.md`](06_decisions.md) —
-   năm cái này chặn việc bắt đầu viết. **D14 chặn nặng nhất**: §1.2 để trống cho
-   tới khi có đề bài. D5, D6, D8, D13 ảnh hưởng bố cục, nên quyết cùng lúc.
-5. ⬜ Viết `report/main.tex` theo [`02_outline.md`](02_outline.md), mục nào tra
-   file nấy. §0 và §2 viết trước vì các mục sau trỏ ngược về chúng.
-6. ⬜ Chỉnh slide cho khớp báo cáo mới — slide hiện **chưa có** 2C và Phase 3.
-
-Việc kỹ thuật không chặn viết, làm xen kẽ được: D9 (`.gitattributes` cho hash
-khớp lại), D11 (đo trung vị độ dài đáp án), D13 (đưa mã Phase 3 vào repo).
-
-## Báo cáo có mấy mục
-
-§0 thuật ngữ · §1 mở đầu · §2 luật phán quyết · §3 Phase 1 · §4 Phase 2 ·
-§5 Phase 2C · §6 held-out · §7 Phase 3 · §8 giới hạn · §9 kết luận.
-
-## Thư mục này không sinh ra file build
-
-Không được `\input` vào LaTeX và không ảnh hưởng `make`.
+Nhóm trưởng và trách nhiệm/sản phẩm bàn giao của từng thành viên; học kỳ
+nếu môn học yêu cầu. Không còn ô chờ kết quả thực nghiệm hoặc ảnh demo.
