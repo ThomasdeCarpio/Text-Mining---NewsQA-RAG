@@ -45,7 +45,7 @@ def main() -> None:
                     "Danh mục hình và bảng", "Tài liệu tham khảo",
                     "Chương 1.", "Chương 2.", "Chương 3.", "Chương 4.",
                     "Chương 5.", "Chương 6.", "Phase 1", "Phase 2D", "Phase 2E", "Phase 2C", "Phase 3",
-                    "Chưa bổ sung",
+                    "Nguyễn Hiệp Thắng",
                     "Giao thức đánh giá chung", "Cấu hình hệ thống và nhánh áp dụng",
                     "Tóm tắt thiết lập các thực nghiệm chính", "Prompt và cấu hình quan trọng",
                     "Cài đặt và tái lập", "EDA", "0,3559", "0,3239",
