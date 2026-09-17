@@ -3,7 +3,7 @@
 \node[box] (a) {Câu hỏi và cấu hình\\Chọn chế độ chat};
 \node[box,right=of a] (b) {Truy xuất ứng viên\\Xếp hạng lại};
 \node[box,below=of a] (e) {Gọi mô hình trực tiếp\\Câu hỏi và lịch sử chat};
-\node[box,below=of b] (c) {Gọi mô hình theo RAG\\Lời nhắc và các đoạn đã chọn};
+\node[box,below=of b] (c) {Gọi mô hình theo RAG\\Prompt và các đoạn đã chọn};
 \node[box,below=of e] (d) {Hiển thị câu trả lời\\Kèm nguồn nếu có};
 \draw[flow] (a)--node[above,font=\footnotesize]{RAG}(b);
 \draw[flow] (a)--node[left,font=\footnotesize]{Trực tiếp}(e);

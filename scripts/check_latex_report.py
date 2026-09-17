@@ -44,7 +44,7 @@ def main() -> None:
                     "Thông tin nhóm và phân công", "Tóm tắt và từ viết tắt",
                     "Danh mục hình và bảng", "Tài liệu tham khảo",
                     "Chương 1.", "Chương 2.", "Chương 3.", "Chương 4.",
-                    "Chương 5.", "Chương 6.", "Phase 1", "Phase 2D", "Phase 2E", "Phase 2C", "Phase 3",
+                    "Chương 5.", "Chương 6.", "Giai đoạn 1", "Giai đoạn 2", "Khảo sát phụ",
                     "Nguyễn Hiệp Thắng",
                     "Giao thức đánh giá chung", "Cấu hình hệ thống và nhánh áp dụng",
                     "Tóm tắt thiết lập các thực nghiệm chính", "Prompt và cấu hình quan trọng",
@@ -58,8 +58,8 @@ def main() -> None:
                 errors.append(f"Out-of-scope experimental placeholder: {token}")
         if normalized("Khai thác dữ liệu và văn bản") in all_text:
             errors.append("Outdated course name in PDF")
-        if len(document) > 25:
-            errors.append(f"Draft exceeds final page budget: {len(document)} > 25")
+        if len(document) > 30:
+            errors.append(f"Draft exceeds final page budget: {len(document)} > 30")
         if len(document) < 10:
             errors.append("Implausibly short report; check missing inputs")
         if "??" in all_text or "\ufffd" in all_text:

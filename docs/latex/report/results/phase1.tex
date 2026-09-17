@@ -22,7 +22,7 @@
   \end{tabular}
 \end{table}
 
-Trên 281 câu resolved, BGE-M3 đạt điểm cao nhất trong nhóm sparse, còn E5-base-v2 được chọn làm đại diện dense. Các phương pháp sparse đạt điểm cao hơn các mô hình dense được khảo sát. Tuy nhiên, CI95 của hiệu nDCG@5 giữa BGE-M3 và BM25 có stemming là $[-0{,}0125;\,0{,}0508]$, nên chưa đủ bằng chứng khẳng định BGE-M3 tốt hơn phương án này trên quần thể mục tiêu.
+Trên 281 câu resolved, BGE-M3 đạt điểm cao nhất trong nhóm sparse, còn E5-base-v2 được chọn làm đại diện dense. Các phương pháp sparse vượt trội rõ rệt so với các mô hình dense. Phân tích EDA chỉ ra rằng câu hỏi tin tức neo chặt vào các thực thể định danh rời rạc (tên riêng, địa danh, mốc thời gian với $\text{IDF} \ge 6{,}0$). Khi kho ngữ liệu lớn (11.064 bài), mô hình dense bi-encoder nén thông tin vào vector 768 chiều dễ gặp hiện tượng \textbf{pha loãng thực thể (entity dilution)}, làm mờ ranh giới giữa các sự kiện cùng chủ đề và kéo theo nhiều bài báo gây nhiễu; trong khi sparse dựa vào khớp từ vựng chính xác để cô lập không gian tìm kiếm. Tuy nhiên, CI95 của hiệu nDCG@5 giữa BGE-M3 và BM25 có stemming là $[-0{,}0125;\,0{,}0508]$, nên chưa đủ bằng chứng khẳng định BGE-M3 tốt hơn BM25-stemmed trên quần thể mục tiêu.
 \begin{table}[H]\setstretch{1.05}
   \centering
   \caption{MRR@5 và nDCG@5 theo retriever và reranker trên tập development.}
@@ -45,7 +45,7 @@ Trên 281 câu resolved, BGE-M3 đạt điểm cao nhất trong nhóm sparse, c�
 
 \begin{table}[H]\setstretch{1.05}
   \centering
-  \caption{Độ trễ P50 của ma trận Phase 1 trên cùng môi trường chạy.}
+  \caption{Độ trễ P50 của ma trận truy xuất Giai đoạn 1 trên cùng môi trường chạy.}
   \label{tab:phase1-reranker-latency}
   \small\setlength{\tabcolsep}{6pt}
   \begin{tabular}{lrrr}

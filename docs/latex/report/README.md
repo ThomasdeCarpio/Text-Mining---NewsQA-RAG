@@ -27,7 +27,7 @@ model, API, CSV hoặc bước sinh số liệu của slide.
 | Sơ đồ vector | `figures/` |
 | Prompt, điều kiện đo và tái lập | `appendices/` |
 | Tài liệu tham khảo | `references.bib` |
-| Mẫu lời nhắc judge để đối chiếu | `appendix/ragas_prompts/` (không input trong PDF) |
+| Mẫu prompt judge để đối chiếu | `appendix/ragas_prompts/` (không input trong PDF) |
 
 Các section cũ và entry chuyển tiếp đã được bỏ để chỉ có một bộ nguồn đang
 sử dụng. Bản Experiment gốc còn trong lịch sử Git tại `4d6a4a2`; bản main
@@ -72,7 +72,7 @@ Các điểm cần giữ khi sửa tiếp:
   chấm theo ngữ cảnh cha chuyển cho generator. Phase 3 dùng corpus và bộ
   case riêng, kết quả sau hiệu chỉnh; lỗi sinh được tính vào lỗi quyết định.
 - One-shot là khảo sát sau held-out, không thay cấu hình đã khóa. CI chứa 0
-  không chứng minh tương đương; thiếu đoạn gold không đồng nghĩa thiếu mọi
+  chưa thể khẳng định tương đương; thiếu đoạn gold không đồng nghĩa thiếu mọi
   bằng chứng hợp lý. Giữ các giới hạn này khi rút gọn nhận xét.
 - Chỉ báo điều kiện đo được xác nhận trong hồ sơ. Không lấy tên phần cứng,
   trọng số RRF hoặc mặc định hiện tại làm cấu hình thực tế của lần chạy cũ.

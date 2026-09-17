@@ -1,7 +1,7 @@
 \section*{Tóm tắt và từ viết tắt}
 NewsLens là hệ thống hỏi đáp tin tức có dẫn nguồn trên bộ NewsQA từ các bài báo CNN. Bộ đánh giá yêu cầu tìm bằng chứng trong kho 11.064 bài và sinh đáp án ngắn có dẫn nguồn. Dữ liệu được làm sạch, rà soát, làm rõ câu hỏi và khử trùng lặp; 1.152 câu được chia theo bài thành tập phát triển và các tập kiểm tra.
 
-Hệ thống kết hợp truy xuất BGE-M3 sparse, xếp hạng lại bằng BGE-reranker-large và mô hình sinh Gemini. Thực nghiệm đánh giá riêng truy xuất, lời nhắc zero-shot, số đoạn ngữ cảnh, one-shot, mô hình sinh, chia đoạn và từ chối trả lời. Chất lượng được đo bằng thước đo theo nhãn, dẫn nguồn và RAGAS với mô hình chấm độc lập; các phép so sánh kèm kiểm tra độ bao phủ và khoảng tin cậy.
+Hệ thống kết hợp truy xuất BGE-M3 sparse, xếp hạng lại bằng BGE-reranker-large và mô hình sinh Gemini. Thực nghiệm đánh giá riêng truy xuất, prompt zero-shot, số đoạn ngữ cảnh, one-shot prompt, mô hình sinh, chia đoạn và từ chối trả lời. Chất lượng được đo bằng thước đo theo nhãn, dẫn nguồn và RAGAS với mô hình chấm độc lập; các phép so sánh kèm kiểm tra độ bao phủ và khoảng tin cậy.
 
 Bộ truy xuất đã khóa đạt MRR@5 bằng 0,8112 trên 871 câu kiểm tra. Trên tập phát triển, P2 với 5 đoạn tăng Answer Correctness từ 0,6308 lên 0,7350 và đạt các ngưỡng bảo vệ chất lượng; cấu hình này đạt 0,7157 trên 284 câu kiểm tra giữ riêng. One-shot tăng độ đúng và Token F1 nhưng giảm Faithfulness, Answer Relevancy. Các khảo sát bổ sung làm rõ sự đánh đổi giữa các tiêu chí, nhưng không thay đổi cấu hình đã khóa cho vòng đánh giá xác nhận. Kết quả cho thấy cần đánh giá đồng thời đáp án, bằng chứng và dẫn nguồn.
 

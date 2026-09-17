@@ -5,7 +5,7 @@
 \subsubsection{Đối chứng, cấu hình và chia tập}
 Các thực nghiệm đánh giá nhánh RAG theo cấu hình của từng lần chạy, không bao gồm chat dự phòng.
 \begin{itemize}
-\item \textbf{Đối chứng và chia tập:} Phase 1 chọn truy xuất/reranker trên tập phát triển (development), không sinh hoặc chấm đáp án. Phase 2 giữ truy xuất, đối chứng P0-D5; sàng lọc (screening) dùng 80 câu, chấm RAGAS 20 câu, chọn một lần bằng seed 42. Ứng viên cuối (finalist) dùng đủ 281 câu rồi khóa cấu hình trước held-out.
+\item \textbf{Đối chứng và chia tập:} Giai đoạn 1 chọn truy xuất/reranker trên tập phát triển (development), không sinh hoặc chấm đáp án. Giai đoạn 2 giữ truy xuất, đối chứng P0-D5; sàng lọc (screening) dùng 80 câu, chấm RAGAS 20 câu, chọn một lần bằng seed 42. Ứng viên cuối (finalist) dùng đủ 281 câu rồi khóa cấu hình trước held-out.
 \item \textbf{Mô hình sinh và chấm:} Gemini 3.1 Flash-Lite sinh đáp án với temperature 0, tối đa 512 token, reasoning minimal. GLM-5.3-Flash qua Fireworks chấm năm thước đo RAGAS với reasoning low, tối đa 2.048 token và embedding all-MiniLM-L6-v2.
 \item \textbf{Biến kiểm soát:} khi đổi prompt hoặc số đoạn ngữ cảnh (context depth), dùng lại kết quả truy xuất và thứ tự xếp hạng theo mã câu hỏi để cô lập tác động tầng sinh.
 \end{itemize}
@@ -30,24 +30,26 @@ Các thước đo truy xuất và dẫn nguồn dùng tập đoạn bằng chứ
 Hit@$k$ / Recall@$k$ & Hit bằng 1 nếu top $k$ chứa đoạn chuẩn, bằng 0 nếu không; Recall là tỷ lệ đoạn chuẩn tìm được. \\
 MRR@$k$ / nDCG@$k$ & MRR là nghịch đảo thứ hạng đoạn chuẩn đầu tiên trong top $k$ (0 nếu không có). nDCG chiết khấu $1/\log_2(r+1)$, chuẩn hóa theo thứ tự lý tưởng. \\
 Exact Match / Token F1 & So khớp toàn chuỗi / chồng lấp token; lấy điểm cao nhất trong các đáp án chấp nhận. \\
-Citation Validity & Tỷ lệ chỉ dấu trỏ tới context hợp lệ; không bảo đảm nội dung hỗ trợ câu trả lời. \\
-Citation Precision, Recall, F1 & Đối chiếu mã đoạn được dẫn với gold. \\
+Citation Validity & Tỷ lệ chỉ số trích dẫn nằm trong phạm vi ngữ cảnh $[1..k]$ (tính hợp lệ cú pháp). \\
+Citation Precision / Recall & $|C \cap G| / |C|$ (đoạn dẫn trúng gold) / $|C \cap G| / |G|$ (độ bao phủ gold); $C$ là tập đoạn được dẫn, $G$ là tập đoạn chuẩn. Citation F1 là trung bình điều hòa. \\
 Faithfulness / Answer Relevancy & Mức hỗ trợ của ngữ cảnh đối với khẳng định / mức tương tự giữa câu hỏi sinh từ đáp án và câu hỏi gốc~\cite{ragas}. \\
 Context Precision / Recall & Mức liên quan và thứ tự các đoạn / mức bao phủ thông tin của đáp án chuẩn~\cite{ragas}. \\
 Answer Correctness (AC) & Kết hợp đối chiếu sự kiện và độ tương tự ngữ nghĩa với đáp án chuẩn~\cite{ragasdocs}; điểm chính tầng sinh, không phải tỷ lệ câu đúng. \\\bottomrule
 \end{tabularx}\end{table}
 \textbf{Tiền xử lý.} Chấm EM/F1 sau khi bỏ chỉ dấu nguồn và nhãn mở đầu, chuyển chữ thường, bỏ dấu câu và chuẩn hóa khoảng trắng. Các điểm dẫn nguồn loại chỉ dấu trùng; câu không có dẫn nguồn nhận điểm 0. Trong bảng, AR là Answer Relevancy; Faith. là Faithfulness; Cit. F1/Valid. là Citation F1/Validity.
 
+\textbf{Phân biệt rào chắn dẫn nguồn.} \textit{Citation Validity} chỉ kiểm tra chỉ số dẫn nguồn có nằm trong dải $[1..k]$ được cung cấp hay không nhằm phát hiện ảo giác cú pháp. Ngược lại, \textit{Citation Precision, Recall và F1} đo lường sự thật khách quan bằng cách đối chiếu mã đoạn được trích dẫn với tập đoạn chuẩn $G$. Đồng thời, \textit{Faithfulness} chỉ đo tính nhất quán nội tại (không bịa thông tin ngoài ngữ cảnh được cấp), trong khi \textit{Citation F1} kiểm tra xem câu trả lời có thực sự neo vào đúng bằng chứng chuẩn hay không.
+
 \textbf{Độ bao phủ (coverage).} Coverage sinh là tỷ lệ câu sinh thành công trên số câu yêu cầu; coverage RAGAS là số câu chấm thành công chia số câu sinh thành công. Tỷ lệ 20/80 ở vòng sàng lọc là phạm vi chấm định trước, không phải lỗi. Cách xử lý bản ghi lỗi, thiếu và tiếp tục lần chạy được nêu ở Phụ lục~\ref{app:reproduction}.
 \subsubsection{Bootstrap, guardrail và tài nguyên}
 \textbf{Bootstrap.} Sai khác trên cùng câu hỏi là $d_q=m_q(B)-m_q(A)$.
 \begin{itemize}
-\item \textbf{Phase 1 development:} 1.000 mẫu bootstrap ghép cặp trên 281 câu.
-\item \textbf{Phase 2, one-shot và mô hình sinh:} 2.000 mẫu theo cụm bài; lấy mẫu 50 bài có hoàn lại, giữ các câu của mỗi bài và tính trung bình theo câu. Cách này giữ sự phụ thuộc giữa các câu cùng nguồn.
+\item \textbf{Giai đoạn 1 (Truy xuất):} 1.000 mẫu bootstrap ghép cặp trên 281 câu development.
+\item \textbf{Giai đoạn 2 (Sinh đáp án) và các mở rộng:} 2.000 mẫu theo cụm bài; lấy mẫu 50 bài có hoàn lại, giữ các câu của mỗi bài và tính trung bình theo câu. Cách này giữ sự phụ thuộc giữa các câu cùng nguồn.
 \end{itemize}
 Khoảng tin cậy 95\% (CI95) lấy các phân vị 2,5\% và 97,5\% của sai khác trung bình. CI chứa 0 chưa đủ để kết luận hai phương án tương đương.
 
-\textbf{Quy tắc chọn Phase 2.} Trên toàn bộ development, áp dụng các ngưỡng bảo vệ chất lượng (guardrail) so với baseline:
+\textbf{Quy tắc chọn ở Giai đoạn 2.} Trên toàn bộ development, áp dụng các ngưỡng bảo vệ chất lượng (guardrail) so với baseline:
 \begin{itemize}
 \item Coverage sinh và chấm ít nhất 95\%.
 \item Faithfulness giảm không quá 0,02; Citation F1/Validity giảm không quá 0,01.
@@ -57,8 +59,8 @@ Khoảng tin cậy 95\% (CI95) lấy các phân vị 2,5\% và 97,5\% của sai 
 \textbf{Tài nguyên.} P50/P95 là trung vị/phân vị 95, tách truy xuất với gọi mô hình sinh. Token chỉ tính sinh đáp án; điều kiện đo trình bày ở Phụ lục~\ref{app:prompts}.
 
 \FloatBarrier
-\subsection{Truy xuất — Phase 1}
-\subsubsection{Mục tiêu và thiết lập}
+\subsection{Giai đoạn 1: Lựa chọn cấu hình truy xuất}
+\subsubsection{Mục tiêu và thiết lập thực nghiệm}
 Mục tiêu là chọn cấu hình đưa bằng chứng lên đầu danh sách trên kho 11.064 bài.
 \begin{itemize}
 \item \textbf{Sàng lọc retriever:} so sánh bốn dense và bốn sparse; giữ recursive 512/64, lấy 10 ứng viên, chưa rerank. Resolved là biến thể chính; original dùng để phân tích ảnh hưởng của câu hỏi thiếu chủ thể.
@@ -67,9 +69,10 @@ Mục tiêu là chọn cấu hình đưa bằng chứng lên đầu danh sách t
 \end{itemize}
 
 \input{results/phase1}
-\subsection{Sinh câu trả lời — Phase 2 và mở rộng}
-\subsubsection{Mục tiêu và thiết lập zero-shot}
-Mục tiêu là cải thiện độ đúng câu trả lời, giữ mức hỗ trợ bởi bằng chứng và chất lượng dẫn nguồn. Truy xuất cố định ở recursive 512/64, BGE-M3 top 20, BGE-reranker-large top 5; generator và judge theo giao thức chung. Bốn lời nhắc khác nhau ở chỉ thị:
+
+\subsection{Giai đoạn 2: Lựa chọn cấu hình sinh câu trả lời}
+\subsubsection{Lựa chọn prompt zero-shot và số đoạn ngữ cảnh}
+Mục tiêu là cải thiện độ đúng câu trả lời, giữ mức hỗ trợ bởi bằng chứng và chất lượng dẫn nguồn. Truy xuất cố định ở recursive 512/64, BGE-M3 top 20, BGE-reranker-large top 5; generator và judge theo giao thức chung. Bốn prompt khác nhau ở chỉ thị:
 \begin{itemize}
 \item \textbf{P0 — đối chứng:} trả lời dựa trên ngữ cảnh và dẫn nguồn.
 \item \textbf{P1 — bám sát bằng chứng:} nhấn mạnh yêu cầu không suy đoán.
@@ -77,52 +80,47 @@ Mục tiêu là cải thiện độ đúng câu trả lời, giữ mức hỗ tr
 \item \textbf{P3 — chọn bằng chứng:} đối chiếu chủ thể, sự kiện, nơi và thời gian để tránh trộn thông tin.
 \end{itemize}
 
-Sàng lọc bốn lời nhắc với 5 đoạn; sau đó thử P0/P2 với 1, 3 hoặc 5 đoạn đầu cùng danh sách rerank, dùng lại kết quả 5 đoạn đã có. P2-D3/D5 được chấm đủ development cùng P0-D5; áp dụng guardrail trước khi chọn theo AC.
+Sàng lọc bốn prompt với 5 đoạn; sau đó thử P0/P2 với 1, 3 hoặc 5 đoạn đầu cùng danh sách rerank, dùng lại kết quả 5 đoạn đã có. P2-D3/D5 được chấm đủ development cùng P0-D5; áp dụng guardrail trước khi chọn theo AC.
 \input{results/phase2}
-\subsubsection{One-shot — Phase 2D}
-Thực nghiệm kiểm tra liệu một ví dụ hướng dẫn có giúp trả lời ngắn và dẫn nguồn đúng vị trí. P2-1S bổ sung ví dụ tổng hợp về Northbridge/Riverside vào P2, không lấy từ corpus hoặc tập đánh giá (Phụ lục~\ref{app:prompts}). Hai phương án dùng cùng truy xuất, depth 5, Gemini 3.1 Flash-Lite và judge; đối chứng P2-D5 được tái sử dụng, không sinh hoặc chấm lại.
+
+\subsubsection{Thử nghiệm one-shot prompt}
+Theo góp ý của giảng viên hướng dẫn, nhóm tiến hành thực nghiệm kiểm tra liệu việc bổ sung một ví dụ mẫu (one-shot prompt) có giúp mô hình định hình đáp án ngắn và đặt vị trí dẫn nguồn chính xác hơn hay không. Prompt P2-1S bổ sung một ví dụ tổng hợp về Northbridge/Riverside vào P2, hoàn toàn không lấy từ corpus hoặc tập đánh giá (Phụ lục~\ref{app:prompts}). Hai phương án dùng cùng truy xuất, depth 5, Gemini 3.1 Flash-Lite và judge; đối chứng P2-D5 được tái sử dụng, không sinh hoặc chấm lại.
 \input{results/phase2d}
-\subsubsection{So sánh mô hình sinh — Phase 2E}
-Thực nghiệm giữ 281 câu development, truy xuất, P2-1S-D5 và judge; thay Gemini 3.1 Flash-Lite bằng 3.5 Flash-Lite hoặc 3.6 Flash. Cả ba dùng temperature 0, tối đa 512 token, reasoning minimal. Phép so sánh ghép cặp theo câu dùng kết quả 3.1 đã lưu, không gọi lại đối chứng.
+
+\subsubsection{Thử nghiệm so sánh các mô hình sinh}
+Theo góp ý của giảng viên hướng dẫn về việc khảo sát tác động khi thay đổi mô hình sinh (generator), thực nghiệm này đánh giá xem việc sử dụng các mô hình khác nhau, đặc biệt là các mô hình mạnh hơn (như Gemini 3.5 Flash-Lite và Gemini 3.6 Flash), mang lại hiệu quả ra sao trên toàn chuỗi RAG, và liệu mức cải thiện về chất lượng câu trả lời có thực sự tương xứng để bù đắp chi phí tài nguyên gia tăng (độ trễ suy luận P95 và lượng token tiêu thụ) hay không. Thử nghiệm giữ nguyên 281 câu development, trace truy xuất, cấu hình P2-1S-D5 và judge; chỉ thay Gemini 3.1 Flash-Lite bằng 3.5 Flash-Lite hoặc 3.6 Flash. Cả ba dùng temperature 0, tối đa 512 token, reasoning minimal. Phép so sánh ghép cặp theo câu dùng kết quả 3.1 đã lưu, không gọi lại đối chứng.
 \input{results/phase2e}
 
-\subsection{Khảo sát chia đoạn — Phase 2C}\label{sec:chunking}
-\subsubsection{Mục tiêu và thiết lập}
-Phase 2C kiểm tra ảnh hưởng của ranh giới đoạn tới bằng chứng và câu trả lời:
+\subsection{Đánh giá trên tập kiểm tra độc lập (Held-out Evaluation)}\label{sec:heldout}
+Để kiểm định khả năng tổng quát hóa của toàn bộ pipeline RAG đã khóa (BGE-M3 sparse + BGE-reranker-large + Prompt P2-D5), hệ thống được đánh giá độc lập đúng một lần trên tập dữ liệu chưa từng tiếp xúc. Retrieval final-test dùng 871 câu/150 bài chưa dùng để chọn cấu hình; generation held-out dùng 284 câu/50 bài thuộc tập đó. Cấu hình đã khóa được giữ nguyên. Development và held-out tách theo bài, nên không thể so sánh ghép cặp theo câu giữa hai tập. Phân tầng theo đoạn chuẩn trong ngữ cảnh giúp phân biệt hạn chế truy xuất và sử dụng bằng chứng; thiếu đoạn chuẩn không đồng nghĩa hoàn toàn thiếu bằng chứng hợp lý.
+\input{results/heldout}
+
+\subsection{Khảo sát phụ và thử nghiệm thăm dò (Ablation Studies)}\label{sec:side-ablations}
+Tương tự như báo cáo bảo vệ ban đầu, bên cạnh hai giai đoạn thực nghiệm trọng tâm, nhóm tiến hành hai khảo sát phụ mang tính thăm dò nhằm kiểm chứng tính tối ưu và lý giải vì sao nhóm kiên định bảo toàn cấu hình đã chốt, không mở thêm vòng lựa chọn trên tập held-out:
+
+\subsubsection{Khảo sát phụ 1: Chiến lược phân đoạn văn bản}\label{sec:chunking}
+Khảo sát kiểm tra ảnh hưởng của ranh giới đoạn tới bằng chứng và câu trả lời:
 \begin{itemize}
 \item \textbf{C0 — đối chứng:} recursive 512/64.
 \item \textbf{C1 và C2:} C1 ghép các câu, C2 ghép các đoạn văn; cùng giới hạn 512 token.
 \item \textbf{C3 — phân cấp:} truy xuất và xếp hạng đoạn con 256/32, mở rộng sang đoạn cha 512/64 rồi loại cha trùng. Citation trỏ tới đoạn cha thực sự gửi cho mô hình sinh.
 \end{itemize}
 
-Khảo sát giữ corpus, 281 câu development và cấu hình truy xuất/sinh/chấm của Phase 2. Vòng sàng lọc đánh giá truy xuất trên 281 câu, sinh trên 80 câu và RAGAS trên 20 câu; sau đó xét độ sâu và finalist trên đủ development. CI dùng 2.000 mẫu bootstrap ghép cặp theo bài, seed 42. Ngoài guardrail Phase 2, Hit@5 và Recall@5 không được giảm quá 0,01 so với C0-D5.
-
-Khảo sát được thiết kế sau held-out Phase 2, nhưng chỉ chọn trên development; không chạy generation trên reserve 587 câu. Tổng ngân sách token ngữ cảnh không cố định giữa các phương án, nên độ dài cũng thuộc tác động được đo.
+Khảo sát giữ corpus, 281 câu development và cấu hình truy xuất/sinh/chấm của Giai đoạn 2. Vòng sàng lọc đánh giá truy xuất trên 281 câu, sinh trên 80 câu và RAGAS trên 20 câu; sau đó xét độ sâu và finalist trên đủ development. CI dùng 2.000 mẫu bootstrap ghép cặp theo bài, seed 42. Ngoài guardrail của tầng sinh, Hit@5 và Recall@5 không được giảm quá 0,01 so với C0-D5. Tổng ngân sách token ngữ cảnh không cố định giữa các phương án, nên độ dài cũng thuộc tác động được đo.
 \input{results/phase2c}
 
-\subsection{Chính sách từ chối trả lời — Phase 3}\label{sec:abstention}
-\subsubsection{Mục tiêu và thiết lập}
-Phase 3 đánh giá khả năng từ chối khi các đoạn được cung cấp không đủ bằng chứng. Bộ 200 tình huống (case) gồm 140 development và 60 final, có các nhóm: đối chứng trả lời được, bỏ bài nguồn, bỏ bằng chứng có kiểm soát, truy xuất thiếu bằng chứng tự nhiên, bằng chứng yếu, câu hỏi phản thực và câu ngoài phạm vi. Hai tập có lần lượt 61 và 26 case trả lời được. Đáp án gốc của case thiếu bằng chứng chỉ mô tả sự kiện nguồn; hành vi mong đợi trên ngữ cảnh được cung cấp là từ chối.
+\subsubsection{Khảo sát phụ 2: Chính sách từ chối khi thiếu bằng chứng}\label{sec:abstention}
+Khảo sát đánh giá khả năng chủ động từ chối trả lời khi các đoạn được cung cấp không đủ bằng chứng. Bộ 200 tình huống (case) gồm 140 development và 60 final, có các nhóm: đối chứng trả lời được, bỏ bài nguồn, bỏ bằng chứng có kiểm soát, truy xuất thiếu bằng chứng tự nhiên, bằng chứng yếu, câu hỏi phản thực và câu ngoài phạm vi. Hai tập có lần lượt 61 và 26 case trả lời được. Đáp án gốc của case thiếu bằng chứng chỉ mô tả sự kiện nguồn; hành vi mong đợi trên ngữ cảnh được cung cấp là từ chối.
 
-Các biến thể cùng nguồn được giữ trong cùng tập đánh giá. Giai đoạn này dùng kho riêng gồm 19.259 đoạn, không chứa bốn bài nguồn của câu hỏi ngoài phạm vi; không dùng chỉ mục 22.766 đoạn của Phase 2. Cổng điểm chỉ áp dụng cho 153 case truy xuất toàn kho; 47 case dùng ngữ cảnh đã kiểm soát không qua cổng.
+Các biến thể cùng nguồn được giữ trong cùng tập đánh giá. Thử nghiệm dùng kho riêng gồm 19.259 đoạn, không chứa bốn bài nguồn của câu hỏi ngoài phạm vi; không dùng chỉ mục 22.766 đoạn của Giai đoạn 2. Cổng điểm chỉ áp dụng cho 153 case truy xuất toàn kho; 47 case dùng ngữ cảnh đã kiểm soát không qua cổng.
 
 \textbf{Chính sách so sánh.} Generator là Gemini 3.1 Flash-Lite, temperature 0, tối đa 512 token, reasoning minimal; không dùng judge RAGAS.
 \begin{itemize}
-\item \textbf{B0:} giữ prompt P2.
+\item \textbf{B0:} giữ prompt P2 (từ chối tự nhiên).
 \item \textbf{B1:} yêu cầu JSON với trường \code{answerability} và đổi chỉ dẫn về cách trả lời.
 \item \textbf{B2:} áp cổng điểm xếp hạng lại lên đầu ra B1 đã lưu, không sinh thêm.
 \end{itemize}
-\textbf{Quy tắc chọn.} Ngưỡng B2 được hiệu chuẩn trên development với false-abstention không quá 10\%. Chính sách được chọn phải thỏa các điều kiện:
-\begin{itemize}
-\item False-abstention không quá 10\%; tỷ lệ sinh thành công ít nhất 98\%.
-\item Trên nhóm trả lời được, Token F1 giảm không quá 0,02; Citation Validity giảm không quá 0,01.
-\item Trong các phương án đạt, chọn false-answer thấp nhất; ưu tiên đơn giản hơn nếu chênh không quá 0,02.
-\end{itemize}
+\textbf{Quy tắc chọn.} Ngưỡng B2 được hiệu chuẩn trên development với false-abstention không quá 10\%. Chính sách được chọn phải thỏa các điều kiện: false-abstention không quá 10\%; tỷ lệ sinh thành công ít nhất 98\%; trên nhóm trả lời được, Token F1 giảm không quá 0,02 và Citation Validity giảm không quá 0,01; ưu tiên false-answer thấp nhất.
 
-\textbf{Hiệu chỉnh bộ đánh giá và CI.} Ba case development được làm rõ sau rà soát; ngưỡng và chính sách được chọn lại, đầu ra final giữ nguyên (Phụ lục~\ref{app:reproduction}). Đây không phải đánh giá độc lập mới. CI dùng 2.000 mẫu bootstrap ghép cặp theo case, seed 42; chưa xử lý phụ thuộc cùng nguồn nên chỉ có giá trị tham khảo.
+\textbf{Hiệu chỉnh bộ đánh giá và CI.} Ba case development được làm rõ sau rà soát; ngưỡng và chính sách được chọn lại, đầu ra final giữ nguyên (Phụ lục~\ref{app:reproduction}). CI dùng 2.000 mẫu bootstrap ghép cặp theo case, seed 42.
 \input{results/phase3}
-
-\subsection{Đánh giá trên tập kiểm tra}\label{sec:heldout}
-\subsubsection{Mục tiêu và thiết lập}
-Retrieval final-test dùng 871 câu/150 bài chưa dùng để chọn cấu hình; generation held-out dùng 284 câu/50 bài thuộc tập đó. Cấu hình đã khóa được giữ nguyên. Development và held-out tách theo bài, nên không thể so sánh ghép cặp theo câu giữa hai tập. Phân tầng theo đoạn chuẩn trong ngữ cảnh giúp phân biệt hạn chế truy xuất và sử dụng bằng chứng; thiếu đoạn chuẩn không đồng nghĩa hoàn toàn thiếu bằng chứng hợp lý.
-\input{results/heldout}

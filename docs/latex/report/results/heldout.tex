@@ -46,3 +46,5 @@
 
 
 \noindent\textbf{Truy xuất.} Pipeline xử lý đủ 871/871 câu: 782 câu có đoạn chuẩn trong top 5, 89 câu có Hit@5 bằng 0. Reranker tăng MRR@5 từ 0,7269 lên 0,8112 và nDCG@5 thêm 0,0758, CI95 $[0{,}0504;\,0{,}1017]$ (2.000 mẫu bootstrap ghép cặp theo 150 bài).
+
+\noindent\textbf{Sinh đáp án.} Trên 284 câu held-out, P2-D5 đạt AC 0,7157 và Citation F1 0,7289. Độ sụt giảm AC so với development (0,7157 so với 0,7350) chủ yếu gắn liền với tỷ lệ câu thiếu đoạn chuẩn trong top 5 tăng từ 12 lên 35 câu. Khi có đoạn chuẩn, AC trên held-out đạt 0,7689 (so với 0,7597 ở development), cho thấy khả năng tổng quát hóa của tầng sinh được bảo toàn tốt khi bằng chứng được cung cấp đầy đủ.

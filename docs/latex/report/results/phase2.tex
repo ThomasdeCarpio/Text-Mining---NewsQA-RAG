@@ -1,6 +1,6 @@
 % Authoritative results: upstream 4d6a4a2, sections/05_phase2_generation.tex.
 % Low-score sample and semantic caveat: docs/reports/phase2/report.md, section 6.
-\subsubsection{Đối chứng và sàng lọc}
+\paragraph{Kết quả baseline và phân tích lỗi.}
 Baseline dùng P0 với 5 đoạn ngữ cảnh (P0-D5) trên toàn bộ development.
 \begin{table}[H]\setstretch{1.05}\centering\small
 \caption{Baseline P0-D5 trên 281 câu development.}\label{tab:phase2-baseline}
@@ -13,7 +13,7 @@ Answer Relevancy & 0,7950 & Coverage & 100\% \\
 Citation F1 & 0,8025 & P50 toàn chuỗi (s) & 2,77 \\
 Citation Validity & 0,9893 & P95 toàn chuỗi (s) & 53,63 \\\bottomrule
 \end{tabularx}\end{table}
-\textbf{Phân tích lỗi.} Trong mẫu 30 câu có AC dưới 0,5, có 24 câu vẫn tìm được đoạn chuẩn trong top 5. Các vấn đề gồm trả lời dài, sai loại thông tin hoặc chọn nhầm chi tiết. Điểm thấp không luôn đồng nghĩa sai ngữ nghĩa; mẫu này không đại diện cho tỷ lệ lỗi toàn tập.
+\textbf{Hiện tượng Exact Match bằng 0.} Ở baseline P0-D5, Exact Match đạt $0{,}0000$ dù AC đạt $0{,}6308$ và Faithfulness đạt $0{,}9761$. Nguyên nhân là dữ liệu NewsQA dùng đáp án chuẩn dạng thực thể trích xuất ngắn (extractive span, như ``26'' hay ``Scotland''), trong khi prompt P0 sinh câu hội thoại hoàn chỉnh (như ``Cases were reported in 26 states [5].''), khiến phép so khớp chuỗi tuyệt đối bằng 0. Đây là lý do chính thúc đẩy việc thiết kế prompt P2 (ràng buộc trả lời ngắn đúng loại thực thể) và one-shot P2-1S. Trong mẫu 30 câu có AC dưới 0,5, có 24 câu vẫn tìm được đoạn chuẩn trong top 5; lỗi chủ yếu do trả lời dài, sai loại thông tin hoặc chọn nhầm chi tiết. Điểm thấp không luôn đồng nghĩa sai ngữ nghĩa; mẫu này không đại diện cho tỷ lệ lỗi toàn tập.
 \begin{table}[H]\setstretch{1.05}
   \centering
   \caption{Sàng lọc prompt trên 80 câu; RAGAS dùng cùng 20 câu calibration.}
@@ -55,7 +55,8 @@ P1 bị loại vì AC và Faithfulness thấp hơn P0. P3 có AC cao hơn P0, nh
 \end{table}
 
 Trên tập sàng lọc, P2-D1 và P2-D3 có AC cao hơn P2-D5, nhưng D1 giảm mạnh Citation F1/Validity. Nhóm đưa P2-D3 và P2-D5 vào vòng cuối trên development.
-\subsubsection{Kết quả và lựa chọn}
+
+\paragraph{Kết quả finalist và lựa chọn cấu hình khóa.}
 \begin{table}[H]\setstretch{1.05}
   \centering
   \caption{Kết quả finalist trên toàn bộ development.}

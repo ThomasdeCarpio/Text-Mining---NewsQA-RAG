@@ -13,7 +13,7 @@ NewsQA cung cấp câu hỏi và đáp án là đoạn trích trong bài CNN~\ci
 Đồ án xây dựng quy trình có thể tái lập và phân biệt lỗi truy xuất với lỗi sử dụng bằng chứng. Bốn câu hỏi nghiên cứu chính là:
 \begin{enumerate}
 \item Bộ truy xuất và xếp hạng lại nào tìm bằng chứng tốt nhất trong các phương án khảo sát?
-\item Lời nhắc zero-shot và số đoạn ngữ cảnh ảnh hưởng thế nào đến chất lượng câu trả lời?
+\item Prompt zero-shot và số đoạn ngữ cảnh ảnh hưởng thế nào đến chất lượng câu trả lời?
 \item Một ví dụ one-shot có cải thiện chất lượng so với zero-shot không?
 \item Thay mô hình sinh ảnh hưởng thế nào đến chất lượng và tài nguyên?
 \end{enumerate}
@@ -22,4 +22,4 @@ Hai khảo sát bổ sung xem xét chiến lược chia đoạn và chính sách
 
 Phạm vi gồm chuẩn bị dữ liệu, các vòng thực nghiệm và ứng dụng web sử dụng các thành phần xử lý dùng chung. Kho CNN cố định phục vụ kiểm soát thực nghiệm; chức năng thu thập tin là một nhánh nhập liệu riêng. Đồ án không huấn luyện lại mô hình nền. Chất lượng câu trả lời được đánh giá qua đáp án, bằng chứng và dẫn nguồn thay vì chỉ dựa vào sự xuất hiện của ký hiệu trích dẫn.
 \subsection{Đóng góp kỹ thuật}
-Các sản phẩm kỹ thuật gồm dữ liệu có nhãn bằng chứng và lịch sử rà soát, các mô-đun truy xuất, xếp hạng lại và sinh câu trả lời, cùng API và giao diện hiển thị nguồn. Kết quả truy xuất được lưu để so sánh lời nhắc trong cùng điều kiện. Cấu hình, dấu định danh và trạng thái từng câu hỏi giúp kiểm tra và tái lập các lần chạy đánh giá.
+Các sản phẩm kỹ thuật gồm dữ liệu có nhãn bằng chứng và lịch sử rà soát, các mô-đun truy xuất, xếp hạng lại và sinh câu trả lời, cùng API và giao diện hiển thị nguồn. Kết quả truy xuất được lưu để so sánh các prompt trong cùng điều kiện. Cấu hình, dấu định danh và trạng thái từng câu hỏi giúp kiểm tra và tái lập các lần chạy đánh giá.

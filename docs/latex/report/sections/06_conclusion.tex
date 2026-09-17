@@ -4,7 +4,7 @@
 \subsection{Thảo luận}\label{sec:discussion-evidence}
 \begin{itemize}
 \item \textbf{Tổng quát hóa:} reranker vẫn có lợi trên tập kiểm tra; chất lượng truy xuất và phần lớn thước đo sinh thấp hơn development. Điểm development chưa đại diện cho hiệu quả trên bài mới.
-\item \textbf{Bằng chứng:} held-out có 35/284 câu thiếu đoạn chuẩn trong top 5, so với 12/281 câu development. Khi có đoạn chuẩn, AC tương ứng là 0,7689 và 0,7597. AC tổng thể thấp hơn đi cùng tỷ lệ thiếu đoạn chuẩn cao hơn; đây là liên hệ, chưa chứng minh nhân quả.
+\item \textbf{Bằng chứng:} held-out có 35/284 câu thiếu đoạn chuẩn trong top 5, so với 12/281 câu development. Khi có đoạn chuẩn, AC tương ứng là 0,7689 và 0,7597. AC tổng thể thấp hơn đi cùng tỷ lệ thiếu đoạn chuẩn cao hơn; đây là mối liên hệ, chưa thể khẳng định quan hệ nhân quả.
 \end{itemize}
 
 \textbf{Diễn giải thước đo.} Faithfulness cao chưa bảo đảm khớp đáp án chuẩn. Bảng~\ref{tab:evidence-example} minh họa với câu hỏi ``In how many states were cases of the Listeria monocytogenes outbreak reported?'', đáp án chuẩn ``26''.
@@ -19,9 +19,9 @@ Cả hai đầu ra đạt Faithfulness 1; chỉ D5 khớp đáp án chuẩn vớ
 
 \subsection{Giới hạn}
 \begin{itemize}
-\item \textbf{Dữ liệu và thước đo:} CNN và câu hỏi tiếng Anh đã rà soát chưa đại diện cho hội thoại tự nhiên hoặc nguồn khác. Việc làm rõ câu hỏi thay đổi độ khó; nhãn chuẩn không bao phủ hết bằng chứng hợp lý. Token F1 ưu tiên khớp từ với đáp án ngắn; RAGAS phụ thuộc mô hình và lời nhắc chấm.
-\item \textbf{Thống kê:} CI trên đầu ra cố định không đo biến động khi gọi lại generator/judge. Bootstrap theo câu ở Phase 1 development chưa xử lý phụ thuộc cùng bài; chọn qua nhiều vòng có thể đánh giá quá cao khả năng khái quát.
-\item \textbf{Khảo sát:} one-shot và 2C diễn ra sau held-out; Phase 3 dùng case có chủ đích, hiệu chỉnh sau khi xem đầu ra. Các khảo sát chưa thay thế đánh giá độc lập hoặc kiểm định mù bởi người đọc.
+\item \textbf{Dữ liệu và thước đo:} CNN và câu hỏi tiếng Anh đã rà soát chưa đại diện cho hội thoại tự nhiên hoặc nguồn khác. Việc làm rõ câu hỏi thay đổi độ khó; nhãn chuẩn không bao phủ hết bằng chứng hợp lý. Token F1 ưu tiên khớp từ với đáp án ngắn; RAGAS phụ thuộc mô hình và prompt chấm.
+\item \textbf{Thống kê:} CI trên đầu ra cố định không đo biến động khi gọi lại generator/judge. Bootstrap theo câu ở Giai đoạn 1 development chưa xử lý phụ thuộc cùng bài; chọn qua nhiều vòng có thể đánh giá quá cao khả năng khái quát.
+\item \textbf{Khảo sát phụ:} các thử nghiệm chia đoạn và chính sách từ chối diễn ra sau held-out, dùng case có chủ đích và hiệu chỉnh sau khi xem đầu ra. Các khảo sát chưa thay thế đánh giá độc lập hoặc kiểm định mù bởi người đọc.
 \item \textbf{Ứng dụng:} chat dự phòng nằm ngoài đánh giá RAG; hệ thống chưa viết lại câu hỏi theo hội thoại. Lịch sử và nhật ký mất khi backend khởi động lại. Kiểm thử giả lập kiểm tra luồng phần mềm; chưa xét tải đồng thời và trải nghiệm người dùng.
 \end{itemize}
 

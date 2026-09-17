@@ -30,12 +30,12 @@ Chunking & Recursive 512/64; \code{cl100k_base}; đoạn con 256/32 & Đo bằng
 Sparse & BGE-M3, \code{BAAI/bge-m3}; top-k 20 & Learned-sparse; 20 ứng viên cho reranker; không dùng HNSW \\
 Dense & \code{all-MiniLM-L6-v2}, 384 chiều; cosine & Chroma; nhánh truy xuất theo độ tương tự vector \\
 Reranker & \code{BAAI/bge-reranker-large}; top-n 5; batch 8 & Cross-encoder xếp hạng lại các ứng viên đã truy xuất \\
-Sinh đáp án & Gemini 3.1 Flash-Lite; P2; 5 đoạn; $T=0$; tối đa 512 token; reasoning minimal & Lời nhắc/số đoạn từ pipeline; tham số sinh từ thiết lập chat \\
+Sinh đáp án & Gemini 3.1 Flash-Lite; P2; 5 đoạn; $T=0$; tối đa 512 token; reasoning minimal & Prompt/số đoạn từ pipeline; tham số sinh từ thiết lập chat \\
 Lưu trữ & \code{data/locked_index}; \code{data/chroma_db}; collection \code{newsqa_cnn} & Sparse tách khỏi Chroma; môi trường có thể đổi đường dẫn và collection \\
 Vận hành & Môi trường mẫu: rag, lịch sử 20, \code{RAG_TOP_K=5} & Mặc định trong mã là auto; khi RAG lỗi có thể chuyển sang chat trực tiếp \\\bottomrule
 \end{tabularx}\end{table}
 
-Biến môi trường được ưu tiên hơn giá trị trong tệp môi trường; dịch vụ chat lấy tham số sinh từ môi trường hoặc mặc định trong mã. Pipeline xác định lời nhắc, số ứng viên và độ sâu. Thiết lập mẫu lấy 20 ứng viên ở nhánh sparse, 5 ở nhánh Chroma và gửi tối đa 5 đoạn cho mô hình sinh.
+Biến môi trường được ưu tiên hơn giá trị trong tệp môi trường; dịch vụ chat lấy tham số sinh từ môi trường hoặc mặc định trong mã. Pipeline xác định prompt, số ứng viên và độ sâu. Thiết lập mẫu lấy 20 ứng viên ở nhánh sparse, 5 ở nhánh Chroma và gửi tối đa 5 đoạn cho mô hình sinh.
 \subsection{Chức năng}
 \begin{itemize}
 \item \textbf{Hỏi đáp:} hiển thị câu trả lời, nguồn và lịch sử theo phiên; cho phép xem hoặc xóa hội thoại. Backend dùng Server-Sent Events để gửi trạng thái và kết quả cuối, chưa truyền từng token đang sinh.

@@ -11,6 +11,6 @@ Bộ xếp hạng lại (reranker) dùng cross-encoder chấm từng cặp câu 
 
 Chia đoạn (chunking) tạo đơn vị lập chỉ mục. Cách chia đệ quy (recursive) ưu tiên ranh giới đoạn, dòng và từ trong giới hạn token; phần chồng lấp giữ ngữ cảnh ở biên. Kích thước đoạn, số ứng viên và số đoạn đưa cho mô hình sinh là các tham số riêng.
 \subsection{Sinh và đánh giá}
-Lời nhắc zero-shot không kèm ví dụ; one-shot có một ví dụ minh họa. Chỉ dấu \texttt{[n]} trong câu trả lời trỏ tới đoạn ngữ cảnh thứ $n$, khác với trích dẫn học thuật trong báo cáo.
+Prompt zero-shot không kèm ví dụ; one-shot có một ví dụ minh họa. Chỉ dấu \texttt{[n]} trong câu trả lời trỏ tới đoạn ngữ cảnh thứ $n$, khác với trích dẫn học thuật trong báo cáo.
 
 NewsLens kết hợp so khớp đáp án, đối chiếu nhãn bằng chứng và điểm chấm bằng mô hình ngôn ngữ của RAGAS~\cite{ragas}. Các thước đo ở Chương 5 đánh giá riêng độ đúng, mức hỗ trợ của ngữ cảnh và dẫn nguồn.
