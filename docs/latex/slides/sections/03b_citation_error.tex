@@ -1,36 +1,42 @@
-\begin{frame}[t]{Hai dạng lỗi citation}
-\purpose{Hai ví dụ thực cho thấy Citation F1 và Citation Validity đo hai lỗi khác nhau.}
+\begin{frame}[t]{Giải thích thước đo dẫn nguồn: Validity và F1}
+\purpose{Đánh giá dẫn nguồn theo hai tầng độc lập: tính hợp lệ cú pháp và độ chính xác đối chiếu với bằng chứng chuẩn.}
 \begin{columns}[T,onlytextwidth]
-\begin{column}{.49\textwidth}
-\heading{1. Đúng index, sai gold chunk}
-{\smalltext
-\textbf{Q:} How many troops does Canada have in Afghanistan?\\[2mm]
-\textbf{Gold [2]:} ``more than \textbf{2,800 Canadian troops}''\\[2mm]
-\textbf{Distractor [3]:} ``Canada's \textbf{2,500 troops}''\\[2mm]
-\textbf{Output:} Canada has 2,500 troops in Afghanistan [3].\par}
-\vspace{4mm}
-{\tabletext\begin{tabular}{lrr}
-\rowcolor{paleblue}\textbf{Metric} & \textbf{Score} & \textbf{Lý do} \\\midrule
-Validity & 1{,}0000 & [3] tồn tại \\\midrule
-Citation F1 & 0{,}0000 & [3] $\neq$ gold [2] \\\bottomrule
-\end{tabular}\par}
+\begin{column}{.48\textwidth}
+\heading{1. Citation Validity (Hợp lệ cú pháp)}
+{\fontsize{13.5}{17.5}\selectfont
+Kiểm tra các chỉ số $[i]$ trong câu trả lời có thuộc phạm vi ngữ cảnh được cấp $\{1, \dots, k\}$ hay không:
+\vspace{-2mm}
+\[
+\text{Validity} = \frac{|\mathcal{C}_{\text{hợp lệ}}|}{|\mathcal{C}_{\text{hợp lệ}}| + |\mathcal{C}_{\text{không hợp lệ}}|}
+\]
+\vspace{-2mm}
+\begin{itemize}
+  \setlength{\itemsep}{2pt}
+  \item \textbf{Mục đích:} Phát hiện ảo giác cú pháp (chỉ số ngoài dải, ví dụ dẫn $[8]$ khi chỉ cấp $k=5$ đoạn).
+  \item \textbf{Ý nghĩa:} Validity $= 1{,}0$ chỉ bảo đảm chỉ số tồn tại, \textit{chưa bảo đảm} dẫn đúng sự thật.
+\end{itemize}\par}
 \end{column}
-\begin{column}{.49\textwidth}
-\heading{2. Index ngoài context}
-{\smalltext
-\textbf{Q:} What day was the suicide blast outside the district courthouse in Peshawar?\\[2mm]
-\textbf{Context được cấp:} chỉ có [1]\\[2mm]
-\textbf{Output:} The suicide blast occurred on Monday \textbf{[8]}.\\[2mm]
-\textbf{Parser:} valid = [,]; invalid = [8]\par}
-\vspace{4mm}
-{\tabletext\begin{tabular}{lrr}
-\rowcolor{paleblue}\textbf{Metric} & \textbf{Score} & \textbf{Lý do} \\\midrule
-Validity & 0{,}0000 & [8] không tồn tại \\\midrule
-Citation F1 & 0{,}0000 & không có valid citation \\\bottomrule
-\end{tabular}\par}
+\begin{column}{.48\textwidth}
+\heading{2. Citation F1 (Khớp bằng chứng chuẩn)}
+{\fontsize{13.5}{17.5}\selectfont
+Ánh xạ các chỉ số hợp lệ sang tập Chunk ID $\mathcal{C}$ và đối chiếu với tập chunk chuẩn $\mathcal{G}$ (gold evidence):
+\vspace{-2mm}
+\[
+P_{\text{cit}} = \frac{|\mathcal{C} \cap \mathcal{G}|}{|\mathcal{C}|},\qquad R_{\text{cit}} = \frac{|\mathcal{C} \cap \mathcal{G}|}{|\mathcal{G}|}
+\]
+\vspace{-4mm}
+\[
+\text{Citation F1} = \frac{2 \cdot P_{\text{cit}} \cdot R_{\text{cit}}}{P_{\text{cit}} + R_{\text{cit}}}
+\]
+\vspace{-2mm}
+\begin{itemize}
+  \setlength{\itemsep}{2pt}
+  \item \textbf{Mục đích:} Đảm bảo câu trả lời neo đúng bằng chứng thực tế, không dẫn đoạn gây nhiễu (distractor).
+  \item \textbf{Đặc điểm:} Tính tất định theo tập hợp; bằng 0 nếu dẫn nhầm đoạn dù cú pháp hợp lệ.
+\end{itemize}\par}
 \end{column}
 \end{columns}
-\vspace{5mm}
-\takeaway{Citation Validity kiểm tra index có tồn tại; Citation F1 kiểm tra citation có trỏ tới gold evidence hay không.}
-\slidenote{Ví dụ 1: P2-depth5 development. Ví dụ 2: P0-depth1 screening; chỉ một context được đưa vào generator.}
+\vspace{2mm}
+\takeaway{\textbf{Validity} kiểm tra trích dẫn có tồn tại trong context; \textbf{Citation F1} đo lường trích dẫn có trỏ đúng bằng chứng chuẩn.}
+\slidenote{Cả hai thước đo đều được tính tất định (deterministic), không phụ thuộc vào LLM judge.}
 \end{frame}

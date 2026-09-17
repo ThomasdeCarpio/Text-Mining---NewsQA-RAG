@@ -1,37 +1,43 @@
 \begin{frame}[t]{Context depth: P0/P2 $\times$ 1/3/5 đoạn}
 \purpose{Cùng ranked trace; chỉ cắt còn 1/3/5 đoạn. Depth 5 tái sử dụng từ vòng prompt.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.32\textwidth}
 \heading{Độ phủ bằng chứng}
-{\fontsize{11.5}{13}\selectfont
-\setlength{\tabcolsep}{9pt}
-\renewcommand{\arraystretch}{1.08}
-\begin{tabular}{lrr}
+{\fontsize{14}{17}\selectfont
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.20}
+\begin{tabularx}{\linewidth}{@{}c>{\centering\arraybackslash}X>{\raggedleft\arraybackslash}X@{}}
 \toprule
-\rowcolor{paleblue}\textbf{Depth} & \textbf{Hit@depth} & \textbf{Số câu mất gold so với depth 5} \\\midrule
-\cellcolor{paleblue}\textbf{1} & \NumPoneHitOne & \NumLostAtDepthOne\ câu \\\midrule
-\cellcolor{paleblue}\textbf{3} & \NumPoneHitThree & \NumLostAtDepthThree\ câu \\\midrule
-\cellcolor{paleblue}\textbf{5} & \NumPoneHitFive & 0 \\\bottomrule
-\end{tabular}\par}
+\rowcolor{paleblue}\textbf{Depth} & \textbf{Hit@$k$} & \textbf{Mất gold} \\\midrule
+\textbf{1} & \NumPoneHitOne & \NumLostAtDepthOne\ câu \\\midrule
+\textbf{3} & \NumPoneHitThree & \NumLostAtDepthThree\ câu \\\midrule
+\textbf{5} & \NumPoneHitFive & 0 câu \\\bottomrule
+\end{tabularx}\par}
 \vspace{3mm}
-\heading{Chất lượng screening}
-{\fontsize{10.6}{12.4}\selectfont
-\setlength{\tabcolsep}{4.5pt}
-\renewcommand{\arraystretch}{1.02}
-\begin{tabular}{lrrrrrrrr}
+{\smalltext\color{brandmuted}Độ phủ giảm mạnh ở depth 1 (mất \NumLostAtDepthOne\ câu gold so với depth 5).\par}
+\end{column}
+\begin{column}{.65\textwidth}
+\heading{Chất lượng sàng lọc (P0 vs P2)}
+{\fontsize{13}{16}\selectfont
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{@{}c*{4}{>{\centering\arraybackslash}X}|*{4}{>{\centering\arraybackslash}X}@{}}
 \toprule
-\rowcolor{paleblue}& \multicolumn{4}{c}{\textbf{P0}} & \multicolumn{4}{c}{\textbf{P2}} \\
-\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+\rowcolor{paleblue} & \multicolumn{4}{c|}{\textbf{P0}} & \multicolumn{4}{c}{\textbf{P2}} \\
 \rowcolor{paleblue}\textbf{Depth} & \textbf{AC} & \textbf{Faith.} & \textbf{Cit.F1} & \textbf{Valid.}
-& \textbf{AC} & \textbf{Faith.} & \textbf{Cit.F1} & \textbf{Valid.} \\\midrule
-\cellcolor{paleblue}\textbf{1} & \NumDepthPzeroOneAC & \NumDepthPzeroOneFaith & \NumDepthPzeroOneCitFone & \NumDepthPzeroOneCitVal
+  & \textbf{AC} & \textbf{Faith.} & \textbf{Cit.F1} & \textbf{Valid.} \\\midrule
+\textbf{1} & \NumDepthPzeroOneAC & \NumDepthPzeroOneFaith & \NumDepthPzeroOneCitFone & \NumDepthPzeroOneCitVal
   & \NumDepthPtwoOneAC & \NumDepthPtwoOneFaith & \NumDepthPtwoOneCitFone & \NumDepthPtwoOneCitVal \\\midrule
-\cellcolor{paleblue}\textbf{3} & \NumDepthPzeroThreeAC & \NumDepthPzeroThreeFaith & \NumDepthPzeroThreeCitFone & \NumDepthPzeroThreeCitVal
+\textbf{3} & \NumDepthPzeroThreeAC & \NumDepthPzeroThreeFaith & \NumDepthPzeroThreeCitFone & \NumDepthPzeroThreeCitVal
   & \textbf{\NumDepthPtwoThreeAC} & \NumDepthPtwoThreeFaith & \NumDepthPtwoThreeCitFone & \NumDepthPtwoThreeCitVal \\\midrule
-\cellcolor{paleblue}\textbf{5} & \NumScreenPzeroAC & \NumScreenPzeroFaith & \NumScreenPzeroCitFone & \NumScreenPzeroCitVal
+\textbf{5} & \NumScreenPzeroAC & \NumScreenPzeroFaith & \NumScreenPzeroCitFone & \NumScreenPzeroCitVal
   & \NumScreenPtwoAC & \textbf{\NumScreenPtwoFaith} & \textbf{\NumScreenPtwoCitFone} & \textbf{\NumScreenPtwoCitVal} \\\bottomrule
-\end{tabular}\par}
+\end{tabularx}\par}
 \vspace{3mm}
-{\smalltext \NumNScreening\ câu screening; metric dùng cùng \NumNJudgeScreening\ câu RAGAS. P2-depth3/5 triển vọng nhất và được chạy đủ \NumNDev\ câu.\par}
-\vspace{1mm}
-\takeaway{Screening chỉ chọn ứng viên. Guardrail chỉ được áp dụng ở full-development để quyết định winner.}
+{\smalltext Sàng lọc trên \NumNScreening\ câu; \NumNJudgeScreening\ câu tính RAGAS. P2 vượt P0 ở mọi depth.\par}
+\end{column}
+\end{columns}
+\vspace{2mm}
+\takeaway{P2-depth3 và P2-depth5 là hai ứng viên triển vọng nhất được đưa vào đánh giá đủ \NumNDev\ câu development.}
 \slidenote{Hit@k tính trên \NumNDev\ câu từ trace retrieval dùng chung. Không retrieve lại khi đổi prompt hoặc context depth.}
 \end{frame}

@@ -1,0 +1,44 @@
+\begin{frame}[t]{Thử nghiệm mở rộng: So sánh các mô hình sinh}
+\purpose{Theo góp ý GVHD: khảo sát hiệu năng toàn chuỗi khi dùng generator mạnh hơn và đánh đổi chi phí tài nguyên.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.56\textwidth}
+\heading{So sánh chất lượng sinh trên 281 câu development}
+{\fontsize{12.5}{15.5}\selectfont
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\linewidth}{@{}l*{6}{>{\centering\arraybackslash}X}@{}}
+\toprule
+\rowcolor{paleblue}\textbf{Mô hình} & \textbf{Token F1} & \textbf{AC} & \textbf{Faith.} & \textbf{AR} & \textbf{Cit.F1} & \textbf{Valid.} \\\midrule
+\textbf{3.1 Flash-Lite} & 0,6267 & 0,8015 & \textbf{0,9603} & \textbf{0,5251} & \textbf{0,8441} & \textbf{0,9786} \\\midrule
+\textbf{3.5 Flash-Lite} & 0,6803 & \textbf{0,8164} & 0,9557 & 0,4351 & 0,8351 & 0,9680 \\\midrule
+\textbf{3.6 Flash} & \textbf{0,6934} & 0,8011 & 0,9472 & 0,3837 & 0,8248 & 0,9644 \\\bottomrule
+\end{tabularx}\par}
+\vspace{2.5mm}
+\heading{Đánh đổi tài nguyên và độ trễ}
+{\fontsize{12.5}{15.5}\selectfont
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\linewidth}{@{}lrr>{\centering\arraybackslash}Xr@{}}
+\toprule
+\rowcolor{paleblue}\textbf{Mô hình} & \textbf{$\Delta$ AC} & \textbf{CI95 của $\Delta$ AC} & \textbf{LLM P95} & \textbf{Token ra} \\\midrule
+\textbf{3.1 Flash-Lite} & Đối chứng & --- & 1,02 s & 3.847 \\\midrule
+\textbf{3.5 Flash-Lite} & $+0{,}0149$ & $[-0{,}0052;\,+0{,}0359]$ & \textbf{0,89 s} & \textbf{3.112} \\\midrule
+\textbf{3.6 Flash} & $-0{,}0003$ & $[-0{,}0204;\,+0{,}0195]$ & 3,50 s ($3{,}4\times$) & 3.249 \\\bottomrule
+\end{tabularx}\par}
+\end{column}
+\begin{column}{.41\textwidth}
+\heading{Phân tích và nhận xét chính}
+{\fontsize{13}{16.5}\selectfont
+\begin{itemize}
+  \setlength{\itemsep}{2pt}
+  \item \textbf{Thiết lập:} Cùng 281 câu dev, trace retrieval, prompt P2-1S, depth 5, temp 0, max 512 token; chỉ đổi generator.
+  \item \textbf{3.5 Flash-Lite:} AC trung bình cao nhất ($0{,}8164$) và P95 nhanh nhất (0,89 s), nhưng CI95 chứa 0 $\implies$ chưa đủ bằng chứng thống kê vượt trội.
+  \item \textbf{3.6 Flash:} Token F1 cao nhất ($0{,}6934$) nhưng AC không tăng ($-0{,}0003$); độ trễ P95 tăng $3{,}4\times$ (3,50 s), Faithfulness và Citation giảm.
+  \item \textbf{3.1 Flash-Lite:} Faithfulness, Relevancy và Citation F1/Validity cao nhất; hiệu quả tối ưu về độ trễ và chi phí.
+\end{itemize}\par}
+\end{column}
+\end{columns}
+\vspace{1.5mm}
+\takeaway{Mô hình lớn hơn không tự động cải thiện toàn chuỗi: 3.6 Flash tăng $3{,}4\times$ độ trễ nhưng AC không đổi; 3.1 Flash-Lite duy trì độ tin cậy và dẫn nguồn tốt nhất.}
+\slidenote{Cả 3 mô hình đều chạy trên 281 câu development; token vào mỗi lần chạy là 666.604 token.}
+\end{frame}

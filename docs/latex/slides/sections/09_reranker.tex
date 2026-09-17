@@ -1,11 +1,11 @@
 \begin{frame}[t]{Reranker cải thiện thứ tự bằng chứng}
 \purpose{So sánh trên câu resolved: ưu tiên MRR@5, sau đó xét nDCG@5.}
-{\smalltext\begin{tabularx}{\textwidth}{@{}p{82mm}*{6}{>{\centering\arraybackslash}X}@{}}
-\rowcolor{paleblue}\textbf{Retriever} & \multicolumn{2}{c}{\textbf{Không rerank}} & \multicolumn{2}{c}{\textbf{MiniLM-L6}} & \multicolumn{2}{c}{\textbf{BGE-large}} \\
-\rowcolor{paleblue} & \textbf{MRR} & \textbf{nDCG} & \textbf{MRR} & \textbf{nDCG} & \textbf{MRR} & \textbf{nDCG} \\\midrule
-\textbf{BGE-M3 sparse} & \NumRtwoSparseNoneMrr & \NumRtwoSparseNone & \NumRtwoSparseMiniMrr & \NumRtwoSparseMini & \cellcolor{paleblue}\textbf{\NumRtwoSparseLargeMrr} & \cellcolor{paleblue}\textbf{\NumRtwoSparseLarge} \\\midrule
-Dense · e5-base-v2 & \NumRtwoDenseNoneMrr & \NumRtwoDenseNone & \NumRtwoDenseMiniMrr & \NumRtwoDenseMini & \NumRtwoDenseLargeMrr & \NumRtwoDenseLarge \\\midrule
-Hybrid · sparse + dense & \NumRtwoHybridNoneMrr & \NumRtwoHybridNone & \NumRtwoHybridMiniMrr & \NumRtwoHybridMini & \NumRtwoHybridLargeMrr & \NumRtwoHybridLarge \\\bottomrule
+{\smalltext\begin{tabularx}{\textwidth}{@{}p{76mm}*{3}{>{\centering\arraybackslash}X}|*{3}{>{\centering\arraybackslash}X}@{}}
+\rowcolor{paleblue}\textbf{Retriever} & \multicolumn{3}{c|}{\textbf{MRR@5}} & \multicolumn{3}{c}{\textbf{nDCG@5}} \\
+\rowcolor{paleblue} & \textbf{Không} & \textbf{MiniLM} & \textbf{BGE-large} & \textbf{Không} & \textbf{MiniLM} & \textbf{BGE-large} \\\midrule
+\textbf{BGE-M3 sparse} & \NumRtwoSparseNoneMrr & \NumRtwoSparseMiniMrr & \cellcolor{paleblue}\textbf{\NumRtwoSparseLargeMrr} & \NumRtwoSparseNone & \NumRtwoSparseMini & \cellcolor{paleblue}\textbf{\NumRtwoSparseLarge} \\\midrule
+Dense · e5-base-v2 & \NumRtwoDenseNoneMrr & \NumRtwoDenseMiniMrr & \NumRtwoDenseLargeMrr & \NumRtwoDenseNone & \NumRtwoDenseMini & \NumRtwoDenseLarge \\\midrule
+Hybrid · sparse + dense & \NumRtwoHybridNoneMrr & \NumRtwoHybridMiniMrr & \NumRtwoHybridLargeMrr & \NumRtwoHybridNone & \NumRtwoHybridMini & \NumRtwoHybridLarge \\\bottomrule
 \end{tabularx}\par}
 \vspace{6mm}
 \begin{columns}[T,onlytextwidth]
@@ -16,7 +16,7 @@ Hybrid · sparse + dense & \NumRtwoHybridNoneMrr & \NumRtwoHybridNone & \NumRtwo
 \rowcolor{paleblue}Sparse & Không rerank & MiniLM & BGE-large \\\midrule
 P50 tổng (ms) & \NumRtwoSparseNoneLatency & \NumRtwoSparseMiniLatency & \NumRtwoSparseLargeLatency \\\bottomrule
 \end{tabularx}}
-\takeaway{Chọn \textbf{sparse + BGE-large}. Hybrid không chứng minh được lợi ích trong thiết lập đã thử.}
+\takeaway{Chọn \textbf{sparse + BGE-large}. Hybrid không cho thấy lợi ích trong thiết lập đã thử.}
 \end{column}\end{columns}
 \slidenote{P50 là trung vị latency. So sánh trên \NumNDev\ câu cùng môi trường; độ trễ thực tế phụ thuộc phần cứng và model đã được nạp.}
 \end{frame}
