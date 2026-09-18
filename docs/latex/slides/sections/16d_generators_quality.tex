@@ -1,0 +1,30 @@
+\begin{frame}[t]{Thử nghiệm mở rộng: So sánh chất lượng các mô hình sinh}
+\purpose{Mục tiêu: Đánh giá chất lượng sinh khi đổi generator. Cùng 281 câu dev, trace retrieval, depth 5, prompt P2-1S, temp 0; cùng judge GLM-5.3 Flash.}
+\heading{Bảng so sánh chất lượng sinh trên 281 câu development}
+{\fontsize{13.5}{17}\selectfont
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.20}
+\begin{tabularx}{\textwidth}{@{}l*{6}{>{\centering\arraybackslash}X}@{}}
+\toprule
+\rowcolor{paleblue}\textbf{Mô hình generator} & \textbf{Token F1} & \textbf{AC} & \textbf{Faith.} & \textbf{AR} & \textbf{Cit.F1} & \textbf{Valid.} \\\midrule
+\textbf{Gemini 3.1 Flash-Lite} & 0,6267 & 0,8015 & \textbf{0,9603} & \textbf{0,5251} & \textbf{0,8441} & \textbf{0,9786} \\\midrule
+\textbf{Gemini 3.5 Flash-Lite} & 0,6803 & \textbf{0,8164} & 0,9557 & 0,4351 & 0,8351 & 0,9680 \\\midrule
+\textbf{Gemini 3.6 Flash} & \textbf{0,6934} & 0,8011 & 0,9472 & 0,3837 & 0,8248 & 0,9644 \\\bottomrule
+\end{tabularx}\par}
+\vspace{3mm}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.48\textwidth}
+\heading{Gemini 3.5 Flash-Lite}
+{\fontsize{13}{16.5}\selectfont
+AC trung bình cao nhất ($0{,}8164$), nhưng Faithfulness ($0{,}9557$) và Citation F1 ($0{,}8351$) thấp hơn 3.1 Flash-Lite.\par}
+\end{column}
+\begin{column}{.48\textwidth}
+\heading{Gemini 3.6 Flash}
+{\fontsize{13}{16.5}\selectfont
+Token F1 cao nhất ($0{,}6934$) nhưng AC không tăng ($0{,}8011$); Citation F1 giảm sâu xuống $0{,}8248$.\par}
+\end{column}
+\end{columns}
+\vspace{2mm}
+\takeaway{Mô hình lớn hơn không tự động cải thiện toàn diện: 3.5 nhỉnh hơn về AC nhưng 3.1 Flash-Lite duy trì độ tin cậy và dẫn nguồn tốt nhất.}
+\slidenote{Cả ba lần chạy đều dùng chung 666.604 token ngữ cảnh đầu vào và cùng giám khảo GLM-5.3 Flash.}
+\end{frame}

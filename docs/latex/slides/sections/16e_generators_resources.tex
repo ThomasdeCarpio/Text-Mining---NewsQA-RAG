@@ -1,0 +1,38 @@
+\begin{frame}[t]{Mô hình sinh: Đánh đổi tài nguyên, độ trễ và quyết định}
+\purpose{So sánh chi phí tài nguyên, độ trễ thực tế và lý giải quyết định lựa chọn mô hình đích.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.49\textwidth}
+\heading{Tài nguyên và kiểm định $\Delta$ AC}
+{\fontsize{13}{16}\selectfont
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}lrr>{\centering\arraybackslash}Xr@{}}
+\toprule
+\rowcolor{paleblue}\textbf{Mô hình} & \textbf{$\Delta$ AC} & \textbf{CI95 của $\Delta$ AC} & \textbf{LLM P95} & \textbf{Token ra} \\\midrule
+\textbf{3.1 Flash-Lite} & Đối chứng & --- & 1,02 s & 3.847 \\\midrule
+\textbf{3.5 Flash-Lite} & $+0{,}0149$ & $[-0{,}0052;\,+0{,}0359]$ & \textbf{0,89 s} & \textbf{3.112} \\\midrule
+\textbf{3.6 Flash} & $-0{,}0003$ & $[-0{,}0204;\,+0{,}0195]$ & 3,50 s ($3{,}4\times$) & 3.249 \\\bottomrule
+\end{tabularx}\par}
+\vspace{3mm}
+{\fontsize{13}{17}\selectfont
+\begin{itemize}
+  \setlength{\itemsep}{4pt}
+  \item \textbf{Kiểm định $\Delta$ AC:} Mức chênh lệch không có ý nghĩa thống kê; mô hình lớn hơn không đem lại cải thiện vượt trội.
+  \item \textbf{Lượng token sinh:} Cả 3 mô hình xuất ra lượng token tương đương nhau ($\sim 3{,}1\text{k}$--$3{,}8\text{k}$ tokens trên 281 câu).
+\end{itemize}\par}
+\end{column}
+\begin{column}{.48\textwidth}
+\heading{Đánh đổi thực tế và quyết định}
+{\fontsize{13}{17}\selectfont
+\begin{itemize}
+  \setlength{\itemsep}{5pt}
+  \item \textbf{Gemini 3.6 Flash (Đánh đổi bất lợi):} Độ trễ P95 tăng vọt lên 3,50 s ($3{,}4\times$) trong khi AC không đổi; độ trung thực và dẫn nguồn đều giảm.
+  \item \textbf{Gemini 3.5 Flash-Lite:} Tốc độ nhanh nhất (0,89 s) nhưng đánh đổi tính trung thực và chất lượng citation.
+  \item \textbf{Quyết định cho NewsLens:} Giữ vững \textbf{Gemini 3.1 Flash-Lite} làm mô hình đích — tối ưu hài hòa giữa chất lượng, dẫn nguồn và thời gian phản hồi.
+\end{itemize}\par}
+\end{column}
+\end{columns}
+\vspace{2mm}
+\takeaway{Chi phí tăng không tương xứng với chất lượng: Gemini 3.1 Flash-Lite là điểm cân bằng tối ưu giữa độ chính xác, dẫn nguồn và độ trễ cho NewsLens.}
+\slidenote{P95 chỉ tính các lượt gọi sinh thành công; token ra không bao gồm token chấm điểm của LLM judge.}
+\end{frame}

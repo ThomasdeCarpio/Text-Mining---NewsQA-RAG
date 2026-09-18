@@ -1,0 +1,37 @@
+\begin{frame}[t]{Thử nghiệm mở rộng: Động lực và thiết kế Prompt one-shot}
+\purpose{Theo góp ý GVHD: kiểm tra xem bổ sung 1 ví dụ mẫu in-context có giúp định hình câu trả lời ngắn và chuẩn hóa citation không.}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.48\textwidth}
+\heading{Động lực và thiết lập thử nghiệm}
+{\fontsize{13.5}{17.5}\selectfont
+\begin{itemize}
+  \setlength{\itemsep}{1.5pt}
+  \item \textbf{Vấn đề ở Zero-shot:} Dữ liệu NewsQA dùng đáp án chuẩn là thực thể trích xuất ngắn (extractive span, vd: ``26'', ``March 2021''). Prompt zero-shot (P0) sinh câu thoại hoàn chỉnh $\implies$ Exact Match bằng 0.
+  \item \textbf{Mục tiêu:} Dùng 1 ví dụ mẫu để mô hình bắt chước trực quan cấu trúc: \textit{câu trả lời cực ngắn đúng thực thể + citation [n] ngay sau đáp án}.
+  \item \textbf{Thiết lập:} Bổ sung 1 ví dụ tổng hợp vào prompt P2 tạo thành \textbf{P2-1S}. Ví dụ nhân tạo, không lấy từ NewsQA hay tập kiểm tra.
+  \item \textbf{Kiểm chứng:} Giữ cố định BGE-M3 + BGE reranker, depth 5, Gemini 3.1 Flash-Lite; so sánh ghép cặp trên 281 câu dev.
+\end{itemize}\par}
+\end{column}
+\begin{column}{.48\textwidth}
+\heading{Mẫu ví dụ in-context bổ sung trong P2-1S}
+\begin{beamercolorbox}[wd=\linewidth,sep=3mm,rounded=true]{takeaway}
+{\fontsize{12}{15.5}\selectfont\color{brandink}
+\textbf{Demonstration (format example only):}\\[1.5mm]
+\textbf{Context [1]:} The Northbridge museum opened a new gallery in 2018.\\
+\textbf{Context [2]:} The city council approved the Riverside transit plan in March 2021.\\
+\textbf{Question:} When was the Riverside transit plan approved?\\
+\textbf{Answer:} \textbf{March 2021 [2]}\par}
+\end{beamercolorbox}
+\vspace{1.5mm}
+{\fontsize{13}{16.5}\selectfont
+\begin{itemize}
+  \setlength{\itemsep}{1.5pt}
+  \item \textbf{Chỉ rõ loại thông tin:} Rút trích trực tiếp mốc thời gian, không lặp lại câu hỏi.
+  \item \textbf{Chuẩn hóa vị trí citation:} Đặt ngay sau thông tin được dẫn chứng để bảo đảm tính kiểm chứng.
+\end{itemize}\par}
+\end{column}
+\end{columns}
+\vspace{1.5mm}
+\takeaway{Một ví dụ in-context đóng vai trò trực quan hóa định dạng mong muốn: trả lời ngắn gọn đúng thực thể và gắn citation chuẩn xác.}
+\slidenote{Ví dụ được thiết kế tổng hợp (synthetic), bảo đảm không rò rỉ dữ liệu từ tập huấn luyện hoặc kiểm tra.}
+\end{frame}
